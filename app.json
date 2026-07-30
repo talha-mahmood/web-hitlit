@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PlayPals",
-    "slug": "playpals",
+    "slug": "hamza-playpal-app",
     "scheme": "playpals",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -27,7 +27,20 @@
     "plugins": [
       "expo-secure-store",
       "expo-status-bar",
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "PlayPals needs access to your photos so you can set a profile picture."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0b193f9f-9736-4125-9a9e-db47d973b92d"
+      }
+    },
+    "owner": "devnexsolutions"
   }
 }
