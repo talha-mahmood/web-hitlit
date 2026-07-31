@@ -1,15 +1,16 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import type { NavigatorScreenParams } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import HomeScreen from "../screens/main/HomeScreen";
+import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
+import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
 import GamesScreen from "../screens/main/GamesScreen";
-import VenuesScreen from "../screens/main/VenuesScreen";
 import ProfileScreen from "../screens/main/ProfileScreen";
 import { colors } from "../constants/theme";
 
 export type MainTabParamList = {
-  Home: undefined;
+  Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Games: undefined;
-  Venues: undefined;
+  Venues: NavigatorScreenParams<VenuesStackParamList> | undefined;
   Profile: undefined;
 };
 
@@ -38,9 +39,9 @@ export default function MainTabNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeStackNavigator} />
       <Tab.Screen name="Games" component={GamesScreen} />
-      <Tab.Screen name="Venues" component={VenuesScreen} />
+      <Tab.Screen name="Venues" component={VenuesStackNavigator} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

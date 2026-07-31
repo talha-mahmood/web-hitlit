@@ -1,0 +1,100 @@
+import { useState } from "react";
+import { View, Text, TextInput, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
+import { useSports } from "../../hooks/useSports";
+import { useVenues } from "../../hooks/useVenues";
+import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
+import SportChip from "../../components/SportChip";
+import VenueCard from "../../components/VenueCard";
+import { colors } from "../../constants/theme";
+import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
+
+type VenuesListRouteProp = RouteProp<VenuesStackParamList, "VenuesList">;
+type VenuesListNavigationProp = NativeStackNavigationProp<VenuesStackParamList, "VenuesList">;
+
+export default function VenuesListScreen() {
+  const route = useRoute<VenuesListRouteProp>();
+  const navigation = useNavigation<VenuesListNavigationProp>();
+
+  const [search, setSearch] = useState("");
+  const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
+    route.params?.sportId
+  );
+
+  const { data: sports } = useSports();
+  const {
+    data: venues,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useVenues({ search: search || undefined, sportId: selectedSportId });
+  const { data: favoriteIds } = useFavoriteVenueIds();
+  const toggleFavorite = useToggleFavoriteVenue();
+
+  return (
+    <View className="flex-1 bg-white pt-14">
+      <View className="px-5">
+        <Text className="text-2xl font-bold text-ink mb-4">Venues</Text>
+        <View className="flex-row items-center border border-border rounded-xl px-3 mb-4">
+          <Ionicons name="search" size={18} color={colors.muted} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search venues or city"
+            className="flex-1 py-3 px-2 text-ink"
+          />
+        </View>
+      </View>
+
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={sports ?? []}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+        renderItem={({ item }) => (
+          <SportChip
+            label={item.name}
+            selected={selectedSportId === item.id}
+            onPress={() =>
+              setSelectedSportId((current) => (current === item.id ? undefined : item.id))
+            }
+          />
+        )}
+      />
+
+      {isLoading ? (
+        <ActivityIndicator color={colors.primary} className="mt-8" />
+      ) : (
+        <FlatList
+          data={venues ?? []}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ padding: 20, gap: 14 }}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          ListEmptyComponent={
+            <Text className="text-muted text-center mt-10">
+              No venues found. Try a different search or sport.
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <VenueCard
+              venue={item}
+              isFavorite={favoriteIds?.has(item.id) ?? false}
+              onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
+              onToggleFavorite={() =>
+                toggleFavorite.mutate({
+                  venueId: item.id,
+                  isFavorite: !(favoriteIds?.has(item.id) ?? false),
+                })
+              }
+            />
+          )}
+        />
+      )}
+    </View>
+  );
+}
