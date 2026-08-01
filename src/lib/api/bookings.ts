@@ -34,7 +34,7 @@ export async function fetchBookedSlots(courtId: string, date: string) {
     p_court_id: courtId,
     p_date: date,
   });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Array<{ start_time: string; end_time: string }>;
 }
 
@@ -61,7 +61,7 @@ export async function createBooking(params: CreateBookingParams) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data;
 }
 
@@ -70,7 +70,7 @@ export async function cancelBooking(bookingId: string) {
     .from("bookings")
     .update({ status: "CANCELLED", updated_at: new Date().toISOString() })
     .eq("id", bookingId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function fetchMyBookings(userId: string): Promise<BookingWithCourt[]> {
@@ -94,6 +94,6 @@ export async function fetchMyBookings(userId: string): Promise<BookingWithCourt[
     .is("deleted_at", null)
     .order("start_time", { ascending: false });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as BookingWithCourt[];
 }

@@ -60,7 +60,7 @@ export async function fetchGames(filters: { sportId?: string } = {}): Promise<Ga
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as GameListItem[];
 }
 
@@ -70,7 +70,7 @@ export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
     .select(DETAIL_SELECT)
     .eq("id", gameId)
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as GameDetail;
 }
 
@@ -99,16 +99,17 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   // Creator automatically joins their own game
-  await supabase.from("game_players").insert({
+  const { error: joinError } = await supabase.from("game_players").insert({
     game_id: data.id,
     user_id: params.creatorId,
     status: "JOINED",
     joined_at: new Date().toISOString(),
     payment_status: "PENDING",
   });
+  if (joinError) throw new Error(joinError.message);
 
   return data;
 }
@@ -121,7 +122,7 @@ export async function joinGame(gameId: string, userId: string): Promise<void> {
     joined_at: new Date().toISOString(),
     payment_status: "PENDING",
   });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function leaveGame(gameId: string, userId: string): Promise<void> {
@@ -131,7 +132,7 @@ export async function leaveGame(gameId: string, userId: string): Promise<void> {
     .eq("game_id", gameId)
     .eq("user_id", userId)
     .eq("status", "JOINED");
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function cancelGame(gameId: string): Promise<void> {
@@ -139,5 +140,5 @@ export async function cancelGame(gameId: string): Promise<void> {
     .from("games")
     .update({ status: "CANCELLED" })
     .eq("id", gameId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }

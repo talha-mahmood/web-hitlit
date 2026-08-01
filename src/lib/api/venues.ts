@@ -47,7 +47,7 @@ export async function fetchVenues(filters: VenueFilters = {}): Promise<VenueList
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data as unknown as VenueListItem[]) ?? [];
 }
 
@@ -74,7 +74,7 @@ export async function fetchFavoriteVenueIds(userId: string): Promise<Set<string>
     .select("venue_id")
     .eq("user_id", userId);
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return new Set((data ?? []).map((row) => row.venue_id));
 }
 
@@ -87,13 +87,13 @@ export async function setFavoriteVenue(
     const { error } = await supabase
       .from("favorite_venues")
       .insert({ user_id: userId, venue_id: venueId });
-    if (error) throw error;
+    if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from("favorite_venues")
       .delete()
       .eq("user_id", userId)
       .eq("venue_id", venueId);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
   }
 }
