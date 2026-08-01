@@ -24,8 +24,9 @@ function formatDateFull(dateStr: string): string {
   });
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-PK", {
+// start_time/end_time are TIME columns ('HH:MM:SS'), combine with game_date for display
+function formatTime(dateStr: string, timeStr: string): string {
+  return new Date(`${dateStr}T${timeStr}+05:00`).toLocaleTimeString("en-PK", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -233,7 +234,7 @@ export default function GameDetailScreen() {
             <InfoRow
               icon="time-outline"
               label="Time"
-              value={`${formatTime(game.start_time)} – ${formatTime(game.end_time)}`}
+              value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
             />
             {game.venues && (
               <InfoRow

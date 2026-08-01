@@ -153,8 +153,6 @@ export default function CreateGameScreen() {
     }
 
     const endTimeValue = addMinutes(startTime, Math.round(duration * 60));
-    const startIso = `${selectedDate}T${startTime}:00+05:00`;
-    const endIso = `${selectedDate}T${endTimeValue}:00+05:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {
@@ -163,8 +161,8 @@ export default function CreateGameScreen() {
         title: title.trim(),
         sportId,
         gameDate: selectedDate,
-        startTime: startIso,
-        endTime: endIso,
+        startTime: `${startTime}:00`,
+        endTime: `${endTimeValue}:00`,
         maxPlayers,
         skillLevel,
         visibility,

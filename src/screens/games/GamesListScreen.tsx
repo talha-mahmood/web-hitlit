@@ -21,13 +21,14 @@ const SKILL_COLORS: Record<string, { bg: string; text: string }> = {
   PRO:          { bg: "bg-red-50",    text: "text-red-600"    },
 };
 
-function formatGameDateTime(dateStr: string, startIso: string): string {
+// start_time is a TIME column ('HH:MM:SS'), combine with game_date for display
+function formatGameDateTime(dateStr: string, startTime: string): string {
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
 
-  const gameDateParts = dateStr.split("-").map(Number);
-  const gameDate = new Date(gameDateParts[0], gameDateParts[1] - 1, gameDateParts[2]);
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const gameDate = new Date(y, m - 1, d);
 
   const isSameDay = (a: Date, b: Date) =>
     a.getFullYear() === b.getFullYear() &&
@@ -43,7 +44,7 @@ function formatGameDateTime(dateStr: string, startIso: string): string {
     dayLabel = gameDate.toLocaleDateString("en-PK", { weekday: "short", month: "short", day: "numeric" });
   }
 
-  const timeStr = new Date(startIso).toLocaleTimeString("en-PK", {
+  const timeStr = new Date(`${dateStr}T${startTime}+05:00`).toLocaleTimeString("en-PK", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
