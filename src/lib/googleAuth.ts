@@ -1,51 +1,41 @@
-import * as WebBrowser from "expo-web-browser";
-import * as QueryParams from "expo-auth-session/build/QueryParams";
-import { makeRedirectUri } from "expo-auth-session";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { supabase } from "./supabase";
 
-// Required once at module load so the auth session popup can close itself on web.
-WebBrowser.maybeCompleteAuthSession();
+// webClientId must be the Web Application OAuth client from Google Cloud Console.
+// Google uses it server-side to verify the ID token before Supabase trusts it.
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  scopes: ["openid", "profile", "email"],
+});
 
-// Resolves to an `exp://...` URI in Expo Go/dev and to the `playpals://` custom
-// scheme in a dev client or standalone/production build - no branching needed.
-const redirectTo = makeRedirectUri();
+/**
+ * Opens the native Android/iOS Google account picker, exchanges the resulting
+ * ID token for a Supabase session. No WebBrowser or redirect URL involved.
+ * Returns null if the user dismisses the picker.
+ */
+export async function signInWithGoogle() {
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+  const response = await GoogleSignin.signIn();
 
-async function createSessionFromUrl(url: string) {
-  const { params, errorCode } = QueryParams.getQueryParams(url);
-  if (errorCode) throw new Error(errorCode);
+  if (response.type !== "success") {
+    return null; // user dismissed the picker
+  }
 
-  const { access_token, refresh_token } = params;
-  if (!access_token || !refresh_token) return null;
+  const idToken = response.data.idToken;
+  if (!idToken) throw new Error("Google sign-in did not return an ID token.");
 
-  const { data, error } = await supabase.auth.setSession({
-    access_token,
-    refresh_token,
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "google",
+    token: idToken,
   });
   if (error) throw error;
   return data.session;
 }
 
-/**
- * Opens the Google OAuth consent screen in an in-app browser and exchanges the
- * resulting redirect for a Supabase session. Requires the Google provider to be
- * enabled in the Supabase Dashboard (Authentication > Providers) and this app's
- * redirect URIs to be whitelisted there (Authentication > URL Configuration).
- */
-export async function signInWithGoogle() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo, skipBrowserRedirect: true },
-  });
-  if (error) throw error;
-  if (!data?.url) throw new Error("No OAuth URL returned by Supabase.");
-
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-  if (result.type === "success") {
-    return createSessionFromUrl(result.url);
+export async function signOutGoogle() {
+  try {
+    await GoogleSignin.signOut();
+  } catch {
+    // swallow — Supabase signOut is the authoritative logout
   }
-  if (result.type === "cancel" || result.type === "dismiss") {
-    return null;
-  }
-  throw new Error("Google sign-in failed. Please try again.");
 }

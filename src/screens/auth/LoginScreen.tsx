@@ -12,7 +12,7 @@ export default function LoginScreen() {
     try {
       const session = await signInWithGoogle();
       if (!session) {
-        // User cancelled the browser sheet - nothing to do.
+        // User dismissed the native account picker — nothing to do.
         return;
       }
       // RootNavigator's onAuthStateChange listener takes it from here.

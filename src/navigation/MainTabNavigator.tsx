@@ -3,15 +3,15 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
+import ProfileStackNavigator, { type ProfileStackParamList } from "./ProfileStackNavigator";
 import GamesScreen from "../screens/main/GamesScreen";
-import ProfileScreen from "../screens/main/ProfileScreen";
 import { colors } from "../constants/theme";
 
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Games: undefined;
   Venues: NavigatorScreenParams<VenuesStackParamList> | undefined;
-  Profile: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -42,7 +42,7 @@ export default function MainTabNavigator() {
       <Tab.Screen name="Home" component={HomeStackNavigator} />
       <Tab.Screen name="Games" component={GamesScreen} />
       <Tab.Screen name="Venues" component={VenuesStackNavigator} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );
 }

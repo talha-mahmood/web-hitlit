@@ -6,22 +6,24 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useVenueDetail } from "../../hooks/useVenueDetail";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { colors } from "../../constants/theme";
+import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type VenueDetailParams = { VenueDetail: { venueId: string } };
+type VenueDetailNav = NativeStackNavigationProp<VenuesStackParamList, "VenueDetail">;
 
 export default function VenueDetailScreen() {
   const { params } = useRoute<RouteProp<VenueDetailParams, "VenueDetail">>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<VenueDetailNav>();
   const { width } = useWindowDimensions();
   const [activeImage, setActiveImage] = useState(0);
 
@@ -148,10 +150,21 @@ export default function VenueDetailScreen() {
 
         <View className="mt-6">
           <Text className="text-ink font-semibold text-base mb-2">Courts</Text>
-          {venue.court.map((court) => (
-            <View
+          {venue.court.filter((c) => c.isactive).map((court) => (
+            <Pressable
               key={court.id}
-              className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-2"
+              onPress={() =>
+                navigation.navigate("SlotPicker", {
+                  courtId: court.id,
+                  courtName: court.name,
+                  pricePerHour: court.price_per_hour,
+                  venueName: venue.name,
+                  venueId: venue.id,
+                  venueStartTime: venue.start_time ?? "06:00:00",
+                  venueEndTime: venue.end_time ?? "23:00:00",
+                })
+              }
+              className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-2 active:bg-primary-light"
             >
               <View className="flex-1">
                 <Text className="text-ink font-medium">{court.name}</Text>
@@ -160,21 +173,13 @@ export default function VenueDetailScreen() {
                   {court.surface_type ? ` \u00b7 ${court.surface_type}` : ""}
                 </Text>
               </View>
-              <Text className="text-primary font-semibold">
-                Rs {court.price_per_hour}/hr
-              </Text>
-            </View>
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <Text className="text-primary font-semibold">Rs {court.price_per_hour}/hr</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              </View>
+            </Pressable>
           ))}
         </View>
-
-        <Pressable
-          className="bg-primary rounded-xl py-4 items-center mt-4"
-          onPress={() =>
-            Alert.alert("Coming soon", "Slot booking and checkout land in Phase 5.")
-          }
-        >
-          <Text className="text-white font-semibold text-base">Select a Court & Book</Text>
-        </Pressable>
       </View>
     </ScrollView>
   );

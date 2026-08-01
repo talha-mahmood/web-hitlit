@@ -1,4 +1,5 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -20,6 +21,7 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const profile = useProfileStore((s) => s.profile);
+  const insets = useSafeAreaInsets();
 
   const { data: sports } = useSports();
   const { data: venues, isLoading } = useVenues({});
@@ -32,30 +34,31 @@ export default function HomeScreen() {
     <FlatList
       className="flex-1 bg-white"
       ListHeaderComponent={
-        <View className="px-5 pt-14">
+        <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
           <Text className="text-2xl font-bold text-ink">
             Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
           </Text>
           <Text className="text-muted mt-1 mb-5">What are you playing today?</Text>
 
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={sports ?? []}
-            keyExtractor={(item) => item.id}
-            className="mb-6"
-            renderItem={({ item }) => (
-              <SportChip
-                label={item.name}
-                onPress={() =>
-                  navigation.navigate("Venues", {
-                    screen: "VenuesList",
-                    params: { sportId: item.id },
-                  })
-                }
-              />
-            )}
-          />
+          <View style={{ paddingVertical: 8, marginBottom: 16 }}>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={sports ?? []}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <SportChip
+                  label={item.name}
+                  onPress={() =>
+                    navigation.navigate("Venues", {
+                      screen: "VenuesList",
+                      params: { sportId: item.id },
+                    })
+                  }
+                />
+              )}
+            />
+          </View>
 
           <Text className="text-lg font-semibold text-ink mb-3">Popular venues</Text>
         </View>

@@ -1135,7 +1135,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_booked_slots: {
+        Args: { p_court_id: string; p_date: string }
+        Returns: {
+          end_time: string
+          start_time: string
+        }[]
+      }
     }
     Enums: {
       booking_payment_status_type: "paid" | "unpaid"
@@ -1320,3 +1326,4 @@ export const Constants = {
     },
   },
 } as const
+

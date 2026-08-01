@@ -34,7 +34,8 @@
         {
           "photosPermission": "PlayPals needs access to your photos so you can set a profile picture."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {

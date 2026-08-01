@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ type VenuesListNavigationProp = NativeStackNavigationProp<VenuesStackParamList, 
 export default function VenuesListScreen() {
   const route = useRoute<VenuesListRouteProp>();
   const navigation = useNavigation<VenuesListNavigationProp>();
+  const insets = useSafeAreaInsets();
 
   const [search, setSearch] = useState("");
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
@@ -34,7 +36,7 @@ export default function VenuesListScreen() {
   const toggleFavorite = useToggleFavoriteVenue();
 
   return (
-    <View className="flex-1 bg-white pt-14">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
         <Text className="text-2xl font-bold text-ink mb-4">Venues</Text>
         <View className="flex-row items-center border border-border rounded-xl px-3 mb-4">
@@ -48,22 +50,24 @@ export default function VenuesListScreen() {
         </View>
       </View>
 
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={sports ?? []}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
-        renderItem={({ item }) => (
-          <SportChip
-            label={item.name}
-            selected={selectedSportId === item.id}
-            onPress={() =>
-              setSelectedSportId((current) => (current === item.id ? undefined : item.id))
-            }
-          />
-        )}
-      />
+      <View style={{ paddingVertical: 8 }}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={sports ?? []}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+          renderItem={({ item }) => (
+            <SportChip
+              label={item.name}
+              selected={selectedSportId === item.id}
+              onPress={() =>
+                setSelectedSportId((current) => (current === item.id ? undefined : item.id))
+              }
+            />
+          )}
+        />
+      </View>
 
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
