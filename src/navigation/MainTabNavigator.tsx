@@ -4,12 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
 import ProfileStackNavigator, { type ProfileStackParamList } from "./ProfileStackNavigator";
-import GamesScreen from "../screens/main/GamesScreen";
+import GamesStackNavigator, { type GamesStackParamList } from "./GamesStackNavigator";
 import { colors } from "../constants/theme";
 
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
-  Games: undefined;
+  Games: NavigatorScreenParams<GamesStackParamList> | undefined;
   Venues: NavigatorScreenParams<VenuesStackParamList> | undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
@@ -40,7 +40,7 @@ export default function MainTabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStackNavigator} />
-      <Tab.Screen name="Games" component={GamesScreen} />
+      <Tab.Screen name="Games" component={GamesStackNavigator} />
       <Tab.Screen name="Venues" component={VenuesStackNavigator} />
       <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>
