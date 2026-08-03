@@ -356,6 +356,14 @@ export default function GameDetailScreen() {
           <Text className="text-base font-bold text-ink" numberOfLines={1}>{game.title}</Text>
           <Text className="text-muted text-sm">{game.sports?.name}</Text>
         </View>
+        {(isCreator || hasJoined) && (
+          <Pressable
+            onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
+            className="mr-2 p-1"
+          >
+            <Ionicons name="chatbubbles-outline" size={22} color={colors.ink} />
+          </Pressable>
+        )}
         {isCancelled && (
           <View className="bg-red-50 px-2 py-1 rounded-lg">
             <Text className="text-red-600 text-xs font-semibold">Cancelled</Text>

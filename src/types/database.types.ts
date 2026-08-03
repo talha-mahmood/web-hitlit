@@ -1199,6 +1199,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_old_game_messages: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
