@@ -3,6 +3,7 @@ import {
   fetchGames,
   fetchGameDetail,
   createGame,
+  updateGame,
   joinGame,
   leaveGame,
   cancelGame,
@@ -34,6 +35,17 @@ export function useCreateGame() {
   return useMutation({
     mutationFn: createGame,
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
+}
+
+export function useUpdateGame() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateGame,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["game", data.id] });
       qc.invalidateQueries({ queryKey: ["games"] });
     },
   });

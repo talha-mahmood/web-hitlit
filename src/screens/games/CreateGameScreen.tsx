@@ -21,101 +21,13 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
+import { SectionLabel, PillRow } from "../../components/GameFormControls";
+import { TIME_SLOTS, DAYS, DURATIONS, MAX_PLAYERS_OPTIONS, addMinutes } from "../../lib/gameFormHelpers";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
-
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function toLocalDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function getNext14Days(): { iso: string; label: string; day: string }[] {
-  const today = new Date();
-  return Array.from({ length: 14 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    return {
-      iso: toLocalDateStr(d),
-      label: String(d.getDate()),
-      day: d.toLocaleDateString("en-PK", { weekday: "short" }),
-    };
-  });
-}
-
-// Half-hour slots from 06:00 to 23:00
-function buildTimeSlots(): { label: string; value: string }[] {
-  const slots: { label: string; value: string }[] = [];
-  for (let h = 6; h <= 23; h++) {
-    for (const m of [0, 30]) {
-      if (h === 23 && m === 30) break;
-      const hh = String(h).padStart(2, "0");
-      const mm = String(m).padStart(2, "0");
-      const suffix = h < 12 ? "AM" : h === 12 ? "PM" : "PM";
-      const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      slots.push({ label: `${displayH}:${mm} ${suffix}`, value: `${hh}:${mm}` });
-    }
-  }
-  return slots;
-}
-
-const TIME_SLOTS = buildTimeSlots();
-const DAYS = getNext14Days();
-const DURATIONS = [1, 1.5, 2, 2.5, 3] as const;
-const MAX_PLAYERS_OPTIONS = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-
-function addMinutes(timeValue: string, minutes: number): string {
-  const [hh, mm] = timeValue.split(":").map(Number);
-  const total = hh * 60 + mm + minutes;
-  const nh = Math.floor(total / 60) % 24;
-  const nm = total % 60;
-  return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
-}
-
-// ── section label ─────────────────────────────────────────────────────────────
-
-function SectionLabel({ title, required }: { title: string; required?: boolean }) {
-  return (
-    <View className="flex-row items-center mb-2 mt-5">
-      <Text className="text-ink font-semibold text-sm">{title}</Text>
-      {required && <Text className="text-red-500 ml-1">*</Text>}
-    </View>
-  );
-}
-
-// ── pill selector ─────────────────────────────────────────────────────────────
-
-function PillRow<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { label: string; value: T }[];
-  value: T | null;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-      {options.map((o) => {
-        const selected = value === o.value;
-        return (
-          <Pressable
-            key={o.value}
-            onPress={() => onChange(o.value)}
-            className={`px-4 py-2 rounded-full border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
-          >
-            <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-              {o.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 // ── main component ────────────────────────────────────────────────────────────
 

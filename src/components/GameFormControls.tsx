@@ -1,0 +1,39 @@
+import { View, Text, Pressable } from "react-native";
+
+export function SectionLabel({ title, required }: { title: string; required?: boolean }) {
+  return (
+    <View className="flex-row items-center mb-2 mt-5">
+      <Text className="text-ink font-semibold text-sm">{title}</Text>
+      {required && <Text className="text-red-500 ml-1">*</Text>}
+    </View>
+  );
+}
+
+export function PillRow<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; value: T }[];
+  value: T | null;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+      {options.map((o) => {
+        const selected = value === o.value;
+        return (
+          <Pressable
+            key={o.value}
+            onPress={() => onChange(o.value)}
+            className={`px-4 py-2 rounded-full border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+          >
+            <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}

@@ -356,6 +356,14 @@ export default function GameDetailScreen() {
           <Text className="text-base font-bold text-ink" numberOfLines={1}>{game.title}</Text>
           <Text className="text-muted text-sm">{game.sports?.name}</Text>
         </View>
+        {isCreator && !isCancelled && !hasEnded && (
+          <Pressable
+            onPress={() => navigation.navigate("EditGame", { gameId: game.id })}
+            className="mr-2 p-1"
+          >
+            <Ionicons name="create-outline" size={22} color={colors.ink} />
+          </Pressable>
+        )}
         {(isCreator || hasJoined) && (
           <Pressable
             onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}

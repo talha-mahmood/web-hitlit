@@ -38,6 +38,23 @@ export type CreateGameParams = {
   entryFee: number;
 };
 
+// Sport is intentionally excluded — changing it post-creation would strand
+// players who joined expecting a specific sport, so it's fixed after creation.
+export type UpdateGameParams = {
+  gameId: string;
+  title: string;
+  venueId: string | null;
+  gameDate: string;
+  startTime: string;
+  endTime: string;
+  maxPlayers: number;
+  skillLevel: Database["public"]["Enums"]["game_skill_level_type"] | null;
+  visibility: Database["public"]["Enums"]["game_visibility_type"];
+  gender: Database["public"]["Enums"]["game_gender_type"];
+  description: string;
+  entryFee: number;
+};
+
 const LIST_SELECT =
   "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id)";
 
@@ -122,6 +139,30 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
   });
   if (joinError) throw new Error(joinError.message);
 
+  return data;
+}
+
+export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
+  const { data, error } = await supabase
+    .from("games")
+    .update({
+      title: params.title,
+      venue_id: params.venueId,
+      game_date: params.gameDate,
+      start_time: params.startTime,
+      end_time: params.endTime,
+      max_players: params.maxPlayers,
+      skill_level: params.skillLevel,
+      visibility: params.visibility,
+      gender: params.gender,
+      description: params.description || null,
+      entry_fee: params.entryFee,
+      pay_and_join: params.entryFee > 0,
+    })
+    .eq("id", params.gameId)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
   return data;
 }
 
