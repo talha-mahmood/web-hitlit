@@ -26,6 +26,7 @@ export type CreateGameParams = {
   creatorId: string;
   title: string;
   sportId: string;
+  venueId: string | null;
   gameDate: string;
   startTime: string;
   endTime: string;
@@ -81,6 +82,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       creator_id: params.creatorId,
       title: params.title,
       sport_id: params.sportId,
+      venue_id: params.venueId,
       game_date: params.gameDate,
       start_time: params.startTime,
       end_time: params.endTime,

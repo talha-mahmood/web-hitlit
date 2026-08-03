@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
+import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
@@ -127,6 +128,8 @@ export default function CreateGameScreen() {
 
   const [title, setTitle] = useState("");
   const [sportId, setSportId] = useState<string | null>(null);
+  const [venueId, setVenueId] = useState<string | null>(null);
+  const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: sportId ?? undefined });
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
@@ -136,6 +139,11 @@ export default function CreateGameScreen() {
   const [gender, setGender] = useState<Gender>("mixed");
   const [description, setDescription] = useState("");
   const [entryFee, setEntryFee] = useState("0");
+
+  const handleSportChange = (id: string) => {
+    setSportId(id);
+    setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
+  };
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -160,6 +168,7 @@ export default function CreateGameScreen() {
         creatorId: userId,
         title: title.trim(),
         sportId,
+        venueId,
         gameDate: selectedDate,
         startTime: `${startTime}:00`,
         endTime: `${endTimeValue}:00`,
@@ -229,7 +238,7 @@ export default function CreateGameScreen() {
             return (
               <Pressable
                 key={s.id}
-                onPress={() => setSportId(s.id)}
+                onPress={() => handleSportChange(s.id)}
                 className={`px-4 py-2 rounded-full border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
@@ -239,6 +248,59 @@ export default function CreateGameScreen() {
             );
           })}
         </View>
+
+        {/* Venue */}
+        <SectionLabel title="Venue" />
+        {!sportId ? (
+          <Text className="text-muted text-sm">Select a sport to see venues that offer it.</Text>
+        ) : venuesLoading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : !venues || venues.length === 0 ? (
+          <Text className="text-muted text-sm">No venues found for this sport yet.</Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            <Pressable
+              onPress={() => setVenueId(null)}
+              className={`px-4 py-3 rounded-xl border justify-center ${!venueId ? "bg-primary border-primary" : "bg-white border-border"}`}
+              style={{ width: 130 }}
+            >
+              <Text className={`text-sm font-semibold ${!venueId ? "text-white" : "text-ink"}`}>
+                No specific venue
+              </Text>
+              <Text className={`text-xs mt-0.5 ${!venueId ? "text-white" : "text-muted"}`}>
+                Decide later
+              </Text>
+            </Pressable>
+            {venues.map((v) => {
+              const selected = venueId === v.id;
+              return (
+                <Pressable
+                  key={v.id}
+                  onPress={() => setVenueId(v.id)}
+                  className={`px-4 py-3 rounded-xl border justify-center ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                  style={{ width: 150 }}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${selected ? "text-white" : "text-ink"}`}
+                    numberOfLines={1}
+                  >
+                    {v.name}
+                  </Text>
+                  <Text
+                    className={`text-xs mt-0.5 ${selected ? "text-white" : "text-muted"}`}
+                    numberOfLines={1}
+                  >
+                    {v.city ?? "—"}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
 
         {/* Date */}
         <SectionLabel title="Date" required />
