@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame } from "../../hooks/useGames";
+import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -47,17 +47,38 @@ function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Ion
   );
 }
 
-function PlayerAvatar({ name, avatar, isCreator }: { name: string | null; avatar: string | null; isCreator: boolean }) {
+function PlayerAvatar({
+  name,
+  avatar,
+  isCreator,
+  onRemove,
+}: {
+  name: string | null;
+  avatar: string | null;
+  isCreator: boolean;
+  onRemove?: () => void;
+}) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 64 }}>
-      {avatar ? (
-        <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
-      ) : (
-        <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
-          <Text className="text-primary font-bold text-base">{initials}</Text>
-        </View>
-      )}
+      <View>
+        {avatar ? (
+          <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
+            <Text className="text-primary font-bold text-base">{initials}</Text>
+          </View>
+        )}
+        {onRemove && (
+          <Pressable
+            onPress={onRemove}
+            hitSlop={8}
+            className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center border-2 border-white"
+          >
+            <Ionicons name="close" size={11} color="white" />
+          </Pressable>
+        )}
+      </View>
       {isCreator && (
         <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Host</Text>
@@ -81,6 +102,50 @@ function EmptySlot() {
   );
 }
 
+function PendingRequestRow({
+  name,
+  avatar,
+  onApprove,
+  onReject,
+  disabled,
+}: {
+  name: string | null;
+  avatar: string | null;
+  onApprove: () => void;
+  onReject: () => void;
+  disabled: boolean;
+}) {
+  const initials = (name ?? "?").charAt(0).toUpperCase();
+  return (
+    <View className="flex-row items-center py-3 border-b border-border" style={{ gap: 12 }}>
+      {avatar ? (
+        <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+      ) : (
+        <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+          <Text className="text-primary font-bold">{initials}</Text>
+        </View>
+      )}
+      <Text className="flex-1 text-ink font-medium text-sm" numberOfLines={1}>
+        {name ?? "Player"}
+      </Text>
+      <Pressable
+        onPress={onReject}
+        disabled={disabled}
+        className="border border-border rounded-lg px-3 py-1.5"
+      >
+        <Text className="text-muted text-xs font-semibold">Reject</Text>
+      </Pressable>
+      <Pressable
+        onPress={onApprove}
+        disabled={disabled}
+        className="bg-primary rounded-lg px-3 py-1.5"
+      >
+        <Text className="text-white text-xs font-semibold">Approve</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 // ── screen ────────────────────────────────────────────────────────────────────
 
 export default function GameDetailScreen() {
@@ -93,6 +158,9 @@ export default function GameDetailScreen() {
   const joinGame = useJoinGame();
   const leaveGame = useLeaveGame();
   const cancelGame = useCancelGame();
+  const approvePlayer = useApprovePlayer(params.gameId);
+  const rejectPlayer = useRejectPlayer(params.gameId);
+  const removePlayer = useRemovePlayer(params.gameId);
 
   if (isLoading) {
     return (
@@ -121,9 +189,14 @@ export default function GameDetailScreen() {
   const myPlayerRecord = userId
     ? game.game_players.find((p) => p.user_id === userId && p.status === "JOINED")
     : null;
+  const myPendingRecord = userId
+    ? game.game_players.find((p) => p.user_id === userId && p.status === "PENDING")
+    : null;
   const hasJoined = !!myPlayerRecord;
+  const hasRequested = !!myPendingRecord;
   const isOpen = game.status === "OPEN" || game.status === "FULL";
   const isCancelled = game.status === "CANCELLED";
+  const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
 
   const skillLabel = !game.skill_level ? "Any Level" :
     game.skill_level === "BEGINNER" ? "Beginner" :
@@ -136,20 +209,20 @@ export default function GameDetailScreen() {
   const handleJoin = () => {
     if (!userId) return;
     Alert.alert(
-      "Join Game",
+      "Request to Join",
       game.entry_fee > 0
-        ? `Entry fee: Rs ${game.entry_fee.toLocaleString()}. Pay at the venue. Confirm?`
-        : "Join this game for free?",
+        ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added. Send request?`
+        : "The host must approve your request before you're added. Send request?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Join",
+          text: "Send Request",
           onPress: () => {
             joinGame.mutate(
               { gameId: game.id, userId },
               {
                 onError: (err) =>
-                  Alert.alert("Error", err instanceof Error ? err.message : "Could not join. Try again."),
+                  Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
               }
             );
           },
@@ -178,6 +251,73 @@ export default function GameDetailScreen() {
     ]);
   };
 
+  const handleCancelRequest = () => {
+    if (!userId) return;
+    Alert.alert("Cancel Request", "Withdraw your request to join this game?", [
+      { text: "Keep Request", style: "cancel" },
+      {
+        text: "Withdraw",
+        style: "destructive",
+        onPress: () => {
+          leaveGame.mutate(
+            { gameId: game.id, userId },
+            {
+              onError: (err) =>
+                Alert.alert("Error", err instanceof Error ? err.message : "Could not withdraw. Try again."),
+            }
+          );
+        },
+      },
+    ]);
+  };
+
+  const handleApprove = (gamePlayerId: string, name: string | null) => {
+    approvePlayer.mutate(gamePlayerId, {
+      onError: (err) =>
+        Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "player"}.`),
+    });
+  };
+
+  const handleReject = (gamePlayerId: string, name: string | null) => {
+    Alert.alert(
+      "Reject Request",
+      `Reject ${name ?? "this player"}'s request to join?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reject",
+          style: "destructive",
+          onPress: () => {
+            rejectPlayer.mutate(gamePlayerId, {
+              onError: (err) =>
+                Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRemove = (gamePlayerId: string, name: string | null) => {
+    Alert.alert(
+      "Remove Player",
+      `Remove ${name ?? "this player"} from the game? They won't be able to rejoin without sending a new request.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            removePlayer.mutate(gamePlayerId, {
+              onError: (err) =>
+                Alert.alert("Error", err instanceof Error ? err.message : "Could not remove player."),
+            });
+          },
+        },
+      ]
+    );
+  };
+
   const handleCancel = () => {
     Alert.alert("Cancel Game", "This will cancel the game for all players. This cannot be undone.", [
       { text: "Keep", style: "cancel" },
@@ -196,6 +336,7 @@ export default function GameDetailScreen() {
   };
 
   const isBusy = joinGame.isPending || leaveGame.isPending || cancelGame.isPending;
+  const isApprovingOrRejecting = approvePlayer.isPending || rejectPlayer.isPending || removePlayer.isPending;
 
   return (
     <View className="flex-1 bg-white">
@@ -278,6 +419,11 @@ export default function GameDetailScreen() {
                 name={p.profiles?.full_name ?? null}
                 avatar={p.profiles?.avatar ?? null}
                 isCreator={p.user_id === game.creator_id}
+                onRemove={
+                  isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
+                    ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
+                    : undefined
+                }
               />
             ))}
             {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
@@ -285,6 +431,33 @@ export default function GameDetailScreen() {
             ))}
           </View>
         </View>
+
+        {/* Pending join requests — host only */}
+        {isCreator && pendingRequests.length > 0 && (
+          <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
+            <Text className="text-ink font-semibold text-sm mb-1">
+              Join Requests ({pendingRequests.length})
+            </Text>
+            <Text className="text-muted text-xs mb-2">
+              Approve players before they're added to the game.
+            </Text>
+            {pendingRequests.map((p) => (
+              <PendingRequestRow
+                key={p.id}
+                name={p.profiles?.full_name ?? null}
+                avatar={p.profiles?.avatar ?? null}
+                disabled={isApprovingOrRejecting || isFull}
+                onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
+                onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
+              />
+            ))}
+            {isFull && (
+              <Text className="text-orange-600 text-xs mt-2">
+                Game is full — reject remaining requests or remove a player to approve more.
+              </Text>
+            )}
+          </View>
+        )}
 
         {/* Host */}
         <View className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl p-4" style={{ gap: 12 }}>
@@ -328,6 +501,20 @@ export default function GameDetailScreen() {
             >
               <Text className="text-danger font-semibold">Leave Game</Text>
             </Pressable>
+          ) : hasRequested ? (
+            <View style={{ gap: 8 }}>
+              <View className="bg-orange-50 rounded-xl py-3 items-center">
+                <Text className="text-orange-600 font-semibold">
+                  Request Sent — Awaiting Host Approval
+                </Text>
+              </View>
+              <Pressable
+                onPress={handleCancelRequest}
+                className="border border-danger rounded-xl py-3 items-center"
+              >
+                <Text className="text-danger font-semibold">Cancel Request</Text>
+              </Pressable>
+            </View>
           ) : isFull ? (
             <View className="bg-gray-100 rounded-xl py-4 items-center">
               <Text className="text-muted font-semibold">Game is Full</Text>
@@ -336,8 +523,8 @@ export default function GameDetailScreen() {
             <Pressable onPress={handleJoin} className="bg-primary rounded-xl py-4 items-center">
               <Text className="text-white font-semibold text-base">
                 {game.entry_fee > 0
-                  ? `Join · Rs ${game.entry_fee.toLocaleString()}`
-                  : "Join Game — Free"}
+                  ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}`
+                  : "Request to Join"}
               </Text>
             </Pressable>
           )}

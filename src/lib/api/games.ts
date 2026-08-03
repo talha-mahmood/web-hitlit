@@ -118,10 +118,33 @@ export async function joinGame(gameId: string, userId: string): Promise<void> {
   const { error } = await supabase.from("game_players").insert({
     game_id: gameId,
     user_id: userId,
-    status: "JOINED",
-    joined_at: new Date().toISOString(),
+    status: "PENDING",
     payment_status: "PENDING",
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function approvePlayer(gamePlayerId: string): Promise<void> {
+  const { error } = await supabase
+    .from("game_players")
+    .update({ status: "JOINED", joined_at: new Date().toISOString() })
+    .eq("id", gamePlayerId);
+  if (error) throw new Error(error.message);
+}
+
+export async function rejectPlayer(gamePlayerId: string): Promise<void> {
+  const { error } = await supabase
+    .from("game_players")
+    .update({ status: "DECLINED" })
+    .eq("id", gamePlayerId);
+  if (error) throw new Error(error.message);
+}
+
+export async function removePlayer(gamePlayerId: string): Promise<void> {
+  const { error } = await supabase
+    .from("game_players")
+    .update({ status: "REMOVED" })
+    .eq("id", gamePlayerId);
   if (error) throw new Error(error.message);
 }
 
@@ -131,7 +154,7 @@ export async function leaveGame(gameId: string, userId: string): Promise<void> {
     .update({ status: "LEFT" })
     .eq("game_id", gameId)
     .eq("user_id", userId)
-    .eq("status", "JOINED");
+    .in("status", ["JOINED", "PENDING"]);
   if (error) throw new Error(error.message);
 }
 

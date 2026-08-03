@@ -6,6 +6,9 @@ import {
   joinGame,
   leaveGame,
   cancelGame,
+  approvePlayer,
+  rejectPlayer,
+  removePlayer,
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 
@@ -71,11 +74,34 @@ export function useCancelGame() {
   });
 }
 
-export function useMyGameStatus(gameId: string) {
-  const userId = useAuthStore((s) => s.session?.user.id);
-  const { data: game } = useGameDetail(gameId);
-  if (!userId || !game) return null;
-  return (
-    game.game_players.find((p) => p.user_id === userId && p.status === "JOINED") ?? null
-  );
+export function useApprovePlayer(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (gamePlayerId: string) => approvePlayer(gamePlayerId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["game", gameId] });
+      qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
+}
+
+export function useRejectPlayer(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (gamePlayerId: string) => rejectPlayer(gamePlayerId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["game", gameId] });
+    },
+  });
+}
+
+export function useRemovePlayer(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (gamePlayerId: string) => removePlayer(gamePlayerId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["game", gameId] });
+      qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
 }
