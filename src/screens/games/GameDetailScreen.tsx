@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
@@ -35,7 +37,17 @@ function formatTime(dateStr: string, timeStr: string): string {
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Ionicons>["name"]; label: string; value: string }) {
+function InfoRow({
+  icon,
+  label,
+  value,
+  action,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  value: string;
+  action?: React.ReactNode;
+}) {
   return (
     <View className="flex-row items-start py-3 border-b border-border" style={{ gap: 12 }}>
       <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
@@ -43,6 +55,7 @@ function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Ion
         <Text className="text-muted text-xs">{label}</Text>
         <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
       </View>
+      {action}
     </View>
   );
 }
@@ -153,6 +166,7 @@ export default function GameDetailScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
   const joinGame = useJoinGame();
@@ -339,6 +353,12 @@ export default function GameDetailScreen() {
     ]);
   };
 
+  const handleCopyGameCode = async () => {
+    await Clipboard.setStringAsync(game.game_code);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 1500);
+  };
+
   const isBusy = joinGame.isPending || leaveGame.isPending || cancelGame.isPending;
   const isApprovingOrRejecting = approvePlayer.isPending || rejectPlayer.isPending || removePlayer.isPending;
 
@@ -396,6 +416,30 @@ export default function GameDetailScreen() {
             <Text className="text-primary-dark font-semibold text-sm">Game Details</Text>
           </View>
           <View className="px-4">
+            <InfoRow
+              icon="pricetag-outline"
+              label="Game ID"
+              value={game.game_code}
+              action={
+                (isCreator || hasJoined) && (
+                  <Pressable
+                    onPress={handleCopyGameCode}
+                    hitSlop={8}
+                    className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-100"
+                    style={{ gap: 4 }}
+                  >
+                    <Ionicons
+                      name={codeCopied ? "checkmark" : "copy-outline"}
+                      size={14}
+                      color={codeCopied ? colors.primary : colors.muted}
+                    />
+                    <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
+                      {codeCopied ? "Copied" : "Copy"}
+                    </Text>
+                  </Pressable>
+                )
+              }
+            />
             <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
             <InfoRow
               icon="time-outline"

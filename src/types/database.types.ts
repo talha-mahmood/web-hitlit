@@ -504,6 +504,7 @@ export type Database = {
           description: string | null
           end_time: string
           entry_fee: number
+          game_code: string
           game_date: string
           game_type: Database["public"]["Enums"]["game_type_type"]
           gender: Database["public"]["Enums"]["game_gender_type"]
@@ -536,6 +537,7 @@ export type Database = {
           description?: string | null
           end_time: string
           entry_fee?: number
+          game_code?: string
           game_date: string
           game_type?: Database["public"]["Enums"]["game_type_type"]
           gender?: Database["public"]["Enums"]["game_gender_type"]
@@ -568,6 +570,7 @@ export type Database = {
           description?: string | null
           end_time?: string
           entry_fee?: number
+          game_code?: string
           game_date?: string
           game_type?: Database["public"]["Enums"]["game_type_type"]
           gender?: Database["public"]["Enums"]["game_gender_type"]
@@ -1201,6 +1204,7 @@ export type Database = {
     Functions: {
       delete_old_game_messages: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
+      generate_game_code: { Args: never; Returns: string }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
         Returns: {
