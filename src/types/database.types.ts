@@ -277,6 +277,70 @@ export type Database = {
           },
         ]
       }
+      game_history: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          game_date: string
+          game_id: string
+          id: string
+          role: string
+          sport_id: string | null
+          start_time: string | null
+          title: string | null
+          user_id: string
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          game_date: string
+          game_id: string
+          id?: string
+          role: string
+          sport_id?: string | null
+          start_time?: string | null
+          title?: string | null
+          user_id: string
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          game_date?: string
+          game_id?: string
+          id?: string
+          role?: string
+          sport_id?: string | null
+          start_time?: string | null
+          title?: string | null
+          user_id?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_history_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_history_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_invites: {
         Row: {
           created_at: string
@@ -1135,6 +1199,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_past_games: { Args: never; Returns: undefined }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
         Returns: {
@@ -1326,4 +1391,3 @@ export const Constants = {
     },
   },
 } as const
-

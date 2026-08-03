@@ -68,9 +68,9 @@ export async function fetchGames(filters: { sportId?: string } = {}): Promise<Ga
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  // Belt-and-suspenders: the DB-side cron job (expire_past_games) soft-deletes
-  // ended games every 10 minutes, but this filters out any that ended within
-  // that window so the list never shows something the user can't actually join.
+  // Belt-and-suspenders: the DB-side cron job (expire_past_games) archives and
+  // hard-deletes ended games every 10 minutes, but this filters out any that
+  // ended within that window so the list never shows something unjoinable.
   return ((data ?? []) as GameListItem[]).filter((g) => !hasGameEnded(g.game_date, g.end_time));
 }
 
