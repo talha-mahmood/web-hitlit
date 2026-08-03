@@ -44,6 +44,12 @@ const LIST_SELECT =
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, profiles(id, full_name, avatar))";
 
+// Games are stored as separate DATE + TIME columns with no timezone; the app is
+// Pakistan-only (see GameDetailScreen's time formatting), so treat them as +05:00.
+function hasGameEnded(gameDate: string, endTime: string): boolean {
+  return new Date(`${gameDate}T${endTime}+05:00`).getTime() < Date.now();
+}
+
 export async function fetchGames(filters: { sportId?: string } = {}): Promise<GameListItem[]> {
   const today = new Date().toISOString().split("T")[0];
   let query = supabase
@@ -62,7 +68,10 @@ export async function fetchGames(filters: { sportId?: string } = {}): Promise<Ga
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data ?? []) as GameListItem[];
+  // Belt-and-suspenders: the DB-side cron job (expire_past_games) soft-deletes
+  // ended games every 10 minutes, but this filters out any that ended within
+  // that window so the list never shows something the user can't actually join.
+  return ((data ?? []) as GameListItem[]).filter((g) => !hasGameEnded(g.game_date, g.end_time));
 }
 
 export async function fetchGameDetail(gameId: string): Promise<GameDetail> {

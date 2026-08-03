@@ -194,7 +194,11 @@ export default function GameDetailScreen() {
     : null;
   const hasJoined = !!myPlayerRecord;
   const hasRequested = !!myPendingRecord;
-  const isOpen = game.status === "OPEN" || game.status === "FULL";
+  // Belt-and-suspenders: the DB-side cron job (expire_past_games) flips status to
+  // COMPLETED every 10 minutes, but this hides the join/leave CTA immediately once
+  // the game's end time passes, without waiting on that job to run.
+  const hasEnded = new Date(`${game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
+  const isOpen = (game.status === "OPEN" || game.status === "FULL") && !hasEnded;
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
 
@@ -357,7 +361,12 @@ export default function GameDetailScreen() {
             <Text className="text-red-600 text-xs font-semibold">Cancelled</Text>
           </View>
         )}
-        {!isCancelled && isFull && (
+        {!isCancelled && hasEnded && (
+          <View className="bg-gray-100 px-2 py-1 rounded-lg">
+            <Text className="text-muted text-xs font-semibold">Ended</Text>
+          </View>
+        )}
+        {!isCancelled && !hasEnded && isFull && (
           <View className="bg-orange-50 px-2 py-1 rounded-lg">
             <Text className="text-orange-600 text-xs font-semibold">Full</Text>
           </View>
