@@ -13,7 +13,7 @@ import {
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 
-export function useGames(filters: { sportId?: string } = {}) {
+export function useGames(filters: { sportId?: string; search?: string } = {}) {
   return useQuery({
     queryKey: ["games", filters],
     queryFn: () => fetchGames(filters),

@@ -1,8 +1,8 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, TextInput, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useGames } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
@@ -148,11 +148,19 @@ export default function GamesListScreen() {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>();
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const { data: sports } = useSports();
-  const { data: games, isLoading, isRefetching, refetch } = useGames(
-    selectedSportId ? { sportId: selectedSportId } : {}
-  );
+  const { data: games, isLoading, isRefetching, refetch } = useGames({
+    sportId: selectedSportId,
+    search: debouncedSearch || undefined,
+  });
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
@@ -167,6 +175,26 @@ export default function GamesListScreen() {
           <Ionicons name="add" size={18} color="white" />
           <Text className="text-white font-semibold text-sm">Create</Text>
         </Pressable>
+      </View>
+
+      {/* Search by game name or game ID */}
+      <View className="px-5 mb-3">
+        <View className="flex-row items-center border border-border rounded-xl px-3" style={{ gap: 8 }}>
+          <Ionicons name="search-outline" size={18} color={colors.muted} />
+          <TextInput
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="Search by game name or game ID"
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="flex-1 py-2.5 text-ink text-sm"
+          />
+          {searchInput.length > 0 && (
+            <Pressable onPress={() => setSearchInput("")} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color={colors.border} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Sport filter chips */}
@@ -199,19 +227,29 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            <View className="items-center mt-16" style={{ gap: 12 }}>
-              <Ionicons name="tennisball-outline" size={48} color={colors.border} />
-              <Text className="text-ink font-semibold text-base">No games yet</Text>
-              <Text className="text-muted text-sm text-center px-8">
-                Be the first to create a game and invite players to join!
-              </Text>
-              <Pressable
-                onPress={() => navigation.navigate("CreateGame")}
-                className="bg-primary rounded-xl px-6 py-3 mt-2"
-              >
-                <Text className="text-white font-semibold">Create a Game</Text>
-              </Pressable>
-            </View>
+            debouncedSearch ? (
+              <View className="items-center mt-16" style={{ gap: 12 }}>
+                <Ionicons name="search-outline" size={48} color={colors.border} />
+                <Text className="text-ink font-semibold text-base">No games found</Text>
+                <Text className="text-muted text-sm text-center px-8">
+                  No games match "{debouncedSearch}". Try a different name or game ID.
+                </Text>
+              </View>
+            ) : (
+              <View className="items-center mt-16" style={{ gap: 12 }}>
+                <Ionicons name="tennisball-outline" size={48} color={colors.border} />
+                <Text className="text-ink font-semibold text-base">No games yet</Text>
+                <Text className="text-muted text-sm text-center px-8">
+                  Be the first to create a game and invite players to join!
+                </Text>
+                <Pressable
+                  onPress={() => navigation.navigate("CreateGame")}
+                  className="bg-primary rounded-xl px-6 py-3 mt-2"
+                >
+                  <Text className="text-white font-semibold">Create a Game</Text>
+                </Pressable>
+              </View>
+            )
           }
           renderItem={({ item }) => (
             <GameCard

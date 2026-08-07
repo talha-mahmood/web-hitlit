@@ -67,7 +67,15 @@ function hasGameEnded(gameDate: string, endTime: string): boolean {
   return new Date(`${gameDate}T${endTime}+05:00`).getTime() < Date.now();
 }
 
-export async function fetchGames(filters: { sportId?: string } = {}): Promise<GameListItem[]> {
+// PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
+// term containing them would otherwise malform the request — strip them.
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, " ").trim();
+}
+
+export async function fetchGames(
+  filters: { sportId?: string; search?: string } = {}
+): Promise<GameListItem[]> {
   const today = new Date().toISOString().split("T")[0];
   let query = supabase
     .from("games")
@@ -81,6 +89,11 @@ export async function fetchGames(filters: { sportId?: string } = {}): Promise<Ga
 
   if (filters.sportId) {
     query = query.eq("sport_id", filters.sportId);
+  }
+
+  const search = filters.search ? sanitizeSearchTerm(filters.search) : "";
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,game_code.ilike.%${search}%`);
   }
 
   const { data, error } = await query;
