@@ -14,6 +14,7 @@ import {
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
+import type { Database } from "../types/database.types";
 
 export function useGames(filters: { sportId?: string; search?: string } = {}) {
   const qc = useQueryClient();
@@ -108,8 +109,17 @@ export function useUpdateGame() {
 export function useJoinGame() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ gameId, userId }: { gameId: string; userId: string }) =>
-      joinGame(gameId, userId),
+    mutationFn: ({
+      gameId,
+      userId,
+      skillLevel,
+      location,
+    }: {
+      gameId: string;
+      userId: string;
+      skillLevel: Database["public"]["Enums"]["skill_level_type"];
+      location: string;
+    }) => joinGame(gameId, userId, skillLevel, location),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["game", vars.gameId] });
       qc.invalidateQueries({ queryKey: ["games"] });

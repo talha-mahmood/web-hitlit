@@ -13,6 +13,7 @@ import {
   removeMember,
 } from "../lib/api/squads";
 import { supabase } from "../lib/supabase";
+import type { Database } from "../types/database.types";
 
 export function useSquads(filters: { search?: string } = {}) {
   const qc = useQueryClient();
@@ -106,8 +107,17 @@ export function useUpdateSquad() {
 export function useJoinSquad() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ squadId, userId }: { squadId: string; userId: string }) =>
-      joinSquad(squadId, userId),
+    mutationFn: ({
+      squadId,
+      userId,
+      skillLevel,
+      location,
+    }: {
+      squadId: string;
+      userId: string;
+      skillLevel: Database["public"]["Enums"]["skill_level_type"];
+      location: string;
+    }) => joinSquad(squadId, userId, skillLevel, location),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["squad", vars.squadId] });
       qc.invalidateQueries({ queryKey: ["squads"] });

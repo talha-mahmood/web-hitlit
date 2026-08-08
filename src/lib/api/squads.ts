@@ -13,7 +13,7 @@ export type SquadDetail = SquadRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   squad_members: (Pick<
     SquadMemberRow,
-    "id" | "status" | "user_id" | "joined_at" | "role"
+    "id" | "status" | "user_id" | "joined_at" | "role" | "skill_level" | "location"
   > & {
     profiles: {
       id: string;
@@ -45,7 +45,7 @@ const LIST_SELECT =
   "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id)";
 
 const DETAIL_SELECT =
-  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, profiles(id, full_name, avatar, skill_level, city))";
+  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";
 
 // PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
 // term containing them would otherwise malform the request — strip them.
@@ -124,12 +124,19 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
   return data;
 }
 
-export async function joinSquad(squadId: string, userId: string): Promise<void> {
+export async function joinSquad(
+  squadId: string,
+  userId: string,
+  skillLevel: Database["public"]["Enums"]["skill_level_type"],
+  location: string
+): Promise<void> {
   const { error } = await supabase.from("squad_members").insert({
     squad_id: squadId,
     user_id: userId,
     role: "member",
     status: "PENDING",
+    skill_level: skillLevel,
+    location: location || null,
   });
   if (error) throw new Error(error.message);
 }

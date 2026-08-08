@@ -17,6 +17,8 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
+import JoinRequestModal from "../../components/JoinRequestModal";
+import type { Database } from "../../types/database.types";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadDetail">;
@@ -164,6 +166,7 @@ export default function SquadDetailScreen() {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   const { data: squad, isLoading, error } = useSquadDetail(params.squadId);
   const joinSquad = useJoinSquad();
@@ -209,24 +212,21 @@ export default function SquadDetailScreen() {
 
   const handleJoin = () => {
     if (!userId) return;
-    Alert.alert(
-      "Request to Join",
-      "The captain must approve your request before you're added. Send request?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Send Request",
-          onPress: () => {
-            joinSquad.mutate(
-              { squadId: squad.id, userId },
-              {
-                onError: (err) =>
-                  Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
-              }
-            );
-          },
-        },
-      ]
+    setShowJoinModal(true);
+  };
+
+  const handleSubmitJoinRequest = (
+    skillLevel: Database["public"]["Enums"]["skill_level_type"],
+    location: string
+  ) => {
+    if (!userId) return;
+    joinSquad.mutate(
+      { squadId: squad.id, userId, skillLevel, location },
+      {
+        onSuccess: () => setShowJoinModal(false),
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+      }
     );
   };
 
@@ -467,8 +467,8 @@ export default function SquadDetailScreen() {
                 key={m.id}
                 name={m.profiles?.full_name ?? null}
                 avatar={m.profiles?.avatar ?? null}
-                skill={m.profiles?.skill_level ?? null}
-                location={m.profiles?.city ?? null}
+                skill={m.skill_level ?? m.profiles?.skill_level ?? null}
+                location={m.location ?? m.profiles?.city ?? null}
                 disabled={isApprovingOrRejecting || isFull}
                 onApprove={() => handleApprove(m.id, m.profiles?.full_name ?? null)}
                 onReject={() => handleReject(m.id, m.profiles?.full_name ?? null)}
@@ -547,6 +547,15 @@ export default function SquadDetailScreen() {
           </Pressable>
         )}
       </View>
+
+      <JoinRequestModal
+        visible={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSubmit={handleSubmitJoinRequest}
+        submitting={joinSquad.isPending}
+        title="Request to Join"
+        subtitle="The captain must approve your request before you're added."
+      />
     </View>
   );
 }

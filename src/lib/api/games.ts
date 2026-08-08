@@ -16,7 +16,7 @@ export type GameDetail = GameRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   game_players: (Pick<
     GamePlayerRow,
-    "id" | "status" | "user_id" | "joined_at" | "payment_status"
+    "id" | "status" | "user_id" | "joined_at" | "payment_status" | "skill_level" | "location"
   > & {
     profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   })[];
@@ -59,7 +59,7 @@ const LIST_SELECT =
   "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id)";
 
 const DETAIL_SELECT =
-  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, profiles(id, full_name, avatar))";
+  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";
 
 // Games are stored as separate DATE + TIME columns with no timezone; the app is
 // Pakistan-only (see GameDetailScreen's time formatting), so treat them as +05:00.
@@ -179,12 +179,19 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
   return data;
 }
 
-export async function joinGame(gameId: string, userId: string): Promise<void> {
+export async function joinGame(
+  gameId: string,
+  userId: string,
+  skillLevel: Database["public"]["Enums"]["skill_level_type"],
+  location: string
+): Promise<void> {
   const { error } = await supabase.from("game_players").insert({
     game_id: gameId,
     user_id: userId,
     status: "PENDING",
     payment_status: "PENDING",
+    skill_level: skillLevel,
+    location: location || null,
   });
   if (error) throw new Error(error.message);
 }

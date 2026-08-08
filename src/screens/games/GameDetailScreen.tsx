@@ -10,6 +10,8 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
+import JoinRequestModal from "../../components/JoinRequestModal";
+import type { Database } from "../../types/database.types";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -115,46 +117,62 @@ function EmptySlot() {
   );
 }
 
+function skillLevelLabel(skill: string | null): string {
+  if (!skill) return "Not specified";
+  return skill.charAt(0).toUpperCase() + skill.slice(1);
+}
+
 function PendingRequestRow({
   name,
   avatar,
+  skill,
+  location,
   onApprove,
   onReject,
   disabled,
 }: {
   name: string | null;
   avatar: string | null;
+  skill: string | null;
+  location: string | null;
   onApprove: () => void;
   onReject: () => void;
   disabled: boolean;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
-    <View className="flex-row items-center py-3 border-b border-border" style={{ gap: 12 }}>
-      {avatar ? (
-        <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-      ) : (
-        <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-          <Text className="text-primary font-bold">{initials}</Text>
+    <View className="py-3 border-b border-border">
+      <View className="flex-row items-center" style={{ gap: 12 }}>
+        {avatar ? (
+          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+        ) : (
+          <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+            <Text className="text-primary font-bold">{initials}</Text>
+          </View>
+        )}
+        <View className="flex-1">
+          <Text className="text-ink font-medium text-sm" numberOfLines={1}>
+            {name ?? "Player"}
+          </Text>
+          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+            {skillLevelLabel(skill)} · {location ?? "Location not specified"}
+          </Text>
         </View>
-      )}
-      <Text className="flex-1 text-ink font-medium text-sm" numberOfLines={1}>
-        {name ?? "Player"}
-      </Text>
-      <Pressable
-        onPress={onReject}
-        disabled={disabled}
-        className="border border-border rounded-lg px-3 py-1.5"
-      >
-        <Text className="text-muted text-xs font-semibold">Reject</Text>
-      </Pressable>
-      <Pressable
-        onPress={onApprove}
-        disabled={disabled}
-        className="bg-primary rounded-lg px-3 py-1.5"
-      >
-        <Text className="text-white text-xs font-semibold">Approve</Text>
-      </Pressable>
+        <Pressable
+          onPress={onReject}
+          disabled={disabled}
+          className="border border-border rounded-lg px-3 py-1.5"
+        >
+          <Text className="text-muted text-xs font-semibold">Reject</Text>
+        </Pressable>
+        <Pressable
+          onPress={onApprove}
+          disabled={disabled}
+          className="bg-primary rounded-lg px-3 py-1.5"
+        >
+          <Text className="text-white text-xs font-semibold">Approve</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -167,6 +185,7 @@ export default function GameDetailScreen() {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
   const joinGame = useJoinGame();
@@ -226,26 +245,21 @@ export default function GameDetailScreen() {
 
   const handleJoin = () => {
     if (!userId) return;
-    Alert.alert(
-      "Request to Join",
-      game.entry_fee > 0
-        ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added. Send request?`
-        : "The host must approve your request before you're added. Send request?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Send Request",
-          onPress: () => {
-            joinGame.mutate(
-              { gameId: game.id, userId },
-              {
-                onError: (err) =>
-                  Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
-              }
-            );
-          },
-        },
-      ]
+    setShowJoinModal(true);
+  };
+
+  const handleSubmitJoinRequest = (
+    skillLevel: Database["public"]["Enums"]["skill_level_type"],
+    location: string
+  ) => {
+    if (!userId) return;
+    joinGame.mutate(
+      { gameId: game.id, userId, skillLevel, location },
+      {
+        onSuccess: () => setShowJoinModal(false),
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+      }
     );
   };
 
@@ -515,6 +529,8 @@ export default function GameDetailScreen() {
                 key={p.id}
                 name={p.profiles?.full_name ?? null}
                 avatar={p.profiles?.avatar ?? null}
+                skill={p.skill_level}
+                location={p.location}
                 disabled={isApprovingOrRejecting || isFull}
                 onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
                 onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
@@ -599,6 +615,19 @@ export default function GameDetailScreen() {
           )}
         </View>
       )}
+
+      <JoinRequestModal
+        visible={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSubmit={handleSubmitJoinRequest}
+        submitting={joinGame.isPending}
+        title="Request to Join"
+        subtitle={
+          game.entry_fee > 0
+            ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.`
+            : "The host must approve your request before you're added."
+        }
+      />
     </View>
   );
 }
