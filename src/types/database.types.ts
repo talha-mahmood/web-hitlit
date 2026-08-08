@@ -951,15 +951,63 @@ export type Database = {
           },
         ]
       }
+      squad_messages: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          message: string
+          sender_id: string
+          squad_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+          squad_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+          squad_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_messages_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       squads: {
         Row: {
           created_at: string
           deleted_at: string | null
           description: string | null
           id: string
+          location: string | null
           max_players: number | null
           min_players: number | null
           name: string
+          skill_level: Database["public"]["Enums"]["skill_level_type"] | null
+          squad_code: string
           squad_owner_id: string
           updated_at: string
         }
@@ -968,9 +1016,12 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           max_players?: number | null
           min_players?: number | null
           name: string
+          skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          squad_code?: string
           squad_owner_id: string
           updated_at?: string
         }
@@ -979,9 +1030,12 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           max_players?: number | null
           min_players?: number | null
           name?: string
+          skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          squad_code?: string
           squad_owner_id?: string
           updated_at?: string
         }
@@ -1203,8 +1257,10 @@ export type Database = {
     }
     Functions: {
       delete_old_game_messages: { Args: never; Returns: undefined }
+      delete_old_squad_messages: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
       generate_game_code: { Args: never; Returns: string }
+      generate_squad_code: { Args: never; Returns: string }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
         Returns: {
@@ -1237,7 +1293,12 @@ export type Database = {
       payment_status_type: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED"
       profile_type: "owner" | "user"
       skill_level_type: "beginner" | "intermediate" | "expert"
-      squad_member_status_type: "ACTIVE" | "LEFT" | "REMOVED"
+      squad_member_status_type:
+        | "ACTIVE"
+        | "LEFT"
+        | "REMOVED"
+        | "PENDING"
+        | "DECLINED"
       squad_role_type: "captain" | "member"
     }
     CompositeTypes: {
@@ -1391,7 +1452,13 @@ export const Constants = {
       payment_status_type: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
       profile_type: ["owner", "user"],
       skill_level_type: ["beginner", "intermediate", "expert"],
-      squad_member_status_type: ["ACTIVE", "LEFT", "REMOVED"],
+      squad_member_status_type: [
+        "ACTIVE",
+        "LEFT",
+        "REMOVED",
+        "PENDING",
+        "DECLINED",
+      ],
       squad_role_type: ["captain", "member"],
     },
   },
