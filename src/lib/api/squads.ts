@@ -168,12 +168,13 @@ export async function leaveSquad(squadId: string, userId: string): Promise<void>
   if (error) throw new Error(error.message);
 }
 
-// Squads aren't time-bound like games (no date/status lifecycle), so
-// "disbanding" is a soft delete rather than a status transition.
+// Hard delete, not a status transition — mirrors how games are hard-deleted
+// on expiry. A soft delete (deleted_at) would make the row instantly fail
+// non-owner members' SELECT policy, and Realtime only delivers a change
+// event to a subscriber if they could still see the row afterward — so
+// disbanding wouldn't propagate live to anyone but the owner. squad_members
+// and squad_messages cascade-delete; games.squad_id is SET NULL.
 export async function disbandSquad(squadId: string): Promise<void> {
-  const { error } = await supabase
-    .from("squads")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", squadId);
+  const { error } = await supabase.from("squads").delete().eq("id", squadId);
   if (error) throw new Error(error.message);
 }
