@@ -21,6 +21,7 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import type { Database } from "../../types/database.types";
 import type { SquadDetail } from "../../lib/api/squads";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
+import LocationPickerField from "../../components/LocationPickerField";
 
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
@@ -109,13 +110,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
 
         {/* Location */}
         <SectionLabel title="Location" />
-        <TextInput
-          value={location}
-          onChangeText={setLocation}
-          placeholder="e.g. DHA Phase 6, Lahore"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
-          maxLength={120}
-        />
+        <LocationPickerField value={location} onChange={setLocation} />
 
         {/* Description */}
         <SectionLabel title="Description" />

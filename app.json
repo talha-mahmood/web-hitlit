@@ -35,6 +35,12 @@
           "photosPermission": "PlayPals needs access to your photos so you can set a profile picture."
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "PlayPals needs your location to set your squad's location automatically."
+        }
+      ],
       "@react-native-google-signin/google-signin"
     ],
     "extra": {

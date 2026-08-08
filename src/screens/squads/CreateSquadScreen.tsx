@@ -20,6 +20,7 @@ import { colors } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
+import LocationPickerField from "../../components/LocationPickerField";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -116,13 +117,7 @@ export default function CreateSquadScreen() {
 
         {/* Location */}
         <SectionLabel title="Location" />
-        <TextInput
-          value={location}
-          onChangeText={setLocation}
-          placeholder="e.g. DHA Phase 6, Lahore"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
-          maxLength={120}
-        />
+        <LocationPickerField value={location} onChange={setLocation} />
 
         {/* Description */}
         <SectionLabel title="Description" />
