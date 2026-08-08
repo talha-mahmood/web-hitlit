@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchGames,
@@ -12,6 +13,7 @@ import {
   removePlayer,
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
+import { supabase } from "../lib/supabase";
 
 export function useGames(filters: { sportId?: string; search?: string } = {}) {
   return useQuery({
@@ -22,12 +24,35 @@ export function useGames(filters: { sportId?: string; search?: string } = {}) {
 }
 
 export function useGameDetail(gameId: string) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["game", gameId],
     queryFn: () => fetchGameDetail(gameId),
     staleTime: 30_000,
     retry: 1,
   });
+
+  // A join request, approval, etc. is a game_players row change made by
+  // someone else's device — without this, the host only sees it after
+  // manually leaving and re-entering the screen (staleTime alone doesn't
+  // trigger a refetch on its own).
+  useEffect(() => {
+    const channel = supabase
+      .channel(`game_players:${gameId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "game_players", filter: `game_id=eq.${gameId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["game", gameId] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [gameId, qc]);
+
+  return query;
 }
 
 export function useCreateGame() {

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchSquads,
@@ -11,6 +12,7 @@ import {
   rejectMember,
   removeMember,
 } from "../lib/api/squads";
+import { supabase } from "../lib/supabase";
 
 export function useSquads(filters: { search?: string } = {}) {
   return useQuery({
@@ -21,12 +23,34 @@ export function useSquads(filters: { search?: string } = {}) {
 }
 
 export function useSquadDetail(squadId: string) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["squad", squadId],
     queryFn: () => fetchSquadDetail(squadId),
     staleTime: 30_000,
     retry: 1,
   });
+
+  // A join request, approval, etc. is a squad_members row change made by
+  // someone else's device — without this, the captain only sees it after
+  // manually leaving and re-entering the screen.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`squad_members:${squadId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "squad_members", filter: `squad_id=eq.${squadId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["squad", squadId] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [squadId, qc]);
+
+  return query;
 }
 
 export function useCreateSquad() {
