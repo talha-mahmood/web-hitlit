@@ -16,11 +16,33 @@ import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
 
 export function useGames(filters: { sportId?: string; search?: string } = {}) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["games", filters],
     queryFn: () => fetchGames(filters),
     staleTime: 30_000,
   });
+
+  // A game being created, cancelled, or expiring off the list (cron
+  // hard-delete) should show up immediately for anyone browsing — without
+  // this the list only updates on pull-to-refresh or the 30s staleTime.
+  useEffect(() => {
+    const channel = supabase
+      .channel("games:list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["games"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  return query;
 }
 
 export function useGameDetail(gameId: string) {
@@ -32,16 +54,23 @@ export function useGameDetail(gameId: string) {
     retry: 1,
   });
 
-  // A join request, approval, etc. is a game_players row change made by
-  // someone else's device — without this, the host only sees it after
-  // manually leaving and re-entering the screen (staleTime alone doesn't
-  // trigger a refetch on its own).
+  // A join request, approval, the game itself being cancelled/edited/
+  // expiring, etc. — all row changes made by someone else's device or the
+  // cron job. Without this the viewer only sees it after manually leaving
+  // and re-entering the screen (staleTime alone doesn't trigger a refetch).
   useEffect(() => {
     const channel = supabase
       .channel(`game_players:${gameId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "game_players", filter: `game_id=eq.${gameId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["game", gameId] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games", filter: `id=eq.${gameId}` },
         () => {
           qc.invalidateQueries({ queryKey: ["game", gameId] });
         }

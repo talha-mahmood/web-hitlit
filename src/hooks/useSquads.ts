@@ -15,11 +15,33 @@ import {
 import { supabase } from "../lib/supabase";
 
 export function useSquads(filters: { search?: string } = {}) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["squads", filters],
     queryFn: () => fetchSquads(filters),
     staleTime: 30_000,
   });
+
+  // A squad being created or disbanded should show up (or disappear)
+  // immediately for anyone browsing — without this the list only updates
+  // on pull-to-refresh or the 30s staleTime.
+  useEffect(() => {
+    const channel = supabase
+      .channel("squads:list")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "squads" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["squads"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
+  return query;
 }
 
 export function useSquadDetail(squadId: string) {
@@ -31,15 +53,22 @@ export function useSquadDetail(squadId: string) {
     retry: 1,
   });
 
-  // A join request, approval, etc. is a squad_members row change made by
-  // someone else's device — without this, the captain only sees it after
-  // manually leaving and re-entering the screen.
+  // A join request, approval, the squad itself being edited/disbanded, etc.
+  // — all row changes made by someone else's device. Without this the
+  // viewer only sees it after manually leaving and re-entering the screen.
   useEffect(() => {
     const channel = supabase
       .channel(`squad_members:${squadId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "squad_members", filter: `squad_id=eq.${squadId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["squad", squadId] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "squads", filter: `id=eq.${squadId}` },
         () => {
           qc.invalidateQueries({ queryKey: ["squad", squadId] });
         }
