@@ -3,11 +3,13 @@ import type { Database } from "../../types/database.types";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 type GamePlayerRow = Database["public"]["Tables"]["game_players"]["Row"];
+type TournamentTeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"];
 
 export type GameListItem = GameRow & {
   sports: { id: string; name: string } | null;
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   game_players: { id: string; status: GamePlayerRow["status"]; user_id: string }[];
+  tournament_teams: { id: string; status: TournamentTeamRow["status"] }[];
 };
 
 export type GameDetail = GameRow & {
@@ -62,7 +64,7 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id)";
+  "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id), tournament_teams(id, status)";
 
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";

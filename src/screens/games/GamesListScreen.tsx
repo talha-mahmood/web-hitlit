@@ -58,9 +58,13 @@ function GameCard({ game, onPress, currentUserId }: {
   onPress: () => void;
   currentUserId?: string;
 }) {
+  const isTournament = game.game_type === "TOURNAMENT";
   const joined = game.game_players.filter((p) => p.status === "JOINED");
+  const activeTeams = game.tournament_teams.filter((t) => t.status !== "REJECTED");
+  const requiredTeams = game.number_of_teams ?? 0;
   const spotsLeft = game.max_players - joined.length;
-  const isFull = game.status === "FULL" || spotsLeft <= 0;
+  const teamsLeft = requiredTeams - activeTeams.length;
+  const isFull = game.status === "FULL" || (isTournament ? teamsLeft <= 0 : spotsLeft <= 0);
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
   const skillStyle = skill ? SKILL_COLORS[skill] : null;
@@ -106,7 +110,11 @@ function GameCard({ game, onPress, currentUserId }: {
             </View>
           ) : (
             <View className="bg-green-50 px-2 py-0.5 rounded-full">
-              <Text className="text-primary text-xs font-medium">{spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left</Text>
+              <Text className="text-primary text-xs font-medium">
+                {isTournament
+                  ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
+                  : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+              </Text>
             </View>
           )}
         </View>
@@ -125,9 +133,9 @@ function GameCard({ game, onPress, currentUserId }: {
             </Text>
           </View>
           <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Ionicons name="people-outline" size={13} color={colors.muted} />
+            <Ionicons name={isTournament ? "flag-outline" : "people-outline"} size={13} color={colors.muted} />
             <Text className="text-muted text-sm">
-              {joined.length}/{game.max_players}
+              {isTournament ? `${activeTeams.length}/${requiredTeams || "—"} teams` : `${joined.length}/${game.max_players}`}
             </Text>
           </View>
         </View>
