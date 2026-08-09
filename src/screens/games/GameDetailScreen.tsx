@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
+import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -198,6 +199,12 @@ export default function GameDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
+  // Only meaningful once `game` has loaded and turned out to be a tournament —
+  // "" keeps the query/realtime subscription off for regular games and while
+  // still loading (see useTournamentTeams: both are no-ops on a falsy gameId).
+  const { data: tournamentTeams } = useTournamentTeams(
+    game?.game_type === "TOURNAMENT" ? params.gameId : ""
+  );
   const joinGame = useJoinGame();
   const leaveGame = useLeaveGame();
   const cancelGame = useCancelGame();
@@ -246,6 +253,17 @@ export default function GameDetailScreen() {
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
   const isTournament = game.game_type === "TOURNAMENT";
+  // Tournament participation lives entirely in tournament_team_members, not
+  // game_players — a captain or regular team member never gets a game_players
+  // row, so hasJoined alone would miss them for chat/copy-ID access.
+  const isTournamentParticipant =
+    isTournament &&
+    !!userId &&
+    (tournamentTeams ?? []).some(
+      (t) =>
+        t.status !== "REJECTED" &&
+        t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
+    );
 
   const skillLabel = !game.skill_level ? "Any Level" :
     game.skill_level === "BEGINNER" ? "Beginner" :
@@ -415,7 +433,7 @@ export default function GameDetailScreen() {
             <Ionicons name="create-outline" size={22} color={colors.ink} />
           </Pressable>
         )}
-        {(isCreator || hasJoined) && (
+        {(isCreator || hasJoined || isTournamentParticipant) && (
           <Pressable
             onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
             className="mr-2 p-1"
@@ -454,7 +472,7 @@ export default function GameDetailScreen() {
               label={isTournament ? "Tournament ID" : "Game ID"}
               value={game.game_code}
               action={
-                (isCreator || hasJoined) && (
+                (isCreator || hasJoined || isTournamentParticipant) && (
                   <Pressable
                     onPress={handleCopyGameCode}
                     hitSlop={8}
