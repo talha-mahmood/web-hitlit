@@ -72,10 +72,13 @@ function GameCard({ game, onPress, currentUserId }: {
 }) {
   const isTournament = game.game_type === "TOURNAMENT";
   const joined = game.game_players.filter((p) => p.status === "JOINED");
-  const activeTeams = game.tournament_teams.filter((t) => t.status !== "REJECTED");
+  // Only teams the host has actually approved count toward the tournament's
+  // roster — a team that's still forming or awaiting approval hasn't secured
+  // a slot yet, so it shouldn't move the "X/Y teams" count.
+  const approvedTeams = game.tournament_teams.filter((t) => t.status === "APPROVED");
   const requiredTeams = game.number_of_teams ?? 0;
   const spotsLeft = game.max_players - joined.length;
-  const teamsLeft = requiredTeams - activeTeams.length;
+  const teamsLeft = requiredTeams - approvedTeams.length;
   const isFull = game.status === "FULL" || (isTournament ? teamsLeft <= 0 : spotsLeft <= 0);
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
@@ -151,7 +154,7 @@ function GameCard({ game, onPress, currentUserId }: {
           <View className="flex-row items-center" style={{ gap: 4 }}>
             <Ionicons name={isTournament ? "flag-outline" : "people-outline"} size={13} color={colors.muted} />
             <Text className="text-muted text-sm">
-              {isTournament ? `${activeTeams.length}/${requiredTeams || "—"} teams` : `${joined.length}/${game.max_players}`}
+              {isTournament ? `${approvedTeams.length}/${requiredTeams || "—"} teams` : `${joined.length}/${game.max_players}`}
             </Text>
           </View>
         </View>
