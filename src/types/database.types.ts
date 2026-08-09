@@ -519,7 +519,9 @@ export type Database = {
           maximum_age: number | null
           min_players: number
           minimum_age: number | null
+          number_of_teams: number | null
           pay_and_join: boolean
+          players_per_team: number | null
           skill_level:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null
@@ -552,7 +554,9 @@ export type Database = {
           maximum_age?: number | null
           min_players?: number
           minimum_age?: number | null
+          number_of_teams?: number | null
           pay_and_join?: boolean
+          players_per_team?: number | null
           skill_level?:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null
@@ -585,7 +589,9 @@ export type Database = {
           maximum_age?: number | null
           min_players?: number
           minimum_age?: number | null
+          number_of_teams?: number | null
           pay_and_join?: boolean
+          players_per_team?: number | null
           skill_level?:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null
@@ -1061,6 +1067,102 @@ export type Database = {
           },
         ]
       }
+      tournament_team_members: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          joined_at: string | null
+          status: Database["public"]["Enums"]["game_player_status_type"]
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          joined_at?: string | null
+          status?: Database["public"]["Enums"]["game_player_status_type"]
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          joined_at?: string | null
+          status?: Database["public"]["Enums"]["game_player_status_type"]
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_teams: {
+        Row: {
+          captain_id: string
+          created_at: string
+          deleted_at: string | null
+          game_id: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["tournament_team_status_type"]
+          updated_at: string
+        }
+        Insert: {
+          captain_id: string
+          created_at?: string
+          deleted_at?: string | null
+          game_id: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["tournament_team_status_type"]
+          updated_at?: string
+        }
+        Update: {
+          captain_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          game_id?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["tournament_team_status_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_facilities: {
         Row: {
           created_at: string
@@ -1312,6 +1414,11 @@ export type Database = {
         | "PENDING"
         | "DECLINED"
       squad_role_type: "captain" | "member"
+      tournament_team_status_type:
+        | "FORMING"
+        | "PENDING_HOST_APPROVAL"
+        | "APPROVED"
+        | "REJECTED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1472,6 +1579,12 @@ export const Constants = {
         "DECLINED",
       ],
       squad_role_type: ["captain", "member"],
+      tournament_team_status_type: [
+        "FORMING",
+        "PENDING_HOST_APPROVAL",
+        "APPROVED",
+        "REJECTED",
+      ],
     },
   },
 } as const

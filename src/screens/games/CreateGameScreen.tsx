@@ -48,6 +48,8 @@ export default function CreateGameScreen() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
   const [maxPlayers, setMaxPlayers] = useState<number>(10);
+  const [numberOfTeams, setNumberOfTeams] = useState("");
+  const [playersPerTeam, setPlayersPerTeam] = useState("");
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [visibility, setVisibility] = useState<Visibility>("public");
   const [gender, setGender] = useState<Gender>("mixed");
@@ -58,6 +60,8 @@ export default function CreateGameScreen() {
     setSportId(id);
     setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
   };
+
+  const isTournament = gameType === "TOURNAMENT";
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -74,6 +78,13 @@ export default function CreateGameScreen() {
       return;
     }
 
+    const teams = parseInt(numberOfTeams, 10) || 0;
+    const perTeam = parseInt(playersPerTeam, 10) || 0;
+    if (isTournament && (teams < 2 || perTeam < 1)) {
+      Alert.alert("Missing Info", "Please enter a number of teams (2+) and players per team.");
+      return;
+    }
+
     const endTimeValue = addMinutes(startTime, Math.round(duration * 60));
     const fee = parseInt(entryFee, 10) || 0;
 
@@ -86,13 +97,17 @@ export default function CreateGameScreen() {
         gameDate: selectedDate,
         startTime: `${startTime}:00`,
         endTime: `${endTimeValue}:00`,
-        maxPlayers,
+        // Tournament capacity is teams × players-per-team; regular games use
+        // the Max Players picker directly.
+        maxPlayers: isTournament ? teams * perTeam : maxPlayers,
         skillLevel,
         visibility,
         gender,
         description: description.trim(),
         entryFee: fee,
         gameType,
+        numberOfTeams: isTournament ? teams : null,
+        playersPerTeam: isTournament ? perTeam : null,
       });
       navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
@@ -286,24 +301,54 @@ export default function CreateGameScreen() {
           onChange={(v) => setDuration(parseFloat(v))}
         />
 
-        {/* Max Players */}
-        <SectionLabel title="Max Players" />
-        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-          {MAX_PLAYERS_OPTIONS.map((n) => {
-            const selected = maxPlayers === n;
-            return (
-              <Pressable
-                key={n}
-                onPress={() => setMaxPlayers(n)}
-                className={`w-12 py-2 rounded-xl border items-center ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
-              >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                  {n}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* Max Players (regular) / Teams config (tournament) */}
+        {isTournament ? (
+          <>
+            <SectionLabel title="Number of Teams" required />
+            <TextInput
+              value={numberOfTeams}
+              onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
+              keyboardType="numeric"
+              placeholder="e.g. 8"
+              className="border border-border rounded-xl px-4 py-3 text-ink"
+              maxLength={3}
+            />
+
+            <SectionLabel title="Players per Team" required />
+            <TextInput
+              value={playersPerTeam}
+              onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
+              keyboardType="numeric"
+              placeholder="e.g. 11"
+              className="border border-border rounded-xl px-4 py-3 text-ink"
+              maxLength={2}
+            />
+            <Text className="text-muted text-xs mt-1">
+              A player must first form (or join) a team with the required number of
+              members — the team is then submitted to you as host for approval.
+            </Text>
+          </>
+        ) : (
+          <>
+            <SectionLabel title="Max Players" />
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {MAX_PLAYERS_OPTIONS.map((n) => {
+                const selected = maxPlayers === n;
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => setMaxPlayers(n)}
+                    className={`w-12 py-2 rounded-xl border items-center ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      {n}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         {/* Skill Level */}
         <SectionLabel title="Skill Level" />

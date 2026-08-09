@@ -11,6 +11,7 @@ import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
@@ -234,6 +235,7 @@ export default function GameDetailScreen() {
   const isOpen = (game.status === "OPEN" || game.status === "FULL") && !hasEnded;
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
+  const isTournament = game.game_type === "TOURNAMENT";
 
   const skillLabel = !game.skill_level ? "Any Level" :
     game.skill_level === "BEGINNER" ? "Beginner" :
@@ -485,63 +487,69 @@ export default function GameDetailScreen() {
           </View>
         )}
 
-        {/* Players */}
-        <View className="mx-4 mt-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-ink font-semibold text-sm">
-              Players ({joinedPlayers.length}/{game.max_players})
-            </Text>
-            <Text className="text-muted text-sm">
-              {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
-            </Text>
-          </View>
-          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {joinedPlayers.map((p) => (
-              <PlayerAvatar
-                key={p.id}
-                name={p.profiles?.full_name ?? null}
-                avatar={p.profiles?.avatar ?? null}
-                isCreator={p.user_id === game.creator_id}
-                onRemove={
-                  isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
-                    ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
-                    : undefined
-                }
-              />
-            ))}
-            {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
-              <EmptySlot key={`empty-${i}`} />
-            ))}
-          </View>
-        </View>
+        {/* Players (regular games) / Teams (tournaments) */}
+        {isTournament ? (
+          <TournamentTeamsSection game={game} />
+        ) : (
+          <>
+            <View className="mx-4 mt-4">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-ink font-semibold text-sm">
+                  Players ({joinedPlayers.length}/{game.max_players})
+                </Text>
+                <Text className="text-muted text-sm">
+                  {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
+                </Text>
+              </View>
+              <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+                {joinedPlayers.map((p) => (
+                  <PlayerAvatar
+                    key={p.id}
+                    name={p.profiles?.full_name ?? null}
+                    avatar={p.profiles?.avatar ?? null}
+                    isCreator={p.user_id === game.creator_id}
+                    onRemove={
+                      isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
+                        ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
+                        : undefined
+                    }
+                  />
+                ))}
+                {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
+                  <EmptySlot key={`empty-${i}`} />
+                ))}
+              </View>
+            </View>
 
-        {/* Pending join requests — host only */}
-        {isCreator && pendingRequests.length > 0 && (
-          <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
-            <Text className="text-ink font-semibold text-sm mb-1">
-              Join Requests ({pendingRequests.length})
-            </Text>
-            <Text className="text-muted text-xs mb-2">
-              Approve players before they're added to the game.
-            </Text>
-            {pendingRequests.map((p) => (
-              <PendingRequestRow
-                key={p.id}
-                name={p.profiles?.full_name ?? null}
-                avatar={p.profiles?.avatar ?? null}
-                skill={p.skill_level}
-                location={p.location}
-                disabled={isApprovingOrRejecting || isFull}
-                onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
-                onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
-              />
-            ))}
-            {isFull && (
-              <Text className="text-orange-600 text-xs mt-2">
-                Game is full — reject remaining requests or remove a player to approve more.
-              </Text>
+            {/* Pending join requests — host only */}
+            {isCreator && pendingRequests.length > 0 && (
+              <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
+                <Text className="text-ink font-semibold text-sm mb-1">
+                  Join Requests ({pendingRequests.length})
+                </Text>
+                <Text className="text-muted text-xs mb-2">
+                  Approve players before they're added to the game.
+                </Text>
+                {pendingRequests.map((p) => (
+                  <PendingRequestRow
+                    key={p.id}
+                    name={p.profiles?.full_name ?? null}
+                    avatar={p.profiles?.avatar ?? null}
+                    skill={p.skill_level}
+                    location={p.location}
+                    disabled={isApprovingOrRejecting || isFull}
+                    onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
+                    onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
+                  />
+                ))}
+                {isFull && (
+                  <Text className="text-orange-600 text-xs mt-2">
+                    Game is full — reject remaining requests or remove a player to approve more.
+                  </Text>
+                )}
+              </View>
             )}
-          </View>
+          </>
         )}
 
         {/* Host */}
@@ -567,8 +575,9 @@ export default function GameDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* CTA */}
-      {isOpen && (
+      {/* CTA — for tournaments, non-host actions (create/join a team) live
+          inline in TournamentTeamsSection instead of a single bottom button */}
+      {isOpen && (isCreator || !isTournament) && (
         <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-6">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />

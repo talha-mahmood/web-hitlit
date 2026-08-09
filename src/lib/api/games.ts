@@ -37,6 +37,9 @@ export type CreateGameParams = {
   description: string;
   entryFee: number;
   gameType: Database["public"]["Enums"]["game_type_type"];
+  // Only meaningful when gameType is TOURNAMENT.
+  numberOfTeams: number | null;
+  playersPerTeam: number | null;
 };
 
 // Sport is intentionally excluded — changing it post-creation would strand
@@ -54,6 +57,8 @@ export type UpdateGameParams = {
   gender: Database["public"]["Enums"]["game_gender_type"];
   description: string;
   entryFee: number;
+  numberOfTeams: number | null;
+  playersPerTeam: number | null;
 };
 
 const LIST_SELECT =
@@ -143,6 +148,8 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       entry_fee: params.entryFee,
       status: "OPEN",
       game_type: params.gameType,
+      number_of_teams: params.numberOfTeams,
+      players_per_team: params.playersPerTeam,
       bring_equipment: false,
       cost_shared: false,
       pay_and_join: params.entryFee > 0,
@@ -179,6 +186,8 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
       gender: params.gender,
       description: params.description || null,
       entry_fee: params.entryFee,
+      number_of_teams: params.numberOfTeams,
+      players_per_team: params.playersPerTeam,
       pay_and_join: params.entryFee > 0,
     })
     .eq("id", params.gameId)

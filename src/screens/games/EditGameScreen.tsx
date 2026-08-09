@@ -59,7 +59,10 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
   const [selectedDate, setSelectedDate] = useState(game.game_date);
   const [startTime, setStartTime] = useState(toHHMM(game.start_time));
   const [duration, setDuration] = useState(diffHours(toHHMM(game.start_time), toHHMM(game.end_time)));
+  const isTournament = game.game_type === "TOURNAMENT";
   const [maxPlayers, setMaxPlayers] = useState(game.max_players);
+  const [numberOfTeams, setNumberOfTeams] = useState(String(game.number_of_teams ?? ""));
+  const [playersPerTeam, setPlayersPerTeam] = useState(String(game.players_per_team ?? ""));
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(game.skill_level);
   const [visibility, setVisibility] = useState<Visibility>(game.visibility);
   const [gender, setGender] = useState<Gender>(game.gender);
@@ -71,7 +74,14 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       Alert.alert("Missing Info", "Please enter a game title.");
       return;
     }
-    if (maxPlayers < minPlayers) {
+
+    const teams = parseInt(numberOfTeams, 10) || 0;
+    const perTeam = parseInt(playersPerTeam, 10) || 0;
+    if (isTournament && (teams < 2 || perTeam < 1)) {
+      Alert.alert("Missing Info", "Please enter a number of teams (2+) and players per team.");
+      return;
+    }
+    if (!isTournament && maxPlayers < minPlayers) {
       Alert.alert(
         "Too Few Slots",
         `${minPlayers} player${minPlayers !== 1 ? "s" : ""} already joined — max players can't go below that.`
@@ -90,12 +100,14 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         gameDate: selectedDate,
         startTime: `${startTime}:00`,
         endTime: `${endTimeValue}:00`,
-        maxPlayers,
+        maxPlayers: isTournament ? teams * perTeam : maxPlayers,
         skillLevel,
         visibility,
         gender,
         description: description.trim(),
         entryFee: fee,
+        numberOfTeams: isTournament ? teams : null,
+        playersPerTeam: isTournament ? perTeam : null,
       });
       navigation.goBack();
     } catch (err) {
@@ -228,32 +240,58 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           onChange={(v) => setDuration(parseFloat(v))}
         />
 
-        {/* Max Players */}
-        <SectionLabel title="Max Players" />
-        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-          {MAX_PLAYERS_OPTIONS.map((n) => {
-            const selected = maxPlayers === n;
-            const disabled = n < minPlayers;
-            return (
-              <Pressable
-                key={n}
-                onPress={() => !disabled && setMaxPlayers(n)}
-                disabled={disabled}
-                className={`w-12 py-2 rounded-xl border items-center ${
-                  selected ? "bg-primary border-primary" : disabled ? "bg-gray-50 border-border" : "bg-white border-border"
-                }`}
-              >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
-                  {n}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {minPlayers > 0 && (
-          <Text className="text-muted text-xs mt-1">
-            {minPlayers} player{minPlayers !== 1 ? "s" : ""} already joined
-          </Text>
+        {/* Max Players (regular) / Teams config (tournament) */}
+        {isTournament ? (
+          <>
+            <SectionLabel title="Number of Teams" required />
+            <TextInput
+              value={numberOfTeams}
+              onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
+              keyboardType="numeric"
+              placeholder="e.g. 8"
+              className="border border-border rounded-xl px-4 py-3 text-ink"
+              maxLength={3}
+            />
+
+            <SectionLabel title="Players per Team" required />
+            <TextInput
+              value={playersPerTeam}
+              onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
+              keyboardType="numeric"
+              placeholder="e.g. 11"
+              className="border border-border rounded-xl px-4 py-3 text-ink"
+              maxLength={2}
+            />
+          </>
+        ) : (
+          <>
+            <SectionLabel title="Max Players" />
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {MAX_PLAYERS_OPTIONS.map((n) => {
+                const selected = maxPlayers === n;
+                const disabled = n < minPlayers;
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => !disabled && setMaxPlayers(n)}
+                    disabled={disabled}
+                    className={`w-12 py-2 rounded-xl border items-center ${
+                      selected ? "bg-primary border-primary" : disabled ? "bg-gray-50 border-border" : "bg-white border-border"
+                    }`}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
+                      {n}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {minPlayers > 0 && (
+              <Text className="text-muted text-xs mt-1">
+                {minPlayers} player{minPlayers !== 1 ? "s" : ""} already joined
+              </Text>
+            )}
+          </>
         )}
 
         {/* Skill Level */}
