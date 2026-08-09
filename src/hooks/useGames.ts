@@ -34,12 +34,22 @@ export function useGames(
   // A game being created, cancelled, or expiring off the list (cron
   // hard-delete) should show up immediately for anyone browsing — without
   // this the list only updates on pull-to-refresh or the 30s staleTime.
+  // A tournament's "teams left" count on its card is also derived from
+  // tournament_teams, so a team being approved/rejected/removed anywhere
+  // needs to invalidate the list too, not just changes to games itself.
   useEffect(() => {
     const channel = supabase
       .channel(uniqueChannelName("games:list"))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "games" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["games"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_teams" },
         () => {
           qc.invalidateQueries({ queryKey: ["games"] });
         }
