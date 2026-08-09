@@ -105,6 +105,17 @@ export async function leaveTeam(teamId: string, userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// Captain-only: submit a full team to the tournament host for approval
+// (or resubmit after a rejection). The DB enforces that the caller is the
+// captain and that the team is actually full before allowing this.
+export async function submitTeamForApproval(teamId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_teams")
+    .update({ status: "PENDING_HOST_APPROVAL" })
+    .eq("id", teamId);
+  if (error) throw new Error(error.message);
+}
+
 // Host-only actions: approve/reject a team once it's full and awaiting them.
 export async function approveTeam(teamId: string): Promise<void> {
   const { error } = await supabase

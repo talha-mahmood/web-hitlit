@@ -9,6 +9,7 @@ import {
   useRejectTeamMember,
   useRemoveTeamMember,
   useLeaveTeam,
+  useSubmitTeam,
   useApproveTeam,
   useRejectTeam,
 } from "../../hooks/useTournamentTeams";
@@ -89,6 +90,7 @@ function TeamCard({
   onApproveMember,
   onRejectMember,
   onRemoveMember,
+  onSubmitTeam,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -100,6 +102,7 @@ function TeamCard({
   onApproveMember: (memberId: string, name: string | null) => void;
   onRejectMember: (memberId: string, name: string | null) => void;
   onRemoveMember: (memberId: string, name: string | null) => void;
+  onSubmitTeam: () => void;
 }) {
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const pendingMembers = team.tournament_team_members.filter((m) => m.status === "PENDING");
@@ -108,6 +111,8 @@ function TeamCard({
     ? team.tournament_team_members.find((m) => m.user_id === userId)
     : undefined;
   const isTeamFull = requiredSize > 0 && joinedMembers.length >= requiredSize;
+  const isRosterEditable = team.status === "FORMING" || team.status === "REJECTED";
+  const playersNeeded = Math.max(requiredSize - joinedMembers.length, 0);
   const badge = TEAM_STATUS_BADGE[team.status];
 
   return (
@@ -132,7 +137,7 @@ function TeamCard({
             avatar={m.profiles?.avatar ?? null}
             isCaptain={m.user_id === team.captain_id}
             onRemove={
-              isCaptain && m.user_id !== team.captain_id && !disabled
+              isCaptain && m.user_id !== team.captain_id && !disabled && isRosterEditable
                 ? () => onRemoveMember(m.id, m.profiles?.full_name ?? null)
                 : undefined
             }
@@ -141,7 +146,7 @@ function TeamCard({
       </View>
 
       {/* Captain's own pending requests for this team */}
-      {isCaptain && pendingMembers.length > 0 && (
+      {isCaptain && isRosterEditable && pendingMembers.length > 0 && (
         <View className="mt-3 pt-3 border-t border-border">
           <Text className="text-ink font-medium text-xs mb-2">
             Join Requests ({pendingMembers.length})
@@ -175,19 +180,53 @@ function TeamCard({
         </View>
       )}
 
+      {team.status === "PENDING_HOST_APPROVAL" && (
+        <View className="mt-3 bg-orange-50 rounded-lg py-2.5 items-center">
+          <Text className="text-orange-600 text-xs font-semibold">
+            Request Pending — awaiting host approval
+          </Text>
+        </View>
+      )}
+
+      {team.status === "APPROVED" && (
+        <View className="mt-3 bg-green-50 rounded-lg py-2.5 items-center">
+          <Text className="text-green-700 text-xs font-semibold">
+            Approved — this team is in the tournament
+          </Text>
+        </View>
+      )}
+
+      {team.status === "REJECTED" && (
+        <Text className="text-danger text-xs mt-2">
+          Rejected by the tournament host{isCaptain ? " — fix your roster and resubmit below." : "."}
+        </Text>
+      )}
+
       {/* This team's own CTA */}
-      {!isHost && team.status !== "REJECTED" && (
+      {!isHost && isRosterEditable && (
         <View className="mt-3">
-          {myMembership?.status === "JOINED" ? (
-            !isCaptain && (
-              <Pressable
-                onPress={onLeave}
-                disabled={disabled}
-                className="border border-danger rounded-lg py-2 items-center"
-              >
-                <Text className="text-danger text-xs font-semibold">Leave Team</Text>
-              </Pressable>
-            )
+          {isCaptain ? (
+            <Pressable
+              onPress={onSubmitTeam}
+              disabled={disabled || !isTeamFull}
+              className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-600" : "bg-gray-200"}`}
+            >
+              <Text className={`text-xs font-semibold ${isTeamFull ? "text-white" : "text-muted"}`}>
+                {isTeamFull
+                  ? team.status === "REJECTED"
+                    ? "Resubmit to Tournament Host"
+                    : "Submit Team to Tournament Host"
+                  : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
+              </Text>
+            </Pressable>
+          ) : myMembership?.status === "JOINED" ? (
+            <Pressable
+              onPress={onLeave}
+              disabled={disabled}
+              className="border border-danger rounded-lg py-2 items-center"
+            >
+              <Text className="text-danger text-xs font-semibold">Leave Team</Text>
+            </Pressable>
           ) : myMembership?.status === "PENDING" ? (
             <Text className="text-orange-600 text-xs font-medium text-center">
               Request sent — awaiting captain approval
@@ -220,6 +259,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const rejectTeamMember = useRejectTeamMember(game.id);
   const removeTeamMember = useRemoveTeamMember(game.id);
   const leaveTeam = useLeaveTeam(game.id);
+  const submitTeam = useSubmitTeam(game.id);
   const approveTeam = useApproveTeam(game.id);
   const rejectTeam = useRejectTeam(game.id);
 
@@ -232,14 +272,18 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const requiredTeams = game.number_of_teams ?? 0;
 
   // A rejected team doesn't count against the tournament's team slots, and
-  // its members are free to form/join a different team.
+  // its non-captain members are free to form/join a different team — but a
+  // captain always "owns" their team regardless of status, since they should
+  // fix its roster and resubmit rather than abandon it for a new one.
   const activeTeams = teams.filter((t) => t.status !== "REJECTED");
   const myTeam = userId
-    ? activeTeams.find((t) =>
-        t.tournament_team_members.some(
+    ? teams.find((t) => {
+        if (t.captain_id === userId) return true;
+        if (t.status === "REJECTED") return false;
+        return t.tournament_team_members.some(
           (m) => m.user_id === userId && (m.status === "JOINED" || m.status === "PENDING")
-        )
-      )
+        );
+      })
     : undefined;
   const canCreateTeam = !isHost && !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
   const teamsAwaitingHost = isHost ? teams.filter((t) => t.status === "PENDING_HOST_APPROVAL") : [];
@@ -251,6 +295,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     rejectTeamMember.isPending ||
     removeTeamMember.isPending ||
     leaveTeam.isPending ||
+    submitTeam.isPending ||
     approveTeam.isPending ||
     rejectTeam.isPending;
 
@@ -300,6 +345,24 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           }),
       },
     ]);
+  };
+
+  const handleSubmitTeam = (teamId: string, name: string, isResubmit: boolean) => {
+    Alert.alert(
+      isResubmit ? "Resubmit Team" : "Submit Team",
+      `Send "${name}" to the tournament host for approval?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: isResubmit ? "Resubmit" : "Submit",
+          onPress: () =>
+            submitTeam.mutate(teamId, {
+              onError: (err) =>
+                Alert.alert("Error", err instanceof Error ? err.message : "Could not submit team."),
+            }),
+        },
+      ]
+    );
   };
 
   const handleRemoveMember = (memberId: string, name: string | null) => {
@@ -419,6 +482,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onApproveMember={handleApproveMember}
               onRejectMember={handleRejectMember}
               onRemoveMember={handleRemoveMember}
+              onSubmitTeam={() => handleSubmitTeam(team.id, team.name, team.status === "REJECTED")}
             />
           ))
         )}
