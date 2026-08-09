@@ -3,19 +3,20 @@ import type { Database } from "../../types/database.types";
 
 type TeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"];
 type TeamMemberRow = Database["public"]["Tables"]["tournament_team_members"]["Row"];
+type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
 export type TournamentTeam = TeamRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   tournament_team_members: (Pick<
     TeamMemberRow,
-    "id" | "status" | "user_id" | "joined_at"
+    "id" | "status" | "user_id" | "joined_at" | "skill_level" | "location"
   > & {
     profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   })[];
 };
 
 const TEAM_SELECT =
-  "*, profiles!tournament_teams_captain_id_fkey(id, full_name, avatar), tournament_team_members(id, status, user_id, joined_at, profiles(id, full_name, avatar))";
+  "*, profiles!tournament_teams_captain_id_fkey(id, full_name, avatar), tournament_team_members(id, status, user_id, joined_at, skill_level, location, profiles(id, full_name, avatar))";
 
 export async function fetchTeamsForTournament(gameId: string): Promise<TournamentTeam[]> {
   const { data, error } = await supabase
@@ -52,11 +53,18 @@ export async function createTeam(
   return data;
 }
 
-export async function requestToJoinTeam(teamId: string, userId: string): Promise<void> {
+export async function requestToJoinTeam(
+  teamId: string,
+  userId: string,
+  skillLevel: SkillLevel,
+  location: string
+): Promise<void> {
   const { error } = await supabase.from("tournament_team_members").insert({
     team_id: teamId,
     user_id: userId,
     status: "PENDING",
+    skill_level: skillLevel,
+    location: location || null,
   });
   if (error) throw new Error(error.message);
 }

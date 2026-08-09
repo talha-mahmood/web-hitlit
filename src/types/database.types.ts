@@ -1073,6 +1073,8 @@ export type Database = {
           deleted_at: string | null
           id: string
           joined_at: string | null
+          location: string | null
+          skill_level: Database["public"]["Enums"]["skill_level_type"] | null
           status: Database["public"]["Enums"]["game_player_status_type"]
           team_id: string
           updated_at: string
@@ -1083,6 +1085,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           joined_at?: string | null
+          location?: string | null
+          skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           team_id: string
           updated_at?: string
@@ -1093,6 +1097,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           joined_at?: string | null
+          location?: string | null
+          skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           team_id?: string
           updated_at?: string

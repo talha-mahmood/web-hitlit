@@ -12,6 +12,9 @@ import {
   rejectTeam,
 } from "../lib/api/tournamentTeams";
 import { supabase } from "../lib/supabase";
+import type { Database } from "../types/database.types";
+
+type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
 export function useTournamentTeams(gameId: string) {
   const qc = useQueryClient();
@@ -62,8 +65,17 @@ export function useCreateTeam(gameId: string) {
 export function useRequestToJoinTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ teamId, userId }: { teamId: string; userId: string }) =>
-      requestToJoinTeam(teamId, userId),
+    mutationFn: ({
+      teamId,
+      userId,
+      skillLevel,
+      location,
+    }: {
+      teamId: string;
+      userId: string;
+      skillLevel: SkillLevel;
+      location: string;
+    }) => requestToJoinTeam(teamId, userId, skillLevel, location),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

@@ -15,8 +15,17 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
+import JoinRequestModal from "../../components/JoinRequestModal";
+import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
+
+type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
+
+function skillLevelLabel(skill: string | null): string {
+  if (!skill) return "Not specified";
+  return skill.charAt(0).toUpperCase() + skill.slice(1);
+}
 
 const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting" },
@@ -139,9 +148,14 @@ function TeamCard({
           </Text>
           {pendingMembers.map((m) => (
             <View key={m.id} className="flex-row items-center py-1.5" style={{ gap: 8 }}>
-              <Text className="flex-1 text-ink text-sm" numberOfLines={1}>
-                {m.profiles?.full_name ?? "Player"}
-              </Text>
+              <View className="flex-1">
+                <Text className="text-ink text-sm" numberOfLines={1}>
+                  {m.profiles?.full_name ?? "Player"}
+                </Text>
+                <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                  {skillLevelLabel(m.skill_level)} · {m.location ?? "Location not specified"}
+                </Text>
+              </View>
               <Pressable
                 onPress={() => onRejectMember(m.id, m.profiles?.full_name ?? null)}
                 disabled={disabled}
@@ -197,6 +211,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const isHost = game.creator_id === userId;
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [joinRequestTeamId, setJoinRequestTeamId] = useState<string | null>(null);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
@@ -239,11 +254,14 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     approveTeam.isPending ||
     rejectTeam.isPending;
 
-  const handleRequestJoin = (teamId: string) => {
-    if (!userId) return;
+  const handleSubmitJoinRequest = (skillLevel: SkillLevel, location: string) => {
+    if (!userId || !joinRequestTeamId) return;
     requestToJoinTeam.mutate(
-      { teamId, userId },
-      { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request.") }
+      { teamId: joinRequestTeamId, userId, skillLevel, location },
+      {
+        onSuccess: () => setJoinRequestTeamId(null),
+        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
+      }
     );
   };
 
@@ -396,7 +414,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               userId={userId}
               isHost={isHost}
               disabled={disabled}
-              onRequestJoin={() => handleRequestJoin(team.id)}
+              onRequestJoin={() => setJoinRequestTeamId(team.id)}
               onLeave={() => handleLeave(team.id)}
               onApproveMember={handleApproveMember}
               onRejectMember={handleRejectMember}
@@ -420,6 +438,15 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             }
           );
         }}
+      />
+
+      <JoinRequestModal
+        visible={!!joinRequestTeamId}
+        onClose={() => setJoinRequestTeamId(null)}
+        submitting={requestToJoinTeam.isPending}
+        title="Request to Join Team"
+        subtitle="The team captain will see this and can approve or reject your request."
+        onSubmit={handleSubmitJoinRequest}
       />
     </View>
   );
