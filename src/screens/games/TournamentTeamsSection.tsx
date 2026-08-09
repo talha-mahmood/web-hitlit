@@ -91,6 +91,7 @@ function TeamCard({
   onRejectMember,
   onRemoveMember,
   onSubmitTeam,
+  onRemoveTeam,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -103,6 +104,7 @@ function TeamCard({
   onRejectMember: (memberId: string, name: string | null) => void;
   onRemoveMember: (memberId: string, name: string | null) => void;
   onSubmitTeam: () => void;
+  onRemoveTeam: () => void;
 }) {
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const pendingMembers = team.tournament_team_members.filter((m) => m.status === "PENDING");
@@ -189,10 +191,21 @@ function TeamCard({
       )}
 
       {team.status === "APPROVED" && (
-        <View className="mt-3 bg-green-50 rounded-lg py-2.5 items-center">
-          <Text className="text-green-700 text-xs font-semibold">
-            Approved — this team is in the tournament
-          </Text>
+        <View className="mt-3" style={{ gap: 8 }}>
+          <View className="bg-green-50 rounded-lg py-2.5 items-center">
+            <Text className="text-green-700 text-xs font-semibold">
+              Approved — this team is in the tournament
+            </Text>
+          </View>
+          {isHost && (
+            <Pressable
+              onPress={onRemoveTeam}
+              disabled={disabled}
+              className="border border-danger rounded-lg py-2 items-center"
+            >
+              <Text className="text-danger text-xs font-semibold">Remove Team</Text>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -406,6 +419,27 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     ]);
   };
 
+  // Same underlying action as handleRejectTeam (status -> REJECTED), but for
+  // a team that was already given a slot — the host is revoking it, not
+  // reviewing a submission, so the confirmation wording differs.
+  const handleRemoveApprovedTeam = (teamId: string, name: string) => {
+    Alert.alert(
+      "Remove Team",
+      `Remove "${name}" from the tournament? This frees up their slot for another team.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () =>
+            rejectTeam.mutate(teamId, {
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove team."),
+            }),
+        },
+      ]
+    );
+  };
+
   return (
     <View>
       <View className="mx-4 mt-4 flex-row items-center justify-between mb-3">
@@ -483,6 +517,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onRejectMember={handleRejectMember}
               onRemoveMember={handleRemoveMember}
               onSubmitTeam={() => handleSubmitTeam(team.id, team.name, team.status === "REJECTED")}
+              onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
             />
           ))
         )}
