@@ -255,13 +255,24 @@ export default function GameDetailScreen() {
   const isTournament = game.game_type === "TOURNAMENT";
   // Tournament participation lives entirely in tournament_team_members, not
   // game_players — a captain or regular team member never gets a game_players
-  // row, so hasJoined alone would miss them for chat/copy-ID access.
-  const isTournamentParticipant =
+  // row, so hasJoined alone would miss them for copy-ID/chat access.
+  const isTournamentTeamMember =
     isTournament &&
     !!userId &&
     (tournamentTeams ?? []).some(
       (t) =>
         t.status !== "REJECTED" &&
+        t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
+    );
+  // Chat, specifically, only opens up once the host has actually approved the
+  // member's team — being on a still-forming or awaiting-approval team isn't
+  // "part of the tournament" yet.
+  const isApprovedTournamentParticipant =
+    isTournament &&
+    !!userId &&
+    (tournamentTeams ?? []).some(
+      (t) =>
+        t.status === "APPROVED" &&
         t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
     );
 
@@ -433,7 +444,7 @@ export default function GameDetailScreen() {
             <Ionicons name="create-outline" size={22} color={colors.ink} />
           </Pressable>
         )}
-        {(isCreator || hasJoined || isTournamentParticipant) && (
+        {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
           <Pressable
             onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
             className="mr-2 p-1"
@@ -472,7 +483,7 @@ export default function GameDetailScreen() {
               label={isTournament ? "Tournament ID" : "Game ID"}
               value={game.game_code}
               action={
-                (isCreator || hasJoined || isTournamentParticipant) && (
+                (isCreator || hasJoined || isTournamentTeamMember) && (
                   <Pressable
                     onPress={handleCopyGameCode}
                     hitSlop={8}
