@@ -81,7 +81,7 @@ export default function CreateGameScreen() {
   const handleCreate = async () => {
     if (!userId) return;
     if (!title.trim()) {
-      Alert.alert("Missing Info", "Please enter a game title.");
+      Alert.alert("Missing Info", `Please enter a ${isTournament ? "tournament" : "game"} title.`);
       return;
     }
     if (!sportId) {
@@ -135,7 +135,9 @@ export default function CreateGameScreen() {
     } catch (err) {
       Alert.alert(
         "Error",
-        err instanceof Error ? err.message : "Could not create game. Please try again."
+        err instanceof Error
+          ? err.message
+          : `Could not create ${isTournament ? "tournament" : "game"}. Please try again.`
       );
     }
   };
@@ -175,7 +177,7 @@ export default function CreateGameScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
-        <SectionLabel title="Game Title" required />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
         <TextInput
           value={title}
           onChangeText={setTitle}
@@ -204,7 +206,7 @@ export default function CreateGameScreen() {
         </View>
 
         {/* Game Type */}
-        <SectionLabel title="Game Type" />
+        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />
         {forcedTournament ? (
           <View className="bg-purple-50 self-start px-4 py-2 rounded-full">
             <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>

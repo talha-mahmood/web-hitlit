@@ -363,20 +363,25 @@ export default function GameDetailScreen() {
   };
 
   const handleCancel = () => {
-    Alert.alert("Cancel Game", "This will cancel the game for all players. This cannot be undone.", [
-      { text: "Keep", style: "cancel" },
-      {
-        text: "Cancel Game",
-        style: "destructive",
-        onPress: () => {
-          cancelGame.mutate(game.id, {
-            onSuccess: () => navigation.goBack(),
-            onError: (err) =>
-              Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel."),
-          });
+    const noun = isTournament ? "tournament" : "game";
+    Alert.alert(
+      `Cancel ${isTournament ? "Tournament" : "Game"}`,
+      `This will cancel the ${noun} for all ${isTournament ? "teams" : "players"}. This cannot be undone.`,
+      [
+        { text: "Keep", style: "cancel" },
+        {
+          text: `Cancel ${isTournament ? "Tournament" : "Game"}`,
+          style: "destructive",
+          onPress: () => {
+            cancelGame.mutate(game.id, {
+              onSuccess: () => navigation.goBack(),
+              onError: (err) =>
+                Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel."),
+            });
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleCopyGameCode = async () => {
@@ -439,12 +444,14 @@ export default function GameDetailScreen() {
         {/* Game info card */}
         <View className="mx-4 mt-4 border border-border rounded-2xl overflow-hidden">
           <View className="bg-primary-light px-4 py-3">
-            <Text className="text-primary-dark font-semibold text-sm">Game Details</Text>
+            <Text className="text-primary-dark font-semibold text-sm">
+              {isTournament ? "Tournament Details" : "Game Details"}
+            </Text>
           </View>
           <View className="px-4">
             <InfoRow
               icon="pricetag-outline"
-              label="Game ID"
+              label={isTournament ? "Tournament ID" : "Game ID"}
               value={game.game_code}
               action={
                 (isCreator || hasJoined) && (
@@ -509,7 +516,9 @@ export default function GameDetailScreen() {
         {/* Description */}
         {!!game.description && (
           <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
-            <Text className="text-ink font-semibold text-sm mb-2">About this game</Text>
+            <Text className="text-ink font-semibold text-sm mb-2">
+              About this {isTournament ? "tournament" : "game"}
+            </Text>
             <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
           </View>
         )}
@@ -613,7 +622,9 @@ export default function GameDetailScreen() {
               onPress={handleCancel}
               className="border border-danger rounded-xl py-4 items-center"
             >
-              <Text className="text-danger font-semibold">Cancel This Game</Text>
+              <Text className="text-danger font-semibold">
+                Cancel This {isTournament ? "Tournament" : "Game"}
+              </Text>
             </Pressable>
           ) : hasJoined ? (
             <Pressable

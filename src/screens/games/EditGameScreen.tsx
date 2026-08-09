@@ -84,7 +84,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert("Missing Info", "Please enter a game title.");
+      Alert.alert("Missing Info", `Please enter a ${isTournament ? "tournament" : "game"} title.`);
       return;
     }
 
@@ -159,7 +159,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
-        <SectionLabel title="Game Title" required />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
         <TextInput
           value={title}
           onChangeText={setTitle}
@@ -438,10 +438,10 @@ export default function EditGameScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2 text-center">
             {game.creator_id !== userId
-              ? "Only the host can edit this game"
+              ? `Only the host can edit this ${game.game_type === "TOURNAMENT" ? "tournament" : "game"}`
               : isCancelled
-                ? "This game has been cancelled"
-                : "This game has already ended"}
+                ? `This ${game.game_type === "TOURNAMENT" ? "tournament" : "game"} has been cancelled`
+                : `This ${game.game_type === "TOURNAMENT" ? "tournament" : "game"} has already ended`}
           </Text>
           <Text className="text-muted text-sm text-center">It can no longer be edited.</Text>
         </View>

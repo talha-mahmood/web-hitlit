@@ -112,7 +112,9 @@ function GameCard({ game, onPress, currentUserId }: {
           )}
           {isMyGame && (
             <View className="bg-blue-50 px-2 py-0.5 rounded-full">
-              <Text className="text-blue-600 text-xs font-medium">My Game</Text>
+              <Text className="text-blue-600 text-xs font-medium">
+                {isTournament ? "My Tournament" : "My Game"}
+              </Text>
             </View>
           )}
           <View className="flex-1" />
@@ -182,6 +184,7 @@ export default function GamesListScreen() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const gameType = route.params?.gameType;
+  const isTournamentList = gameType === "TOURNAMENT";
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -219,14 +222,16 @@ export default function GamesListScreen() {
         </Pressable>
       </View>
 
-      {/* Search by game name or game ID */}
+      {/* Search by name or ID */}
       <View className="px-5 mb-3">
         <View className="flex-row items-center border border-border rounded-xl px-3" style={{ gap: 8 }}>
           <Ionicons name="search-outline" size={18} color={colors.muted} />
           <TextInput
             value={searchInput}
             onChangeText={setSearchInput}
-            placeholder="Search by game name or game ID"
+            placeholder={
+              isTournamentList ? "Search by tournament name or tournament ID" : "Search by game name or game ID"
+            }
             autoCapitalize="none"
             autoCorrect={false}
             className="flex-1 py-2.5 text-ink text-sm"
@@ -272,23 +277,30 @@ export default function GamesListScreen() {
             debouncedSearch ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No games found</Text>
+                <Text className="text-ink font-semibold text-base">
+                  No {isTournamentList ? "tournaments" : "games"} found
+                </Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  No games match "{debouncedSearch}". Try a different name or game ID.
+                  No {isTournamentList ? "tournaments" : "games"} match "{debouncedSearch}". Try a different
+                  name or {isTournamentList ? "tournament" : "game"} ID.
                 </Text>
               </View>
             ) : (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="tennisball-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No games yet</Text>
+                <Text className="text-ink font-semibold text-base">
+                  No {isTournamentList ? "tournaments" : "games"} yet
+                </Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  Be the first to create a game and invite players to join!
+                  Be the first to create a {isTournamentList ? "tournament" : "game"} and invite players to join!
                 </Text>
                 <Pressable
                   onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
                   className="bg-primary rounded-xl px-6 py-3 mt-2"
                 >
-                  <Text className="text-white font-semibold">Create a Game</Text>
+                  <Text className="text-white font-semibold">
+                    Create a {isTournamentList ? "Tournament" : "Game"}
+                  </Text>
                 </Pressable>
               </View>
             )
