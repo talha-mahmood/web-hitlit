@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { uniqueChannelName } from "../realtimeChannel";
 import type { Database } from "../../types/database.types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -44,7 +45,7 @@ export function subscribeToSquadMessages(
   onDelete: (messageId: string) => void
 ): RealtimeChannel {
   return supabase
-    .channel(`squad_messages:${squadId}`)
+    .channel(uniqueChannelName(`squad_messages:${squadId}`))
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "squad_messages", filter: `squad_id=eq.${squadId}` },

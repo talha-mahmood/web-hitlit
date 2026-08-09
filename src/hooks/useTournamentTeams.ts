@@ -13,6 +13,7 @@ import {
   rejectTeam,
 } from "../lib/api/tournamentTeams";
 import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -32,7 +33,7 @@ export function useTournamentTeams(gameId: string) {
     // so any member change (across all tournaments) triggers a refetch here
     // — a bit coarse, but cheap, and keeps captain/host approval state live.
     const channel = supabase
-      .channel(`tournament_teams:${gameId}`)
+      .channel(uniqueChannelName(`tournament_teams:${gameId}`))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tournament_teams", filter: `game_id=eq.${gameId}` },

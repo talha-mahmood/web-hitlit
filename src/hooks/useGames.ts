@@ -14,6 +14,7 @@ import {
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
 export function useGames(
@@ -35,7 +36,7 @@ export function useGames(
   // this the list only updates on pull-to-refresh or the 30s staleTime.
   useEffect(() => {
     const channel = supabase
-      .channel("games:list")
+      .channel(uniqueChannelName("games:list"))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "games" },
@@ -67,7 +68,7 @@ export function useGameDetail(gameId: string) {
   // and re-entering the screen (staleTime alone doesn't trigger a refetch).
   useEffect(() => {
     const channel = supabase
-      .channel(`game_players:${gameId}`)
+      .channel(uniqueChannelName(`game_players:${gameId}`))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "game_players", filter: `game_id=eq.${gameId}` },

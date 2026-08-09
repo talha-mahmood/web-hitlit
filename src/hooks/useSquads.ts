@@ -13,6 +13,7 @@ import {
   removeMember,
 } from "../lib/api/squads";
 import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
 export function useSquads(filters: { search?: string } = {}) {
@@ -28,7 +29,7 @@ export function useSquads(filters: { search?: string } = {}) {
   // on pull-to-refresh or the 30s staleTime.
   useEffect(() => {
     const channel = supabase
-      .channel("squads:list")
+      .channel(uniqueChannelName("squads:list"))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "squads" },
@@ -59,7 +60,7 @@ export function useSquadDetail(squadId: string) {
   // viewer only sees it after manually leaving and re-entering the screen.
   useEffect(() => {
     const channel = supabase
-      .channel(`squad_members:${squadId}`)
+      .channel(uniqueChannelName(`squad_members:${squadId}`))
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "squad_members", filter: `squad_id=eq.${squadId}` },
