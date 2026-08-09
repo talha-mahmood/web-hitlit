@@ -407,7 +407,7 @@ export default function GameDetailScreen() {
           <Text className="text-base font-bold text-ink" numberOfLines={1}>{game.title}</Text>
           <Text className="text-muted text-sm">{game.sports?.name}</Text>
         </View>
-        {isCreator && !isCancelled && !hasEnded && (
+        {isCreator && !isTournament && !isCancelled && !hasEnded && (
           <Pressable
             onPress={() => navigation.navigate("EditGame", { gameId: game.id })}
             className="mr-2 p-1"
