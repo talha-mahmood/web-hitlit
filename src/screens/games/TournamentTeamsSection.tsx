@@ -220,8 +220,17 @@ function TeamCard({
         <View className="mt-3">
           {isCaptain ? (
             <Pressable
-              onPress={onSubmitTeam}
-              disabled={disabled || !isTeamFull}
+              onPress={() => {
+                if (!isTeamFull) {
+                  Alert.alert(
+                    "Team Incomplete",
+                    "First complete your players required for a team then you can make a Join Request. You can ask members from squads to join your team."
+                  );
+                  return;
+                }
+                onSubmitTeam();
+              }}
+              disabled={disabled}
               className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-600" : "bg-gray-200"}`}
             >
               <Text className={`text-xs font-semibold ${isTeamFull ? "text-white" : "text-muted"}`}>
