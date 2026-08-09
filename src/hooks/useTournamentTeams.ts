@@ -44,6 +44,16 @@ export function useTournamentTeams(gameId: string) {
         { event: "*", schema: "public", table: "tournament_team_members" },
         () => qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] })
       )
+      // The tournament itself being cancelled/edited by the host is a change
+      // to `games`, not `tournament_teams` — TournamentTeamsSection only
+      // renders game.status via the prop it was given by GameDetailScreen,
+      // so without this, a captain/member sitting on the teams section
+      // wouldn't see a cancellation until they left and reopened the screen.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "games", filter: `id=eq.${gameId}` },
+        () => qc.invalidateQueries({ queryKey: ["game", gameId] })
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
