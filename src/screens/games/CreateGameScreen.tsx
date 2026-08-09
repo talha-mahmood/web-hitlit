@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
@@ -22,9 +22,18 @@ import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
-import { TIME_SLOTS, DAYS, DURATIONS, MAX_PLAYERS_OPTIONS, addMinutes } from "../../lib/gameFormHelpers";
+import {
+  TIME_SLOTS,
+  DAYS,
+  DURATIONS,
+  TOURNAMENT_DURATIONS_DAYS,
+  MAX_PLAYERS_OPTIONS,
+  addMinutes,
+  addDays,
+} from "../../lib/gameFormHelpers";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
+type CreateGameRoute = RouteProp<GamesStackParamList, "CreateGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
@@ -34,19 +43,25 @@ type GameType = Database["public"]["Enums"]["game_type_type"];
 
 export default function CreateGameScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<CreateGameRoute>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createGame = useCreateGame();
   const { data: sports } = useSports();
 
+  // Reached via the Tournaments section (Home card / Tournaments list "Create"
+  // button) — game type is fixed, not a Regular/Tournament toggle.
+  const forcedTournament = route.params?.gameType === "TOURNAMENT";
+
   const [title, setTitle] = useState("");
-  const [gameType, setGameType] = useState<GameType>("REGULAR");
+  const [gameType, setGameType] = useState<GameType>(forcedTournament ? "TOURNAMENT" : "REGULAR");
   const [sportId, setSportId] = useState<string | null>(null);
   const [venueId, setVenueId] = useState<string | null>(null);
   const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: sportId ?? undefined });
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
+  const [durationDays, setDurationDays] = useState<number>(1);
   const [maxPlayers, setMaxPlayers] = useState<number>(10);
   const [numberOfTeams, setNumberOfTeams] = useState("");
   const [playersPerTeam, setPlayersPerTeam] = useState("");
@@ -85,7 +100,13 @@ export default function CreateGameScreen() {
       return;
     }
 
-    const endTimeValue = addMinutes(startTime, Math.round(duration * 60));
+    // Regular games run start_time..end_time on a single game_date. A
+    // tournament instead spans durationDays calendar days starting at
+    // game_date; its last day (end_date) formally closes at 23:59:59 rather
+    // than some fixed hour, since matches on the final day don't have a
+    // predetermined end time the way a single game session does.
+    const endDateValue = isTournament ? addDays(selectedDate, durationDays - 1) : null;
+    const endTimeValue = isTournament ? "23:59:59" : `${addMinutes(startTime, Math.round(duration * 60))}:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {
@@ -95,8 +116,9 @@ export default function CreateGameScreen() {
         sportId,
         venueId,
         gameDate: selectedDate,
+        endDate: endDateValue,
         startTime: `${startTime}:00`,
-        endTime: `${endTimeValue}:00`,
+        endTime: endTimeValue,
         // Tournament capacity is teams × players-per-team; regular games use
         // the Max Players picker directly.
         maxPlayers: isTournament ? teams * perTeam : maxPlayers,
@@ -131,7 +153,9 @@ export default function CreateGameScreen() {
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">Create Game</Text>
+        <Text className="text-base font-bold text-ink flex-1">
+          {isTournament ? "Create Tournament" : "Create Game"}
+        </Text>
         <Pressable
           onPress={handleCreate}
           disabled={createGame.isPending}
@@ -181,14 +205,20 @@ export default function CreateGameScreen() {
 
         {/* Game Type */}
         <SectionLabel title="Game Type" />
-        <PillRow<GameType>
-          options={[
-            { label: "Regular", value: "REGULAR" },
-            { label: "Tournament", value: "TOURNAMENT" },
-          ]}
-          value={gameType}
-          onChange={setGameType}
-        />
+        {forcedTournament ? (
+          <View className="bg-purple-50 self-start px-4 py-2 rounded-full">
+            <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
+          </View>
+        ) : (
+          <PillRow<GameType>
+            options={[
+              { label: "Regular", value: "REGULAR" },
+              { label: "Tournament", value: "TOURNAMENT" },
+            ]}
+            value={gameType}
+            onChange={setGameType}
+          />
+        )}
 
         {/* Venue */}
         <SectionLabel title="Venue" />
@@ -292,14 +322,25 @@ export default function CreateGameScreen() {
 
         {/* Duration */}
         <SectionLabel title="Duration" />
-        <PillRow
-          options={DURATIONS.map((d) => ({
-            label: d === 1 ? "1 hr" : `${d} hrs`,
-            value: String(d) as string,
-          }))}
-          value={String(duration)}
-          onChange={(v) => setDuration(parseFloat(v))}
-        />
+        {isTournament ? (
+          <PillRow
+            options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
+              label: d === 1 ? "1 Day" : `${d} Days`,
+              value: String(d),
+            }))}
+            value={String(durationDays)}
+            onChange={(v) => setDurationDays(parseInt(v, 10))}
+          />
+        ) : (
+          <PillRow
+            options={DURATIONS.map((d) => ({
+              label: d === 1 ? "1 hr" : `${d} hrs`,
+              value: String(d) as string,
+            }))}
+            value={String(duration)}
+            onChange={(v) => setDuration(parseFloat(v))}
+          />
+        )}
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
@@ -388,7 +429,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Entry Fee */}
-        <SectionLabel title="Entry Fee (Rs)" />
+        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
         <View className="flex-row items-center border border-border rounded-xl px-4">
           <Text className="text-muted mr-2">Rs</Text>
           <TextInput
@@ -399,7 +440,9 @@ export default function CreateGameScreen() {
             className="flex-1 py-3 text-ink"
           />
         </View>
-        <Text className="text-muted text-xs mt-1">Enter 0 for a free game</Text>
+        <Text className="text-muted text-xs mt-1">
+          {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
+        </Text>
 
         {/* Description */}
         <SectionLabel title="Description" />

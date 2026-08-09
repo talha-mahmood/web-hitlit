@@ -22,7 +22,17 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
-import { TIME_SLOTS, DAYS, DURATIONS, MAX_PLAYERS_OPTIONS, addMinutes, diffHours } from "../../lib/gameFormHelpers";
+import {
+  TIME_SLOTS,
+  DAYS,
+  DURATIONS,
+  TOURNAMENT_DURATIONS_DAYS,
+  MAX_PLAYERS_OPTIONS,
+  addMinutes,
+  addDays,
+  diffHours,
+  diffDays,
+} from "../../lib/gameFormHelpers";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -60,6 +70,9 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
   const [startTime, setStartTime] = useState(toHHMM(game.start_time));
   const [duration, setDuration] = useState(diffHours(toHHMM(game.start_time), toHHMM(game.end_time)));
   const isTournament = game.game_type === "TOURNAMENT";
+  const [durationDays, setDurationDays] = useState(
+    game.end_date ? diffDays(game.game_date, game.end_date) : 1
+  );
   const [maxPlayers, setMaxPlayers] = useState(game.max_players);
   const [numberOfTeams, setNumberOfTeams] = useState(String(game.number_of_teams ?? ""));
   const [playersPerTeam, setPlayersPerTeam] = useState(String(game.players_per_team ?? ""));
@@ -89,7 +102,8 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       return;
     }
 
-    const endTimeValue = addMinutes(startTime, Math.round(duration * 60));
+    const endDateValue = isTournament ? addDays(selectedDate, durationDays - 1) : null;
+    const endTimeValue = isTournament ? "23:59:59" : `${addMinutes(startTime, Math.round(duration * 60))}:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {
@@ -98,8 +112,9 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         title: title.trim(),
         venueId,
         gameDate: selectedDate,
+        endDate: endDateValue,
         startTime: `${startTime}:00`,
-        endTime: `${endTimeValue}:00`,
+        endTime: endTimeValue,
         maxPlayers: isTournament ? teams * perTeam : maxPlayers,
         skillLevel,
         visibility,
@@ -122,7 +137,9 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">Edit Game</Text>
+        <Text className="text-base font-bold text-ink flex-1">
+          {isTournament ? "Edit Tournament" : "Edit Game"}
+        </Text>
         <Pressable
           onPress={handleSave}
           disabled={updateGame.isPending}
@@ -234,11 +251,22 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
         {/* Duration */}
         <SectionLabel title="Duration" />
-        <PillRow
-          options={DURATIONS.map((d) => ({ label: d === 1 ? "1 hr" : `${d} hrs`, value: String(d) as string }))}
-          value={String(duration)}
-          onChange={(v) => setDuration(parseFloat(v))}
-        />
+        {isTournament ? (
+          <PillRow
+            options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
+              label: d === 1 ? "1 Day" : `${d} Days`,
+              value: String(d),
+            }))}
+            value={String(durationDays)}
+            onChange={(v) => setDurationDays(parseInt(v, 10))}
+          />
+        ) : (
+          <PillRow
+            options={DURATIONS.map((d) => ({ label: d === 1 ? "1 hr" : `${d} hrs`, value: String(d) as string }))}
+            value={String(duration)}
+            onChange={(v) => setDuration(parseFloat(v))}
+          />
+        )}
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
@@ -332,7 +360,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         />
 
         {/* Entry Fee */}
-        <SectionLabel title="Entry Fee (Rs)" />
+        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
         <View className="flex-row items-center border border-border rounded-xl px-4">
           <Text className="text-muted mr-2">Rs</Text>
           <TextInput
@@ -343,7 +371,9 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
             className="flex-1 py-3 text-ink"
           />
         </View>
-        <Text className="text-muted text-xs mt-1">Enter 0 for a free game</Text>
+        <Text className="text-muted text-xs mt-1">
+          {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
+        </Text>
 
         {/* Description */}
         <SectionLabel title="Description" />
@@ -390,7 +420,8 @@ export default function EditGameScreen() {
     );
   }
 
-  const hasEnded = new Date(`${game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
+  const hasEnded =
+    new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
   const isCancelled = game.status === "CANCELLED";
 
   if (game.creator_id !== userId || hasEnded || isCancelled) {
@@ -400,7 +431,9 @@ export default function EditGameScreen() {
           <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">Edit Game</Text>
+          <Text className="text-base font-bold text-ink">
+            {game.game_type === "TOURNAMENT" ? "Edit Tournament" : "Edit Game"}
+          </Text>
         </View>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2 text-center">

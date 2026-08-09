@@ -53,6 +53,18 @@ function formatGameDateTime(dateStr: string, startTime: string): string {
   return `${dayLabel} · ${timeStr}`;
 }
 
+// A multi-day tournament shows a date range instead of a single day + time.
+function formatDateRange(gameDate: string, endDate: string): string {
+  const [sy, sm, sd] = gameDate.split("-").map(Number);
+  const [ey, em, ed] = endDate.split("-").map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+  const fmt = (d: Date, withYear: boolean) =>
+    d.toLocaleDateString("en-PK", { month: "short", day: "numeric", year: withYear ? "numeric" : undefined });
+  const sameYear = sy === ey;
+  return `${fmt(start, !sameYear)} - ${fmt(end, true)}`;
+}
+
 function GameCard({ game, onPress, currentUserId }: {
   game: GameListItem;
   onPress: () => void;
@@ -129,7 +141,9 @@ function GameCard({ game, onPress, currentUserId }: {
           <View className="flex-row items-center" style={{ gap: 4 }}>
             <Ionicons name="calendar-outline" size={13} color={colors.muted} />
             <Text className="text-muted text-sm">
-              {formatGameDateTime(game.game_date, game.start_time)}
+              {isTournament && game.end_date && game.end_date !== game.game_date
+                ? formatDateRange(game.game_date, game.end_date)
+                : formatGameDateTime(game.game_date, game.start_time)}
             </Text>
           </View>
           <View className="flex-row items-center" style={{ gap: 4 }}>
@@ -196,7 +210,7 @@ export default function GamesListScreen() {
           </Text>
         </View>
         <Pressable
-          onPress={() => navigation.navigate("CreateGame")}
+          onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
           className="flex-row items-center bg-primary rounded-xl px-3 py-2"
           style={{ gap: 4 }}
         >
@@ -271,7 +285,7 @@ export default function GamesListScreen() {
                   Be the first to create a game and invite players to join!
                 </Text>
                 <Pressable
-                  onPress={() => navigation.navigate("CreateGame")}
+                  onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
                   className="bg-primary rounded-xl px-6 py-3 mt-2"
                 >
                   <Text className="text-white font-semibold">Create a Game</Text>

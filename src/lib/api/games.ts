@@ -42,6 +42,7 @@ export type CreateGameParams = {
   // Only meaningful when gameType is TOURNAMENT.
   numberOfTeams: number | null;
   playersPerTeam: number | null;
+  endDate: string | null;
 };
 
 // Sport is intentionally excluded — changing it post-creation would strand
@@ -61,6 +62,7 @@ export type UpdateGameParams = {
   entryFee: number;
   numberOfTeams: number | null;
   playersPerTeam: number | null;
+  endDate: string | null;
 };
 
 const LIST_SELECT =
@@ -71,8 +73,10 @@ const DETAIL_SELECT =
 
 // Games are stored as separate DATE + TIME columns with no timezone; the app is
 // Pakistan-only (see GameDetailScreen's time formatting), so treat them as +05:00.
-function hasGameEnded(gameDate: string, endTime: string): boolean {
-  return new Date(`${gameDate}T${endTime}+05:00`).getTime() < Date.now();
+// A multi-day TOURNAMENT's real finish line is end_date (its last day), not
+// game_date (its first day) — regular games leave end_date null.
+function hasGameEnded(gameDate: string, endDate: string | null, endTime: string): boolean {
+  return new Date(`${endDate ?? gameDate}T${endTime}+05:00`).getTime() < Date.now();
 }
 
 // PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
@@ -117,7 +121,7 @@ export async function fetchGames(
   // Belt-and-suspenders: the DB-side cron job (expire_past_games) archives and
   // hard-deletes ended games every 10 minutes, but this filters out any that
   // ended within that window so the list never shows something unjoinable.
-  return ((data ?? []) as GameListItem[]).filter((g) => !hasGameEnded(g.game_date, g.end_time));
+  return ((data ?? []) as GameListItem[]).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time));
 }
 
 export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
@@ -139,6 +143,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       sport_id: params.sportId,
       venue_id: params.venueId,
       game_date: params.gameDate,
+      end_date: params.endDate,
       start_time: params.startTime,
       end_time: params.endTime,
       max_players: params.maxPlayers,
@@ -180,6 +185,7 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
       title: params.title,
       venue_id: params.venueId,
       game_date: params.gameDate,
+      end_date: params.endDate,
       start_time: params.startTime,
       end_time: params.endTime,
       max_players: params.maxPlayers,

@@ -38,6 +38,15 @@ function formatTime(dateStr: string, timeStr: string): string {
   });
 }
 
+// A multi-day tournament's real span is game_date..end_date.
+function formatDateRangeFull(gameDate: string, endDate: string): string {
+  const [sy, sm, sd] = gameDate.split("-").map(Number);
+  const [ey, em, ed] = endDate.split("-").map(Number);
+  const fmt = (y: number, m: number, d: number) =>
+    new Date(y, m - 1, d).toLocaleDateString("en-PK", { month: "long", day: "numeric", year: "numeric" });
+  return `${fmt(sy, sm, sd)} – ${fmt(ey, em, ed)}`;
+}
+
 // ── sub-components ────────────────────────────────────────────────────────────
 
 function InfoRow({
@@ -231,7 +240,8 @@ export default function GameDetailScreen() {
   // Belt-and-suspenders: the DB-side cron job (expire_past_games) flips status to
   // COMPLETED every 10 minutes, but this hides the join/leave CTA immediately once
   // the game's end time passes, without waiting on that job to run.
-  const hasEnded = new Date(`${game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
+  const hasEnded =
+    new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
   const isOpen = (game.status === "OPEN" || game.status === "FULL") && !hasEnded;
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
@@ -456,12 +466,29 @@ export default function GameDetailScreen() {
                 )
               }
             />
-            <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
-            <InfoRow
-              icon="time-outline"
-              label="Time"
-              value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
-            />
+            {isTournament && game.end_date && game.end_date !== game.game_date ? (
+              <>
+                <InfoRow
+                  icon="calendar-outline"
+                  label="Dates"
+                  value={formatDateRangeFull(game.game_date, game.end_date)}
+                />
+                <InfoRow
+                  icon="time-outline"
+                  label="Daily Start Time"
+                  value={formatTime(game.game_date, game.start_time)}
+                />
+              </>
+            ) : (
+              <>
+                <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
+                <InfoRow
+                  icon="time-outline"
+                  label="Time"
+                  value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
+                />
+              </>
+            )}
             {game.venues && (
               <InfoRow
                 icon="location-outline"

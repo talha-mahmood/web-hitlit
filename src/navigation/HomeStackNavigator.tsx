@@ -25,7 +25,7 @@ export type HomeStackParamList = {
   GamesList:
     | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
     | undefined;
-  CreateGame: undefined;
+  CreateGame: { gameType?: Database["public"]["Enums"]["game_type_type"] } | undefined;
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };

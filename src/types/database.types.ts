@@ -508,6 +508,7 @@ export type Database = {
           creator_id: string
           deleted_at: string | null
           description: string | null
+          end_date: string | null
           end_time: string
           entry_fee: number
           game_code: string
@@ -543,6 +544,7 @@ export type Database = {
           creator_id: string
           deleted_at?: string | null
           description?: string | null
+          end_date?: string | null
           end_time: string
           entry_fee?: number
           game_code?: string
@@ -578,6 +580,7 @@ export type Database = {
           creator_id?: string
           deleted_at?: string | null
           description?: string | null
+          end_date?: string | null
           end_time?: string
           entry_fee?: number
           game_code?: string
