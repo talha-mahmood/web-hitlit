@@ -185,9 +185,16 @@ export default function GamesListScreen() {
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 mb-4">
-        <Text className="text-2xl font-bold text-ink">
-          {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
-        </Text>
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          {navigation.canGoBack() && (
+            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color={colors.ink} />
+            </Pressable>
+          )}
+          <Text className="text-2xl font-bold text-ink">
+            {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
+          </Text>
+        </View>
         <Pressable
           onPress={() => navigation.navigate("CreateGame")}
           className="flex-row items-center bg-primary rounded-xl px-3 py-2"

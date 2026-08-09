@@ -97,12 +97,7 @@ export default function HomeScreen() {
               title="Tournaments"
               subtitle="Compete. Win big."
               emoji="🏆"
-              onPress={() =>
-                navigation.navigate("Games", {
-                  screen: "GamesList",
-                  params: { gameType: "TOURNAMENT" },
-                })
-              }
+              onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
             />
             <HomeActionCard
               title="Venues"

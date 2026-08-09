@@ -4,7 +4,13 @@ import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
 import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
 import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
 import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
+import GamesListScreen from "../screens/games/GamesListScreen";
+import CreateGameScreen from "../screens/games/CreateGameScreen";
+import GameDetailScreen from "../screens/games/GameDetailScreen";
+import GameChatScreen from "../screens/games/GameChatScreen";
+import EditGameScreen from "../screens/games/EditGameScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
+import type { Database } from "../types/database.types";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
@@ -12,6 +18,17 @@ export type HomeStackParamList = {
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
   BookingConfirmation: BookingConfirmationParams;
+  // Tournaments are reachable only from the Home screen's card, deliberately
+  // hosted in this stack (not GamesStackNavigator) so browsing them never
+  // highlights the Games tab icon. These reuse the exact same screens as the
+  // Games tab; only the route name's parent stack differs.
+  GamesList:
+    | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
+    | undefined;
+  CreateGame: undefined;
+  GameDetail: { gameId: string };
+  GameChat: { gameId: string; gameTitle?: string };
+  EditGame: { gameId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -24,6 +41,11 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />
       <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+      <Stack.Screen name="GamesList" component={GamesListScreen} />
+      <Stack.Screen name="CreateGame" component={CreateGameScreen} />
+      <Stack.Screen name="GameDetail" component={GameDetailScreen} />
+      <Stack.Screen name="GameChat" component={GameChatScreen} />
+      <Stack.Screen name="EditGame" component={EditGameScreen} />
     </Stack.Navigator>
   );
 }
