@@ -16,7 +16,13 @@ import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
 import type { Database } from "../types/database.types";
 
-export function useGames(filters: { sportId?: string; search?: string } = {}) {
+export function useGames(
+  filters: {
+    sportId?: string;
+    search?: string;
+    gameType?: Database["public"]["Enums"]["game_type_type"];
+  } = {}
+) {
   const qc = useQueryClient();
   const query = useQuery({
     queryKey: ["games", filters],

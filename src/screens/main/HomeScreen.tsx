@@ -1,4 +1,4 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -17,6 +17,32 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "HomeFeed">,
   BottomTabNavigationProp<MainTabParamList>
 >;
+
+function HomeActionCard({
+  title,
+  subtitle,
+  emoji,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="bg-white border border-border rounded-2xl p-4 justify-between"
+      style={{ width: "48%", height: 120 }}
+    >
+      <View>
+        <Text className="text-ink font-extrabold text-base">{title}</Text>
+        <Text className="text-muted text-xs mt-1">{subtitle}</Text>
+      </View>
+      <Text style={{ fontSize: 32, textAlign: "right" }}>{emoji}</Text>
+    </Pressable>
+  );
+}
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -57,6 +83,38 @@ export default function HomeScreen() {
                   }
                 />
               )}
+            />
+          </View>
+
+          <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
+            <HomeActionCard
+              title="Games"
+              subtitle="Join games. Meet players"
+              emoji="🏸"
+              onPress={() => navigation.navigate("Games", { screen: "GamesList" })}
+            />
+            <HomeActionCard
+              title="Tournaments"
+              subtitle="Compete. Win big."
+              emoji="🏆"
+              onPress={() =>
+                navigation.navigate("Games", {
+                  screen: "GamesList",
+                  params: { gameType: "TOURNAMENT" },
+                })
+              }
+            />
+            <HomeActionCard
+              title="Venues"
+              subtitle="Book turfs. Save big"
+              emoji="⚽"
+              onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
+            />
+            <HomeActionCard
+              title="Squads"
+              subtitle="Find your play tribe"
+              emoji="🤝"
+              onPress={() => navigation.navigate("Squads", { screen: "SquadsList" })}
             />
           </View>
 

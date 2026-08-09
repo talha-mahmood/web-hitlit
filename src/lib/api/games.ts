@@ -36,6 +36,7 @@ export type CreateGameParams = {
   gender: Database["public"]["Enums"]["game_gender_type"];
   description: string;
   entryFee: number;
+  gameType: Database["public"]["Enums"]["game_type_type"];
 };
 
 // Sport is intentionally excluded — changing it post-creation would strand
@@ -74,7 +75,11 @@ function sanitizeSearchTerm(term: string): string {
 }
 
 export async function fetchGames(
-  filters: { sportId?: string; search?: string } = {}
+  filters: {
+    sportId?: string;
+    search?: string;
+    gameType?: Database["public"]["Enums"]["game_type_type"];
+  } = {}
 ): Promise<GameListItem[]> {
   const today = new Date().toISOString().split("T")[0];
   let query = supabase
@@ -89,6 +94,10 @@ export async function fetchGames(
 
   if (filters.sportId) {
     query = query.eq("sport_id", filters.sportId);
+  }
+
+  if (filters.gameType) {
+    query = query.eq("game_type", filters.gameType);
   }
 
   const search = filters.search ? sanitizeSearchTerm(filters.search) : "";
@@ -133,7 +142,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       description: params.description || null,
       entry_fee: params.entryFee,
       status: "OPEN",
-      game_type: "REGULAR",
+      game_type: params.gameType,
       bring_equipment: false,
       cost_shared: false,
       pay_and_join: params.entryFee > 0,

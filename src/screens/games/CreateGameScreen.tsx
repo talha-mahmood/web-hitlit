@@ -28,6 +28,7 @@ type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
+type GameType = Database["public"]["Enums"]["game_type_type"];
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ export default function CreateGameScreen() {
   const { data: sports } = useSports();
 
   const [title, setTitle] = useState("");
+  const [gameType, setGameType] = useState<GameType>("REGULAR");
   const [sportId, setSportId] = useState<string | null>(null);
   const [venueId, setVenueId] = useState<string | null>(null);
   const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: sportId ?? undefined });
@@ -90,6 +92,7 @@ export default function CreateGameScreen() {
         gender,
         description: description.trim(),
         entryFee: fee,
+        gameType,
       });
       navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
@@ -160,6 +163,17 @@ export default function CreateGameScreen() {
             );
           })}
         </View>
+
+        {/* Game Type */}
+        <SectionLabel title="Game Type" />
+        <PillRow<GameType>
+          options={[
+            { label: "Regular", value: "REGULAR" },
+            { label: "Tournament", value: "TOURNAMENT" },
+          ]}
+          value={gameType}
+          onChange={setGameType}
+        />
 
         {/* Venue */}
         <SectionLabel title="Venue" />

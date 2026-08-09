@@ -4,9 +4,12 @@ import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
+import type { Database } from "../types/database.types";
 
 export type GamesStackParamList = {
-  GamesList: { sportId?: string } | undefined;
+  GamesList:
+    | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
+    | undefined;
   CreateGame: undefined;
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };

@@ -1,6 +1,6 @@
 import { View, Text, FlatList, Pressable, TextInput, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,7 @@ import type { GameListItem } from "../../lib/api/games";
 import { useAuthStore } from "../../store/authStore";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
+type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
 
 const SKILL_COLORS: Record<string, { bg: string; text: string }> = {
   BEGINNER:     { bg: "bg-green-50",  text: "text-green-700"  },
@@ -79,6 +80,11 @@ function GameCard({ game, onPress, currentUserId }: {
               {game.sports?.name ?? "Sport"}
             </Text>
           </View>
+          {game.game_type === "TOURNAMENT" && (
+            <View className="bg-purple-50 px-2 py-0.5 rounded-full">
+              <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+            </View>
+          )}
           {skillStyle && (
             <View className={`px-2 py-0.5 rounded-full ${skillStyle.bg}`}>
               <Text className={`text-xs font-medium ${skillStyle.text}`}>
@@ -145,11 +151,15 @@ function GameCard({ game, onPress, currentUserId }: {
 
 export default function GamesListScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<GamesListRoute>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
-  const [selectedSportId, setSelectedSportId] = useState<string | undefined>();
+  const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
+    route.params?.sportId
+  );
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const gameType = route.params?.gameType;
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -160,13 +170,16 @@ export default function GamesListScreen() {
   const { data: games, isLoading, isRefetching, refetch } = useGames({
     sportId: selectedSportId,
     search: debouncedSearch || undefined,
+    gameType,
   });
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 mb-4">
-        <Text className="text-2xl font-bold text-ink">Games</Text>
+        <Text className="text-2xl font-bold text-ink">
+          {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
+        </Text>
         <Pressable
           onPress={() => navigation.navigate("CreateGame")}
           className="flex-row items-center bg-primary rounded-xl px-3 py-2"
