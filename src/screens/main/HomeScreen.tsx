@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -61,10 +61,25 @@ export default function HomeScreen() {
       className="flex-1 bg-white"
       ListHeaderComponent={
         <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
-          <Text className="text-2xl font-bold text-ink">
-            Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-          </Text>
-          <Text className="text-muted mt-1 mb-5">What are you playing today?</Text>
+          <View className="flex-row items-center justify-between mb-5">
+            <View className="flex-1">
+              <Text className="text-2xl font-bold text-ink">
+                Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
+              </Text>
+              <Text className="text-muted mt-1">What are you playing today?</Text>
+            </View>
+            <Pressable onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}>
+              {profile?.avatar ? (
+                <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
+              ) : (
+                <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
+                  <Text className="text-lg font-bold text-primary">
+                    {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
 
           <View style={{ paddingVertical: 8, marginBottom: 16 }}>
             <FlatList
