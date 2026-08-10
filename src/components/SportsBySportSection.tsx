@@ -52,12 +52,6 @@ export default function SportsBySportSection({
 
   return (
     <View className="mb-6" onLayout={handleLayout}>
-      <Text
-        className="text-ink font-bold"
-        style={{ fontSize: 10, letterSpacing: 0.3, marginBottom: 12 }}
-      >
-        GAMES BY SPORTS
-      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
