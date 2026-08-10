@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "PlayPals",
-    "slug": "hamza-playpal-app",
-    "scheme": "playpals",
+    "name": "PlayFast",
+    "slug": "hamza-playfast-app",
+    "scheme": "playfast",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.playpals.app"
+      "bundleIdentifier": "com.playfast.app"
     },
     "android": {
-      "package": "com.playpals.app",
+      "package": "com.playfast.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -32,13 +32,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "PlayPals needs access to your photos so you can set a profile picture."
+          "photosPermission": "PlayFast needs access to your photos so you can set a profile picture."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "PlayPals needs your location to set your squad's location automatically."
+          "locationWhenInUsePermission": "PlayFast needs your location to set your squad's location automatically."
         }
       ],
       "@react-native-google-signin/google-signin"

@@ -29,7 +29,7 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 bg-white items-center justify-between px-6 py-16">
       <View className="flex-1 items-center justify-center">
-        <Text className="text-4xl font-extrabold text-primary">PlayPals</Text>
+        <Text className="text-4xl font-extrabold text-primary">PlayFast</Text>
         <Text className="text-muted text-center mt-3 text-base">
           Find players, book courts, and get in the game.
         </Text>
