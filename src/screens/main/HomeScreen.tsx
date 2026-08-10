@@ -61,13 +61,7 @@ export default function HomeScreen() {
       className="flex-1 bg-white"
       ListHeaderComponent={
         <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
-          <View className="flex-row items-center justify-between mb-5">
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-ink">
-                Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-              </Text>
-              <Text className="text-muted mt-1">What are you playing today?</Text>
-            </View>
+          <View className="flex-row items-center mb-5" style={{ gap: 12 }}>
             <Pressable onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}>
               {profile?.avatar ? (
                 <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
@@ -79,6 +73,12 @@ export default function HomeScreen() {
                 </View>
               )}
             </Pressable>
+            <View className="flex-1">
+              <Text className="text-2xl font-bold text-ink">
+                Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
+              </Text>
+              <Text className="text-muted mt-1">What are you playing today?</Text>
+            </View>
           </View>
 
           <View style={{ paddingVertical: 8, marginBottom: 16 }}>
