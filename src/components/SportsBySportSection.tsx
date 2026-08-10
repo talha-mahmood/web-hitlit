@@ -38,19 +38,7 @@ export default function SportsBySportSection({
   if (sports.length === 0) return null;
 
   return (
-    <View
-      className="bg-white mb-6"
-      style={{
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 15,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-      }}
-    >
+    <View className="mb-6">
       <Text
         className="text-ink font-bold"
         style={{ fontSize: 10, letterSpacing: 0.3, marginBottom: 12 }}
