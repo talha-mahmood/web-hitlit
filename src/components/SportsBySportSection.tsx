@@ -5,20 +5,22 @@ import { colors } from "../constants/theme";
 
 type Sport = { id: string; name: string };
 
-const ICON_BADGE_SIZE = 76;
+const ICON_BADGE_SIZE = 52;
+const ICON_SIZE = 26;
 
 function SportTile({ sport, onPress }: { sport: Sport; onPress: () => void }) {
   const { icon, bg, fg } = getSportIcon(sport.name);
   return (
-    <Pressable onPress={onPress} className="items-center" style={{ width: 84 }}>
+    <Pressable onPress={onPress} className="items-center" style={{ width: 60 }}>
       <View
         className="items-center justify-center rounded-full"
         style={{ width: ICON_BADGE_SIZE, height: ICON_BADGE_SIZE, backgroundColor: bg }}
       >
-        <MaterialCommunityIcons name={icon} size={40} color={fg} />
+        <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={fg} />
       </View>
       <Text
-        className="text-ink font-semibold text-xs text-center mt-2"
+        className="text-ink font-semibold text-center mt-1.5"
+        style={{ fontSize: 13 }}
         numberOfLines={1}
       >
         {sport.name}
@@ -38,28 +40,29 @@ export default function SportsBySportSection({
 
   return (
     <View
-      className="bg-white rounded-3xl border mb-6"
+      className="bg-white border mb-6"
       style={{
         borderColor: colors.border,
-        paddingTop: 18,
-        paddingBottom: 18,
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 15,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.06,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
         elevation: 2,
       }}
     >
       <Text
-        className="text-ink font-extrabold text-sm px-5 mb-4"
-        style={{ letterSpacing: 0.6 }}
+        className="text-ink font-bold"
+        style={{ fontSize: 16, letterSpacing: 0.3, marginBottom: 12 }}
       >
         GAMES BY SPORTS
       </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 20 }}
+        contentContainerStyle={{ gap: 26 }}
       >
         {sports.map((sport) => (
           <SportTile key={sport.id} sport={sport} onPress={() => onSelectSport(sport.id)} />
