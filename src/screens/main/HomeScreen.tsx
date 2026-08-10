@@ -33,8 +33,18 @@ function HomeActionCard({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white border border-border rounded-2xl p-4 justify-between"
-      style={{ width: "48%", height: 120 }}
+      className="bg-white rounded-2xl p-4 justify-between"
+      style={{
+        width: "48%",
+        height: 120,
+        borderWidth: 1,
+        borderColor: "rgba(17, 24, 39, 0.06)",
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 18,
+        elevation: 6,
+      }}
     >
       <View>
         <Text className="text-ink font-extrabold text-base">{title}</Text>
