@@ -1,7 +1,6 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
-import { colors } from "../constants/theme";
 
 type Sport = { id: string; name: string };
 
@@ -40,9 +39,8 @@ export default function SportsBySportSection({
 
   return (
     <View
-      className="bg-white border mb-6"
+      className="bg-white mb-6"
       style={{
-        borderColor: colors.border,
         borderRadius: 20,
         paddingHorizontal: 16,
         paddingVertical: 15,
@@ -55,7 +53,7 @@ export default function SportsBySportSection({
     >
       <Text
         className="text-ink font-bold"
-        style={{ fontSize: 16, letterSpacing: 0.3, marginBottom: 12 }}
+        style={{ fontSize: 10, letterSpacing: 0.3, marginBottom: 12 }}
       >
         GAMES BY SPORTS
       </Text>
