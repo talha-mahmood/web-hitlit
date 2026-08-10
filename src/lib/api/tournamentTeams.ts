@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { isUniqueViolation } from "../nameValidation";
 import type { Database } from "../../types/database.types";
 
 type TeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"];
@@ -39,7 +40,12 @@ export async function createTeam(
     .insert({ game_id: gameId, captain_id: captainId, name, status: "FORMING" })
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("A team with this name already exists in this tournament. Please choose a different name.");
+    }
+    throw new Error(error.message);
+  }
 
   // Captain automatically joins their own team
   const { error: memberError } = await supabase.from("tournament_team_members").insert({

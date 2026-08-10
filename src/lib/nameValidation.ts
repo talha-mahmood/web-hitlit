@@ -7,3 +7,10 @@ export function isValidName(value: string): boolean {
 }
 
 export const NAME_REQUIREMENT_HINT = "at least 3 letters long, starting with a capital letter";
+
+// Postgres/PostgREST report a unique-index violation as SQLSTATE 23505 —
+// used to turn a raw "duplicate key value violates unique constraint ..."
+// error into a message that actually tells the user what to do.
+export function isUniqueViolation(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "23505";
+}

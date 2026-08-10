@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { isUniqueViolation } from "../nameValidation";
 import type { Database } from "../../types/database.types";
 
 type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
@@ -94,7 +95,12 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
     })
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("A squad with this name already exists. Please choose a different name.");
+    }
+    throw new Error(error.message);
+  }
 
   // Owner automatically joins their own squad as captain
   const { error: joinError } = await supabase.from("squad_members").insert({
@@ -120,7 +126,12 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
     .eq("id", params.squadId)
     .select()
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("Another squad already uses this name. Please choose a different name.");
+    }
+    throw new Error(error.message);
+  }
   return data;
 }
 
