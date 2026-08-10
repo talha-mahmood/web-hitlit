@@ -22,6 +22,7 @@ import type { Database } from "../../types/database.types";
 import type { SquadDetail } from "../../lib/api/squads";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
@@ -40,8 +41,8 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   const [description, setDescription] = useState(squad.description ?? "");
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert("Missing Info", "Please enter a squad name.");
+    if (!isValidName(name)) {
+      Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
     if (!skillLevel) {

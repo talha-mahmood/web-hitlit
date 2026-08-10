@@ -21,6 +21,7 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -38,8 +39,8 @@ export default function CreateSquadScreen() {
 
   const handleCreate = async () => {
     if (!userId) return;
-    if (!name.trim()) {
-      Alert.alert("Missing Info", "Please enter a squad name.");
+    if (!isValidName(name)) {
+      Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
     if (!skillLevel) {

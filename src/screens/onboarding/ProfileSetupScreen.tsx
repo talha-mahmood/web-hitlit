@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 export default function ProfileSetupScreen() {
   const session = useAuthStore((s) => s.session);
@@ -75,8 +76,8 @@ export default function ProfileSetupScreen() {
 
   const handleSave = async () => {
     if (!userId) return;
-    if (fullName.trim().length < 2) {
-      Alert.alert("Add your name", "Please enter at least 2 characters.");
+    if (!isValidName(fullName)) {
+      Alert.alert("Invalid Name", `Your name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
 
@@ -131,7 +132,10 @@ export default function ProfileSetupScreen() {
           </Pressable>
         </View>
 
-        <Text className="text-muted mb-2">Full name</Text>
+        <View className="flex-row items-center mb-2">
+          <Text className="text-muted">Full name</Text>
+          <Text className="text-red-500 ml-1">*</Text>
+        </View>
         <TextInput
           value={fullName}
           onChangeText={setFullName}

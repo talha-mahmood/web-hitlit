@@ -31,6 +31,7 @@ import {
   addMinutes,
   addDays,
 } from "../../lib/gameFormHelpers";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
 type CreateGameRoute = RouteProp<GamesStackParamList, "CreateGame">;
@@ -80,8 +81,11 @@ export default function CreateGameScreen() {
 
   const handleCreate = async () => {
     if (!userId) return;
-    if (!title.trim()) {
-      Alert.alert("Missing Info", `Please enter a ${isTournament ? "tournament" : "game"} title.`);
+    if (!isValidName(title)) {
+      Alert.alert(
+        "Invalid Title",
+        `${isTournament ? "Tournament" : "Game"} title must be ${NAME_REQUIREMENT_HINT}.`
+      );
       return;
     }
     if (!sportId) {

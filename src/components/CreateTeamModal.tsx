@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Modal, View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { Modal, View, Text, TextInput, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import { SectionLabel } from "./GameFormControls";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../lib/nameValidation";
 
 export default function CreateTeamModal({
   visible,
@@ -18,7 +19,10 @@ export default function CreateTeamModal({
   const [name, setName] = useState("");
 
   const handleCreate = () => {
-    if (!name.trim()) return;
+    if (!isValidName(name)) {
+      Alert.alert("Invalid Name", `Team name must be ${NAME_REQUIREMENT_HINT}.`);
+      return;
+    }
     onSubmit(name.trim());
   };
 

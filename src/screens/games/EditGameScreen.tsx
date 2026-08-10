@@ -33,6 +33,7 @@ import {
   diffHours,
   diffDays,
 } from "../../lib/gameFormHelpers";
+import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -83,8 +84,11 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
   const [entryFee, setEntryFee] = useState(String(game.entry_fee));
 
   const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert("Missing Info", `Please enter a ${isTournament ? "tournament" : "game"} title.`);
+    if (!isValidName(title)) {
+      Alert.alert(
+        "Invalid Title",
+        `${isTournament ? "Tournament" : "Game"} title must be ${NAME_REQUIREMENT_HINT}.`
+      );
       return;
     }
 
