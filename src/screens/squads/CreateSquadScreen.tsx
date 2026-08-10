@@ -42,6 +42,18 @@ export default function CreateSquadScreen() {
       Alert.alert("Missing Info", "Please enter a squad name.");
       return;
     }
+    if (!skillLevel) {
+      Alert.alert("Missing Info", "Please select a skill level.");
+      return;
+    }
+    if (!location.trim()) {
+      Alert.alert("Missing Info", "Please enter a location.");
+      return;
+    }
+    if (!description.trim()) {
+      Alert.alert("Missing Info", "Please enter a description.");
+      return;
+    }
 
     try {
       const squad = await createSquad.mutateAsync({
@@ -103,28 +115,27 @@ export default function CreateSquadScreen() {
         />
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" />
-        <PillRow<SkillLevel | "ANY">
+        <SectionLabel title="Skill Level" required />
+        <PillRow<SkillLevel>
           options={[
-            { label: "Any", value: "ANY" as SkillLevel | "ANY" },
             { label: "Beginner", value: "beginner" },
             { label: "Intermediate", value: "intermediate" },
             { label: "Expert", value: "expert" },
           ]}
-          value={skillLevel ?? "ANY"}
-          onChange={(v) => setSkillLevel(v === "ANY" ? null : (v as SkillLevel))}
+          value={skillLevel}
+          onChange={setSkillLevel}
         />
 
         {/* Location */}
-        <SectionLabel title="Location" />
+        <SectionLabel title="Location" required />
         <LocationPickerField value={location} onChange={setLocation} />
 
         {/* Description */}
-        <SectionLabel title="Description" />
+        <SectionLabel title="Description" required />
         <TextInput
           value={description}
           onChangeText={setDescription}
-          placeholder="Optional notes about your squad (how often you play, vibe, etc.)"
+          placeholder="Notes about your squad (how often you play, vibe, etc.)"
           className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}

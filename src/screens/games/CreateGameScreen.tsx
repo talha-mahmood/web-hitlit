@@ -88,8 +88,20 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a sport.");
       return;
     }
+    if (!venueId) {
+      Alert.alert("Missing Info", "Please select a venue.");
+      return;
+    }
     if (!startTime) {
       Alert.alert("Missing Info", "Please select a start time.");
+      return;
+    }
+    if (!skillLevel) {
+      Alert.alert("Missing Info", "Please select a skill level.");
+      return;
+    }
+    if (!description.trim()) {
+      Alert.alert("Missing Info", "Please enter a description.");
       return;
     }
 
@@ -223,7 +235,7 @@ export default function CreateGameScreen() {
         )}
 
         {/* Venue */}
-        <SectionLabel title="Venue" />
+        <SectionLabel title="Venue" required />
         {!sportId ? (
           <Text className="text-muted text-sm">Select a sport to see venues that offer it.</Text>
         ) : venuesLoading ? (
@@ -236,18 +248,6 @@ export default function CreateGameScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 8 }}
           >
-            <Pressable
-              onPress={() => setVenueId(null)}
-              className={`px-4 py-3 rounded-xl border justify-center ${!venueId ? "bg-primary border-primary" : "bg-white border-border"}`}
-              style={{ width: 130 }}
-            >
-              <Text className={`text-sm font-semibold ${!venueId ? "text-white" : "text-ink"}`}>
-                No specific venue
-              </Text>
-              <Text className={`text-xs mt-0.5 ${!venueId ? "text-white" : "text-muted"}`}>
-                Decide later
-              </Text>
-            </Pressable>
             {venues.map((v) => {
               const selected = venueId === v.id;
               return (
@@ -394,17 +394,16 @@ export default function CreateGameScreen() {
         )}
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" />
-        <PillRow<SkillLevel | "ANY">
+        <SectionLabel title="Skill Level" required />
+        <PillRow<SkillLevel>
           options={[
-            { label: "Any", value: "ANY" as SkillLevel | "ANY" },
             { label: "Beginner", value: "BEGINNER" },
             { label: "Intermediate", value: "INTERMEDIATE" },
             { label: "Advanced", value: "ADVANCED" },
             { label: "Pro", value: "PRO" },
           ]}
-          value={skillLevel ?? "ANY"}
-          onChange={(v) => setSkillLevel(v === "ANY" ? null : (v as SkillLevel))}
+          value={skillLevel}
+          onChange={setSkillLevel}
         />
 
         {/* Gender */}
@@ -447,11 +446,11 @@ export default function CreateGameScreen() {
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" />
+        <SectionLabel title="Description" required />
         <TextInput
           value={description}
           onChangeText={setDescription}
-          placeholder="Optional notes for players (meeting point, equipment, etc.)"
+          placeholder="Notes for players (meeting point, equipment, etc.)"
           className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}
