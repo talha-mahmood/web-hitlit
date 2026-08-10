@@ -9,7 +9,7 @@ import { useProfileStore } from "../../store/profileStore";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
-import SportChip from "../../components/SportChip";
+import SportsBySportSection from "../../components/SportsBySportSection";
 import VenueCard from "../../components/VenueCard";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import { colors } from "../../constants/theme";
@@ -129,25 +129,12 @@ export default function HomeScreen() {
 
           <PromoCarousel slides={promoSlides} />
 
-          <View style={{ paddingVertical: 8, marginBottom: 16 }}>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={sports ?? []}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <SportChip
-                  label={item.name}
-                  onPress={() =>
-                    navigation.navigate("Venues", {
-                      screen: "VenuesList",
-                      params: { sportId: item.id },
-                    })
-                  }
-                />
-              )}
-            />
-          </View>
+          <SportsBySportSection
+            sports={sports ?? []}
+            onSelectSport={(sportId) =>
+              navigation.navigate("Venues", { screen: "VenuesList", params: { sportId } })
+            }
+          />
 
           <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
             <HomeActionCard
