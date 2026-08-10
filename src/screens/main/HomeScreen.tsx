@@ -11,6 +11,7 @@ import { useVenues } from "../../hooks/useVenues";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import SportChip from "../../components/SportChip";
 import VenueCard from "../../components/VenueCard";
+import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import { colors } from "../../constants/theme";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
@@ -56,6 +57,49 @@ export default function HomeScreen() {
 
   const topVenues = (venues ?? []).slice(0, 6);
 
+  const promoSlides: PromoSlide[] = [
+    {
+      key: "tournaments",
+      title: "Compete & Win Big",
+      subtitle: "Join tournaments across your city and prove your game.",
+      cta: "View Tournaments",
+      icon: "trophy",
+      bgColor: "#111827",
+      accentColor: "#F59E0B",
+      onPress: () => navigation.navigate("GamesList", { gameType: "TOURNAMENT" }),
+    },
+    {
+      key: "venues",
+      title: "Book Premium Turfs",
+      subtitle: "Top-rated venues, instant booking, zero hassle.",
+      cta: "Explore Venues",
+      icon: "flash",
+      bgColor: "#0B3B24",
+      accentColor: "#4ADE80",
+      onPress: () => navigation.navigate("Venues", { screen: "VenuesList" }),
+    },
+    {
+      key: "squads",
+      title: "Build Your Squad",
+      subtitle: "Find your regular crew and never play solo again.",
+      cta: "Find Squads",
+      icon: "people",
+      bgColor: "#1E3A5F",
+      accentColor: "#7DD3FC",
+      onPress: () => navigation.navigate("Squads", { screen: "SquadsList" }),
+    },
+    {
+      key: "games",
+      title: "Jump Into a Game",
+      subtitle: "Browse open games nearby and play today.",
+      cta: "Browse Games",
+      icon: "flame",
+      bgColor: "#7C2D12",
+      accentColor: "#FDBA74",
+      onPress: () => navigation.navigate("Games", { screen: "GamesList" }),
+    },
+  ];
+
   return (
     <FlatList
       className="flex-1 bg-white"
@@ -82,6 +126,8 @@ export default function HomeScreen() {
               <Text className="text-muted mt-1">What are you playing today?</Text>
             </View>
           </Pressable>
+
+          <PromoCarousel slides={promoSlides} />
 
           <View style={{ paddingVertical: 8, marginBottom: 16 }}>
             <FlatList
