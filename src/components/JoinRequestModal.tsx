@@ -26,8 +26,10 @@ export default function JoinRequestModal({
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
 
+  const canSend = !!skillLevel && !!location.trim();
+
   const handleSend = () => {
-    if (!skillLevel) return;
+    if (!canSend || !skillLevel) return;
     onSubmit(skillLevel, location.trim());
   };
 
@@ -55,18 +57,18 @@ export default function JoinRequestModal({
               onChange={setSkillLevel}
             />
 
-            <SectionLabel title="Your Location" />
+            <SectionLabel title="Your Location" required />
             <LocationPickerField value={location} onChange={setLocation} />
 
             <Pressable
               onPress={handleSend}
-              disabled={!skillLevel || submitting}
-              className={`rounded-xl py-4 items-center mt-6 ${skillLevel ? "bg-primary" : "bg-gray-200"}`}
+              disabled={!canSend || submitting}
+              className={`rounded-xl py-4 items-center mt-6 ${canSend ? "bg-primary" : "bg-gray-200"}`}
             >
               {submitting ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className={`font-semibold text-base ${skillLevel ? "text-white" : "text-muted"}`}>
+                <Text className={`font-semibold text-base ${canSend ? "text-white" : "text-muted"}`}>
                   Send Request
                 </Text>
               )}
