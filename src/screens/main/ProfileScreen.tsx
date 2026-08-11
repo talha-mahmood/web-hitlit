@@ -9,6 +9,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
+import type { ProfileStats } from "../../lib/api/profileStats";
 import DonutChart from "../../components/DonutChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors } from "../../constants/theme";
@@ -23,16 +24,62 @@ const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
   { value: "expert", label: "Expert" },
 ];
 
-function getParticipationLevel(totalPlayed: number): { label: string; color: string; bg: string } {
-  if (totalPlayed >= 50) return { label: "Elite", color: "#B45309", bg: "#FFFBEB" };
-  if (totalPlayed >= 25) return { label: "Veteran", color: "#7C3AED", bg: "#F5F3FF" };
-  if (totalPlayed >= 10) return { label: "Enthusiast", color: "#0891B2", bg: "#ECFEFF" };
-  if (totalPlayed >= 3) return { label: "Regular", color: "#16A34A", bg: "#F0FDF4" };
-  return { label: "Newcomer", color: "#6B7280", bg: "#F3F4F6" };
+const CARD_SHADOW = {
+  borderWidth: 1,
+  borderColor: "rgba(17, 24, 39, 0.06)",
+  shadowColor: "#0F172A",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.1,
+  shadowRadius: 14,
+  elevation: 4,
+} as const;
+
+const PARTICIPATION_TIERS = [
+  { label: "Newcomer", min: 0, color: "#6B7280", bg: "#F3F4F6" },
+  { label: "Regular", min: 3, color: "#16A34A", bg: "#F0FDF4" },
+  { label: "Enthusiast", min: 10, color: "#0891B2", bg: "#ECFEFF" },
+  { label: "Veteran", min: 25, color: "#7C3AED", bg: "#F5F3FF" },
+  { label: "Elite", min: 50, color: "#B45309", bg: "#FFFBEB" },
+] as const;
+
+function getParticipationInfo(totalPlayed: number) {
+  let idx = 0;
+  for (let i = 0; i < PARTICIPATION_TIERS.length; i++) {
+    if (totalPlayed >= PARTICIPATION_TIERS[i].min) idx = i;
+  }
+  const current = PARTICIPATION_TIERS[idx];
+  const next = PARTICIPATION_TIERS[idx + 1] ?? null;
+  const progress = next ? (totalPlayed - current.min) / (next.min - current.min) : 1;
+  return {
+    label: current.label,
+    color: current.color,
+    bg: current.bg,
+    progress: Math.max(0, Math.min(1, progress)),
+    nextLabel: next?.label ?? null,
+    remaining: next ? next.min - totalPlayed : 0,
+  };
 }
 
 function formatMonthYear(iso: string): string {
   return new Date(iso).toLocaleDateString("en-PK", { month: "long", year: "numeric" });
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+type Achievement = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; unlocked: boolean };
+
+function buildAchievements(stats: ProfileStats): Achievement[] {
+  return [
+    { key: "first-game", label: "First Game", icon: "flag-outline", unlocked: stats.gamesPlayedTotal >= 1 },
+    { key: "regular", label: "5 Games Played", icon: "repeat-outline", unlocked: stats.gamesPlayedTotal >= 5 },
+    { key: "veteran", label: "25 Games Played", icon: "shield-checkmark-outline", unlocked: stats.gamesPlayedTotal >= 25 },
+    { key: "tournament", label: "Tournament Debut", icon: "trophy-outline", unlocked: stats.tournamentsPlayedTotal >= 1 },
+    { key: "squad", label: "Team Player", icon: "people-outline", unlocked: stats.activeSquads.length >= 1 },
+    { key: "host", label: "Game Host", icon: "star-outline", unlocked: stats.gamesHostedTotal >= 1 },
+    { key: "venues", label: "Venue Explorer", icon: "location-outline", unlocked: stats.favoriteVenuesCount >= 3 },
+  ];
 }
 
 function StatCard({
@@ -49,19 +96,7 @@ function StatCard({
   label: string;
 }) {
   return (
-    <View
-      className="bg-white rounded-2xl p-4"
-      style={{
-        width: "48%",
-        borderWidth: 1,
-        borderColor: "rgba(17, 24, 39, 0.06)",
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 14,
-        elevation: 4,
-      }}
-    >
+    <View className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_SHADOW }}>
       <View
         className="items-center justify-center rounded-full mb-3"
         style={{ width: 40, height: 40, backgroundColor: bg }}
@@ -101,6 +136,45 @@ function EnrolledRow({
   );
 }
 
+function ActivityBarRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return (
+    <View className="mb-3">
+      <View className="flex-row justify-between mb-1">
+        <Text className="text-ink text-sm font-medium">{label}</Text>
+        <Text className="text-muted text-sm">{value}</Text>
+      </View>
+      <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+        <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: color }} />
+      </View>
+    </View>
+  );
+}
+
+function AchievementBadge({ achievement }: { achievement: Achievement }) {
+  return (
+    <View style={{ width: "31%", alignItems: "center", marginBottom: 16 }}>
+      <View
+        className="items-center justify-center rounded-full mb-1.5"
+        style={{ width: 52, height: 52, backgroundColor: achievement.unlocked ? colors.primaryLight : "#F3F4F6" }}
+      >
+        <Ionicons
+          name={achievement.unlocked ? achievement.icon : "lock-closed-outline"}
+          size={22}
+          color={achievement.unlocked ? colors.primaryDark : "#9CA3AF"}
+        />
+      </View>
+      <Text
+        className="text-center text-xs"
+        style={{ color: achievement.unlocked ? colors.ink : "#9CA3AF" }}
+        numberOfLines={2}
+      >
+        {achievement.label}
+      </Text>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const profile = useProfileStore((s) => s.profile);
   const updateProfile = useProfileStore((s) => s.updateProfile);
@@ -113,13 +187,17 @@ export default function ProfileScreen() {
 
   const effectiveSkillLevel = profile?.skill_level ?? stats?.computedSkillLevel ?? null;
   const totalPlayed = stats?.gamesPlayedTotal ?? 0;
-  const participation = getParticipationLevel(totalPlayed);
+  const participation = getParticipationInfo(totalPlayed);
 
   const sportSegments = (stats?.sportBreakdown ?? []).map((s) => ({
     label: s.sportName,
     value: s.count,
     color: getSportIcon(s.sportName).fg,
   }));
+
+  const regularGamesPlayed = Math.max(0, (stats?.gamesPlayedTotal ?? 0) - (stats?.tournamentsPlayedTotal ?? 0));
+  const activityMax = Math.max(regularGamesPlayed, stats?.tournamentsPlayedTotal ?? 0, stats?.gamesHostedTotal ?? 0, 1);
+  const achievements = stats ? buildAchievements(stats) : [];
 
   async function handlePickSkillLevel(level: SkillLevel) {
     if (!userId) return;
@@ -140,7 +218,7 @@ export default function ProfileScreen() {
     >
       <View className="px-6">
         {/* Header */}
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-center mb-6">
           {profile?.avatar ? (
             <Image source={{ uri: profile.avatar }} className="w-16 h-16 rounded-full bg-primary-light mr-4" />
           ) : (
@@ -159,30 +237,58 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Badges */}
-        <View className="flex-row mb-6" style={{ gap: 8 }}>
+        {/* Level & skill card */}
+        <View className="bg-white rounded-2xl p-4 mb-6" style={CARD_SHADOW}>
+          <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
+            PARTICIPATION LEVEL
+          </Text>
+          <View className="flex-row items-center justify-between mb-2">
+            <View className="flex-row items-center" style={{ gap: 10 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 36, height: 36, backgroundColor: participation.bg }}
+              >
+                <Ionicons name="flame" size={18} color={participation.color} />
+              </View>
+              <Text className="text-ink font-extrabold text-lg">{participation.label}</Text>
+            </View>
+            {participation.nextLabel ? (
+              <Text className="text-muted text-xs">
+                {participation.remaining} to {participation.nextLabel}
+              </Text>
+            ) : (
+              <Text className="text-muted text-xs">Top tier</Text>
+            )}
+          </View>
+          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+            <View
+              style={{
+                height: 8,
+                borderRadius: 4,
+                width: `${participation.progress * 100}%`,
+                backgroundColor: participation.color,
+              }}
+            />
+          </View>
+
+          <View className="h-px bg-border my-4" />
+
+          <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
+            SKILL LEVEL
+          </Text>
           <Pressable
             onPress={() => setSkillPickerOpen(true)}
-            className="flex-row items-center rounded-full px-3 py-1.5"
-            style={{ backgroundColor: colors.primaryLight, gap: 6 }}
+            className="flex-row items-center justify-between rounded-xl px-3.5 py-3"
+            style={{ backgroundColor: colors.primaryLight }}
           >
-            <Ionicons name="medal-outline" size={14} color={colors.primaryDark} />
-            <Text style={{ color: colors.primaryDark }} className="text-xs font-semibold">
-              {effectiveSkillLevel
-                ? effectiveSkillLevel.charAt(0).toUpperCase() + effectiveSkillLevel.slice(1)
-                : "Set skill level"}
-            </Text>
-            <Ionicons name="chevron-down" size={12} color={colors.primaryDark} />
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <Ionicons name="medal-outline" size={18} color={colors.primaryDark} />
+              <Text style={{ color: colors.primaryDark }} className="font-semibold">
+                {effectiveSkillLevel ? capitalize(effectiveSkillLevel) : "Tap to set your skill level"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.primaryDark} />
           </Pressable>
-          <View
-            className="flex-row items-center rounded-full px-3 py-1.5"
-            style={{ backgroundColor: participation.bg, gap: 6 }}
-          >
-            <Ionicons name="flame-outline" size={14} color={participation.color} />
-            <Text style={{ color: participation.color }} className="text-xs font-semibold">
-              {participation.label}
-            </Text>
-          </View>
         </View>
 
         {isLoading ? (
@@ -210,11 +316,7 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <View className="flex-row items-center mb-6" style={{ gap: 20 }}>
-                <DonutChart
-                  segments={sportSegments}
-                  centerLabel={String(totalPlayed)}
-                  centerSubLabel="Games"
-                />
+                <DonutChart segments={sportSegments} centerLabel={String(totalPlayed)} centerSubLabel="Games" />
                 <View className="flex-1" style={{ gap: 8 }}>
                   {sportSegments.map((s) => (
                     <View key={s.label} className="flex-row items-center" style={{ gap: 8 }}>
@@ -222,14 +324,28 @@ export default function ProfileScreen() {
                       <Text className="text-ink text-sm flex-1" numberOfLines={1}>
                         {s.label}
                       </Text>
-                      <Text className="text-muted text-xs">
-                        {Math.round((s.value / totalPlayed) * 100)}%
-                      </Text>
+                      <Text className="text-muted text-xs">{Math.round((s.value / totalPlayed) * 100)}%</Text>
                     </View>
                   ))}
                 </View>
               </View>
             )}
+
+            {/* Activity breakdown */}
+            <Text className="text-lg font-semibold text-ink mb-3">Your Activity</Text>
+            <View className="bg-white rounded-2xl p-4 mb-6" style={CARD_SHADOW}>
+              <ActivityBarRow label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#2563EB" />
+              <ActivityBarRow label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#D97706" />
+              <ActivityBarRow label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#A21CAF" />
+            </View>
+
+            {/* Achievements */}
+            <Text className="text-lg font-semibold text-ink mb-3">Achievements</Text>
+            <View className="flex-row flex-wrap justify-between mb-3">
+              {achievements.map((a) => (
+                <AchievementBadge key={a.key} achievement={a} />
+              ))}
+            </View>
 
             {/* Active squads */}
             {stats && stats.activeSquads.length > 0 ? (

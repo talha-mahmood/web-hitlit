@@ -244,9 +244,9 @@ export default function GameDetailScreen() {
     : null;
   const hasJoined = !!myPlayerRecord;
   const hasRequested = !!myPendingRecord;
-  // Belt-and-suspenders: the DB-side cron job (expire_past_games) flips status to
-  // COMPLETED every 10 minutes, but this hides the join/leave CTA immediately once
-  // the game's end time passes, without waiting on that job to run.
+  // Belt-and-suspenders: the DB-side cron job (expire_past_games) archives and
+  // hard-deletes the game every 10 minutes, but this hides the join/leave CTA
+  // immediately once the game's end time passes, without waiting on that job to run.
   const hasEnded =
     new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
   const isOpen = (game.status === "OPEN" || game.status === "FULL") && !hasEnded;

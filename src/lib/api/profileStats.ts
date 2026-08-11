@@ -60,12 +60,12 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
       .eq("status", "ACTIVE"),
     supabase
       .from("game_players")
-      .select("games(id, title, game_date, start_time, sports(name))")
+      .select("games(id, title, game_date, start_time, status, sports(name))")
       .eq("user_id", userId)
       .eq("status", "JOINED"),
     supabase
       .from("tournament_team_members")
-      .select("tournament_teams!inner(status, games(id, title, game_date, start_time, sports(name)))")
+      .select("tournament_teams!inner(status, games(id, title, game_date, start_time, status, sports(name)))")
       .eq("user_id", userId)
       .eq("status", "JOINED")
       .eq("tournament_teams.status", "APPROVED"),
@@ -107,13 +107,19 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
     .map(([sportId, v]) => ({ sportId, sportName: v.sportName, count: v.count }))
     .sort((a, b) => b.count - a.count);
 
+  // Only these statuses count as "still upcoming" — matches exactly what
+  // expire_past_games() treats as not-yet-expired. COMPLETED/CANCELLED games
+  // linger in the games table (the cron never cleans those up), so without
+  // this filter they'd wrongly show as something the user can still play.
+  const ACTIVE_GAME_STATUSES = new Set(["OPEN", "FULL", "ONGOING"]);
+
   const activeSquads: ActiveSquadEntry[] = (squadsRes.data ?? [])
     .map((r) => r.squads)
     .filter((s): s is { id: string; name: string } => !!s);
 
   const upcomingGames: UpcomingEntry[] = (gamesRes.data ?? [])
     .map((r) => r.games)
-    .filter((g): g is NonNullable<typeof g> => !!g)
+    .filter((g): g is NonNullable<typeof g> => !!g && ACTIVE_GAME_STATUSES.has(g.status))
     .map((g) => ({
       id: g.id,
       title: g.title,
@@ -125,7 +131,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
 
   const upcomingTournaments: UpcomingEntry[] = (tournamentsRes.data ?? [])
     .map((r) => r.tournament_teams?.games)
-    .filter((g): g is NonNullable<typeof g> => !!g)
+    .filter((g): g is NonNullable<typeof g> => !!g && ACTIVE_GAME_STATUSES.has(g.status))
     .map((g) => ({
       id: g.id,
       title: g.title,
