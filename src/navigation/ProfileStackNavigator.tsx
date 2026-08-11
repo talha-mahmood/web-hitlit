@@ -1,10 +1,26 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ProfileScreen from "../screens/main/ProfileScreen";
 import MyBookingsScreen from "../screens/main/MyBookingsScreen";
+import GameDetailScreen from "../screens/games/GameDetailScreen";
+import GameChatScreen from "../screens/games/GameChatScreen";
+import EditGameScreen from "../screens/games/EditGameScreen";
+import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
+import SquadChatScreen from "../screens/squads/SquadChatScreen";
+import EditSquadScreen from "../screens/squads/EditSquadScreen";
 
 export type ProfileStackParamList = {
   ProfileHome: undefined;
   MyBookings: undefined;
+  // Reachable from the Profile stats screen's "currently enrolled" lists —
+  // hosted here (not just GamesStackNavigator/SquadsStackNavigator) so
+  // tapping through never switches the active tab, matching the same
+  // pattern HomeStackNavigator uses for its own Games shortcuts.
+  GameDetail: { gameId: string };
+  GameChat: { gameId: string; gameTitle?: string };
+  EditGame: { gameId: string };
+  SquadDetail: { squadId: string };
+  SquadChat: { squadId: string; squadName?: string };
+  EditSquad: { squadId: string };
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -14,6 +30,12 @@ export default function ProfileStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileHome" component={ProfileScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
+      <Stack.Screen name="GameDetail" component={GameDetailScreen} />
+      <Stack.Screen name="GameChat" component={GameChatScreen} />
+      <Stack.Screen name="EditGame" component={EditGameScreen} />
+      <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
+      <Stack.Screen name="SquadChat" component={SquadChatScreen} />
+      <Stack.Screen name="EditSquad" component={EditSquadScreen} />
     </Stack.Navigator>
   );
 }

@@ -10,7 +10,7 @@ type ProfileState = {
   fetchProfile: (userId: string) => Promise<void>;
   updateProfile: (
     userId: string,
-    changes: Partial<Pick<Profile, "full_name" | "avatar">>
+    changes: Partial<Pick<Profile, "full_name" | "avatar" | "skill_level">>
   ) => Promise<void>;
   clear: () => void;
 };

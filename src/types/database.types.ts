@@ -283,6 +283,7 @@ export type Database = {
           end_time: string | null
           game_date: string
           game_id: string
+          game_type: Database["public"]["Enums"]["game_type_type"] | null
           id: string
           role: string
           sport_id: string | null
@@ -296,6 +297,7 @@ export type Database = {
           end_time?: string | null
           game_date: string
           game_id: string
+          game_type?: Database["public"]["Enums"]["game_type_type"] | null
           id?: string
           role: string
           sport_id?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           end_time?: string | null
           game_date?: string
           game_id?: string
+          game_type?: Database["public"]["Enums"]["game_type_type"] | null
           id?: string
           role?: string
           sport_id?: string | null
