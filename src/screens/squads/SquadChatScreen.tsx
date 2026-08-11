@@ -20,6 +20,7 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadMessage } from "../../lib/api/squadMessages";
+import ChatIcon from "../../components/ChatIcon";
 
 type ChatRoute = RouteProp<SquadsStackParamList, "SquadChat">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadChat">;
@@ -133,8 +134,13 @@ export default function SquadChatScreen() {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-6">
-              <Ionicons name="chatbubbles" size={40} color={colors.primary} />
-              <Text className="text-muted text-sm text-center mt-3">
+              <View
+                className="items-center justify-center rounded-full mb-3"
+                style={{ width: 88, height: 88, backgroundColor: colors.primaryLight }}
+              >
+                <ChatIcon size={40} />
+              </View>
+              <Text className="text-muted text-sm text-center">
                 No messages yet. Say hi to the squad!
               </Text>
             </View>

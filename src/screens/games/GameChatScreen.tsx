@@ -20,6 +20,7 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameMessage } from "../../lib/api/gameMessages";
+import ChatIcon from "../../components/ChatIcon";
 
 type ChatRoute = RouteProp<GamesStackParamList, "GameChat">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameChat">;
@@ -133,8 +134,13 @@ export default function GameChatScreen() {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-6">
-              <Ionicons name="chatbubbles" size={40} color={colors.primary} />
-              <Text className="text-muted text-sm text-center mt-3">
+              <View
+                className="items-center justify-center rounded-full mb-3"
+                style={{ width: 88, height: 88, backgroundColor: colors.primaryLight }}
+              >
+                <ChatIcon size={40} />
+              </View>
+              <Text className="text-muted text-sm text-center">
                 No messages yet. Say hi to the squad!
               </Text>
             </View>

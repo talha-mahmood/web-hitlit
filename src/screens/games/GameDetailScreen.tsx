@@ -12,6 +12,7 @@ import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import ChatIcon from "../../components/ChatIcon";
 import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
 
@@ -447,9 +448,19 @@ export default function GameDetailScreen() {
         {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
           <Pressable
             onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
-            className="mr-2 p-1"
+            className="ml-1 mr-2 items-center justify-center rounded-full"
+            style={{
+              width: 36,
+              height: 36,
+              backgroundColor: colors.primaryLight,
+              shadowColor: "#0F172A",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 2,
+            }}
           >
-            <Ionicons name="chatbubbles" size={22} color={colors.primary} />
+            <ChatIcon size={19} />
           </Pressable>
         )}
         {isCancelled && (
