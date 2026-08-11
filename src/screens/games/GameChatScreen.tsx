@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGameMessages, useSendGameMessage } from "../../hooks/useGameMessages";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
-import type { GameMessage } from "../../lib/api/gameMessages";
+import { markGameChatRead, type GameMessage } from "../../lib/api/gameMessages";
 import ChatIcon from "../../components/ChatIcon";
 
 type ChatRoute = RouteProp<GamesStackParamList, "GameChat">;
@@ -75,6 +76,17 @@ export default function GameChatScreen() {
 
   const { data: messages, isLoading, error } = useGameMessages(params.gameId);
   const sendMessage = useSendGameMessage(params.gameId);
+  const qc = useQueryClient();
+
+  // Marks the chat read on open, and again whenever a new message arrives
+  // (via realtime) while this screen stays mounted — otherwise the unread
+  // badge on GameDetailScreen would only clear the *next* time you open it.
+  useEffect(() => {
+    if (!userId || !messages || messages.length === 0) return;
+    markGameChatRead(params.gameId, userId).then(() => {
+      qc.invalidateQueries({ queryKey: ["gameChatUnread", params.gameId, userId] });
+    });
+  }, [params.gameId, userId, messages?.length, qc]);
 
   const handleSend = () => {
     const text = draft.trim();

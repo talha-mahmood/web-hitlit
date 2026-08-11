@@ -4,9 +4,11 @@ import {
   fetchGameMessages,
   sendGameMessage,
   subscribeToGameMessages,
+  fetchGameChatUnreadCount,
   type GameMessage,
 } from "../lib/api/gameMessages";
 import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 
 
 export function useGameMessages(gameId: string) {
@@ -46,4 +48,39 @@ export function useSendGameMessage(gameId: string) {
     mutationFn: ({ senderId, message }: { senderId: string; message: string }) =>
       sendGameMessage(gameId, senderId, message),
   });
+}
+
+// Powers the red unread-count badge on the chat icon (GameDetailScreen) —
+// stays in sync as new messages arrive or the chat gets marked read
+// elsewhere (e.g. the chat screen itself, via markGameChatRead).
+export function useGameChatUnreadCount(gameId: string | undefined, userId: string | undefined) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ["gameChatUnread", gameId, userId],
+    queryFn: () => fetchGameChatUnreadCount(gameId as string, userId as string),
+    enabled: !!gameId && !!userId,
+    staleTime: 10_000,
+  });
+
+  useEffect(() => {
+    if (!gameId || !userId) return;
+    const channel = supabase
+      .channel(uniqueChannelName(`gameChatUnread:${gameId}:${userId}`))
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "game_messages", filter: `game_id=eq.${gameId}` },
+        () => qc.invalidateQueries({ queryKey: ["gameChatUnread", gameId, userId] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "game_chat_reads", filter: `game_id=eq.${gameId}` },
+        () => qc.invalidateQueries({ queryKey: ["gameChatUnread", gameId, userId] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [gameId, userId, qc]);
+
+  return query;
 }

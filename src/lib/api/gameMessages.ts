@@ -36,6 +36,37 @@ export async function sendGameMessage(
   if (error) throw new Error(error.message);
 }
 
+export async function fetchGameChatUnreadCount(gameId: string, userId: string): Promise<number> {
+  const { data: readRow, error: readError } = await supabase
+    .from("game_chat_reads")
+    .select("last_read_at")
+    .eq("user_id", userId)
+    .eq("game_id", gameId)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+
+  let query = supabase
+    .from("game_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("game_id", gameId)
+    .is("deleted_at", null)
+    .neq("sender_id", userId);
+  if (readRow?.last_read_at) {
+    query = query.gt("created_at", readRow.last_read_at);
+  }
+
+  const { count, error } = await query;
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+export async function markGameChatRead(gameId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("game_chat_reads")
+    .upsert({ user_id: userId, game_id: gameId, last_read_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+}
+
 // Messages older than 24h are hard-deleted by a DB cron job, so a DELETE event
 // means "this expired," not "someone chose to remove it" — the caller drops it
 // from the local list either way.

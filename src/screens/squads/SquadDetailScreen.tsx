@@ -14,6 +14,7 @@ import {
   useRejectMember,
   useRemoveMember,
 } from "../../hooks/useSquads";
+import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
@@ -170,6 +171,7 @@ export default function SquadDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
 
   const { data: squad, isLoading, error } = useSquadDetail(params.squadId);
+  const { data: chatUnreadCount } = useSquadChatUnreadCount(squad?.id, userId);
   const joinSquad = useJoinSquad();
   const leaveSquad = useLeaveSquad();
   const disbandSquad = useDisbandSquad();
@@ -381,7 +383,7 @@ export default function SquadDetailScreen() {
               elevation: 2,
             }}
           >
-            <ChatIcon size={19} />
+            <ChatIcon size={19} unreadCount={chatUnreadCount} />
           </Pressable>
         )}
         {isFull && (

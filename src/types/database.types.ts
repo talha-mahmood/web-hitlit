@@ -277,6 +277,39 @@ export type Database = {
           },
         ]
       }
+      game_chat_reads: {
+        Row: {
+          game_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_chat_reads_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_history: {
         Row: {
           created_at: string
@@ -917,6 +950,39 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      squad_chat_reads: {
+        Row: {
+          last_read_at: string
+          squad_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          squad_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          squad_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_chat_reads_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       squad_members: {
         Row: {

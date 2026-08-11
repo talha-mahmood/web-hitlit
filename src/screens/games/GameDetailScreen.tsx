@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
+import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
@@ -206,6 +207,7 @@ export default function GameDetailScreen() {
   const { data: tournamentTeams } = useTournamentTeams(
     game?.game_type === "TOURNAMENT" ? params.gameId : ""
   );
+  const { data: chatUnreadCount } = useGameChatUnreadCount(game?.id, userId);
   const joinGame = useJoinGame();
   const leaveGame = useLeaveGame();
   const cancelGame = useCancelGame();
@@ -460,7 +462,7 @@ export default function GameDetailScreen() {
               elevation: 2,
             }}
           >
-            <ChatIcon size={19} />
+            <ChatIcon size={19} unreadCount={chatUnreadCount} />
           </Pressable>
         )}
         {isCancelled && (

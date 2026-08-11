@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSquadMessages, useSendSquadMessage } from "../../hooks/useSquadMessages";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
-import type { SquadMessage } from "../../lib/api/squadMessages";
+import { markSquadChatRead, type SquadMessage } from "../../lib/api/squadMessages";
 import ChatIcon from "../../components/ChatIcon";
 
 type ChatRoute = RouteProp<SquadsStackParamList, "SquadChat">;
@@ -75,6 +76,17 @@ export default function SquadChatScreen() {
 
   const { data: messages, isLoading, error } = useSquadMessages(params.squadId);
   const sendMessage = useSendSquadMessage(params.squadId);
+  const qc = useQueryClient();
+
+  // Marks the chat read on open, and again whenever a new message arrives
+  // (via realtime) while this screen stays mounted — otherwise the unread
+  // badge on SquadDetailScreen would only clear the *next* time you open it.
+  useEffect(() => {
+    if (!userId || !messages || messages.length === 0) return;
+    markSquadChatRead(params.squadId, userId).then(() => {
+      qc.invalidateQueries({ queryKey: ["squadChatUnread", params.squadId, userId] });
+    });
+  }, [params.squadId, userId, messages?.length, qc]);
 
   const handleSend = () => {
     const text = draft.trim();
