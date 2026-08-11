@@ -300,7 +300,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         ) : (
           <>
             <SectionLabel title="Max Players" />
-            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {MAX_PLAYERS_OPTIONS.map((n) => {
                 const selected = maxPlayers === n;
                 const disabled = n < minPlayers;
@@ -319,7 +319,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
             {minPlayers > 0 && (
               <Text className="text-muted text-xs mt-1">
                 {minPlayers} player{minPlayers !== 1 ? "s" : ""} already joined

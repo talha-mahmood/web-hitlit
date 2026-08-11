@@ -363,7 +363,11 @@ export default function CreateGameScreen() {
         ) : (
           <>
             <SectionLabel title="Max Players" />
-            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
               {MAX_PLAYERS_OPTIONS.map((n) => {
                 const selected = maxPlayers === n;
                 return (
@@ -378,7 +382,7 @@ export default function CreateGameScreen() {
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
           </>
         )}
 
