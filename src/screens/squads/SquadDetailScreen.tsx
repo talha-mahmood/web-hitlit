@@ -370,7 +370,7 @@ export default function SquadDetailScreen() {
             onPress={() => navigation.navigate("SquadChat", { squadId: squad.id, squadName: squad.name })}
             className="mr-2 p-1"
           >
-            <Ionicons name="chatbubbles-outline" size={22} color={colors.ink} />
+            <Ionicons name="chatbubbles" size={22} color={colors.primary} />
           </Pressable>
         )}
         {isFull && (

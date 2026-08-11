@@ -133,7 +133,7 @@ export default function SquadChatScreen() {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-6">
-              <Ionicons name="chatbubbles-outline" size={40} color={colors.border} />
+              <Ionicons name="chatbubbles" size={40} color={colors.primary} />
               <Text className="text-muted text-sm text-center mt-3">
                 No messages yet. Say hi to the squad!
               </Text>

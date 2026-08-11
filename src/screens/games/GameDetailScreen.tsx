@@ -449,7 +449,7 @@ export default function GameDetailScreen() {
             onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
             className="mr-2 p-1"
           >
-            <Ionicons name="chatbubbles-outline" size={22} color={colors.ink} />
+            <Ionicons name="chatbubbles" size={22} color={colors.primary} />
           </Pressable>
         )}
         {isCancelled && (
