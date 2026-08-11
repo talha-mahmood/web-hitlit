@@ -31,6 +31,7 @@ import {
   MAX_PLAYERS_OPTIONS,
   addMinutes,
   addDays,
+  isTimeSlotPast,
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
@@ -99,6 +100,10 @@ export default function CreateGameScreen() {
     }
     if (!startTime) {
       Alert.alert("Missing Info", "Please select a start time.");
+      return;
+    }
+    if (selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, startTime)) {
+      Alert.alert("Invalid Start Time", "That time has already passed. Please pick a later start time.");
       return;
     }
     if (!skillLevel) {
@@ -261,7 +266,15 @@ export default function CreateGameScreen() {
             return (
               <Pressable
                 key={d.iso}
-                onPress={() => setSelectedDate(d.iso)}
+                onPress={() => {
+                  setSelectedDate(d.iso);
+                  // A time picked for a later date can be in the past once
+                  // the user switches to today — clear it rather than leave
+                  // an invalid selection sitting there.
+                  if (startTime && d.iso === DAYS[0].iso && isTimeSlotPast(d.iso, startTime)) {
+                    setStartTime(null);
+                  }
+                }}
                 className={`items-center px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
               >
                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
@@ -282,13 +295,22 @@ export default function CreateGameScreen() {
         >
           {TIME_SLOTS.map((t) => {
             const selected = startTime === t.value;
+            const isPast = selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value);
             return (
               <Pressable
                 key={t.value}
-                onPress={() => setStartTime(t.value)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                onPress={() => !isPast && setStartTime(t.value)}
+                disabled={isPast}
+                className={`px-3 py-2 rounded-xl border ${
+                  selected ? "bg-primary border-primary" : isPast ? "bg-gray-50 border-border" : "bg-white border-border"
+                }`}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                <Text
+                  className={`text-sm font-medium ${
+                    selected ? "text-white" : isPast ? "text-border" : "text-ink"
+                  }`}
+                  style={isPast ? { textDecorationLine: "line-through" } : undefined}
+                >
                   {t.label}
                 </Text>
               </Pressable>

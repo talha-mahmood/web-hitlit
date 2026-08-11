@@ -33,6 +33,7 @@ import {
   addDays,
   diffHours,
   diffDays,
+  isTimeSlotPast,
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
@@ -108,6 +109,10 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
     }
     if (!venueId) {
       Alert.alert("Missing Info", "Please select a venue.");
+      return;
+    }
+    if (!startTime) {
+      Alert.alert("Missing Info", "Please select a start time.");
       return;
     }
     if (!skillLevel) {
@@ -209,7 +214,12 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
             return (
               <Pressable
                 key={d.iso}
-                onPress={() => setSelectedDate(d.iso)}
+                onPress={() => {
+                  setSelectedDate(d.iso);
+                  if (d.iso === DAYS[0].iso && isTimeSlotPast(d.iso, startTime)) {
+                    setStartTime("");
+                  }
+                }}
                 className={`items-center px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
               >
                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
@@ -224,13 +234,28 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {TIME_SLOTS.map((t) => {
             const selected = startTime === t.value;
+            // A pre-filled time that's already past (e.g. editing an
+            // ongoing game) stays selectable as-is — only block picking a
+            // *different* past slot going forward.
+            const isPast =
+              !selected && selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value);
             return (
               <Pressable
                 key={t.value}
-                onPress={() => setStartTime(t.value)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                onPress={() => !isPast && setStartTime(t.value)}
+                disabled={isPast}
+                className={`px-3 py-2 rounded-xl border ${
+                  selected ? "bg-primary border-primary" : isPast ? "bg-gray-50 border-border" : "bg-white border-border"
+                }`}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{t.label}</Text>
+                <Text
+                  className={`text-sm font-medium ${
+                    selected ? "text-white" : isPast ? "text-border" : "text-ink"
+                  }`}
+                  style={isPast ? { textDecorationLine: "line-through" } : undefined}
+                >
+                  {t.label}
+                </Text>
               </Pressable>
             );
           })}

@@ -66,6 +66,12 @@ export function diffHours(startTime: string, endTime: string): number {
   return Math.round((minutes / 60) * 2) / 2; // nearest 0.5
 }
 
+// The app is Pakistan-only (see GameDetailScreen's time formatting), so a
+// dateIso + 'HH:MM' pair is always treated as +05:00 when comparing to now.
+export function isTimeSlotPast(dateIso: string, timeValue: string): boolean {
+  return new Date(`${dateIso}T${timeValue}:00+05:00`).getTime() < Date.now();
+}
+
 export const TIME_SLOTS = buildTimeSlots();
 export const DAYS = getNext14Days();
 export const DURATIONS = [1, 1.5, 2, 2.5, 3] as const;
