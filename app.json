@@ -14,7 +14,7 @@
     "android": {
       "package": "com.playfast.app",
       "adaptiveIcon": {
-        "backgroundColor": "#5DBC36",
+        "backgroundColor": "#55B036",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
