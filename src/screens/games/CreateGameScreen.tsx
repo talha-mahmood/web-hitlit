@@ -293,24 +293,17 @@ export default function CreateGameScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
         >
-          {TIME_SLOTS.map((t) => {
+          {TIME_SLOTS.filter(
+            (t) => !(selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value))
+          ).map((t) => {
             const selected = startTime === t.value;
-            const isPast = selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value);
             return (
               <Pressable
                 key={t.value}
-                onPress={() => !isPast && setStartTime(t.value)}
-                disabled={isPast}
-                className={`px-3 py-2 rounded-xl border ${
-                  selected ? "bg-primary border-primary" : isPast ? "bg-gray-50 border-border" : "bg-white border-border"
-                }`}
+                onPress={() => setStartTime(t.value)}
+                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
               >
-                <Text
-                  className={`text-sm font-medium ${
-                    selected ? "text-white" : isPast ? "text-border" : "text-ink"
-                  }`}
-                  style={isPast ? { textDecorationLine: "line-through" } : undefined}
-                >
+                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
                 </Text>
               </Pressable>

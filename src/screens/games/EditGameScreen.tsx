@@ -232,28 +232,22 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         {/* Start Time */}
         <SectionLabel title="Start Time" required />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {TIME_SLOTS.map((t) => {
-            const selected = startTime === t.value;
+          {TIME_SLOTS.filter(
             // A pre-filled time that's already past (e.g. editing an
-            // ongoing game) stays selectable as-is — only block picking a
-            // *different* past slot going forward.
-            const isPast =
-              !selected && selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value);
+            // ongoing game) stays in the list and selectable as-is — only
+            // *other* past slots are removed going forward.
+            (t) =>
+              t.value === startTime ||
+              !(selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value))
+          ).map((t) => {
+            const selected = startTime === t.value;
             return (
               <Pressable
                 key={t.value}
-                onPress={() => !isPast && setStartTime(t.value)}
-                disabled={isPast}
-                className={`px-3 py-2 rounded-xl border ${
-                  selected ? "bg-primary border-primary" : isPast ? "bg-gray-50 border-border" : "bg-white border-border"
-                }`}
+                onPress={() => setStartTime(t.value)}
+                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
               >
-                <Text
-                  className={`text-sm font-medium ${
-                    selected ? "text-white" : isPast ? "text-border" : "text-ink"
-                  }`}
-                  style={isPast ? { textDecorationLine: "line-through" } : undefined}
-                >
+                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
                 </Text>
               </Pressable>
