@@ -22,6 +22,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
+import VenueSearchField from "../../components/VenueSearchField";
 import {
   TIME_SLOTS,
   DAYS,
@@ -193,32 +194,12 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
         {/* Venue */}
         <SectionLabel title="Venue" required />
-        {venuesLoading ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : !venues || venues.length === 0 ? (
-          <Text className="text-muted text-sm">No venues found for this sport yet.</Text>
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {venues.map((v) => {
-              const selected = venueId === v.id;
-              return (
-                <Pressable
-                  key={v.id}
-                  onPress={() => setVenueId(v.id)}
-                  className={`px-4 py-3 rounded-xl border justify-center ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
-                  style={{ width: 150 }}
-                >
-                  <Text className={`text-sm font-semibold ${selected ? "text-white" : "text-ink"}`} numberOfLines={1}>
-                    {v.name}
-                  </Text>
-                  <Text className={`text-xs mt-0.5 ${selected ? "text-white" : "text-muted"}`} numberOfLines={1}>
-                    {v.city ?? "—"}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
+        <VenueSearchField
+          venues={venues}
+          loading={venuesLoading}
+          selectedVenueId={venueId}
+          onSelect={(id) => setVenueId(id || null)}
+        />
 
         {/* Date */}
         <SectionLabel title="Date" required />
