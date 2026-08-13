@@ -1,8 +1,10 @@
-import { View, Text, Pressable, FlatList, ActivityIndicator, Image } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Image } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { useProfileStore } from "../../store/profileStore";
@@ -12,46 +14,67 @@ import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavo
 import SportsBySportSection from "../../components/SportsBySportSection";
 import VenueCard from "../../components/VenueCard";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
-import { colors } from "../../constants/theme";
+import Bouncy from "../../components/Bouncy";
+import { colors, fonts } from "../../constants/theme";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "HomeFeed">,
   BottomTabNavigationProp<MainTabParamList>
 >;
 
-function HomeActionCard({
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function QuickActionCard({
   title,
   subtitle,
-  emoji,
+  icon,
+  color,
+  tint,
   onPress,
 }: {
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  tint: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <Bouncy
       onPress={onPress}
-      className="bg-white rounded-2xl p-4 justify-between"
+      className="bg-white rounded-3xl p-4 justify-between"
       style={{
         width: "48%",
-        height: 120,
-        borderWidth: 1,
-        borderColor: "rgba(17, 24, 39, 0.06)",
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 18,
-        elevation: 6,
+        height: 130,
+        borderWidth: 1.5,
+        borderColor: tint,
+        shadowColor: color,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 14,
+        elevation: 5,
       }}
     >
-      <View>
-        <Text className="text-ink font-extrabold text-base">{title}</Text>
-        <Text className="text-muted text-xs mt-1">{subtitle}</Text>
+      <View
+        className="items-center justify-center rounded-2xl"
+        style={{ width: 44, height: 44, backgroundColor: color }}
+      >
+        <Ionicons name={icon} size={22} color="white" />
       </View>
-      <Text style={{ fontSize: 32, textAlign: "right" }}>{emoji}</Text>
-    </Pressable>
+      <View>
+        <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-base">
+          {title}
+        </Text>
+        <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs mt-0.5">
+          {subtitle}
+        </Text>
+      </View>
+    </Bouncy>
   );
 }
 
@@ -67,6 +90,8 @@ export default function HomeScreen() {
 
   const topVenues = (venues ?? []).slice(0, 6);
 
+  // Bold, saturated, distinct colors per slide — a vivid "cartoon-but-clean"
+  // palette rather than a single muted brand tone repeated everywhere.
   const promoSlides: PromoSlide[] = [
     {
       key: "tournaments",
@@ -74,8 +99,8 @@ export default function HomeScreen() {
       subtitle: "Join tournaments across your city and prove your game.",
       cta: "View Tournaments",
       icon: "trophy",
-      bgColor: "#111827",
-      accentColor: "#F59E0B",
+      bgColor: "#7C3AED",
+      accentColor: "#FDE047",
       onPress: () => navigation.navigate("GamesList", { gameType: "TOURNAMENT" }),
     },
     {
@@ -84,8 +109,8 @@ export default function HomeScreen() {
       subtitle: "Top-rated venues, instant booking, zero hassle.",
       cta: "Explore Venues",
       icon: "flash",
-      bgColor: "#0B3B24",
-      accentColor: "#4ADE80",
+      bgColor: colors.primaryDark,
+      accentColor: "#D9FF6B",
       onPress: () => navigation.navigate("Venues", { screen: "VenuesList" }),
     },
     {
@@ -94,7 +119,7 @@ export default function HomeScreen() {
       subtitle: "Find your regular crew and never play solo again.",
       cta: "Find Squads",
       icon: "people",
-      bgColor: "#1E3A5F",
+      bgColor: "#2563EB",
       accentColor: "#7DD3FC",
       onPress: () => navigation.navigate("Squads", { screen: "SquadsList" }),
     },
@@ -104,7 +129,7 @@ export default function HomeScreen() {
       subtitle: "Browse open games nearby and play today.",
       cta: "Browse Games",
       icon: "flame",
-      bgColor: "#7C2D12",
+      bgColor: "#E11D48",
       accentColor: "#FDBA74",
       onPress: () => navigation.navigate("Games", { screen: "GamesList" }),
     },
@@ -115,65 +140,108 @@ export default function HomeScreen() {
       className="flex-1 bg-white"
       ListHeaderComponent={
         <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
-          <Pressable
-            onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
-            className="flex-row items-center mb-5"
-            style={{ gap: 12 }}
-          >
-            {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
-            ) : (
-              <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
-                <Text className="text-lg font-bold text-primary">
-                  {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+          <Animated.View entering={FadeInDown.duration(400)}>
+            <Bouncy
+              onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
+              className="flex-row items-center mb-6"
+              style={{ gap: 12 }}
+              scaleTo={0.98}
+            >
+              <View
+                className="rounded-full items-center justify-center"
+                style={{ padding: 3, backgroundColor: colors.primaryLight }}
+              >
+                {profile?.avatar ? (
+                  <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
+                ) : (
+                  <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
+                    <Text style={{ fontFamily: fonts.bold }} className="text-lg text-primary">
+                      {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View className="flex-1">
+                <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs">
+                  {getGreeting()}
+                </Text>
+                <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-2xl">
+                  {profile?.full_name?.split(" ")[0] ?? "there"} 👋
                 </Text>
               </View>
-            )}
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-ink">
-                Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-              </Text>
-              <Text className="text-muted mt-1">What are you playing today?</Text>
+            </Bouncy>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(450).delay(80)}>
+            <PromoCarousel slides={promoSlides} />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(450).delay(140)}>
+            <SportsBySportSection
+              sports={sports ?? []}
+              onSelectSport={(sportId) =>
+                navigation.navigate("Venues", { screen: "VenuesList", params: { sportId } })
+              }
+            />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(450).delay(200)}>
+            <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-lg mb-3">
+              Quick actions
+            </Text>
+            <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
+              <QuickActionCard
+                title="Games"
+                subtitle="Join games. Meet players"
+                icon="tennisball"
+                color={colors.sky}
+                tint={colors.skyLight}
+                onPress={() => navigation.navigate("Games", { screen: "GamesList" })}
+              />
+              <QuickActionCard
+                title="Tournaments"
+                subtitle="Compete. Win big."
+                icon="trophy"
+                color={colors.amber}
+                tint={colors.amberLight}
+                onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
+              />
+              <QuickActionCard
+                title="Venues"
+                subtitle="Book turfs. Save big"
+                icon="location"
+                color={colors.coral}
+                tint={colors.coralLight}
+                onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
+              />
+              <QuickActionCard
+                title="Squads"
+                subtitle="Find your play tribe"
+                icon="people"
+                color={colors.violet}
+                tint={colors.violetLight}
+                onPress={() => navigation.navigate("Squads", { screen: "SquadsList" })}
+              />
             </View>
-          </Pressable>
+          </Animated.View>
 
-          <PromoCarousel slides={promoSlides} />
-
-          <SportsBySportSection
-            sports={sports ?? []}
-            onSelectSport={(sportId) =>
-              navigation.navigate("Venues", { screen: "VenuesList", params: { sportId } })
-            }
-          />
-
-          <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
-            <HomeActionCard
-              title="Games"
-              subtitle="Join games. Meet players"
-              emoji="🏸"
-              onPress={() => navigation.navigate("Games", { screen: "GamesList" })}
-            />
-            <HomeActionCard
-              title="Tournaments"
-              subtitle="Compete. Win big."
-              emoji="🏆"
-              onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
-            />
-            <HomeActionCard
-              title="Venues"
-              subtitle="Book turfs. Save big"
-              emoji="⚽"
-              onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
-            />
-            <HomeActionCard
-              title="Squads"
-              subtitle="Find your play tribe"
-              emoji="🤝"
-              onPress={() => navigation.navigate("Squads", { screen: "SquadsList" })}
-            />
-          </View>
-
-          <Text className="text-lg font-semibold text-ink mb-3">Popular venues</Text>
+          <Animated.View entering={FadeInDown.duration(450).delay(260)}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-lg">
+                Popular venues
+              </Text>
+              <Bouncy
+                onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
+                className="flex-row items-center"
+                style={{ gap: 2 }}
+              >
+                <Text style={{ fontFamily: fonts.bold }} className="text-primary text-sm">
+                  See all
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              </Bouncy>
+            </View>
+          </Animated.View>
         </View>
       }
       data={topVenues}
