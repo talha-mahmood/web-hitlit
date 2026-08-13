@@ -1,7 +1,7 @@
 import { View, Text, Image, Pressable } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, cardShadow } from "../constants/theme";
+import { colors, homeCardShadow, homeCardBorderColor } from "../constants/theme";
 import type { VenueListItem } from "../lib/api/venues";
 import Bouncy from "./Bouncy";
 
@@ -39,8 +39,11 @@ export default function VenueCard({
     // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
     // render on a view with overflow:hidden (needed below to clip the cover
     // image to the rounded corners), so it has to sit one level up.
-    <Bouncy onPress={onPress} className={`rounded-2xl ${className}`} style={cardShadow} scaleTo={0.98}>
-      <View className="bg-white rounded-2xl border border-border overflow-hidden">
+    <Bouncy onPress={onPress} className={`rounded-2xl ${className}`} style={homeCardShadow} scaleTo={0.98}>
+      <View
+        className="bg-white rounded-2xl overflow-hidden"
+        style={{ borderWidth: 1, borderColor: homeCardBorderColor }}
+      >
         <View className="relative">
           {coverImage ? (
             <Image source={{ uri: coverImage }} className="w-full h-36" resizeMode="cover" />

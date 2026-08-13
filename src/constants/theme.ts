@@ -49,3 +49,16 @@ export const primaryButtonShadow = {
   shadowRadius: 8,
   elevation: 3,
 };
+
+// The Home screen's four nav cards (Games/Tournaments/Venues/Squads) use a
+// deliberately heavier shadow than cardShadow so they visibly lift off the
+// white background instead of blending into it. Shared here so every list
+// card (game/squad/venue) can match that exact look.
+export const homeCardShadow = {
+  shadowColor: "#0F172A",
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.14,
+  shadowRadius: 18,
+  elevation: 6,
+};
+export const homeCardBorderColor = "rgba(17, 24, 39, 0.06)";
