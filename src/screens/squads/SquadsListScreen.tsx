@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useSquads } from "../../hooks/useSquads";
-import FieldInput from "../../components/FieldInput";
+import SearchField from "../../components/SearchField";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -133,22 +133,12 @@ export default function SquadsListScreen() {
 
       {/* Search by squad name or squad ID */}
       <View className="px-5 mb-3">
-        <FieldInput
+        <SearchField
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search by squad name or squad ID"
+          placeholders={["Search by squad name", "Search by squad ID"]}
           autoCapitalize="none"
           autoCorrect={false}
-          className="text-sm"
-          containerStyle={{ gap: 8 }}
-          left={<Ionicons name="search-outline" size={18} color={colors.muted} />}
-          right={
-            searchInput.length > 0 ? (
-              <Pressable onPress={() => setSearchInput("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={18} color={colors.border} />
-              </Pressable>
-            ) : undefined
-          }
         />
       </View>
 

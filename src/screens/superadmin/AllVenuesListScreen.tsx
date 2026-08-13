@@ -9,7 +9,7 @@ import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
-import FieldInput from "../../components/FieldInput";
+import SearchField from "../../components/SearchField";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 
@@ -52,13 +52,7 @@ export default function AllVenuesListScreen() {
             <Text className="text-white text-xs font-semibold">New Venue</Text>
           </Pressable>
         </View>
-        <FieldInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search venues"
-          containerStyle={{ gap: 8 }}
-          left={<Ionicons name="search-outline" size={18} color={colors.muted} />}
-        />
+        <SearchField value={search} onChangeText={setSearch} placeholders={["Search venues"]} />
       </View>
 
       {isLoading ? (

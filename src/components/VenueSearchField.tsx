@@ -70,8 +70,13 @@ export default function VenueSearchField({
         style={{
           gap: 8,
           borderWidth: 1.5,
-          borderColor: focused ? colors.primary : colors.border,
+          borderColor: focused ? colors.primary : "#CBD5E1",
           backgroundColor: focused ? colors.primaryLight : "white",
+          shadowColor: "#0F172A",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 6,
+          elevation: 1,
         }}
       >
         <Ionicons name="search-outline" size={18} color={colors.muted} />

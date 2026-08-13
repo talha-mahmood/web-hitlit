@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGames, useFavoriteGameIds, useToggleFavoriteGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import SportChip from "../../components/SportChip";
-import FieldInput from "../../components/FieldInput";
+import SearchField from "../../components/SearchField";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -249,24 +249,16 @@ export default function GamesListScreen() {
 
       {/* Search by name or ID */}
       <View className="px-5 mb-3">
-        <FieldInput
+        <SearchField
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder={
-            isTournamentList ? "Search by tournament name or tournament ID" : "Search by game name or game ID"
+          placeholders={
+            isTournamentList
+              ? ["Search by tournament name", "Search by tournament ID"]
+              : ["Search by game name", "Search by game ID"]
           }
           autoCapitalize="none"
           autoCorrect={false}
-          className="text-sm"
-          containerStyle={{ gap: 8 }}
-          left={<Ionicons name="search-outline" size={18} color={colors.muted} />}
-          right={
-            searchInput.length > 0 ? (
-              <Pressable onPress={() => setSearchInput("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={18} color={colors.border} />
-              </Pressable>
-            ) : undefined
-          }
         />
       </View>
 
