@@ -11,6 +11,8 @@ import {
   approvePlayer,
   rejectPlayer,
   removePlayer,
+  fetchFavoriteGameIds,
+  setFavoriteGame,
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
@@ -195,6 +197,26 @@ export function useRemovePlayer(gameId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["game", gameId] });
       qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
+}
+
+export function useFavoriteGameIds(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["favoriteGames", userId],
+    queryFn: () => fetchFavoriteGameIds(userId as string),
+    enabled: !!userId,
+  });
+}
+
+export function useToggleFavoriteGame() {
+  const userId = useAuthStore((s) => s.session?.user.id);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gameId, isFavorite }: { gameId: string; isFavorite: boolean }) =>
+      setFavoriteGame(userId as string, gameId, isFavorite),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["favoriteGames", userId] });
     },
   });
 }

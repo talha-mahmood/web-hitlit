@@ -8,8 +8,14 @@ type TournamentTeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"]
 
 export type GameListItem = GameRow & {
   sports: { id: string; name: string } | null;
+  venues: { id: string; name: string; city: string | null } | null;
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
-  game_players: { id: string; status: GamePlayerRow["status"]; user_id: string }[];
+  game_players: {
+    id: string;
+    status: GamePlayerRow["status"];
+    user_id: string;
+    profiles: { avatar: string | null; full_name: string | null } | null;
+  }[];
   tournament_teams: { id: string; status: TournamentTeamRow["status"] }[];
 };
 
@@ -67,7 +73,7 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id), tournament_teams(id, status)";
+  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, status)";
 
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";
@@ -275,4 +281,33 @@ export async function cancelGame(gameId: string): Promise<void> {
     .update({ status: "CANCELLED" })
     .eq("id", gameId);
   if (error) throw new Error(error.message);
+}
+
+export async function fetchFavoriteGameIds(userId: string): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("favorite_games")
+    .select("game_id")
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  return new Set((data ?? []).map((row) => row.game_id));
+}
+
+export async function setFavoriteGame(
+  userId: string,
+  gameId: string,
+  isFavorite: boolean
+): Promise<void> {
+  if (isFavorite) {
+    const { error } = await supabase
+      .from("favorite_games")
+      .insert({ user_id: userId, game_id: gameId });
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("favorite_games")
+      .delete()
+      .eq("user_id", userId)
+      .eq("game_id", gameId);
+    if (error) throw new Error(error.message);
+  }
 }

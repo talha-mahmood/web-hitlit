@@ -1,4 +1,5 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -6,6 +7,8 @@ import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useSquads } from "../../hooks/useSquads";
 import FieldInput from "../../components/FieldInput";
+import Bouncy from "../../components/Bouncy";
+import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
@@ -13,80 +16,93 @@ import { useAuthStore } from "../../store/authStore";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
 
-const SKILL_COLORS: Record<string, { bg: string; text: string }> = {
-  beginner:     { bg: "bg-green-50",  text: "text-green-700"  },
-  intermediate: { bg: "bg-yellow-50", text: "text-yellow-700" },
-  expert:       { bg: "bg-red-50",    text: "text-red-600"    },
+// Solid, fully-saturated pills for skill level (not pale tints).
+const SKILL_SOLID_COLORS: Record<string, string> = {
+  beginner: colors.primary,
+  intermediate: "#EAB308",
+  expert: "#EC4899",
 };
 
-function SquadCard({ squad, onPress, currentUserId }: {
+function SquadCard({ squad, onPress, currentUserId, index }: {
   squad: SquadListItem;
   onPress: () => void;
   currentUserId?: string;
+  index: number;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
   const isMySquad = squad.squad_owner_id === currentUserId;
   const skill = squad.skill_level;
-  const skillStyle = skill ? SKILL_COLORS[skill] : null;
+  const skillColor = skill ? SKILL_SOLID_COLORS[skill] : null;
 
   return (
-    // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
-    // render on a view with overflow:hidden (needed below to clip the top
-    // accent bar to the rounded corners), so it has to sit one level up.
-    <Pressable onPress={onPress} className="mb-3" style={cardShadow}>
-      <View className="border border-border rounded-2xl overflow-hidden bg-white">
-      <View className="bg-primary h-1" />
-      <View className="px-4 pt-3 pb-4">
-        <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
-          {skillStyle && (
-            <View className={`px-2 py-0.5 rounded-full ${skillStyle.bg}`}>
-              <Text className={`text-xs font-medium ${skillStyle.text}`}>
-                {skill!.charAt(0).toUpperCase() + skill!.slice(1)}
-              </Text>
-            </View>
-          )}
-          {isMySquad && (
-            <View className="bg-blue-50 px-2 py-0.5 rounded-full">
-              <Text className="text-blue-600 text-xs font-medium">My Squad</Text>
-            </View>
-          )}
-          <View className="flex-1" />
-          {isFull && (
-            <View className="bg-red-50 px-2 py-0.5 rounded-full">
-              <Text className="text-red-600 text-xs font-medium">Full</Text>
-            </View>
-          )}
-        </View>
+    <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
+      {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
+          render on a view with overflow:hidden (needed below to clip the top
+          accent bar to the rounded corners), so it has to sit one level up. */}
+      <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
+        <View className="border border-border rounded-2xl overflow-hidden bg-white">
+        <View className="bg-primary h-1" />
+        <View className="px-4 pt-3 pb-4">
+          <View className="flex-row items-center mb-2.5" style={{ gap: 8 }}>
+            <AvatarStack
+              people={active.map((m) => ({
+                avatar: m.profiles?.avatar ?? null,
+                name: m.profiles?.full_name ?? null,
+              }))}
+              size={24}
+            />
+            <Text className="text-muted text-sm font-medium">
+              {active.length} member{active.length !== 1 ? "s" : ""}
+            </Text>
+            <View className="flex-1" />
+            {isMySquad && (
+              <View className="bg-blue-50 px-2 py-0.5 rounded-full">
+                <Text className="text-blue-600 text-xs font-medium">My Squad</Text>
+              </View>
+            )}
+            {isFull && (
+              <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                <Text className="text-red-600 text-xs font-medium">Full</Text>
+              </View>
+            )}
+          </View>
 
-        <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
-          {squad.name}
-        </Text>
+          <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
+            {squad.name}
+          </Text>
 
-        <View className="flex-row items-center justify-between mt-1">
-          <View className="flex-row items-center" style={{ gap: 4, flex: 1 }}>
+          <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
             <Ionicons name="location-outline" size={13} color={colors.muted} />
-            <Text className="text-muted text-sm" numberOfLines={1}>
+            <Text className="text-muted text-sm flex-1" numberOfLines={1}>
               {squad.location ?? "Location not set"}
             </Text>
           </View>
-          <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Ionicons name="people-outline" size={13} color={colors.muted} />
-            <Text className="text-muted text-sm">
-              {active.length}{squad.max_players ? `/${squad.max_players}` : ""}
-            </Text>
+
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1 mr-2" style={{ gap: 6 }}>
+              {skillColor && skill && (
+                <View style={{ backgroundColor: skillColor, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+                  <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
+                    {skill.charAt(0).toUpperCase() + skill.slice(1)}
+                  </Text>
+                </View>
+              )}
+              <Ionicons name="person-circle-outline" size={14} color={colors.muted} />
+              <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+                {squad.profiles?.full_name ?? "Unknown"}
+              </Text>
+            </View>
+            {!!squad.max_players && (
+              <Text className="text-muted text-xs">
+                {active.length}/{squad.max_players}
+              </Text>
+            )}
           </View>
         </View>
-
-        <View className="flex-row items-center mt-2" style={{ gap: 4 }}>
-          <Ionicons name="person-circle-outline" size={14} color={colors.muted} />
-          <Text className="text-muted text-sm" numberOfLines={1}>
-            {squad.profiles?.full_name ?? "Unknown"}
-          </Text>
         </View>
-      </View>
-      </View>
-    </Pressable>
+      </Bouncy>
+    </Animated.View>
   );
 }
 
@@ -176,10 +192,11 @@ export default function SquadsListScreen() {
               </View>
             )
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <SquadCard
               squad={item}
               currentUserId={userId}
+              index={index}
               onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
             />
           )}

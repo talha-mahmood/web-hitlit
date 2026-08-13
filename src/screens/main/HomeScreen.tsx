@@ -199,9 +199,10 @@ export default function HomeScreen() {
           <Text className="text-muted">No venues available yet.</Text>
         )
       }
-      renderItem={({ item }) => (
+      renderItem={({ item, index }) => (
         <VenueCard
           venue={item}
+          index={index}
           isFavorite={favoriteIds?.has(item.id) ?? false}
           onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
           onToggleFavorite={() =>

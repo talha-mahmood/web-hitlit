@@ -7,7 +7,12 @@ type SquadMemberRow = Database["public"]["Tables"]["squad_members"]["Row"];
 
 export type SquadListItem = SquadRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
-  squad_members: { id: string; status: SquadMemberRow["status"]; user_id: string }[];
+  squad_members: {
+    id: string;
+    status: SquadMemberRow["status"];
+    user_id: string;
+    profiles: { avatar: string | null; full_name: string | null } | null;
+  }[];
 };
 
 export type SquadDetail = SquadRow & {
@@ -43,7 +48,7 @@ export type UpdateSquadParams = {
 };
 
 const LIST_SELECT =
-  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id)";
+  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, profiles(avatar, full_name))";
 
 const DETAIL_SELECT =
   "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";

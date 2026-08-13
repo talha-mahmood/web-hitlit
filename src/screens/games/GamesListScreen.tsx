@@ -1,13 +1,16 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useGames } from "../../hooks/useGames";
+import { useGames, useFavoriteGameIds, useToggleFavoriteGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import SportChip from "../../components/SportChip";
 import FieldInput from "../../components/FieldInput";
+import Bouncy from "../../components/Bouncy";
+import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
@@ -16,15 +19,38 @@ import { useAuthStore } from "../../store/authStore";
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
 
-const SKILL_COLORS: Record<string, { bg: string; text: string }> = {
-  BEGINNER:     { bg: "bg-green-50",  text: "text-green-700"  },
-  INTERMEDIATE: { bg: "bg-yellow-50", text: "text-yellow-700" },
-  ADVANCED:     { bg: "bg-orange-50", text: "text-orange-700" },
-  PRO:          { bg: "bg-red-50",    text: "text-red-600"    },
+// Solid, fully-saturated pills for skill level (not pale tints) — reads
+// closer to a real badge at a glance.
+const SKILL_SOLID_COLORS: Record<string, string> = {
+  BEGINNER: colors.primary,
+  INTERMEDIATE: "#EAB308",
+  ADVANCED: "#EC4899",
+  PRO: "#8B5CF6",
 };
 
-// start_time is a TIME column ('HH:MM:SS'), combine with game_date for display
-function formatGameDateTime(dateStr: string, startTime: string): string {
+// The time badge's color varies with time of day — a small, tasteful dose
+// of color variety rather than one flat tint on every card.
+function timeBadgeColor(startTime: string): string {
+  const hour = parseInt(startTime.slice(0, 2), 10);
+  if (hour >= 5 && hour < 12) return "#F59E0B"; // morning
+  if (hour >= 12 && hour < 17) return "#0EA5E9"; // afternoon
+  if (hour >= 17 && hour < 21) return "#6366F1"; // evening
+  return "#2563EB"; // night
+}
+
+function formatTimeRange(startTime: string, endTime: string): string {
+  const fmt = (t: string) =>
+    new Date(`2000-01-01T${t}`).toLocaleTimeString("en-PK", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  return `${fmt(startTime)} - ${fmt(endTime)}`;
+}
+
+// "Today" / "Tomorrow" / "Sat, Aug 16" — used to prefix the time badge so a
+// list spanning many days doesn't lose which day a game falls on.
+function dayLabel(dateStr: string): string {
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -37,21 +63,9 @@ function formatGameDateTime(dateStr: string, startTime: string): string {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
-  let dayLabel: string;
-  if (isSameDay(gameDate, today)) {
-    dayLabel = "Today";
-  } else if (isSameDay(gameDate, tomorrow)) {
-    dayLabel = "Tomorrow";
-  } else {
-    dayLabel = gameDate.toLocaleDateString("en-PK", { weekday: "short", month: "short", day: "numeric" });
-  }
-
-  const timeStr = new Date(`${dateStr}T${startTime}+05:00`).toLocaleTimeString("en-PK", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return `${dayLabel} · ${timeStr}`;
+  if (isSameDay(gameDate, today)) return "Today";
+  if (isSameDay(gameDate, tomorrow)) return "Tomorrow";
+  return gameDate.toLocaleDateString("en-PK", { weekday: "short", month: "short", day: "numeric" });
 }
 
 // A multi-day tournament shows a date range instead of a single day + time.
@@ -66,10 +80,20 @@ function formatDateRange(gameDate: string, endDate: string): string {
   return `${fmt(start, !sameYear)} - ${fmt(end, true)}`;
 }
 
-function GameCard({ game, onPress, currentUserId }: {
+function GameCard({
+  game,
+  onPress,
+  currentUserId,
+  index,
+  isFavorite,
+  onToggleFavorite,
+}: {
   game: GameListItem;
   onPress: () => void;
   currentUserId?: string;
+  index: number;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }) {
   const isTournament = game.game_type === "TOURNAMENT";
   const joined = game.game_players.filter((p) => p.status === "JOINED");
@@ -83,99 +107,130 @@ function GameCard({ game, onPress, currentUserId }: {
   const isFull = game.status === "FULL" || (isTournament ? teamsLeft <= 0 : spotsLeft <= 0);
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
-  const skillStyle = skill ? SKILL_COLORS[skill] : null;
+  const skillColor = skill ? SKILL_SOLID_COLORS[skill] : null;
+  const skillLabel =
+    skill === "BEGINNER" ? "Beginner" :
+    skill === "INTERMEDIATE" ? "Intermediate" :
+    skill === "ADVANCED" ? "Advanced" :
+    skill === "PRO" ? "Pro" : null;
+
+  const badgeLabel =
+    isTournament && game.end_date && game.end_date !== game.game_date
+      ? formatDateRange(game.game_date, game.end_date)
+      : `${dayLabel(game.game_date)} · ${formatTimeRange(game.start_time, game.end_time)}`;
+  const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
 
   return (
-    // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
-    // render on a view with overflow:hidden (needed below to clip the top
-    // accent bar to the rounded corners), so it has to sit one level up.
-    <Pressable onPress={onPress} className="mb-3" style={cardShadow}>
-      <View className="border border-border rounded-2xl overflow-hidden bg-white">
-        {/* Top accent bar keyed to sport */}
-        <View className="bg-primary h-1" />
-        <View className="px-4 pt-3 pb-4">
-        {/* Row 1: Sport + skill + my-game badge */}
-        <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
-          <View className="bg-primary-light px-2 py-0.5 rounded-full">
-            <Text className="text-primary text-xs font-semibold">
-              {game.sports?.name ?? "Sport"}
-            </Text>
-          </View>
-          {game.game_type === "TOURNAMENT" && (
-            <View className="bg-purple-50 px-2 py-0.5 rounded-full">
-              <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+    <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
+      {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
+          render on a view with overflow:hidden (needed below to clip the top
+          accent bar to the rounded corners), so it has to sit one level up. */}
+      <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
+        <View className="border border-border rounded-2xl overflow-hidden bg-white">
+          {/* Top accent bar keyed to sport */}
+          <View className="bg-primary h-1" />
+          <View className="px-4 pt-3 pb-4">
+            {/* Row 1: time/date badge + favorite */}
+            <View className="flex-row items-center justify-between mb-2.5">
+              <View style={{ backgroundColor: badgeColor, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{badgeLabel}</Text>
+              </View>
+              <Bouncy onPress={onToggleFavorite} scaleTo={0.75} hitSlop={8}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={20}
+                  color={isFavorite ? colors.danger : colors.muted}
+                />
+              </Bouncy>
             </View>
-          )}
-          {skillStyle && (
-            <View className={`px-2 py-0.5 rounded-full ${skillStyle.bg}`}>
-              <Text className={`text-xs font-medium ${skillStyle.text}`}>
-                {skill === "BEGINNER" ? "Beginner" :
-                 skill === "INTERMEDIATE" ? "Intermediate" :
-                 skill === "ADVANCED" ? "Advanced" : "Pro"}
-              </Text>
-            </View>
-          )}
-          {isMyGame && (
-            <View className="bg-blue-50 px-2 py-0.5 rounded-full">
-              <Text className="text-blue-600 text-xs font-medium">
-                {isTournament ? "My Tournament" : "My Game"}
-              </Text>
-            </View>
-          )}
-          <View className="flex-1" />
-          {isFull ? (
-            <View className="bg-red-50 px-2 py-0.5 rounded-full">
-              <Text className="text-red-600 text-xs font-medium">Full</Text>
-            </View>
-          ) : (
-            <View className="bg-green-50 px-2 py-0.5 rounded-full">
-              <Text className="text-primary text-xs font-medium">
+
+            {/* Row 2: avatar stack + going/teams count */}
+            <View className="flex-row items-center mb-2" style={{ gap: 8 }}>
+              <AvatarStack
+                people={joined.map((p) => ({
+                  avatar: p.profiles?.avatar ?? null,
+                  name: p.profiles?.full_name ?? null,
+                }))}
+                size={24}
+              />
+              <Text className="text-muted text-sm font-medium">
                 {isTournament
-                  ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
-                  : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                  ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""}`
+                  : `${joined.length} Going`}
               </Text>
             </View>
-          )}
-        </View>
 
-        {/* Row 2: Title */}
-        <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
-          {game.title}
-        </Text>
+            {/* Row 3: Title */}
+            <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
+              {game.title}
+            </Text>
 
-        {/* Row 3: Date/time + players */}
-        <View className="flex-row items-center justify-between mt-1">
-          <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Ionicons name="calendar-outline" size={13} color={colors.muted} />
-            <Text className="text-muted text-sm">
-              {isTournament && game.end_date && game.end_date !== game.game_date
-                ? formatDateRange(game.game_date, game.end_date)
-                : formatGameDateTime(game.game_date, game.start_time)}
-            </Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Ionicons name={isTournament ? "flag-outline" : "people-outline"} size={13} color={colors.muted} />
-            <Text className="text-muted text-sm">
-              {isTournament ? `${approvedTeams.length}/${requiredTeams || "—"} teams` : `${joined.length}/${game.max_players}`}
-            </Text>
-          </View>
-        </View>
+            {/* Row 4: Location */}
+            {game.venues && (
+              <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
+                <Ionicons name="location-outline" size={13} color={colors.muted} />
+                <Text className="text-muted text-sm" numberOfLines={1}>
+                  {game.venues.name}
+                  {game.venues.city ? ` · ${game.venues.city}` : ""}
+                </Text>
+              </View>
+            )}
 
-        {/* Row 4: Creator + entry fee */}
-        <View className="flex-row items-center justify-between mt-2">
-          <View className="flex-row items-center" style={{ gap: 4 }}>
-            <Ionicons name="person-circle-outline" size={14} color={colors.muted} />
-            <Text className="text-muted text-sm" numberOfLines={1}>
-              {game.profiles?.full_name ?? "Unknown"}
-            </Text>
+            {/* Row 5: Sport + tournament + my-game + spots badges */}
+            <View className="flex-row items-center flex-wrap" style={{ gap: 6 }}>
+              <View className="bg-primary-light px-2 py-0.5 rounded-full">
+                <Text className="text-primary text-xs font-semibold">
+                  {game.sports?.name ?? "Sport"}
+                </Text>
+              </View>
+              {isTournament && (
+                <View className="bg-purple-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+                </View>
+              )}
+              {isMyGame && (
+                <View className="bg-blue-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-blue-600 text-xs font-medium">
+                    {isTournament ? "My Tournament" : "My Game"}
+                  </Text>
+                </View>
+              )}
+              {isFull ? (
+                <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-red-600 text-xs font-medium">Full</Text>
+                </View>
+              ) : (
+                <View className="bg-green-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-primary text-xs font-medium">
+                    {isTournament
+                      ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
+                      : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Row 6: skill pill + creator + entry fee */}
+            <View className="flex-row items-center justify-between mt-2.5">
+              <View className="flex-row items-center flex-1 mr-2" style={{ gap: 6 }}>
+                {skillColor && skillLabel && (
+                  <View style={{ backgroundColor: skillColor, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+                    <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>{skillLabel}</Text>
+                  </View>
+                )}
+                <Ionicons name="person-circle-outline" size={14} color={colors.muted} />
+                <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+                  {game.profiles?.full_name ?? "Unknown"}
+                </Text>
+              </View>
+              <Text className="text-ink font-semibold text-sm">
+                {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
+              </Text>
+            </View>
           </View>
-          <Text className="text-ink font-semibold text-sm">
-            {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
-          </Text>
         </View>
-        </View>
-      </View>
-    </Pressable>
+      </Bouncy>
+    </Animated.View>
   );
 }
 
@@ -203,6 +258,8 @@ export default function GamesListScreen() {
     search: debouncedSearch || undefined,
     gameType,
   });
+  const { data: favoriteIds } = useFavoriteGameIds(userId);
+  const toggleFavorite = useToggleFavoriteGame();
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
@@ -312,10 +369,18 @@ export default function GamesListScreen() {
               </View>
             )
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <GameCard
               game={item}
               currentUserId={userId}
+              index={index}
+              isFavorite={favoriteIds?.has(item.id) ?? false}
+              onToggleFavorite={() =>
+                toggleFavorite.mutate({
+                  gameId: item.id,
+                  isFavorite: !(favoriteIds?.has(item.id) ?? false),
+                })
+              }
               onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
             />
           )}
