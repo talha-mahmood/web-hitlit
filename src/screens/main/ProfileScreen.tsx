@@ -37,20 +37,21 @@ const CARD_SHADOW = {
 // A numeric rating (à la 8 Ball Pool / Chess.com) rather than a skill ELO —
 // this app has no win/loss data to base a real competitive rating on, so
 // it's activity-driven: it only ever goes up as you play more, host, and
-// enter tournaments. Everyone starts at the same base, like a fresh account.
-const BASE_RATING = 1000;
-const POINTS_PER_GAME = 15;
-const POINTS_PER_TOURNAMENT = 40;
-const POINTS_PER_HOSTED_GAME = 20;
-const POINTS_PER_HOUR = 2;
+// enter tournaments. Deliberately slow: everyone starts at 0, and a regular
+// game is worth 1 point, so a rating of 100 genuinely means ~100 games
+// played — reaching it should take real, sustained participation.
+const BASE_RATING = 0;
+const POINTS_PER_GAME = 1;
+const POINTS_PER_TOURNAMENT = 3;
+const POINTS_PER_HOSTED_GAME = 2;
 
 const RATING_TIERS = [
-  { label: "Rookie", min: 1000, color: "#6B7280", bg: "#F3F4F6" },
-  { label: "Bronze", min: 1150, color: "#B45309", bg: "#FFFBEB" },
-  { label: "Silver", min: 1350, color: "#64748B", bg: "#F1F5F9" },
-  { label: "Gold", min: 1600, color: "#CA8A04", bg: "#FEFCE8" },
-  { label: "Platinum", min: 1900, color: "#0891B2", bg: "#ECFEFF" },
-  { label: "Diamond", min: 2300, color: "#7C3AED", bg: "#F5F3FF" },
+  { label: "Rookie", min: 0, color: "#6B7280", bg: "#F3F4F6" },
+  { label: "Bronze", min: 10, color: "#B45309", bg: "#FFFBEB" },
+  { label: "Silver", min: 25, color: "#64748B", bg: "#F1F5F9" },
+  { label: "Gold", min: 50, color: "#CA8A04", bg: "#FEFCE8" },
+  { label: "Platinum", min: 100, color: "#0891B2", bg: "#ECFEFF" },
+  { label: "Diamond", min: 200, color: "#7C3AED", bg: "#F5F3FF" },
 ] as const;
 
 function computeRating(stats: ProfileStats | undefined): number {
@@ -60,8 +61,7 @@ function computeRating(stats: ProfileStats | undefined): number {
     BASE_RATING +
     regularGames * POINTS_PER_GAME +
     stats.tournamentsPlayedTotal * POINTS_PER_TOURNAMENT +
-    stats.gamesHostedTotal * POINTS_PER_HOSTED_GAME +
-    Math.round(stats.hoursPlayedTotal * POINTS_PER_HOUR)
+    stats.gamesHostedTotal * POINTS_PER_HOSTED_GAME
   );
 }
 
