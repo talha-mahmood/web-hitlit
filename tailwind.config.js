@@ -6,15 +6,23 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#16A34A",
-          dark: "#15803D",
-          light: "#DCFCE7",
+          DEFAULT: "#0E7C4A",
+          dark: "#0A5C37",
+          light: "#E8F5EE",
         },
-        ink: "#1A1A1A",
+        ink: "#12181A",
         muted: "#6B7280",
-        border: "#E5E7EB",
+        border: "#E9ECEA",
+        offwhite: "#F7F8F6",
         danger: "#DC2626",
         warning: "#F59E0B",
+      },
+      fontFamily: {
+        sans: ["PlusJakartaSans_400Regular"],
+        medium: ["PlusJakartaSans_500Medium"],
+        semibold: ["PlusJakartaSans_600SemiBold"],
+        bold: ["PlusJakartaSans_700Bold"],
+        extrabold: ["PlusJakartaSans_800ExtraBold"],
       },
     },
   },
