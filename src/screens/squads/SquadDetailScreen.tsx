@@ -16,7 +16,7 @@ import {
 } from "../../hooks/useSquads";
 import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
 import { useAuthStore } from "../../store/authStore";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import ChatIcon from "../../components/ChatIcon";
@@ -46,7 +46,7 @@ function InfoRow({
   action?: React.ReactNode;
 }) {
   return (
-    <View className="flex-row items-start py-3 border-b border-border" style={{ gap: 12 }}>
+    <View className="flex-row items-start py-2.5" style={{ gap: 12 }}>
       <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
       <View className="flex-1">
         <Text className="text-muted text-xs">{label}</Text>
@@ -394,55 +394,47 @@ export default function SquadDetailScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Squad info card — shadow lives on this outer, non-clipping
-            wrapper since a shadow doesn't render on a view with
-            overflow:hidden (needed to clip the header band's corners). */}
-        <View className="mx-4 mt-4 rounded-2xl" style={cardShadow}>
-          <View className="border border-border rounded-2xl overflow-hidden">
-            <View className="bg-primary-light px-4 py-3">
-              <Text className="text-primary-dark font-semibold text-sm">Squad Details</Text>
-            </View>
-            <View className="px-4">
-              <InfoRow
-                icon="pricetag-outline"
-                label="Squad ID"
-                value={squad.squad_code}
-                action={
-                  (isOwner || hasJoined) && (
-                    <Pressable
-                      onPress={handleCopySquadCode}
-                      hitSlop={8}
-                      className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-100"
-                      style={{ gap: 4 }}
-                    >
-                      <Ionicons
-                        name={codeCopied ? "checkmark" : "copy-outline"}
-                        size={14}
-                        color={codeCopied ? colors.primary : colors.muted}
-                      />
-                      <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
-                        {codeCopied ? "Copied" : "Copy"}
-                      </Text>
-                    </Pressable>
-                  )
-                }
-              />
-              <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel(squad.skill_level)} />
-              <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
-            </View>
-          </View>
+        {/* Squad info — plain rows, no card chrome */}
+        <View className="px-5 mt-5">
+          <Text className="text-ink font-bold text-base mb-1">Squad Details</Text>
+          <InfoRow
+            icon="pricetag-outline"
+            label="Squad ID"
+            value={squad.squad_code}
+            action={
+              (isOwner || hasJoined) && (
+                <Pressable
+                  onPress={handleCopySquadCode}
+                  hitSlop={8}
+                  className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50"
+                  style={{ gap: 4 }}
+                >
+                  <Ionicons
+                    name={codeCopied ? "checkmark" : "copy-outline"}
+                    size={14}
+                    color={codeCopied ? colors.primary : colors.muted}
+                  />
+                  <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
+                    {codeCopied ? "Copied" : "Copy"}
+                  </Text>
+                </Pressable>
+              )
+            }
+          />
+          <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel(squad.skill_level)} />
+          <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
         </View>
 
         {/* Description */}
         {!!squad.description && (
-          <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
+          <View className="px-5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-2">About this squad</Text>
             <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
           </View>
         )}
 
         {/* Members */}
-        <View className="mx-4 mt-4">
+        <View className="px-5 mt-6">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-ink font-semibold text-sm">
               Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
@@ -472,7 +464,7 @@ export default function SquadDetailScreen() {
 
         {/* Pending join requests — owner only, shows requester's skill + location */}
         {isOwner && pendingRequests.length > 0 && (
-          <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
+          <View className="px-5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-1">
               Join Requests ({pendingRequests.length})
             </Text>
@@ -500,10 +492,7 @@ export default function SquadDetailScreen() {
         )}
 
         {/* Owner */}
-        <View
-          className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl p-4"
-          style={{ gap: 12, ...cardShadow }}
-        >
+        <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
           {squad.profiles?.avatar ? (
             <Image
               source={{ uri: squad.profiles.avatar }}
