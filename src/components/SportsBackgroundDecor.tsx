@@ -76,7 +76,7 @@ function FloatingIcon({ item }: { item: DecorItem }) {
         style,
       ]}
     >
-      <MaterialCommunityIcons name={item.icon} size={item.size} color="rgba(255,255,255,0.16)" />
+      <MaterialCommunityIcons name={item.icon} size={item.size} color="rgba(22,163,74,0.09)" />
     </Animated.View>
   );
 }

@@ -16,7 +16,7 @@ import { getSportIcon } from "../lib/sportIcons";
 export default function SportHeroBadge({ sportName }: { sportName: string }) {
   const scale = useSharedValue(0);
   const bob = useSharedValue(0);
-  const { icon } = getSportIcon(sportName);
+  const { icon, bg, fg } = getSportIcon(sportName);
 
   useEffect(() => {
     scale.value = 0;
@@ -45,16 +45,16 @@ export default function SportHeroBadge({ sportName }: { sportName: string }) {
           width: 60,
           height: 60,
           borderRadius: 30,
-          backgroundColor: "rgba(255,255,255,0.18)",
+          backgroundColor: bg,
           alignItems: "center",
           justifyContent: "center",
           borderWidth: 1.5,
-          borderColor: "rgba(255,255,255,0.4)",
+          borderColor: fg,
         },
         style,
       ]}
     >
-      <MaterialCommunityIcons name={icon} size={28} color="#FFFFFF" />
+      <MaterialCommunityIcons name={icon} size={28} color={fg} />
     </Animated.View>
   );
 }

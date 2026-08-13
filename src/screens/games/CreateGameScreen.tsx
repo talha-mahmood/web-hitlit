@@ -46,19 +46,18 @@ type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
 
-// Chips on this screen sit on a green page background, so the selected
-// state is inverted (solid white + green text) to stay legible instead of
-// green-on-green, and unselected chips are a translucent white outline.
+// Shared "chip" look for the inline pickers below (sport, date, time, max
+// players) — same rounded + shadow-when-selected treatment as PillRow.
 function chipStyle(selected: boolean, extra?: object) {
   return {
     borderWidth: 1.5,
-    borderColor: selected ? "white" : "rgba(255,255,255,0.45)",
-    backgroundColor: selected ? "white" : "rgba(255,255,255,0.14)",
+    borderColor: selected ? colors.primary : colors.border,
+    backgroundColor: selected ? colors.primary : "white",
     ...(selected
       ? {
-          shadowColor: "#000",
+          shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.18,
+          shadowOpacity: 0.2,
           shadowRadius: 6,
           elevation: 2,
         }
@@ -80,7 +79,7 @@ function SportChipItem({
   return (
     <Animated.View style={pulseStyle}>
       <Bouncy onPress={onPress} className="px-4 py-2.5 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>
+        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
       </Bouncy>
@@ -103,8 +102,8 @@ function DateChipItem({
   return (
     <Animated.View style={pulseStyle}>
       <Bouncy onPress={onPress} className="items-center px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-xs ${selected ? "text-primary" : "text-white/80"}`}>{day}</Text>
-        <Text className={`text-base font-bold mt-0.5 ${selected ? "text-primary" : "text-white"}`}>
+        <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
+        <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
       </Bouncy>
@@ -125,7 +124,7 @@ function TimeChipItem({
   return (
     <Animated.View style={pulseStyle}>
       <Bouncy onPress={onPress} className="px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>
+        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
       </Bouncy>
@@ -146,7 +145,7 @@ function MaxPlayersChipItem({
   return (
     <Animated.View style={pulseStyle}>
       <Bouncy onPress={onPress} className="w-12 py-2 rounded-2xl items-center" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>{n}</Text>
+        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Bouncy>
     </Animated.View>
   );
@@ -272,38 +271,38 @@ export default function CreateGameScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.primary }}
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SportsBackgroundDecor />
 
       {/* Header */}
       <View
-        className="flex-row items-center px-4 pb-4"
-        style={{ paddingTop: insets.top + 16, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.25)" }}
+        className="flex-row items-center px-4 pb-4 border-b border-border"
+        style={{ paddingTop: insets.top + 16 }}
       >
         <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color="white" />
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Bouncy>
-        <Text className="text-base font-bold text-white flex-1">
+        <Text className="text-base font-bold text-ink flex-1">
           {isTournament ? "Create Tournament" : "Create Game"}
         </Text>
         <Bouncy
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="bg-white rounded-xl px-4 py-2"
+          className="bg-primary rounded-xl px-4 py-2"
           style={{
-            shadowColor: "#000",
+            shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
+            shadowOpacity: 0.25,
             shadowRadius: 8,
             elevation: 3,
           }}
         >
           {createGame.isPending ? (
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-primary font-semibold text-sm">Post</Text>
+            <Text className="text-white font-semibold text-sm">Post</Text>
           )}
         </Bouncy>
       </View>
@@ -314,7 +313,7 @@ export default function CreateGameScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
-        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required variant="onGreen" />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
         <FieldInput
           value={title}
           onChangeText={setTitle}
@@ -323,11 +322,11 @@ export default function CreateGameScreen() {
         />
 
         {/* Sport */}
-        <SectionLabel title="Sport" required variant="onGreen" />
+        <SectionLabel title="Sport" required />
         {selectedSportName && (
           <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
             <SportHeroBadge sportName={selectedSportName} />
-            <Text className="text-white font-semibold flex-1">{selectedSportName}</Text>
+            <Text className="text-ink font-semibold flex-1">{selectedSportName}</Text>
           </View>
         )}
         <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -342,7 +341,7 @@ export default function CreateGameScreen() {
         </View>
 
         {/* Game Type */}
-        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} variant="onGreen" />
+        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />
         {forcedTournament ? (
           <View className="bg-purple-50 self-start px-4 py-2 rounded-2xl">
             <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
@@ -355,12 +354,12 @@ export default function CreateGameScreen() {
             ]}
             value={gameType}
             onChange={setGameType}
-            variant="onGreen"
+           
           />
         )}
 
         {/* Venue */}
-        <SectionLabel title="Venue" required variant="onGreen" />
+        <SectionLabel title="Venue" required />
         <VenueSearchField
           venues={venues}
           loading={sportId != null && venuesLoading}
@@ -370,7 +369,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Date */}
-        <SectionLabel title="Date" required variant="onGreen" />
+        <SectionLabel title="Date" required />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -396,7 +395,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Start Time */}
-        <SectionLabel title="Start Time" required variant="onGreen" />
+        <SectionLabel title="Start Time" required />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -415,7 +414,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Duration */}
-        <SectionLabel title="Duration" variant="onGreen" />
+        <SectionLabel title="Duration" />
         {isTournament ? (
           <PillRow
             options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
@@ -424,7 +423,7 @@ export default function CreateGameScreen() {
             }))}
             value={String(durationDays)}
             onChange={(v) => setDurationDays(parseInt(v, 10))}
-            variant="onGreen"
+           
           />
         ) : (
           <PillRow
@@ -434,14 +433,14 @@ export default function CreateGameScreen() {
             }))}
             value={String(duration)}
             onChange={(v) => setDuration(parseFloat(v))}
-            variant="onGreen"
+           
           />
         )}
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
           <>
-            <SectionLabel title="Number of Teams" required variant="onGreen" />
+            <SectionLabel title="Number of Teams" required />
             <FieldInput
               value={numberOfTeams}
               onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
@@ -450,7 +449,7 @@ export default function CreateGameScreen() {
               maxLength={3}
             />
 
-            <SectionLabel title="Players per Team" required variant="onGreen" />
+            <SectionLabel title="Players per Team" required />
             <FieldInput
               value={playersPerTeam}
               onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
@@ -458,14 +457,14 @@ export default function CreateGameScreen() {
               placeholder="e.g. 11"
               maxLength={2}
             />
-            <Text className="text-white/80 text-xs mt-1">
+            <Text className="text-muted text-xs mt-1">
               A player must first form (or join) a team with the required number of
               members — the team is then submitted to you as host for approval.
             </Text>
           </>
         ) : (
           <>
-            <SectionLabel title="Max Players" variant="onGreen" />
+            <SectionLabel title="Max Players" />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -484,7 +483,7 @@ export default function CreateGameScreen() {
         )}
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" required variant="onGreen" />
+        <SectionLabel title="Skill Level" required />
         <PillRow<SkillLevel>
           options={[
             { label: "Beginner", value: "BEGINNER" },
@@ -494,11 +493,11 @@ export default function CreateGameScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
-          variant="onGreen"
+         
         />
 
         {/* Gender */}
-        <SectionLabel title="Open To" variant="onGreen" />
+        <SectionLabel title="Open To" />
         <PillRow<Gender>
           options={[
             { label: "Everyone", value: "mixed" },
@@ -507,11 +506,11 @@ export default function CreateGameScreen() {
           ]}
           value={gender}
           onChange={setGender}
-          variant="onGreen"
+         
         />
 
         {/* Visibility */}
-        <SectionLabel title="Visibility" variant="onGreen" />
+        <SectionLabel title="Visibility" />
         <PillRow<Visibility>
           options={[
             { label: "Public", value: "public" },
@@ -519,11 +518,11 @@ export default function CreateGameScreen() {
           ]}
           value={visibility}
           onChange={setVisibility}
-          variant="onGreen"
+         
         />
 
         {/* Entry Fee */}
-        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} variant="onGreen" />
+        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
         <FieldInput
           value={entryFee}
           onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
@@ -531,12 +530,12 @@ export default function CreateGameScreen() {
           placeholder="0"
           left={<Text className="text-muted mr-2">Rs</Text>}
         />
-        <Text className="text-white/80 text-xs mt-1">
+        <Text className="text-muted text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" variant="onGreen" />
+        <SectionLabel title="Description" />
         <FieldInput
           value={description}
           onChangeText={setDescription}
