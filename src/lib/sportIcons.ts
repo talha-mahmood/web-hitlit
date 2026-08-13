@@ -11,13 +11,13 @@ type SportIconInfo = {
 
 // Keyed by lowercase sport name (from public.sports.name). Colors are chosen
 // to stay visually distinct even where two sports share an icon glyph (e.g.
-// Cricket / Box Cricket, or the racquet-court sports Padel/Squash).
+// Outdoor Cricket / Box Cricket, or the racquet-court sports Padel/Squash).
 const SPORT_ICON_MAP: Record<string, SportIconInfo> = {
   badminton: { icon: "badminton", bg: "#F0FDF4", fg: "#16A34A" },
   football: { icon: "soccer", bg: "#EFF6FF", fg: "#2563EB" },
   futsal: { icon: "soccer", bg: "#F0F9FF", fg: "#0284C7" },
   "box cricket": { icon: "cricket", bg: "#FFFBEB", fg: "#D97706" },
-  cricket: { icon: "cricket", bg: "#FDF4FF", fg: "#A21CAF" },
+  "outdoor cricket": { icon: "cricket", bg: "#FDF4FF", fg: "#A21CAF" },
   pickleball: { icon: "table-tennis", bg: "#ECFEFF", fg: "#0891B2" },
   basketball: { icon: "basketball", bg: "#FFF7ED", fg: "#EA580C" },
   tennis: { icon: "tennis", bg: "#FEFCE8", fg: "#CA8A04" },
