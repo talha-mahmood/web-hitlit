@@ -85,6 +85,7 @@ function TeamCard({
   userId,
   isHost,
   disabled,
+  hasActiveTeamElsewhere,
   onRequestJoin,
   onLeave,
   onApproveMember,
@@ -98,6 +99,10 @@ function TeamCard({
   userId?: string;
   isHost: boolean;
   disabled: boolean;
+  // True when the user already has a PENDING request or a JOINED spot on a
+  // *different* (non-rejected) team in this same tournament — until the
+  // captain there rejects them or they leave, they can't request this team.
+  hasActiveTeamElsewhere: boolean;
   onRequestJoin: () => void;
   onLeave: () => void;
   onApproveMember: (memberId: string, name: string | null) => void;
@@ -256,6 +261,10 @@ function TeamCard({
           ) : myMembership?.status === "PENDING" ? (
             <Text className="text-orange-600 text-xs font-medium text-center">
               Request sent — awaiting captain approval
+            </Text>
+          ) : !myMembership && hasActiveTeamElsewhere ? (
+            <Text className="text-muted text-xs text-center">
+              You already have a request or spot on another team in this tournament.
             </Text>
           ) : !myMembership && team.status === "FORMING" && !isTeamFull ? (
             <Pressable
@@ -532,6 +541,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               userId={userId}
               isHost={isHost}
               disabled={disabled}
+              hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
               onRequestJoin={() => setJoinRequestTeamId(team.id)}
               onLeave={() => handleLeave(team.id)}
               onApproveMember={handleApproveMember}
