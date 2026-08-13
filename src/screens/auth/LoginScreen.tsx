@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, Pressable, ActivityIndicator, Alert } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { signInWithGoogle } from "../../lib/googleAuth";
 import { colors } from "../../constants/theme";
@@ -27,32 +27,47 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white items-center justify-between px-6 py-16">
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-4xl font-extrabold text-primary">PlayFast</Text>
-        <Text className="text-muted text-center mt-3 text-base">
+    <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: colors.primary }}>
+      <View
+        className="w-full items-center rounded-3xl px-6 py-10"
+        style={{
+          backgroundColor: "white",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.18,
+          shadowRadius: 20,
+          elevation: 8,
+        }}
+      >
+        <Image
+          source={require("../../../assets/icon.png")}
+          style={{ width: 84, height: 84, borderRadius: 42 }}
+        />
+        <Text className="text-2xl font-extrabold text-ink mt-5 text-center">
+          Welcome to PlayFast
+        </Text>
+        <Text className="text-muted text-center mt-2 text-sm px-2">
           Find players, book courts, and get in the game.
         </Text>
+
+        <Pressable
+          onPress={handleGoogleSignIn}
+          disabled={isSigningIn}
+          className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-4 mt-8 active:opacity-90"
+          style={{ backgroundColor: colors.primary }}
+        >
+          {isSigningIn ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <AntDesign name="google" size={20} color="white" />
+              <Text className="text-white font-semibold text-base">Continue with Google</Text>
+            </>
+          )}
+        </Pressable>
       </View>
 
-      <Pressable
-        onPress={handleGoogleSignIn}
-        disabled={isSigningIn}
-        className="w-full flex-row items-center justify-center gap-3 border border-border rounded-xl py-4 bg-white active:bg-primary-light"
-      >
-        {isSigningIn ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : (
-          <>
-            <AntDesign name="google" size={20} color={colors.ink} />
-            <Text className="text-ink font-semibold text-base">
-              Continue with Google
-            </Text>
-          </>
-        )}
-      </Pressable>
-
-      <Text className="text-muted text-xs text-center mt-4">
+      <Text className="text-white text-xs text-center mt-6 px-4" style={{ opacity: 0.85 }}>
         By continuing, you agree to our Terms of Service and Privacy Policy.
       </Text>
     </View>
