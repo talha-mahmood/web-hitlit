@@ -136,7 +136,8 @@ export default function SquadsListScreen() {
         <SearchField
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholders={["Search by squad name", "Search by squad ID"]}
+          prefix="Search by "
+          variants={["squad name", "squad ID"]}
           autoCapitalize="none"
           autoCorrect={false}
         />

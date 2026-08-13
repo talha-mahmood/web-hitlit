@@ -52,7 +52,7 @@ export default function AllVenuesListScreen() {
             <Text className="text-white text-xs font-semibold">New Venue</Text>
           </Pressable>
         </View>
-        <SearchField value={search} onChangeText={setSearch} placeholders={["Search venues"]} />
+        <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["venue name"]} />
       </View>
 
       {isLoading ? (

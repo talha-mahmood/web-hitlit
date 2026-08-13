@@ -252,11 +252,8 @@ export default function GamesListScreen() {
         <SearchField
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholders={
-            isTournamentList
-              ? ["Search by tournament name", "Search by tournament ID"]
-              : ["Search by game name", "Search by game ID"]
-          }
+          prefix="Search by "
+          variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
           autoCapitalize="none"
           autoCorrect={false}
         />

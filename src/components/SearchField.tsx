@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ComponentProps } from "react";
-import { View, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
@@ -12,14 +12,16 @@ const SWIPE_DURATION = 220;
 // set it apart from a plain FieldInput:
 //  - A visibly darker border (+ a soft shadow) so it doesn't blend into the
 //    white page background the way a pale `colors.border` line does.
-//  - When empty, its placeholder cycles through `placeholders` (e.g. "Search
-//    by game name" -> "Search by game ID"), swiping up/out and in/up every
-//    second — a fake placeholder overlay, since a native TextInput
-//    placeholder can't be animated directly.
+//  - When empty, its placeholder is `prefix` (static, e.g. "Search by ")
+//    followed by one of `variants` (e.g. "game name" / "game ID") — only the
+//    variant part swipes out/in every second, the prefix never moves. A
+//    native TextInput placeholder can't be animated, so this is a fake
+//    overlay shown only while the field is empty.
 export default function SearchField({
   value,
   onChangeText,
-  placeholders,
+  prefix,
+  variants,
   autoCapitalize,
   autoCorrect,
   keyboardType,
@@ -27,7 +29,8 @@ export default function SearchField({
 }: {
   value: string;
   onChangeText: (t: string) => void;
-  placeholders: string[];
+  prefix: string;
+  variants: string[];
   autoCapitalize?: ComponentProps<typeof TextInput>["autoCapitalize"];
   autoCorrect?: boolean;
   keyboardType?: ComponentProps<typeof TextInput>["keyboardType"];
@@ -39,14 +42,14 @@ export default function SearchField({
   const opacity = useSharedValue(1);
 
   useEffect(() => {
-    if (placeholders.length < 2) return;
+    if (variants.length < 2) return;
     let cancelled = false;
     const id = setInterval(() => {
       opacity.value = withTiming(0, { duration: SWIPE_DURATION, easing: Easing.in(Easing.ease) });
       translateY.value = withTiming(-10, { duration: SWIPE_DURATION, easing: Easing.in(Easing.ease) });
       setTimeout(() => {
         if (cancelled) return;
-        setIndex((i) => (i + 1) % placeholders.length);
+        setIndex((i) => (i + 1) % variants.length);
         translateY.value = 10;
         opacity.value = withTiming(1, { duration: SWIPE_DURATION, easing: Easing.out(Easing.ease) });
         translateY.value = withTiming(0, { duration: SWIPE_DURATION, easing: Easing.out(Easing.ease) });
@@ -56,7 +59,7 @@ export default function SearchField({
       cancelled = true;
       clearInterval(id);
     };
-  }, [placeholders, opacity, translateY]);
+  }, [variants, opacity, translateY]);
 
   const placeholderStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -95,17 +98,28 @@ export default function SearchField({
           style={{ paddingVertical: 12 }}
         />
         {value.length === 0 && (
-          <Animated.View
+          <View
             pointerEvents="none"
-            style={[
-              { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center" },
-              placeholderStyle,
-            ]}
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              flexDirection: "row",
+              alignItems: "center",
+              overflow: "hidden",
+            }}
           >
-            <Animated.Text style={{ color: colors.muted, fontSize: 14 }} numberOfLines={1}>
-              {placeholders[index % placeholders.length]}
-            </Animated.Text>
-          </Animated.View>
+            <Text style={{ color: colors.muted, fontSize: 14 }} numberOfLines={1}>
+              {prefix}
+            </Text>
+            <Animated.View style={placeholderStyle}>
+              <Animated.Text style={{ color: colors.muted, fontSize: 14 }} numberOfLines={1}>
+                {variants[index % variants.length]}
+              </Animated.Text>
+            </Animated.View>
+          </View>
         )}
       </View>
       {value.length > 0 && (

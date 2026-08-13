@@ -42,7 +42,8 @@ export default function VenuesListScreen() {
         <SearchField
           value={search}
           onChangeText={setSearch}
-          placeholders={["Search venues", "Search by city"]}
+          prefix="Search by "
+          variants={["venue name", "city"]}
           containerStyle={{ marginBottom: 16 }}
         />
       </View>
