@@ -14,9 +14,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitializing: true,
   setSession: (session) => set({ session }),
   init: () => {
-    supabase.auth.getSession().then(({ data }) => {
-      set({ session: data.session, isInitializing: false });
-    });
+    // A network hiccup here must never leave the app stuck on the splash
+    // screen forever — fall back to "logged out" so AuthNavigator takes over
+    // and the user can at least retry, instead of an unrecoverable hang.
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        set({ session: data.session, isInitializing: false });
+      })
+      .catch(() => {
+        set({ session: null, isInitializing: false });
+      });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {

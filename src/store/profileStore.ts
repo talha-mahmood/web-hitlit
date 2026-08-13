@@ -25,17 +25,24 @@ export const useProfileStore = create<ProfileState>((set) => ({
   isLoading: true,
   fetchProfile: async (userId: string) => {
     set({ isLoading: true });
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    // A thrown network error here (not just a normal Postgrest {error}
+    // response) must never leave isLoading stuck at true — that's exactly
+    // what keeps the whole app parked on the splash screen forever.
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
+      if (error) {
+        set({ isLoading: false });
+        return;
+      }
+      set({ profile: data, isLoading: false });
+    } catch {
       set({ isLoading: false });
-      return;
     }
-    set({ profile: data, isLoading: false });
   },
   updateProfile: async (userId, changes) => {
     const { data, error } = await supabase
