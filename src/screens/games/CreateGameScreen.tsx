@@ -23,7 +23,6 @@ import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
-import Bouncy from "../../components/Bouncy";
 import {
   TIME_SLOTS,
   DAYS,
@@ -190,13 +189,13 @@ export default function CreateGameScreen() {
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}
       >
-        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
+        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Bouncy>
+        </Pressable>
         <Text className="text-base font-bold text-ink flex-1">
           {isTournament ? "Create Tournament" : "Create Game"}
         </Text>
-        <Bouncy
+        <Pressable
           onPress={handleCreate}
           disabled={createGame.isPending}
           className="bg-primary rounded-xl px-4 py-2"
@@ -213,7 +212,7 @@ export default function CreateGameScreen() {
           ) : (
             <Text className="text-white font-semibold text-sm">Post</Text>
           )}
-        </Bouncy>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -236,17 +235,16 @@ export default function CreateGameScreen() {
           {(sports ?? []).map((s) => {
             const selected = sportId === s.id;
             return (
-              <Bouncy
+              <Pressable
                 key={s.id}
                 onPress={() => handleSportChange(s.id)}
-                scaleTo={0.94}
                 className="px-4 py-2.5 rounded-2xl"
                 style={chipStyle(selected)}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {s.name}
                 </Text>
-              </Bouncy>
+              </Pressable>
             );
           })}
         </View>
@@ -288,7 +286,7 @@ export default function CreateGameScreen() {
           {DAYS.map((d) => {
             const selected = selectedDate === d.iso;
             return (
-              <Bouncy
+              <Pressable
                 key={d.iso}
                 onPress={() => {
                   setSelectedDate(d.iso);
@@ -299,7 +297,6 @@ export default function CreateGameScreen() {
                     setStartTime(null);
                   }
                 }}
-                scaleTo={0.94}
                 className="items-center px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
@@ -307,7 +304,7 @@ export default function CreateGameScreen() {
                 <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
                   {d.label}
                 </Text>
-              </Bouncy>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -324,17 +321,16 @@ export default function CreateGameScreen() {
           ).map((t) => {
             const selected = startTime === t.value;
             return (
-              <Bouncy
+              <Pressable
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                scaleTo={0.94}
                 className="px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
                 </Text>
-              </Bouncy>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -397,17 +393,16 @@ export default function CreateGameScreen() {
               {MAX_PLAYERS_OPTIONS.map((n) => {
                 const selected = maxPlayers === n;
                 return (
-                  <Bouncy
+                  <Pressable
                     key={n}
                     onPress={() => setMaxPlayers(n)}
-                    scaleTo={0.9}
                     className="w-12 py-2 rounded-2xl items-center"
                     style={chipStyle(selected)}
                   >
                     <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                       {n}
                     </Text>
-                  </Bouncy>
+                  </Pressable>
                 );
               })}
             </ScrollView>

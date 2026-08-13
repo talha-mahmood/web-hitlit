@@ -316,16 +316,14 @@ export default function GamesListScreen() {
           data={sports ?? []}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 20 }}
-          renderItem={({ item, index }) => (
-            <Animated.View entering={FadeInDown.duration(350).delay(Math.min(index, 8) * 40)}>
-              <SportChip
-                label={item.name}
-                selected={selectedSportId === item.id}
-                onPress={() =>
-                  setSelectedSportId((cur) => (cur === item.id ? undefined : item.id))
-                }
-              />
-            </Animated.View>
+          renderItem={({ item }) => (
+            <SportChip
+              label={item.name}
+              selected={selectedSportId === item.id}
+              onPress={() =>
+                setSelectedSportId((cur) => (cur === item.id ? undefined : item.id))
+              }
+            />
           )}
         />
       </View>
@@ -340,8 +338,7 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            <Animated.View entering={FadeInDown.duration(400)}>
-            {debouncedSearch ? (
+            debouncedSearch ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
@@ -361,18 +358,16 @@ export default function GamesListScreen() {
                 <Text className="text-muted text-sm text-center px-8">
                   Be the first to create a {isTournamentList ? "tournament" : "game"} and invite players to join!
                 </Text>
-                <Bouncy
+                <Pressable
                   onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
                   className="bg-primary rounded-xl px-6 py-3 mt-2"
-                  style={primaryButtonShadow}
                 >
                   <Text className="text-white font-semibold">
                     Create a {isTournamentList ? "Tournament" : "Game"}
                   </Text>
-                </Bouncy>
+                </Pressable>
               </View>
-            )}
-            </Animated.View>
+            )
           }
           renderItem={({ item, index }) => (
             <GameCard

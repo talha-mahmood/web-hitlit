@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Modal, View, Text, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { SectionLabel } from "./GameFormControls";
 import FieldInput from "./FieldInput";
-import Bouncy from "./Bouncy";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../lib/nameValidation";
 
 export default function CreateTeamModal({
@@ -44,9 +43,9 @@ export default function CreateTeamModal({
           >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">Create a Team</Text>
-              <Bouncy onPress={onClose} scaleTo={0.8} hitSlop={8}>
+              <Pressable onPress={onClose} hitSlop={8}>
                 <Ionicons name="close" size={22} color={colors.muted} />
-              </Bouncy>
+              </Pressable>
             </View>
             <Text className="text-muted text-sm mb-2">
               You'll be the team captain — invite players to join, then submit your team for the
@@ -62,7 +61,7 @@ export default function CreateTeamModal({
               autoFocus
             />
 
-            <Bouncy
+            <Pressable
               onPress={handleCreate}
               disabled={!name.trim() || submitting}
               className={`rounded-xl py-4 items-center mt-6 ${name.trim() ? "bg-primary" : "bg-gray-200"}`}
@@ -75,7 +74,7 @@ export default function CreateTeamModal({
                   Create Team
                 </Text>
               )}
-            </Bouncy>
+            </Pressable>
           </View>
         </KeyboardAvoidingView>
       </View>

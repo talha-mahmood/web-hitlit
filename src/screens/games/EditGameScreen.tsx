@@ -23,7 +23,6 @@ import type { GameDetail } from "../../lib/api/games";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
-import Bouncy from "../../components/Bouncy";
 import {
   TIME_SLOTS,
   DAYS,
@@ -171,13 +170,13 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
-        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
+        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Bouncy>
+        </Pressable>
         <Text className="text-base font-bold text-ink flex-1">
           {isTournament ? "Edit Tournament" : "Edit Game"}
         </Text>
-        <Bouncy
+        <Pressable
           onPress={handleSave}
           disabled={updateGame.isPending}
           className="bg-primary rounded-xl px-4 py-2"
@@ -194,7 +193,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ) : (
             <Text className="text-white font-semibold text-sm">Save</Text>
           )}
-        </Bouncy>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -228,7 +227,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           {dateOptions.map((d) => {
             const selected = selectedDate === d.iso;
             return (
-              <Bouncy
+              <Pressable
                 key={d.iso}
                 onPress={() => {
                   setSelectedDate(d.iso);
@@ -236,13 +235,12 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     setStartTime("");
                   }
                 }}
-                scaleTo={0.94}
                 className="items-center px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
                 <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{d.label}</Text>
-              </Bouncy>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -260,17 +258,16 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ).map((t) => {
             const selected = startTime === t.value;
             return (
-              <Bouncy
+              <Pressable
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                scaleTo={0.94}
                 className="px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
                 </Text>
-              </Bouncy>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -323,18 +320,17 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                 const selected = maxPlayers === n;
                 const disabled = n < minPlayers;
                 return (
-                  <Bouncy
+                  <Pressable
                     key={n}
                     onPress={() => !disabled && setMaxPlayers(n)}
                     disabled={disabled}
-                    scaleTo={0.9}
                     className="w-12 py-2 rounded-2xl items-center"
                     style={chipStyle(selected, disabled)}
                   >
                     <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
                       {n}
                     </Text>
-                  </Bouncy>
+                  </Pressable>
                 );
               })}
             </ScrollView>

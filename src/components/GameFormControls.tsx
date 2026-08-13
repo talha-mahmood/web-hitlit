@@ -1,6 +1,5 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { colors } from "../constants/theme";
-import Bouncy from "./Bouncy";
 
 export function SectionLabel({ title, required }: { title: string; required?: boolean }) {
   return (
@@ -25,10 +24,9 @@ export function PillRow<T extends string>({
       {options.map((o) => {
         const selected = value === o.value;
         return (
-          <Bouncy
+          <Pressable
             key={o.value}
             onPress={() => onChange(o.value)}
-            scaleTo={0.94}
             className="px-4 py-2.5 rounded-2xl"
             style={{
               borderWidth: 1.5,
@@ -48,7 +46,7 @@ export function PillRow<T extends string>({
             <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
               {o.label}
             </Text>
-          </Bouncy>
+          </Pressable>
         );
       })}
     </View>

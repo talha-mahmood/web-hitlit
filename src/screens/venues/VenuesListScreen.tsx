@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -57,16 +56,14 @@ export default function VenuesListScreen() {
           data={sports ?? []}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 20 }}
-          renderItem={({ item, index }) => (
-            <Animated.View entering={FadeInDown.duration(350).delay(Math.min(index, 8) * 40)}>
-              <SportChip
-                label={item.name}
-                selected={selectedSportId === item.id}
-                onPress={() =>
-                  setSelectedSportId((current) => (current === item.id ? undefined : item.id))
-                }
-              />
-            </Animated.View>
+          renderItem={({ item }) => (
+            <SportChip
+              label={item.name}
+              selected={selectedSportId === item.id}
+              onPress={() =>
+                setSelectedSportId((current) => (current === item.id ? undefined : item.id))
+              }
+            />
           )}
         />
       </View>
@@ -82,11 +79,9 @@ export default function VenuesListScreen() {
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
           ListEmptyComponent={
-            <Animated.View entering={FadeInDown.duration(400)}>
-              <Text className="text-muted text-center mt-10">
-                No venues found. Try a different search or sport.
-              </Text>
-            </Animated.View>
+            <Text className="text-muted text-center mt-10">
+              No venues found. Try a different search or sport.
+            </Text>
           }
           renderItem={({ item, index }) => (
             <VenueCard

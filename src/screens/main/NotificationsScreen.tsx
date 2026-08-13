@@ -1,5 +1,4 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -153,16 +152,14 @@ export default function NotificationsScreen() {
           contentContainerStyle={{ padding: 20, paddingTop: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            <Animated.View entering={FadeInDown.duration(400)}>
-              <View className="items-center mt-16" style={{ gap: 12 }}>
-                <Ionicons name="notifications-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No notifications yet</Text>
-                <Text className="text-muted text-sm text-center px-8">
-                  You'll see updates here when something happens with your games, squads, or
-                  tournaments.
-                </Text>
-              </View>
-            </Animated.View>
+            <View className="items-center mt-16" style={{ gap: 12 }}>
+              <Ionicons name="notifications-outline" size={48} color={colors.border} />
+              <Text className="text-ink font-semibold text-base">No notifications yet</Text>
+              <Text className="text-muted text-sm text-center px-8">
+                You'll see updates here when something happens with your games, squads, or
+                tournaments.
+              </Text>
+            </View>
           }
           renderItem={({ item }) => (
             <NotificationCard notification={item} onPress={() => handlePress(item)} />
