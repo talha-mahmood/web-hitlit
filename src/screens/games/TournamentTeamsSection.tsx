@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import Bouncy from "../../components/Bouncy";
 import {
   useTournamentTeams,
   useCreateTeam,
@@ -267,13 +269,13 @@ function TeamCard({
               You already have a request or spot on another team in this tournament.
             </Text>
           ) : !myMembership && team.status === "FORMING" && !isTeamFull ? (
-            <Pressable
+            <Bouncy
               onPress={onRequestJoin}
               disabled={disabled}
               className="bg-primary rounded-lg py-2 items-center"
             >
               <Text className="text-white text-xs font-semibold">Request to Join Team</Text>
-            </Pressable>
+            </Bouncy>
           ) : null}
         </View>
       )}
@@ -477,14 +479,14 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           Teams ({activeTeams.length}/{requiredTeams || "—"})
         </Text>
         {canCreateTeam && (
-          <Pressable
+          <Bouncy
             onPress={() => setShowCreateModal(true)}
             className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
             style={{ gap: 4 }}
           >
             <Ionicons name="add" size={14} color="white" />
             <Text className="text-white text-xs font-semibold">Create Team</Text>
-          </Pressable>
+          </Bouncy>
         )}
       </View>
 
@@ -526,32 +528,35 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
       <View className="mx-4" style={{ gap: 12 }}>
         {teams.length === 0 ? (
-          <View className="border border-dashed border-border rounded-2xl p-6 items-center">
-            <Ionicons name="people-outline" size={32} color={colors.border} />
-            <Text className="text-muted text-sm text-center mt-2">
-              No teams yet. Be the first to create one!
-            </Text>
-          </View>
+          <Animated.View entering={FadeInDown.duration(400)}>
+            <View className="border border-dashed border-border rounded-2xl p-6 items-center">
+              <Ionicons name="people-outline" size={32} color={colors.border} />
+              <Text className="text-muted text-sm text-center mt-2">
+                No teams yet. Be the first to create one!
+              </Text>
+            </View>
+          </Animated.View>
         ) : (
-          teams.map((team) => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              requiredSize={requiredSize}
-              userId={userId}
-              isHost={isHost}
-              disabled={disabled}
-              hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
-              onRequestJoin={() => setJoinRequestTeamId(team.id)}
-              onLeave={() => handleLeave(team.id)}
-              onApproveMember={handleApproveMember}
-              onRejectMember={handleRejectMember}
-              onRemoveMember={handleRemoveMember}
-              onSubmitTeam={() =>
-                handleSubmitTeam(team.id, team.name, team.status === "REJECTED", isHost && team.captain_id === userId)
-              }
-              onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
-            />
+          teams.map((team, index) => (
+            <Animated.View key={team.id} entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
+              <TeamCard
+                team={team}
+                requiredSize={requiredSize}
+                userId={userId}
+                isHost={isHost}
+                disabled={disabled}
+                hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
+                onRequestJoin={() => setJoinRequestTeamId(team.id)}
+                onLeave={() => handleLeave(team.id)}
+                onApproveMember={handleApproveMember}
+                onRejectMember={handleRejectMember}
+                onRemoveMember={handleRemoveMember}
+                onSubmitTeam={() =>
+                  handleSubmitTeam(team.id, team.name, team.status === "REJECTED", isHost && team.captain_id === userId)
+                }
+                onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
+              />
+            </Animated.View>
           ))
         )}
       </View>

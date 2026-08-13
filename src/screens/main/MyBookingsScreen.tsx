@@ -8,6 +8,7 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -197,17 +198,19 @@ export default function MyBookingsScreen() {
             />
           }
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center pt-16">
-              <Ionicons name="calendar-outline" size={52} color={colors.border} />
-              <Text className="text-ink font-semibold text-base mt-4">
-                No {tab} bookings
-              </Text>
-              <Text className="text-muted text-sm text-center mt-1 px-8">
-                {tab === "upcoming"
-                  ? "Book a court from the Venues tab."
-                  : "Your completed and cancelled bookings will appear here."}
-              </Text>
-            </View>
+            <Animated.View entering={FadeInDown.duration(400)}>
+              <View className="flex-1 items-center justify-center pt-16">
+                <Ionicons name="calendar-outline" size={52} color={colors.border} />
+                <Text className="text-ink font-semibold text-base mt-4">
+                  No {tab} bookings
+                </Text>
+                <Text className="text-muted text-sm text-center mt-1 px-8">
+                  {tab === "upcoming"
+                    ? "Book a court from the Venues tab."
+                    : "Your completed and cancelled bookings will appear here."}
+                </Text>
+              </View>
+            </Animated.View>
           }
           renderItem={({ item }) => (
             <BookingCard

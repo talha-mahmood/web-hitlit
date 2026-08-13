@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -395,6 +396,7 @@ export default function SquadDetailScreen() {
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Squad info — plain rows, no card chrome */}
+        <Animated.View entering={FadeInDown.duration(400)}>
         <View className="px-5 mt-5">
           <Text className="text-ink font-bold text-base mb-1">Squad Details</Text>
           <InfoRow
@@ -424,94 +426,103 @@ export default function SquadDetailScreen() {
           <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel(squad.skill_level)} />
           <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
         </View>
+        </Animated.View>
 
         {/* Description */}
         {!!squad.description && (
-          <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-2">About this squad</Text>
-            <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
-          </View>
+          <Animated.View entering={FadeInDown.duration(400).delay(80)}>
+            <View className="px-5 mt-6">
+              <Text className="text-ink font-semibold text-sm mb-2">About this squad</Text>
+              <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
+            </View>
+          </Animated.View>
         )}
 
         {/* Members */}
-        <View className="px-5 mt-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-ink font-semibold text-sm">
-              Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
-            </Text>
-            {!!squad.max_players && (
-              <Text className="text-muted text-sm">
-                {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
+        <Animated.View entering={FadeInDown.duration(400).delay(140)}>
+          <View className="px-5 mt-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-ink font-semibold text-sm">
+                Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
               </Text>
-            )}
+              {!!squad.max_players && (
+                <Text className="text-muted text-sm">
+                  {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
+                </Text>
+              )}
+            </View>
+            <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+              {activeMembers.map((m) => (
+                <MemberAvatar
+                  key={m.id}
+                  name={m.profiles?.full_name ?? null}
+                  avatar={m.profiles?.avatar ?? null}
+                  isOwner={m.user_id === squad.squad_owner_id}
+                  onRemove={
+                    isOwner && m.user_id !== squad.squad_owner_id && !isApprovingOrRejecting
+                      ? () => handleRemove(m.id, m.profiles?.full_name ?? null)
+                      : undefined
+                  }
+                />
+              ))}
+            </View>
           </View>
-          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {activeMembers.map((m) => (
-              <MemberAvatar
-                key={m.id}
-                name={m.profiles?.full_name ?? null}
-                avatar={m.profiles?.avatar ?? null}
-                isOwner={m.user_id === squad.squad_owner_id}
-                onRemove={
-                  isOwner && m.user_id !== squad.squad_owner_id && !isApprovingOrRejecting
-                    ? () => handleRemove(m.id, m.profiles?.full_name ?? null)
-                    : undefined
-                }
-              />
-            ))}
-          </View>
-        </View>
+        </Animated.View>
 
         {/* Pending join requests — owner only, shows requester's skill + location */}
         {isOwner && pendingRequests.length > 0 && (
-          <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-1">
-              Join Requests ({pendingRequests.length})
-            </Text>
-            <Text className="text-muted text-xs mb-2">
-              Approve members before they're added to the squad.
-            </Text>
-            {pendingRequests.map((m) => (
-              <SquadPendingRequestRow
-                key={m.id}
-                name={m.profiles?.full_name ?? null}
-                avatar={m.profiles?.avatar ?? null}
-                skill={m.skill_level ?? m.profiles?.skill_level ?? null}
-                location={m.location ?? m.profiles?.city ?? null}
-                disabled={isApprovingOrRejecting || isFull}
-                onApprove={() => handleApprove(m.id, m.profiles?.full_name ?? null)}
-                onReject={() => handleReject(m.id, m.profiles?.full_name ?? null)}
-              />
-            ))}
-            {isFull && (
-              <Text className="text-orange-600 text-xs mt-2">
-                Squad is full — reject remaining requests or remove a member to approve more.
+          <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+            <View className="px-5 mt-6">
+              <Text className="text-ink font-semibold text-sm mb-1">
+                Join Requests ({pendingRequests.length})
               </Text>
-            )}
-          </View>
+              <Text className="text-muted text-xs mb-2">
+                Approve members before they're added to the squad.
+              </Text>
+              {pendingRequests.map((m) => (
+                <SquadPendingRequestRow
+                  key={m.id}
+                  name={m.profiles?.full_name ?? null}
+                  avatar={m.profiles?.avatar ?? null}
+                  skill={m.skill_level ?? m.profiles?.skill_level ?? null}
+                  location={m.location ?? m.profiles?.city ?? null}
+                  disabled={isApprovingOrRejecting || isFull}
+                  onApprove={() => handleApprove(m.id, m.profiles?.full_name ?? null)}
+                  onReject={() => handleReject(m.id, m.profiles?.full_name ?? null)}
+                />
+              ))}
+              {isFull && (
+                <Text className="text-orange-600 text-xs mt-2">
+                  Squad is full — reject remaining requests or remove a member to approve more.
+                </Text>
+              )}
+            </View>
+          </Animated.View>
         )}
 
         {/* Owner */}
-        <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
-          {squad.profiles?.avatar ? (
-            <Image
-              source={{ uri: squad.profiles.avatar }}
-              className="w-10 h-10 rounded-full bg-primary-light"
-            />
-          ) : (
-            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold">
-                {(squad.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
+        <Animated.View entering={FadeInDown.duration(400).delay(260)}>
+          <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
+            {squad.profiles?.avatar ? (
+              <Image
+                source={{ uri: squad.profiles.avatar }}
+                className="w-10 h-10 rounded-full bg-primary-light"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-primary font-bold">
+                  {(squad.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View>
+              <Text className="text-muted text-xs">Captained by</Text>
+              <Text className="text-ink font-semibold text-sm">
+                {squad.profiles?.full_name ?? "Unknown"}
               </Text>
             </View>
-          )}
-          <View>
-            <Text className="text-muted text-xs">Captained by</Text>
-            <Text className="text-ink font-semibold text-sm">
-              {squad.profiles?.full_name ?? "Unknown"}
-            </Text>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
 
       {/* CTA */}

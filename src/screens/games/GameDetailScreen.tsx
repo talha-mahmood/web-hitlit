@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -484,6 +485,7 @@ export default function GameDetailScreen() {
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Game info — plain rows, no card chrome */}
+        <Animated.View entering={FadeInDown.duration(400)}>
         <View className="px-5 mt-5">
           <Text className="text-ink font-bold text-base mb-1">
             {isTournament ? "Tournament Details" : "Game Details"}
@@ -550,15 +552,18 @@ export default function GameDetailScreen() {
             value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
           />
         </View>
+        </Animated.View>
 
         {/* Description */}
         {!!game.description && (
-          <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-2">
-              About this {isTournament ? "tournament" : "game"}
-            </Text>
-            <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
-          </View>
+          <Animated.View entering={FadeInDown.duration(400).delay(80)}>
+            <View className="px-5 mt-6">
+              <Text className="text-ink font-semibold text-sm mb-2">
+                About this {isTournament ? "tournament" : "game"}
+              </Text>
+              <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
+            </View>
+          </Animated.View>
         )}
 
         {/* Players (regular games) / Teams (tournaments) */}
@@ -566,87 +571,93 @@ export default function GameDetailScreen() {
           <TournamentTeamsSection game={game} />
         ) : (
           <>
-            <View className="px-5 mt-6">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-ink font-semibold text-sm">
-                  Players ({joinedPlayers.length}/{game.max_players})
-                </Text>
-                <Text className="text-muted text-sm">
-                  {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
-                </Text>
+            <Animated.View entering={FadeInDown.duration(400).delay(140)}>
+              <View className="px-5 mt-6">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-ink font-semibold text-sm">
+                    Players ({joinedPlayers.length}/{game.max_players})
+                  </Text>
+                  <Text className="text-muted text-sm">
+                    {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
+                  </Text>
+                </View>
+                <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+                  {joinedPlayers.map((p) => (
+                    <PlayerAvatar
+                      key={p.id}
+                      name={p.profiles?.full_name ?? null}
+                      avatar={p.profiles?.avatar ?? null}
+                      isCreator={p.user_id === game.creator_id}
+                      onRemove={
+                        isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
+                          ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
+                          : undefined
+                      }
+                    />
+                  ))}
+                  {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
+                    <EmptySlot key={`empty-${i}`} />
+                  ))}
+                </View>
               </View>
-              <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-                {joinedPlayers.map((p) => (
-                  <PlayerAvatar
-                    key={p.id}
-                    name={p.profiles?.full_name ?? null}
-                    avatar={p.profiles?.avatar ?? null}
-                    isCreator={p.user_id === game.creator_id}
-                    onRemove={
-                      isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
-                        ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
-                        : undefined
-                    }
-                  />
-                ))}
-                {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
-                  <EmptySlot key={`empty-${i}`} />
-                ))}
-              </View>
-            </View>
+            </Animated.View>
 
             {/* Pending join requests — host only */}
             {isCreator && pendingRequests.length > 0 && (
-              <View className="px-5 mt-6">
-                <Text className="text-ink font-semibold text-sm mb-1">
-                  Join Requests ({pendingRequests.length})
-                </Text>
-                <Text className="text-muted text-xs mb-2">
-                  Approve players before they're added to the game.
-                </Text>
-                {pendingRequests.map((p) => (
-                  <PendingRequestRow
-                    key={p.id}
-                    name={p.profiles?.full_name ?? null}
-                    avatar={p.profiles?.avatar ?? null}
-                    skill={p.skill_level}
-                    location={p.location}
-                    disabled={isApprovingOrRejecting || isFull}
-                    onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
-                    onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
-                  />
-                ))}
-                {isFull && (
-                  <Text className="text-orange-600 text-xs mt-2">
-                    Game is full — reject remaining requests or remove a player to approve more.
+              <Animated.View entering={FadeInDown.duration(400).delay(200)}>
+                <View className="px-5 mt-6">
+                  <Text className="text-ink font-semibold text-sm mb-1">
+                    Join Requests ({pendingRequests.length})
                   </Text>
-                )}
-              </View>
+                  <Text className="text-muted text-xs mb-2">
+                    Approve players before they're added to the game.
+                  </Text>
+                  {pendingRequests.map((p) => (
+                    <PendingRequestRow
+                      key={p.id}
+                      name={p.profiles?.full_name ?? null}
+                      avatar={p.profiles?.avatar ?? null}
+                      skill={p.skill_level}
+                      location={p.location}
+                      disabled={isApprovingOrRejecting || isFull}
+                      onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
+                      onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
+                    />
+                  ))}
+                  {isFull && (
+                    <Text className="text-orange-600 text-xs mt-2">
+                      Game is full — reject remaining requests or remove a player to approve more.
+                    </Text>
+                  )}
+                </View>
+              </Animated.View>
             )}
           </>
         )}
 
         {/* Host */}
-        <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
-          {game.profiles?.avatar ? (
-            <Image
-              source={{ uri: game.profiles.avatar }}
-              className="w-10 h-10 rounded-full bg-primary-light"
-            />
-          ) : (
-            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold">
-                {(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
+        <Animated.View entering={FadeInDown.duration(400).delay(260)}>
+          <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
+            {game.profiles?.avatar ? (
+              <Image
+                source={{ uri: game.profiles.avatar }}
+                className="w-10 h-10 rounded-full bg-primary-light"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-primary font-bold">
+                  {(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View>
+              <Text className="text-muted text-xs">Hosted by</Text>
+              <Text className="text-ink font-semibold text-sm">
+                {game.profiles?.full_name ?? "Unknown"}
               </Text>
             </View>
-          )}
-          <View>
-            <Text className="text-muted text-xs">Hosted by</Text>
-            <Text className="text-ink font-semibold text-sm">
-              {game.profiles?.full_name ?? "Unknown"}
-            </Text>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
 
       {/* CTA — for tournaments, non-host actions (create/join a team) live

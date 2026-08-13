@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Modal, View, Text, Pressable, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { Modal, View, Text, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import type { Database } from "../types/database.types";
 import { SectionLabel, PillRow } from "./GameFormControls";
 import LocationPickerField from "./LocationPickerField";
+import Bouncy from "./Bouncy";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
@@ -50,9 +51,9 @@ export default function JoinRequestModal({
           >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">{title}</Text>
-              <Pressable onPress={onClose} hitSlop={8}>
+              <Bouncy onPress={onClose} scaleTo={0.8} hitSlop={8}>
                 <Ionicons name="close" size={22} color={colors.muted} />
-              </Pressable>
+              </Bouncy>
             </View>
             {!!subtitle && <Text className="text-muted text-sm mb-2">{subtitle}</Text>}
 
@@ -70,7 +71,7 @@ export default function JoinRequestModal({
             <SectionLabel title="Your Location" required />
             <LocationPickerField value={location} onChange={setLocation} />
 
-            <Pressable
+            <Bouncy
               onPress={handleSend}
               disabled={!canSend || submitting}
               className={`rounded-xl py-4 items-center mt-6 ${canSend ? "bg-primary" : "bg-gray-200"}`}
@@ -83,7 +84,7 @@ export default function JoinRequestModal({
                   Send Request
                 </Text>
               )}
-            </Pressable>
+            </Bouncy>
           </View>
         </KeyboardAvoidingView>
       </View>

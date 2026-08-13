@@ -1,4 +1,5 @@
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
+import Bouncy from "./Bouncy";
 
 type SportChipProps = {
   label: string;
@@ -8,13 +9,14 @@ type SportChipProps = {
 
 export default function SportChip({ label, selected, onPress }: SportChipProps) {
   return (
-    <Pressable
+    <Bouncy
       onPress={onPress}
+      scaleTo={0.94}
       className={`px-4 py-2 rounded-full border mr-2 ${
         selected ? "bg-primary border-primary" : "bg-white border-border"
       }`}
     >
       <Text className={selected ? "text-white font-semibold" : "text-ink"}>{label}</Text>
-    </Pressable>
+    </Bouncy>
   );
 }

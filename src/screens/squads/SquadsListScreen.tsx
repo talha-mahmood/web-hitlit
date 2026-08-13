@@ -168,7 +168,8 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch ? (
+            <Animated.View entering={FadeInDown.duration(400)}>
+            {debouncedSearch ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No squads found</Text>
@@ -183,14 +184,16 @@ export default function SquadsListScreen() {
                 <Text className="text-muted text-sm text-center px-8">
                   Create a squad to find regular playmates near you!
                 </Text>
-                <Pressable
+                <Bouncy
                   onPress={() => navigation.navigate("CreateSquad")}
                   className="bg-primary rounded-xl px-6 py-3 mt-2"
+                  style={primaryButtonShadow}
                 >
                   <Text className="text-white font-semibold">Create a Squad</Text>
-                </Pressable>
+                </Bouncy>
               </View>
-            )
+            )}
+            </Animated.View>
           }
           renderItem={({ item, index }) => (
             <SquadCard
