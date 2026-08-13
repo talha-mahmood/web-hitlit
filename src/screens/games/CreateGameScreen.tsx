@@ -207,7 +207,10 @@ export default function CreateGameScreen() {
   const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
-  const [visibility, setVisibility] = useState<Visibility>("public");
+  // Visibility isn't a user-facing choice (removed from the form) — every
+  // game/tournament created here is public, matching the games list query's
+  // `.eq("visibility", "public")` filter.
+  const visibility: Visibility = "public";
   const [gender, setGender] = useState<Gender>("mixed");
   const [description, setDescription] = useState("");
   const [entryFee, setEntryFee] = useState("0");
@@ -548,17 +551,6 @@ export default function CreateGameScreen() {
           ]}
           value={gender}
           onChange={setGender}
-        />
-
-        {/* Visibility */}
-        <SectionLabel title="Visibility" />
-        <PillRow<Visibility>
-          options={[
-            { label: "Public", value: "public" },
-            { label: "Private", value: "private" },
-          ]}
-          value={visibility}
-          onChange={setVisibility}
         />
 
         {/* Entry Fee */}
