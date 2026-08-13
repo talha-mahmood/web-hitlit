@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  ScrollView,
   Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -100,13 +99,10 @@ export default function ProfileSetupScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-white"
     >
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 260 }}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View className="flex-1 px-6 pt-16">
         <Text className="text-2xl font-bold text-ink">Complete your profile</Text>
         <Text className="text-muted mt-1 mb-8">
           What would you like your mates to call you?
@@ -158,7 +154,7 @@ export default function ProfileSetupScreen() {
             <Text className="text-white font-semibold text-base">Next</Text>
           )}
         </Pressable>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }

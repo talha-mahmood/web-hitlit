@@ -106,7 +106,7 @@ export default function SquadChatScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={insets.top}
     >
       {/* Header */}
