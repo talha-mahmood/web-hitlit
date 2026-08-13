@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useAllVenues } from "../../hooks/useSuperadmin";
+import { useAllVenues, useDeleteVenue } from "../../hooks/useSuperadmin";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
 import { colors } from "../../constants/theme";
@@ -17,6 +17,25 @@ export default function AllVenuesListScreen() {
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const { data: venues, isLoading } = useAllVenues(search || undefined);
+  const deleteVenue = useDeleteVenue();
+
+  const handleDelete = (venueId: string, venueName: string) => {
+    Alert.alert(
+      "Delete Venue",
+      `Delete "${venueName}"? It'll be hidden from customers and its admin immediately — this can only be undone from the database.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () =>
+            deleteVenue.mutate(venueId, {
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete venue."),
+            }),
+        },
+      ]
+    );
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -102,6 +121,9 @@ export default function AllVenuesListScreen() {
                 className="mr-2"
               >
                 <Ionicons name="person-add-outline" size={20} color={colors.primary} />
+              </Pressable>
+              <Pressable onPress={() => handleDelete(item.id, item.name)} hitSlop={8} className="mr-2">
+                <Ionicons name="trash-outline" size={20} color={colors.danger} />
               </Pressable>
               <Ionicons name="chevron-forward" size={16} color={colors.muted} />
             </Pressable>

@@ -4,6 +4,7 @@ import {
   lookupProfileByEmail,
   assignVenueAdmin,
   removeVenueAdmin,
+  deleteVenue,
 } from "../lib/api/superadmin";
 import { createVenue, type CreateVenueInput } from "../lib/api/venuesAdmin";
 
@@ -47,5 +48,13 @@ export function useRemoveVenueAdmin(venueId: string) {
       qc.invalidateQueries({ queryKey: ["allVenues"] });
       qc.invalidateQueries({ queryKey: ["venue", venueId] });
     },
+  });
+}
+
+export function useDeleteVenue() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (venueId: string) => deleteVenue(venueId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allVenues"] }),
   });
 }

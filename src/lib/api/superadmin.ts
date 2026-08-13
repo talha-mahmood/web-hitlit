@@ -58,3 +58,15 @@ export async function removeVenueAdmin(venueId: string): Promise<void> {
   const { error } = await supabase.from("venues").update({ venue_owner_id: null }).eq("id", venueId);
   if (error) throw new Error(error.message);
 }
+
+// Soft delete, matching the deleted_at convention used everywhere else in
+// this app (games, squads, ...) — the venue drops out of every query that
+// filters .is("deleted_at", null) (customer browsing, the owner's own
+// venue list, this superadmin list) without destroying its history.
+export async function deleteVenue(venueId: string): Promise<void> {
+  const { error } = await supabase
+    .from("venues")
+    .update({ deleted_at: new Date().toISOString(), isactive: false })
+    .eq("id", venueId);
+  if (error) throw new Error(error.message);
+}
