@@ -14,6 +14,7 @@ import SportsBySportSection from "../../components/SportsBySportSection";
 import VenueCard from "../../components/VenueCard";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
+import WavingHandIcon from "../../components/WavingHandIcon";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 
@@ -136,9 +137,12 @@ export default function HomeScreen() {
                 </View>
               )}
               <View className="flex-1">
-                <Text className="text-2xl font-bold text-ink">
-                  Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-                </Text>
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <Text className="text-2xl font-bold text-ink">
+                    Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
+                  </Text>
+                  <WavingHandIcon size={22} />
+                </View>
                 <Text className="text-muted mt-1">What are you playing today?</Text>
               </View>
             </Pressable>

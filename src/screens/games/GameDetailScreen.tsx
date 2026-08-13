@@ -14,6 +14,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import ChatIcon from "../../components/ChatIcon";
+import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
 
@@ -485,9 +486,12 @@ export default function GameDetailScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Game info — plain rows, no card chrome */}
         <View className="px-5 mt-5">
-          <Text className="text-ink font-bold text-base mb-1">
-            {isTournament ? "Tournament Details" : "Game Details"}
-          </Text>
+          <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
+            <Text className="text-ink font-bold text-base">
+              {isTournament ? "Tournament Details" : "Game Details"}
+            </Text>
+            <BlinkingEyeIcon size={16} />
+          </View>
           <InfoRow
             icon="pricetag-outline"
             label={isTournament ? "Tournament ID" : "Game ID"}

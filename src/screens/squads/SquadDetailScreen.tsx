@@ -20,6 +20,7 @@ import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import ChatIcon from "../../components/ChatIcon";
+import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import type { Database } from "../../types/database.types";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
@@ -396,7 +397,10 @@ export default function SquadDetailScreen() {
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Squad info — plain rows, no card chrome */}
         <View className="px-5 mt-5">
-          <Text className="text-ink font-bold text-base mb-1">Squad Details</Text>
+          <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
+            <Text className="text-ink font-bold text-base">Squad Details</Text>
+            <BlinkingEyeIcon size={16} />
+          </View>
           <InfoRow
             icon="pricetag-outline"
             label="Squad ID"

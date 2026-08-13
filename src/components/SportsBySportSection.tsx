@@ -1,5 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, type LayoutChangeEvent } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
 
@@ -10,16 +18,57 @@ const ICON_SIZE = 26;
 const GAP = 26;
 const VISIBLE_TILES = 3;
 
-function SportTile({ sport, width, onPress }: { sport: Sport; width: number; onPress: () => void }) {
+function SportTile({
+  sport,
+  width,
+  index,
+  onPress,
+}: {
+  sport: Sport;
+  width: number;
+  index: number;
+  onPress: () => void;
+}) {
   const { icon, bg, fg } = getSportIcon(sport.name);
+  const scale = useSharedValue(1);
+
+  // A slow, gentle idle pulse per icon badge, staggered by tile so the row
+  // feels alive rather than all icons breathing in perfect unison.
+  useEffect(() => {
+    scale.value = withDelay(
+      index * 150,
+      withRepeat(
+        withSequence(
+          withTiming(1.08, { duration: 700 }),
+          withTiming(1, { duration: 700 })
+        ),
+        -1,
+        true
+      )
+    );
+  }, [scale, index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
     <Pressable onPress={onPress} className="items-center" style={{ width }}>
-      <View
-        className="items-center justify-center rounded-full"
-        style={{ width: ICON_BADGE_SIZE, height: ICON_BADGE_SIZE, backgroundColor: bg }}
+      <Animated.View
+        style={[
+          {
+            width: ICON_BADGE_SIZE,
+            height: ICON_BADGE_SIZE,
+            borderRadius: ICON_BADGE_SIZE / 2,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: bg,
+          },
+          animatedStyle,
+        ]}
       >
         <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={fg} />
-      </View>
+      </Animated.View>
       <Text
         className="text-ink font-semibold text-center mt-1.5"
         style={{ fontSize: 13 }}
@@ -57,11 +106,12 @@ export default function SportsBySportSection({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: GAP }}
       >
-        {sports.map((sport) => (
+        {sports.map((sport, index) => (
           <SportTile
             key={sport.id}
             sport={sport}
             width={tileWidth}
+            index={index}
             onPress={() => onSelectSport(sport.id)}
           />
         ))}
