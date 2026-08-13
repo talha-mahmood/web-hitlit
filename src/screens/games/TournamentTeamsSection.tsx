@@ -215,8 +215,10 @@ function TeamCard({
         </Text>
       )}
 
-      {/* This team's own CTA */}
-      {!isHost && isRosterEditable && (
+      {/* This team's own CTA — hidden for the host on OTHER teams (they get
+          the approval queue / Remove Team button instead), but shown for the
+          host's own team same as any other captain. */}
+      {(!isHost || isCaptain) && isRosterEditable && (
         <View className="mt-3">
           {isCaptain ? (
             <Pressable
@@ -235,9 +237,11 @@ function TeamCard({
             >
               <Text className={`text-xs font-semibold ${isTeamFull ? "text-white" : "text-muted"}`}>
                 {isTeamFull
-                  ? team.status === "REJECTED"
-                    ? "Resubmit to Tournament Host"
-                    : "Submit Team to Tournament Host"
+                  ? isHost
+                    ? "Add Team to Tournament"
+                    : team.status === "REJECTED"
+                      ? "Resubmit to Tournament Host"
+                      : "Submit Team to Tournament Host"
                   : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
               </Text>
             </Pressable>
@@ -307,7 +311,10 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         );
       })
     : undefined;
-  const canCreateTeam = !isHost && !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
+  // The host can create their own team too — since they're also the one who'd
+  // approve it, their team skips PENDING_HOST_APPROVAL entirely (see
+  // submitTeamForApproval / enforce_team_status_transition).
+  const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
   const teamsAwaitingHost = isHost ? teams.filter((t) => t.status === "PENDING_HOST_APPROVAL") : [];
 
   const disabled =
@@ -369,19 +376,24 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     ]);
   };
 
-  const handleSubmitTeam = (teamId: string, name: string, isResubmit: boolean) => {
+  const handleSubmitTeam = (teamId: string, name: string, isResubmit: boolean, isHostOwnTeam: boolean) => {
     Alert.alert(
-      isResubmit ? "Resubmit Team" : "Submit Team",
-      `Send "${name}" to the tournament host for approval?`,
+      isHostOwnTeam ? "Add Team to Tournament" : isResubmit ? "Resubmit Team" : "Submit Team",
+      isHostOwnTeam
+        ? `Add "${name}" to the tournament? As the host, your team doesn't need approval.`
+        : `Send "${name}" to the tournament host for approval?`,
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: isResubmit ? "Resubmit" : "Submit",
+          text: isHostOwnTeam ? "Add" : isResubmit ? "Resubmit" : "Submit",
           onPress: () =>
-            submitTeam.mutate(teamId, {
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not submit team."),
-            }),
+            submitTeam.mutate(
+              { teamId, isHostOwnTeam },
+              {
+                onError: (err) =>
+                  Alert.alert("Error", err instanceof Error ? err.message : "Could not submit team."),
+              }
+            ),
         },
       ]
     );
@@ -508,7 +520,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           <View className="border border-dashed border-border rounded-2xl p-6 items-center">
             <Ionicons name="people-outline" size={32} color={colors.border} />
             <Text className="text-muted text-sm text-center mt-2">
-              No teams yet. {!isHost ? "Be the first to create one!" : "Waiting for players to form teams."}
+              No teams yet. Be the first to create one!
             </Text>
           </View>
         ) : (
@@ -525,7 +537,9 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onApproveMember={handleApproveMember}
               onRejectMember={handleRejectMember}
               onRemoveMember={handleRemoveMember}
-              onSubmitTeam={() => handleSubmitTeam(team.id, team.name, team.status === "REJECTED")}
+              onSubmitTeam={() =>
+                handleSubmitTeam(team.id, team.name, team.status === "REJECTED", isHost && team.captain_id === userId)
+              }
               onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
             />
           ))

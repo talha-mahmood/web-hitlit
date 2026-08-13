@@ -110,11 +110,6 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a skill level.");
       return;
     }
-    if (!description.trim()) {
-      Alert.alert("Missing Info", "Please enter a description.");
-      return;
-    }
-
     const teams = parseInt(numberOfTeams, 10) || 0;
     const perTeam = parseInt(playersPerTeam, 10) || 0;
     if (isTournament && (teams < 2 || perTeam < 1)) {
@@ -167,7 +162,7 @@ export default function CreateGameScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
       <View
@@ -195,7 +190,7 @@ export default function CreateGameScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
@@ -439,7 +434,7 @@ export default function CreateGameScreen() {
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" required />
+        <SectionLabel title="Description" />
         <TextInput
           value={description}
           onChangeText={setDescription}

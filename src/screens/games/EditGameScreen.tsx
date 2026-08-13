@@ -119,11 +119,6 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       Alert.alert("Missing Info", "Please select a skill level.");
       return;
     }
-    if (!description.trim()) {
-      Alert.alert("Missing Info", "Please enter a description.");
-      return;
-    }
-
     const endDateValue = isTournament ? addDays(selectedDate, durationDays - 1) : null;
     const endTimeValue = isTournament ? "23:59:59" : `${addMinutes(startTime, Math.round(duration * 60))}:00`;
     const fee = parseInt(entryFee, 10) || 0;
@@ -153,7 +148,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
@@ -177,7 +172,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
@@ -381,7 +376,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" required />
+        <SectionLabel title="Description" />
         <TextInput
           value={description}
           onChangeText={setDescription}

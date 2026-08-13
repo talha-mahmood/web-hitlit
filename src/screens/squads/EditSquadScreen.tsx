@@ -53,11 +53,6 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
       Alert.alert("Missing Info", "Please enter a location.");
       return;
     }
-    if (!description.trim()) {
-      Alert.alert("Missing Info", "Please enter a description.");
-      return;
-    }
-
     try {
       await updateSquad.mutateAsync({
         squadId: squad.id,
@@ -73,7 +68,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
@@ -95,7 +90,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Name */}
@@ -125,7 +120,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         <LocationPickerField value={location} onChange={setLocation} />
 
         {/* Description */}
-        <SectionLabel title="Description" required />
+        <SectionLabel title="Description" />
         <TextInput
           value={description}
           onChangeText={setDescription}

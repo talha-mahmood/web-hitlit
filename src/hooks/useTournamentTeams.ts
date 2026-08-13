@@ -138,7 +138,8 @@ export function useLeaveTeam(gameId: string) {
 export function useSubmitTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (teamId: string) => submitTeamForApproval(teamId),
+    mutationFn: ({ teamId, isHostOwnTeam }: { teamId: string; isHostOwnTeam: boolean }) =>
+      submitTeamForApproval(teamId, isHostOwnTeam),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

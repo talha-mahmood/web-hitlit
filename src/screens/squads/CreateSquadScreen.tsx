@@ -51,11 +51,6 @@ export default function CreateSquadScreen() {
       Alert.alert("Missing Info", "Please enter a location.");
       return;
     }
-    if (!description.trim()) {
-      Alert.alert("Missing Info", "Please enter a description.");
-      return;
-    }
-
     try {
       const squad = await createSquad.mutateAsync({
         ownerId: userId,
@@ -76,7 +71,7 @@ export default function CreateSquadScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
       <View
@@ -102,7 +97,7 @@ export default function CreateSquadScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Name */}
@@ -132,7 +127,7 @@ export default function CreateSquadScreen() {
         <LocationPickerField value={location} onChange={setLocation} />
 
         {/* Description */}
-        <SectionLabel title="Description" required />
+        <SectionLabel title="Description" />
         <TextInput
           value={description}
           onChangeText={setDescription}
