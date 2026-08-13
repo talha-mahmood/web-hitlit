@@ -71,7 +71,7 @@ export default function CreateTeamModal({
                 <ActivityIndicator color="white" />
               ) : (
                 <Text className={`font-semibold text-base ${name.trim() ? "text-white" : "text-muted"}`}>
-                  Create Team
+                  Post
                 </Text>
               )}
             </Pressable>

@@ -86,9 +86,10 @@ export default function VenuesListScreen() {
               <SportChip
                 label={item.name}
                 selected={selectedSportId === item.id}
-                onPress={() =>
-                  setSelectedSportId((current) => (current === item.id ? undefined : item.id))
-                }
+                onPress={() => {
+                  setSelectedSportId((current) => (current === item.id ? undefined : item.id));
+                  setShowFilters(false);
+                }}
               />
             )}
           />
