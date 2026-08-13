@@ -34,29 +34,52 @@ const CARD_SHADOW = {
   elevation: 4,
 } as const;
 
-const PARTICIPATION_TIERS = [
-  { label: "Newcomer", min: 0, color: "#6B7280", bg: "#F3F4F6" },
-  { label: "Regular", min: 3, color: "#16A34A", bg: "#F0FDF4" },
-  { label: "Enthusiast", min: 10, color: "#0891B2", bg: "#ECFEFF" },
-  { label: "Veteran", min: 25, color: "#7C3AED", bg: "#F5F3FF" },
-  { label: "Elite", min: 50, color: "#B45309", bg: "#FFFBEB" },
+// A numeric rating (à la 8 Ball Pool / Chess.com) rather than a skill ELO —
+// this app has no win/loss data to base a real competitive rating on, so
+// it's activity-driven: it only ever goes up as you play more, host, and
+// enter tournaments. Everyone starts at the same base, like a fresh account.
+const BASE_RATING = 1000;
+const POINTS_PER_GAME = 15;
+const POINTS_PER_TOURNAMENT = 40;
+const POINTS_PER_HOSTED_GAME = 20;
+const POINTS_PER_HOUR = 2;
+
+const RATING_TIERS = [
+  { label: "Rookie", min: 1000, color: "#6B7280", bg: "#F3F4F6" },
+  { label: "Bronze", min: 1150, color: "#B45309", bg: "#FFFBEB" },
+  { label: "Silver", min: 1350, color: "#64748B", bg: "#F1F5F9" },
+  { label: "Gold", min: 1600, color: "#CA8A04", bg: "#FEFCE8" },
+  { label: "Platinum", min: 1900, color: "#0891B2", bg: "#ECFEFF" },
+  { label: "Diamond", min: 2300, color: "#7C3AED", bg: "#F5F3FF" },
 ] as const;
 
-function getParticipationInfo(totalPlayed: number) {
+function computeRating(stats: ProfileStats | undefined): number {
+  if (!stats) return BASE_RATING;
+  const regularGames = Math.max(0, stats.gamesPlayedTotal - stats.tournamentsPlayedTotal);
+  return (
+    BASE_RATING +
+    regularGames * POINTS_PER_GAME +
+    stats.tournamentsPlayedTotal * POINTS_PER_TOURNAMENT +
+    stats.gamesHostedTotal * POINTS_PER_HOSTED_GAME +
+    Math.round(stats.hoursPlayedTotal * POINTS_PER_HOUR)
+  );
+}
+
+function getRatingTierInfo(rating: number) {
   let idx = 0;
-  for (let i = 0; i < PARTICIPATION_TIERS.length; i++) {
-    if (totalPlayed >= PARTICIPATION_TIERS[i].min) idx = i;
+  for (let i = 0; i < RATING_TIERS.length; i++) {
+    if (rating >= RATING_TIERS[i].min) idx = i;
   }
-  const current = PARTICIPATION_TIERS[idx];
-  const next = PARTICIPATION_TIERS[idx + 1] ?? null;
-  const progress = next ? (totalPlayed - current.min) / (next.min - current.min) : 1;
+  const current = RATING_TIERS[idx];
+  const next = RATING_TIERS[idx + 1] ?? null;
+  const progress = next ? (rating - current.min) / (next.min - current.min) : 1;
   return {
     label: current.label,
     color: current.color,
     bg: current.bg,
     progress: Math.max(0, Math.min(1, progress)),
     nextLabel: next?.label ?? null,
-    remaining: next ? next.min - totalPlayed : 0,
+    remaining: next ? next.min - rating : 0,
   };
 }
 
@@ -187,7 +210,8 @@ export default function ProfileScreen() {
 
   const effectiveSkillLevel = profile?.skill_level ?? stats?.computedSkillLevel ?? null;
   const totalPlayed = stats?.gamesPlayedTotal ?? 0;
-  const participation = getParticipationInfo(totalPlayed);
+  const rating = computeRating(stats);
+  const ratingTier = getRatingTierInfo(rating);
 
   const sportSegments = (stats?.sportBreakdown ?? []).map((s) => ({
     label: s.sportName,
@@ -237,36 +261,39 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Level & skill card */}
+        {/* Rating & skill card */}
         <View className="bg-white rounded-2xl p-4 mb-6" style={CARD_SHADOW}>
           <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
-            PARTICIPATION LEVEL
+            RATING
           </Text>
           <View className="flex-row items-center justify-between mb-2">
             <View className="flex-row items-center" style={{ gap: 10 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 36, height: 36, backgroundColor: participation.bg }}
+                style={{ width: 40, height: 40, backgroundColor: ratingTier.bg }}
               >
-                <Ionicons name="flame" size={18} color={participation.color} />
+                <Ionicons name="flame" size={20} color={ratingTier.color} />
               </View>
-              <Text className="text-ink font-extrabold text-lg">{participation.label}</Text>
-            </View>
-            {participation.nextLabel ? (
-              <Text className="text-muted text-xs">
-                {participation.remaining} to {participation.nextLabel}
+              <Text className="text-ink font-extrabold" style={{ fontSize: 30, lineHeight: 34 }}>
+                {rating}
               </Text>
-            ) : (
-              <Text className="text-muted text-xs">Top tier</Text>
-            )}
+            </View>
+            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ratingTier.bg }}>
+              <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
+                {ratingTier.label}
+              </Text>
+            </View>
           </View>
+          <Text className="text-muted text-xs mb-2">
+            {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
+          </Text>
           <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
             <View
               style={{
                 height: 8,
                 borderRadius: 4,
-                width: `${participation.progress * 100}%`,
-                backgroundColor: participation.color,
+                width: `${ratingTier.progress * 100}%`,
+                backgroundColor: ratingTier.color,
               }}
             />
           </View>
