@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -12,6 +13,11 @@ type ProfileState = {
     userId: string,
     changes: Partial<Pick<Profile, "full_name" | "avatar" | "skill_level">>
   ) => Promise<void>;
+  // Keeps the store's own profile in sync live — e.g. a superadmin revoking
+  // someone's venue-admin access (type 'owner' -> 'user') must be reflected
+  // on that person's own device immediately if they're already signed in,
+  // not just on their next login.
+  subscribeToProfile: (userId: string) => () => void;
   clear: () => void;
 };
 
@@ -54,6 +60,21 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
     if (error) throw error;
     set({ profile: data });
+  },
+  subscribeToProfile: (userId: string) => {
+    const channel = supabase
+      .channel(uniqueChannelName(`profile:${userId}`))
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        (payload) => {
+          set({ profile: payload.new as Profile });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   },
   clear: () => set({ profile: null, isLoading: true }),
 }));
