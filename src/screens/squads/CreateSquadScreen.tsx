@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -21,6 +20,8 @@ import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
 import FieldInput from "../../components/FieldInput";
+import Bouncy from "../../components/Bouncy";
+import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
@@ -73,16 +74,18 @@ export default function CreateSquadScreen() {
       className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <SportsBackgroundDecor />
+
       {/* Header */}
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}
       >
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
+        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
+        </Bouncy>
         <Text className="text-base font-bold text-ink flex-1">Create Squad</Text>
-        <Pressable
+        <Bouncy
           onPress={handleCreate}
           disabled={createSquad.isPending}
           className="bg-primary rounded-xl px-4 py-2"
@@ -93,7 +96,7 @@ export default function CreateSquadScreen() {
           ) : (
             <Text className="text-white font-semibold text-sm">Post</Text>
           )}
-        </Pressable>
+        </Bouncy>
       </View>
 
       <ScrollView

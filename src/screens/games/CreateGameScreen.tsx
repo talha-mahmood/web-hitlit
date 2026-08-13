@@ -27,6 +27,7 @@ import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
 import SportHeroBadge from "../../components/SportHeroBadge";
+import IconPoolPreview from "../../components/IconPoolPreview";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
   TIME_SLOTS,
@@ -34,6 +35,8 @@ import {
   DURATIONS,
   TOURNAMENT_DURATIONS_DAYS,
   MAX_PLAYERS_OPTIONS,
+  NUMBER_OF_TEAMS_OPTIONS,
+  PLAYERS_PER_TEAM_OPTIONS,
   addMinutes,
   addDays,
   isTimeSlotPast,
@@ -156,6 +159,27 @@ function MaxPlayersChipItem({
   );
 }
 
+// Shared by the tournament-only "Number of Teams" / "Players per Team"
+// pickers below — same chip look and pop animation as Max Players.
+function CountChipItem({
+  n,
+  selected,
+  onPress,
+}: {
+  n: number;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
+        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function CreateGameScreen() {
@@ -180,8 +204,8 @@ export default function CreateGameScreen() {
   const [duration, setDuration] = useState<number>(1);
   const [durationDays, setDurationDays] = useState<number>(1);
   const [maxPlayers, setMaxPlayers] = useState<number>(10);
-  const [numberOfTeams, setNumberOfTeams] = useState("");
-  const [playersPerTeam, setPlayersPerTeam] = useState("");
+  const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
+  const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [visibility, setVisibility] = useState<Visibility>("public");
   const [gender, setGender] = useState<Gender>("mixed");
@@ -225,10 +249,10 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a skill level.");
       return;
     }
-    const teams = parseInt(numberOfTeams, 10) || 0;
-    const perTeam = parseInt(playersPerTeam, 10) || 0;
+    const teams = numberOfTeams ?? 0;
+    const perTeam = playersPerTeam ?? 0;
     if (isTournament && (teams < 2 || perTeam < 1)) {
-      Alert.alert("Missing Info", "Please enter a number of teams (2+) and players per team.");
+      Alert.alert("Missing Info", "Please select a number of teams (2+) and players per team.");
       return;
     }
 
@@ -359,7 +383,6 @@ export default function CreateGameScreen() {
             ]}
             value={gameType}
             onChange={setGameType}
-           
           />
         )}
 
@@ -428,7 +451,6 @@ export default function CreateGameScreen() {
             }))}
             value={String(durationDays)}
             onChange={(v) => setDurationDays(parseInt(v, 10))}
-           
           />
         ) : (
           <PillRow
@@ -438,7 +460,6 @@ export default function CreateGameScreen() {
             }))}
             value={String(duration)}
             onChange={(v) => setDuration(parseFloat(v))}
-           
           />
         )}
 
@@ -446,23 +467,40 @@ export default function CreateGameScreen() {
         {isTournament ? (
           <>
             <SectionLabel title="Number of Teams" required />
-            <FieldInput
-              value={numberOfTeams}
-              onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
-              keyboardType="numeric"
-              placeholder="e.g. 8"
-              maxLength={3}
-            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {NUMBER_OF_TEAMS_OPTIONS.map((n) => (
+                <CountChipItem
+                  key={n}
+                  n={n}
+                  selected={numberOfTeams === n}
+                  onPress={() => setNumberOfTeams(n)}
+                />
+              ))}
+            </ScrollView>
+            <IconPoolPreview count={numberOfTeams ?? 0} icon="shield" />
 
             <SectionLabel title="Players per Team" required />
-            <FieldInput
-              value={playersPerTeam}
-              onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
-              keyboardType="numeric"
-              placeholder="e.g. 11"
-              maxLength={2}
-            />
-            <Text className="text-muted text-xs mt-1">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                <CountChipItem
+                  key={n}
+                  n={n}
+                  selected={playersPerTeam === n}
+                  onPress={() => setPlayersPerTeam(n)}
+                />
+              ))}
+            </ScrollView>
+            <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
+
+            <Text className="text-muted text-xs mt-3">
               A player must first form (or join) a team with the required number of
               members — the team is then submitted to you as host for approval.
             </Text>
@@ -498,7 +536,6 @@ export default function CreateGameScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
-         
         />
 
         {/* Gender */}
@@ -511,7 +548,6 @@ export default function CreateGameScreen() {
           ]}
           value={gender}
           onChange={setGender}
-         
         />
 
         {/* Visibility */}
@@ -523,7 +559,6 @@ export default function CreateGameScreen() {
           ]}
           value={visibility}
           onChange={setVisibility}
-         
         />
 
         {/* Entry Fee */}
