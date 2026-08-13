@@ -13,15 +13,9 @@ import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
 import { useAuthStore } from "../../store/authStore";
+import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
-
-// Solid, fully-saturated pills for skill level (not pale tints).
-const SKILL_SOLID_COLORS: Record<string, string> = {
-  beginner: colors.primary,
-  intermediate: "#EAB308",
-  expert: "#EC4899",
-};
 
 function SquadCard({ squad, onPress, currentUserId, index }: {
   squad: SquadListItem;
@@ -33,7 +27,7 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
   const isFull = !!squad.max_players && active.length >= squad.max_players;
   const isMySquad = squad.squad_owner_id === currentUserId;
   const skill = squad.skill_level;
-  const skillColor = skill ? SKILL_SOLID_COLORS[skill] : null;
+  const skillColor = skill ? SQUAD_SKILL_COLORS[skill] : null;
 
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>

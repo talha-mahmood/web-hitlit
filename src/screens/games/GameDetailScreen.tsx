@@ -15,8 +15,11 @@ import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
+import DetailSportBackdrop from "../../components/DetailSportBackdrop";
 import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
+import { getSportIcon } from "../../lib/sportIcons";
+import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -58,18 +61,49 @@ function InfoRow({
   label,
   value,
   action,
+  pillColor,
+  badge,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   value: string;
   action?: React.ReactNode;
+  // When set, the value renders as a solid colored pill instead of plain
+  // text — used for info that also carries color meaning elsewhere in the
+  // app (skill level, open-to, entry fee), same palette as the list cards.
+  pillColor?: string;
+  // A small colored tag shown next to the label (e.g. "Today") — distinct
+  // from `pillColor`, which recolors the value itself.
+  badge?: { label: string; color: string };
 }) {
   return (
     <View className="flex-row items-start py-2.5" style={{ gap: 12 }}>
       <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
       <View className="flex-1">
-        <Text className="text-muted text-xs">{label}</Text>
-        <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
+        <View className="flex-row items-center" style={{ gap: 6 }}>
+          <Text className="text-muted text-xs">{label}</Text>
+          {badge && (
+            <View style={{ backgroundColor: badge.color, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 }}>
+              <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>{badge.label}</Text>
+            </View>
+          )}
+        </View>
+        {pillColor ? (
+          <View
+            style={{
+              backgroundColor: pillColor,
+              alignSelf: "flex-start",
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 999,
+              marginTop: 4,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+          </View>
+        ) : (
+          <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
+        )}
       </View>
       {action}
     </View>
@@ -284,9 +318,12 @@ export default function GameDetailScreen() {
     game.skill_level === "BEGINNER" ? "Beginner" :
     game.skill_level === "INTERMEDIATE" ? "Intermediate" :
     game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
+  const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;
 
   const genderLabel = game.gender === "male" ? "Male Only" :
     game.gender === "female" ? "Female Only" : "Everyone";
+  const genderPillColor =
+    game.gender === "male" ? "#2563EB" : game.gender === "female" ? "#EC4899" : colors.primary;
 
   const handleJoin = () => {
     if (!userId) return;
@@ -426,8 +463,12 @@ export default function GameDetailScreen() {
   const isBusy = joinGame.isPending || leaveGame.isPending || cancelGame.isPending;
   const isApprovingOrRejecting = approvePlayer.isPending || rejectPlayer.isPending || removePlayer.isPending;
 
+  const sportIconInfo = game.sports?.name ? getSportIcon(game.sports.name) : null;
+
   return (
     <View className="flex-1 bg-white">
+      <DetailSportBackdrop sportName={game.sports?.name} />
+
       {/* Header */}
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
@@ -438,7 +479,20 @@ export default function GameDetailScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-base font-bold text-ink" numberOfLines={1}>{game.title}</Text>
-          <Text className="text-muted text-sm">{game.sports?.name}</Text>
+          <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+            {sportIconInfo && game.sports?.name && (
+              <View style={{ backgroundColor: sportIconInfo.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                <Text style={{ color: sportIconInfo.fg, fontSize: 11, fontWeight: "700" }}>
+                  {game.sports.name}
+                </Text>
+              </View>
+            )}
+            {isTournament && (
+              <View className="bg-purple-50 px-2 py-0.5 rounded-full">
+                <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+              </View>
+            )}
+          </View>
         </View>
         {isCreator && !isTournament && !isCancelled && !hasEnded && (
           <Pressable
@@ -531,7 +585,12 @@ export default function GameDetailScreen() {
             </>
           ) : (
             <>
-              <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
+              <InfoRow
+                icon="calendar-outline"
+                label="Date"
+                value={formatDateFull(game.game_date)}
+                badge={{ label: dayLabel(game.game_date), color: timeBadgeColor(game.start_time) }}
+              />
               <InfoRow
                 icon="time-outline"
                 label="Time"
@@ -546,12 +605,13 @@ export default function GameDetailScreen() {
               value={`${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`}
             />
           )}
-          <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} />
-          <InfoRow icon="people-outline" label="Open To" value={genderLabel} />
+          <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
+          <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
           <InfoRow
             icon="cash-outline"
             label="Entry Fee"
             value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
+            pillColor={game.entry_fee > 0 ? undefined : colors.primary}
           />
         </View>
 
@@ -575,9 +635,17 @@ export default function GameDetailScreen() {
                 <Text className="text-ink font-semibold text-sm">
                   Players ({joinedPlayers.length}/{game.max_players})
                 </Text>
-                <Text className="text-muted text-sm">
-                  {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
-                </Text>
+                {emptySlots > 0 ? (
+                  <View className="bg-green-50 px-2 py-0.5 rounded-full">
+                    <Text className="text-primary text-xs font-medium">
+                      {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                    <Text className="text-red-600 text-xs font-medium">Full</Text>
+                  </View>
+                )}
               </View>
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
                 {joinedPlayers.map((p) => (

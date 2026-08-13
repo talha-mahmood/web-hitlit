@@ -15,28 +15,10 @@ import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
 import { useAuthStore } from "../../store/authStore";
+import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
-
-// Solid, fully-saturated pills for skill level (not pale tints) — reads
-// closer to a real badge at a glance.
-const SKILL_SOLID_COLORS: Record<string, string> = {
-  BEGINNER: colors.primary,
-  INTERMEDIATE: "#EAB308",
-  ADVANCED: "#EC4899",
-  PRO: "#8B5CF6",
-};
-
-// The time badge's color varies with time of day — a small, tasteful dose
-// of color variety rather than one flat tint on every card.
-function timeBadgeColor(startTime: string): string {
-  const hour = parseInt(startTime.slice(0, 2), 10);
-  if (hour >= 5 && hour < 12) return "#F59E0B"; // morning
-  if (hour >= 12 && hour < 17) return "#0EA5E9"; // afternoon
-  if (hour >= 17 && hour < 21) return "#6366F1"; // evening
-  return "#2563EB"; // night
-}
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const fmt = (t: string) =>
@@ -46,26 +28,6 @@ function formatTimeRange(startTime: string, endTime: string): string {
       hour12: true,
     });
   return `${fmt(startTime)} - ${fmt(endTime)}`;
-}
-
-// "Today" / "Tomorrow" / "Sat, Aug 16" — used to prefix the time badge so a
-// list spanning many days doesn't lose which day a game falls on.
-function dayLabel(dateStr: string): string {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const gameDate = new Date(y, m - 1, d);
-
-  const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  if (isSameDay(gameDate, today)) return "Today";
-  if (isSameDay(gameDate, tomorrow)) return "Tomorrow";
-  return gameDate.toLocaleDateString("en-PK", { weekday: "short", month: "short", day: "numeric" });
 }
 
 // A multi-day tournament shows a date range instead of a single day + time.
@@ -107,7 +69,7 @@ function GameCard({
   const isFull = game.status === "FULL" || (isTournament ? teamsLeft <= 0 : spotsLeft <= 0);
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
-  const skillColor = skill ? SKILL_SOLID_COLORS[skill] : null;
+  const skillColor = skill ? GAME_SKILL_COLORS[skill] : null;
   const skillLabel =
     skill === "BEGINNER" ? "Beginner" :
     skill === "INTERMEDIATE" ? "Intermediate" :

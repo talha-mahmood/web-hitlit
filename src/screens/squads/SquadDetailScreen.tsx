@@ -21,7 +21,9 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import JoinRequestModal from "../../components/JoinRequestModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
+import DetailSportBackdrop from "../../components/DetailSportBackdrop";
 import type { Database } from "../../types/database.types";
+import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadDetail">;
@@ -40,18 +42,37 @@ function InfoRow({
   label,
   value,
   action,
+  pillColor,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   value: string;
   action?: React.ReactNode;
+  // When set, the value renders as a solid colored pill instead of plain
+  // text — same palette as the squad list cards.
+  pillColor?: string;
 }) {
   return (
     <View className="flex-row items-start py-2.5" style={{ gap: 12 }}>
       <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
       <View className="flex-1">
         <Text className="text-muted text-xs">{label}</Text>
-        <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
+        {pillColor ? (
+          <View
+            style={{
+              backgroundColor: pillColor,
+              alignSelf: "flex-start",
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 999,
+              marginTop: 4,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+          </View>
+        ) : (
+          <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
+        )}
       </View>
       {action}
     </View>
@@ -347,8 +368,12 @@ export default function SquadDetailScreen() {
   const isBusy = joinSquad.isPending || leaveSquad.isPending || disbandSquad.isPending;
   const isApprovingOrRejecting = approveMember.isPending || rejectMember.isPending || removeMember.isPending;
 
+  const squadSkillColor = squad.skill_level ? SQUAD_SKILL_COLORS[squad.skill_level] : colors.muted;
+
   return (
     <View className="flex-1 bg-white">
+      <DetailSportBackdrop />
+
       {/* Header */}
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
@@ -359,7 +384,14 @@ export default function SquadDetailScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-base font-bold text-ink" numberOfLines={1}>{squad.name}</Text>
-          <Text className="text-muted text-sm">{skillLabel(squad.skill_level)}</Text>
+          <View
+            className="mt-1"
+            style={{ backgroundColor: squadSkillColor, alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}
+          >
+            <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
+              {skillLabel(squad.skill_level)}
+            </Text>
+          </View>
         </View>
         {isOwner && (
           <Pressable
@@ -425,7 +457,12 @@ export default function SquadDetailScreen() {
               )
             }
           />
-          <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel(squad.skill_level)} />
+          <InfoRow
+            icon="speedometer-outline"
+            label="Skill Level"
+            value={skillLabel(squad.skill_level)}
+            pillColor={squadSkillColor}
+          />
           <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
         </View>
 
@@ -444,9 +481,17 @@ export default function SquadDetailScreen() {
               Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
             </Text>
             {!!squad.max_players && (
-              <Text className="text-muted text-sm">
-                {emptySlots > 0 ? `${emptySlots} spot${emptySlots !== 1 ? "s" : ""} left` : "Full"}
-              </Text>
+              emptySlots > 0 ? (
+                <View className="bg-green-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-primary text-xs font-medium">
+                    {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
+                  </Text>
+                </View>
+              ) : (
+                <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-red-600 text-xs font-medium">Full</Text>
+                </View>
+              )
             )}
           </View>
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
