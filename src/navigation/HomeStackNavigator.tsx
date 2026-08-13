@@ -9,11 +9,13 @@ import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
+import NotificationsScreen from "../screens/main/NotificationsScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
+  Notifications: undefined;
   VenueDetail: { venueId: string };
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
@@ -37,6 +39,7 @@ export default function HomeStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeFeed" component={HomeScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />

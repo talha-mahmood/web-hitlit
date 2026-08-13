@@ -9,9 +9,12 @@ import { useProfileStore } from "../../store/profileStore";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
+import { useUnreadNotificationCount } from "../../hooks/useNotifications";
 import SportsBySportSection from "../../components/SportsBySportSection";
 import VenueCard from "../../components/VenueCard";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
+import NotificationBell from "../../components/NotificationBell";
+import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
@@ -58,12 +61,14 @@ function HomeActionCard({
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const profile = useProfileStore((s) => s.profile);
+  const userId = useAuthStore((s) => s.session?.user.id);
   const insets = useSafeAreaInsets();
 
   const { data: sports } = useSports();
   const { data: venues, isLoading } = useVenues({});
   const { data: favoriteIds } = useFavoriteVenueIds();
   const toggleFavorite = useToggleFavoriteVenue();
+  const { data: unreadCount } = useUnreadNotificationCount(userId);
 
   const topVenues = (venues ?? []).slice(0, 6);
 
@@ -115,27 +120,33 @@ export default function HomeScreen() {
       className="flex-1 bg-white"
       ListHeaderComponent={
         <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
-          <Pressable
-            onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
-            className="flex-row items-center mb-5"
-            style={{ gap: 12 }}
-          >
-            {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
-            ) : (
-              <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
-                <Text className="text-lg font-bold text-primary">
-                  {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+          <View className="flex-row items-center mb-5" style={{ gap: 12 }}>
+            <Pressable
+              onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
+              className="flex-row items-center flex-1"
+              style={{ gap: 12 }}
+            >
+              {profile?.avatar ? (
+                <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
+              ) : (
+                <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
+                  <Text className="text-lg font-bold text-primary">
+                    {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+                  </Text>
+                </View>
+              )}
+              <View className="flex-1">
+                <Text className="text-2xl font-bold text-ink">
+                  Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
                 </Text>
+                <Text className="text-muted mt-1">What are you playing today?</Text>
               </View>
-            )}
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-ink">
-                Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-              </Text>
-              <Text className="text-muted mt-1">What are you playing today?</Text>
-            </View>
-          </Pressable>
+            </Pressable>
+            <NotificationBell
+              unreadCount={unreadCount}
+              onPress={() => navigation.navigate("Notifications")}
+            />
+          </View>
 
           <PromoCarousel slides={promoSlides} />
 

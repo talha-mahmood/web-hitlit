@@ -692,6 +692,7 @@ export type Database = {
         Row: {
           body: string | null
           created_at: string
+          data: Json
           deleted_at: string | null
           id: string
           is_read: boolean
@@ -703,6 +704,7 @@ export type Database = {
         Insert: {
           body?: string | null
           created_at?: string
+          data?: Json
           deleted_at?: string | null
           id?: string
           is_read?: boolean
@@ -714,6 +716,7 @@ export type Database = {
         Update: {
           body?: string | null
           created_at?: string
+          data?: Json
           deleted_at?: string | null
           id?: string
           is_read?: boolean
@@ -1448,6 +1451,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          p_body: string
+          p_data?: Json
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       delete_old_game_messages: { Args: never; Returns: undefined }
       delete_old_squad_messages: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
@@ -1669,3 +1682,4 @@ export const Constants = {
     },
   },
 } as const
+
