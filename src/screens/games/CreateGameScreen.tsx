@@ -3,12 +3,12 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,6 +23,10 @@ import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
+import Bouncy from "../../components/Bouncy";
+import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
+import SportHeroBadge from "../../components/SportHeroBadge";
+import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
   TIME_SLOTS,
   DAYS,
@@ -42,24 +46,110 @@ type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
 
-// Shared "chip" look for the inline pickers below (sport, date, time, max
-// players) — same rounded + shadow-when-selected treatment as PillRow.
+// Chips on this screen sit on a green page background, so the selected
+// state is inverted (solid white + green text) to stay legible instead of
+// green-on-green, and unselected chips are a translucent white outline.
 function chipStyle(selected: boolean, extra?: object) {
   return {
     borderWidth: 1.5,
-    borderColor: selected ? colors.primary : colors.border,
-    backgroundColor: selected ? colors.primary : "white",
+    borderColor: selected ? "white" : "rgba(255,255,255,0.45)",
+    backgroundColor: selected ? "white" : "rgba(255,255,255,0.14)",
     ...(selected
       ? {
-          shadowColor: colors.primary,
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.2,
+          shadowOpacity: 0.18,
           shadowRadius: 6,
           elevation: 2,
         }
       : null),
     ...extra,
   };
+}
+
+function SportChipItem({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Bouncy onPress={onPress} className="px-4 py-2.5 rounded-2xl" style={chipStyle(selected)}>
+        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>
+          {label}
+        </Text>
+      </Bouncy>
+    </Animated.View>
+  );
+}
+
+function DateChipItem({
+  day,
+  label,
+  selected,
+  onPress,
+}: {
+  day: string;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Bouncy onPress={onPress} className="items-center px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
+        <Text className={`text-xs ${selected ? "text-primary" : "text-white/80"}`}>{day}</Text>
+        <Text className={`text-base font-bold mt-0.5 ${selected ? "text-primary" : "text-white"}`}>
+          {label}
+        </Text>
+      </Bouncy>
+    </Animated.View>
+  );
+}
+
+function TimeChipItem({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Bouncy onPress={onPress} className="px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
+        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>
+          {label}
+        </Text>
+      </Bouncy>
+    </Animated.View>
+  );
+}
+
+function MaxPlayersChipItem({
+  n,
+  selected,
+  onPress,
+}: {
+  n: number;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Bouncy onPress={onPress} className="w-12 py-2 rounded-2xl items-center" style={chipStyle(selected)}>
+        <Text className={`text-sm font-medium ${selected ? "text-primary" : "text-white"}`}>{n}</Text>
+      </Bouncy>
+    </Animated.View>
+  );
 }
 
 // ── main component ────────────────────────────────────────────────────────────
@@ -100,6 +190,7 @@ export default function CreateGameScreen() {
   };
 
   const isTournament = gameType === "TOURNAMENT";
+  const selectedSportName = sports?.find((s) => s.id === sportId)?.name ?? null;
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -181,38 +272,40 @@ export default function CreateGameScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      style={{ flex: 1, backgroundColor: colors.primary }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <SportsBackgroundDecor />
+
       {/* Header */}
       <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
+        className="flex-row items-center px-4 pb-4"
+        style={{ paddingTop: insets.top + 16, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.25)" }}
       >
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">
+        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
+          <Ionicons name="arrow-back" size={22} color="white" />
+        </Bouncy>
+        <Text className="text-base font-bold text-white flex-1">
           {isTournament ? "Create Tournament" : "Create Game"}
         </Text>
-        <Pressable
+        <Bouncy
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
+          className="bg-white rounded-xl px-4 py-2"
           style={{
-            shadowColor: colors.primary,
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
+            shadowOpacity: 0.2,
             shadowRadius: 8,
             elevation: 3,
           }}
         >
           {createGame.isPending ? (
-            <ActivityIndicator size="small" color="white" />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Text className="text-white font-semibold text-sm">Post</Text>
+            <Text className="text-primary font-semibold text-sm">Post</Text>
           )}
-        </Pressable>
+        </Bouncy>
       </View>
 
       <ScrollView
@@ -221,7 +314,7 @@ export default function CreateGameScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
-        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required variant="onGreen" />
         <FieldInput
           value={title}
           onChangeText={setTitle}
@@ -230,27 +323,26 @@ export default function CreateGameScreen() {
         />
 
         {/* Sport */}
-        <SectionLabel title="Sport" required />
+        <SectionLabel title="Sport" required variant="onGreen" />
+        {selectedSportName && (
+          <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
+            <SportHeroBadge sportName={selectedSportName} />
+            <Text className="text-white font-semibold flex-1">{selectedSportName}</Text>
+          </View>
+        )}
         <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-          {(sports ?? []).map((s) => {
-            const selected = sportId === s.id;
-            return (
-              <Pressable
-                key={s.id}
-                onPress={() => handleSportChange(s.id)}
-                className="px-4 py-2.5 rounded-2xl"
-                style={chipStyle(selected)}
-              >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                  {s.name}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {(sports ?? []).map((s) => (
+            <SportChipItem
+              key={s.id}
+              label={s.name}
+              selected={sportId === s.id}
+              onPress={() => handleSportChange(s.id)}
+            />
+          ))}
         </View>
 
         {/* Game Type */}
-        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />
+        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} variant="onGreen" />
         {forcedTournament ? (
           <View className="bg-purple-50 self-start px-4 py-2 rounded-2xl">
             <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
@@ -263,11 +355,12 @@ export default function CreateGameScreen() {
             ]}
             value={gameType}
             onChange={setGameType}
+            variant="onGreen"
           />
         )}
 
         {/* Venue */}
-        <SectionLabel title="Venue" required />
+        <SectionLabel title="Venue" required variant="onGreen" />
         <VenueSearchField
           venues={venues}
           loading={sportId != null && venuesLoading}
@@ -277,40 +370,33 @@ export default function CreateGameScreen() {
         />
 
         {/* Date */}
-        <SectionLabel title="Date" required />
+        <SectionLabel title="Date" required variant="onGreen" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
         >
-          {DAYS.map((d) => {
-            const selected = selectedDate === d.iso;
-            return (
-              <Pressable
-                key={d.iso}
-                onPress={() => {
-                  setSelectedDate(d.iso);
-                  // A time picked for a later date can be in the past once
-                  // the user switches to today — clear it rather than leave
-                  // an invalid selection sitting there.
-                  if (startTime && d.iso === DAYS[0].iso && isTimeSlotPast(d.iso, startTime)) {
-                    setStartTime(null);
-                  }
-                }}
-                className="items-center px-3 py-2 rounded-2xl"
-                style={chipStyle(selected)}
-              >
-                <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
-                <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
-                  {d.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {DAYS.map((d) => (
+            <DateChipItem
+              key={d.iso}
+              day={d.day}
+              label={d.label}
+              selected={selectedDate === d.iso}
+              onPress={() => {
+                setSelectedDate(d.iso);
+                // A time picked for a later date can be in the past once
+                // the user switches to today — clear it rather than leave
+                // an invalid selection sitting there.
+                if (startTime && d.iso === DAYS[0].iso && isTimeSlotPast(d.iso, startTime)) {
+                  setStartTime(null);
+                }
+              }}
+            />
+          ))}
         </ScrollView>
 
         {/* Start Time */}
-        <SectionLabel title="Start Time" required />
+        <SectionLabel title="Start Time" required variant="onGreen" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -318,25 +404,18 @@ export default function CreateGameScreen() {
         >
           {TIME_SLOTS.filter(
             (t) => !(selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value))
-          ).map((t) => {
-            const selected = startTime === t.value;
-            return (
-              <Pressable
-                key={t.value}
-                onPress={() => setStartTime(t.value)}
-                className="px-3 py-2 rounded-2xl"
-                style={chipStyle(selected)}
-              >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          ).map((t) => (
+            <TimeChipItem
+              key={t.value}
+              label={t.label}
+              selected={startTime === t.value}
+              onPress={() => setStartTime(t.value)}
+            />
+          ))}
         </ScrollView>
 
         {/* Duration */}
-        <SectionLabel title="Duration" />
+        <SectionLabel title="Duration" variant="onGreen" />
         {isTournament ? (
           <PillRow
             options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
@@ -345,6 +424,7 @@ export default function CreateGameScreen() {
             }))}
             value={String(durationDays)}
             onChange={(v) => setDurationDays(parseInt(v, 10))}
+            variant="onGreen"
           />
         ) : (
           <PillRow
@@ -354,13 +434,14 @@ export default function CreateGameScreen() {
             }))}
             value={String(duration)}
             onChange={(v) => setDuration(parseFloat(v))}
+            variant="onGreen"
           />
         )}
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
           <>
-            <SectionLabel title="Number of Teams" required />
+            <SectionLabel title="Number of Teams" required variant="onGreen" />
             <FieldInput
               value={numberOfTeams}
               onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
@@ -369,7 +450,7 @@ export default function CreateGameScreen() {
               maxLength={3}
             />
 
-            <SectionLabel title="Players per Team" required />
+            <SectionLabel title="Players per Team" required variant="onGreen" />
             <FieldInput
               value={playersPerTeam}
               onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
@@ -377,40 +458,33 @@ export default function CreateGameScreen() {
               placeholder="e.g. 11"
               maxLength={2}
             />
-            <Text className="text-muted text-xs mt-1">
+            <Text className="text-white/80 text-xs mt-1">
               A player must first form (or join) a team with the required number of
               members — the team is then submitted to you as host for approval.
             </Text>
           </>
         ) : (
           <>
-            <SectionLabel title="Max Players" />
+            <SectionLabel title="Max Players" variant="onGreen" />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 8 }}
             >
-              {MAX_PLAYERS_OPTIONS.map((n) => {
-                const selected = maxPlayers === n;
-                return (
-                  <Pressable
-                    key={n}
-                    onPress={() => setMaxPlayers(n)}
-                    className="w-12 py-2 rounded-2xl items-center"
-                    style={chipStyle(selected)}
-                  >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {n}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {MAX_PLAYERS_OPTIONS.map((n) => (
+                <MaxPlayersChipItem
+                  key={n}
+                  n={n}
+                  selected={maxPlayers === n}
+                  onPress={() => setMaxPlayers(n)}
+                />
+              ))}
             </ScrollView>
           </>
         )}
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" required />
+        <SectionLabel title="Skill Level" required variant="onGreen" />
         <PillRow<SkillLevel>
           options={[
             { label: "Beginner", value: "BEGINNER" },
@@ -420,10 +494,11 @@ export default function CreateGameScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
+          variant="onGreen"
         />
 
         {/* Gender */}
-        <SectionLabel title="Open To" />
+        <SectionLabel title="Open To" variant="onGreen" />
         <PillRow<Gender>
           options={[
             { label: "Everyone", value: "mixed" },
@@ -432,10 +507,11 @@ export default function CreateGameScreen() {
           ]}
           value={gender}
           onChange={setGender}
+          variant="onGreen"
         />
 
         {/* Visibility */}
-        <SectionLabel title="Visibility" />
+        <SectionLabel title="Visibility" variant="onGreen" />
         <PillRow<Visibility>
           options={[
             { label: "Public", value: "public" },
@@ -443,10 +519,11 @@ export default function CreateGameScreen() {
           ]}
           value={visibility}
           onChange={setVisibility}
+          variant="onGreen"
         />
 
         {/* Entry Fee */}
-        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
+        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} variant="onGreen" />
         <FieldInput
           value={entryFee}
           onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
@@ -454,12 +531,12 @@ export default function CreateGameScreen() {
           placeholder="0"
           left={<Text className="text-muted mr-2">Rs</Text>}
         />
-        <Text className="text-muted text-xs mt-1">
+        <Text className="text-white/80 text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" />
+        <SectionLabel title="Description" variant="onGreen" />
         <FieldInput
           value={description}
           onChangeText={setDescription}
