@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Pressable,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -66,6 +67,10 @@ function chipStyle(selected: boolean, extra?: object) {
   };
 }
 
+// Sport/Date/Start Time/Max Players use this same plain-Pressable chip (no
+// press-scale) as Duration and every other PillRow field — only the
+// select-pulse "pop" (also used by PillRow) carries over as the animation,
+// so these fields look and behave exactly like the rest of the form.
 function SportChipItem({
   label,
   selected,
@@ -78,11 +83,11 @@ function SportChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Bouncy onPress={onPress} className="px-4 py-2.5 rounded-2xl" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="px-4 py-2.5 rounded-2xl" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
-      </Bouncy>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -101,12 +106,12 @@ function DateChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Bouncy onPress={onPress} className="items-center px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="items-center px-3 py-2.5 rounded-2xl" style={chipStyle(selected)}>
         <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
         <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
-      </Bouncy>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -123,11 +128,11 @@ function TimeChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Bouncy onPress={onPress} className="px-3 py-2 rounded-2xl" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="px-3 py-2.5 rounded-2xl" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
-      </Bouncy>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -144,9 +149,9 @@ function MaxPlayersChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Bouncy onPress={onPress} className="w-12 py-2 rounded-2xl items-center" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
-      </Bouncy>
+      </Pressable>
     </Animated.View>
   );
 }
