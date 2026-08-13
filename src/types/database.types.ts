@@ -1460,6 +1460,7 @@ export type Database = {
           start_time: string
         }[]
       }
+      is_superadmin: { Args: never; Returns: boolean }
     }
     Enums: {
       booking_payment_status_type: "paid" | "unpaid"
@@ -1469,6 +1470,7 @@ export type Database = {
         | "CANCELLED"
         | "EXPIRED"
         | "COMPLETED"
+        | "BLOCKED"
       game_gender_type: "male" | "female" | "mixed"
       game_invite_status_type: "pending" | "accepted" | "declined"
       game_player_status_type:
@@ -1631,6 +1633,7 @@ export const Constants = {
         "CANCELLED",
         "EXPIRED",
         "COMPLETED",
+        "BLOCKED",
       ],
       game_gender_type: ["male", "female", "mixed"],
       game_invite_status_type: ["pending", "accepted", "declined"],
