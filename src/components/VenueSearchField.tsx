@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../constants/theme";
+import Bouncy from "./Bouncy";
+import { colors, fonts } from "../constants/theme";
 
 type VenueOption = { id: string; name: string; city: string | null };
 
@@ -52,21 +53,37 @@ export default function VenueSearchField({
   const showDropdown = focused && !loading;
 
   if (disabledReason) {
-    return <Text className="text-muted text-sm">{disabledReason}</Text>;
+    return (
+      <Text style={{ fontFamily: fonts.medium }} className="text-muted text-sm">
+        {disabledReason}
+      </Text>
+    );
   }
 
   if (loading) {
-    return <ActivityIndicator color={colors.primary} />;
+    return <ActivityIndicator color={colors.sky} />;
   }
 
   if (!venues || venues.length === 0) {
-    return <Text className="text-muted text-sm">No venues found for this sport yet.</Text>;
+    return (
+      <Text style={{ fontFamily: fonts.medium }} className="text-muted text-sm">
+        No venues found for this sport yet.
+      </Text>
+    );
   }
 
   return (
     <View>
-      <View className="flex-row items-center border border-border rounded-xl px-4" style={{ gap: 8 }}>
-        <Ionicons name="search-outline" size={18} color={colors.muted} />
+      <View
+        className="flex-row items-center rounded-2xl px-4"
+        style={{
+          gap: 8,
+          borderWidth: 1.5,
+          borderColor: focused ? colors.sky : colors.border,
+          backgroundColor: focused ? colors.skyLight : "white",
+        }}
+      >
+        <Ionicons name="search-outline" size={18} color={focused ? colors.sky : colors.muted} />
         <TextInput
           value={query}
           onChangeText={(t) => {
@@ -85,6 +102,7 @@ export default function VenueSearchField({
           placeholder="Search venue by name"
           autoCapitalize="words"
           autoCorrect={false}
+          style={{ fontFamily: fonts.medium }}
           className="flex-1 py-3 text-ink"
         />
         {query.length > 0 && (
@@ -95,19 +113,25 @@ export default function VenueSearchField({
             }}
             hitSlop={8}
           >
-            <Ionicons name="close-circle" size={18} color={colors.border} />
+            <Ionicons name="close-circle" size={18} color={colors.muted} />
           </Pressable>
         )}
       </View>
 
       {showDropdown && (
-        <View className="border border-border rounded-xl mt-1.5 overflow-hidden" style={{ maxHeight: 220 }}>
+        <View
+          className="rounded-2xl mt-1.5 overflow-hidden"
+          style={{ maxHeight: 220, borderWidth: 1.5, borderColor: colors.border }}
+        >
           {matches.length === 0 ? (
-            <Text className="text-muted text-sm px-4 py-3">No venues match "{query}".</Text>
+            <Text style={{ fontFamily: fonts.medium }} className="text-muted text-sm px-4 py-3">
+              No venues match "{query}".
+            </Text>
           ) : (
-            matches.slice(0, MAX_RESULTS).map((v) => (
-              <Pressable
+            matches.slice(0, MAX_RESULTS).map((v, i) => (
+              <Bouncy
                 key={v.id}
+                scaleTo={0.99}
                 // onPress fires after TextInput's onBlur on RN — fine, since
                 // selection doesn't depend on focus state.
                 onPress={() => {
@@ -115,15 +139,28 @@ export default function VenueSearchField({
                   setQuery(v.name);
                   setFocused(false);
                 }}
-                className={`px-4 py-3 border-b border-border ${v.id === selectedVenueId ? "bg-primary-light" : "bg-white"}`}
+                className="px-4 py-3"
+                style={{
+                  borderTopWidth: i === 0 ? 0 : 1,
+                  borderTopColor: colors.border,
+                  backgroundColor: v.id === selectedVenueId ? colors.skyLight : "white",
+                }}
               >
-                <Text className="text-ink text-sm font-medium" numberOfLines={1}>
+                <Text
+                  style={{ fontFamily: fonts.semibold }}
+                  className="text-ink text-sm"
+                  numberOfLines={1}
+                >
                   {v.name}
                 </Text>
-                <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                <Text
+                  style={{ fontFamily: fonts.medium }}
+                  className="text-muted text-xs mt-0.5"
+                  numberOfLines={1}
+                >
                   {v.city ?? "—"}
                 </Text>
-              </Pressable>
+              </Bouncy>
             ))
           )}
         </View>

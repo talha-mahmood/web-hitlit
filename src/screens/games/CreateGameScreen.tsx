@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   ScrollView,
-  Pressable,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,11 +17,12 @@ import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, fonts } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
+import Bouncy from "../../components/Bouncy";
 import {
   TIME_SLOTS,
   DAYS,
@@ -41,6 +41,47 @@ type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
+
+// A bold, rounded text field with a color-accented focus ring — the same
+// "advanced" treatment as the picker chips, applied to plain text inputs.
+function FieldInput({
+  focusColor = colors.primary,
+  focusTint = colors.primaryLight,
+  containerStyle,
+  ...props
+}: React.ComponentProps<typeof TextInput> & {
+  focusColor?: string;
+  focusTint?: string;
+  containerStyle?: object;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View
+      className="rounded-2xl px-4"
+      style={{
+        borderWidth: 1.5,
+        borderColor: focused ? focusColor : colors.border,
+        backgroundColor: focused ? focusTint : "white",
+        ...containerStyle,
+      }}
+    >
+      <TextInput
+        {...props}
+        onFocus={(e) => {
+          setFocused(true);
+          props.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          props.onBlur?.(e);
+        }}
+        placeholderTextColor={colors.muted}
+        style={[{ fontFamily: fonts.medium, paddingVertical: 12 }, props.style]}
+        className="text-ink"
+      />
+    </View>
+  );
+}
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -169,23 +210,33 @@ export default function CreateGameScreen() {
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}
       >
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
+        <Bouncy onPress={() => navigation.goBack()} className="mr-3 p-1" scaleTo={0.85}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">
+        </Bouncy>
+        <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-base flex-1">
           {isTournament ? "Create Tournament" : "Create Game"}
         </Text>
-        <Pressable
+        <Bouncy
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
+          className="rounded-2xl px-4 py-2.5"
+          style={{
+            backgroundColor: colors.primary,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
         >
           {createGame.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white font-semibold text-sm">Post</Text>
+            <Text style={{ fontFamily: fonts.bold }} className="text-white text-sm">
+              Post
+            </Text>
           )}
-        </Pressable>
+        </Bouncy>
       </View>
 
       <ScrollView
@@ -195,11 +246,10 @@ export default function CreateGameScreen() {
       >
         {/* Title */}
         <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
-        <TextInput
+        <FieldInput
           value={title}
           onChangeText={setTitle}
           placeholder="e.g. Saturday morning football"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           maxLength={80}
         />
 
@@ -209,15 +259,34 @@ export default function CreateGameScreen() {
           {(sports ?? []).map((s) => {
             const selected = sportId === s.id;
             return (
-              <Pressable
+              <Bouncy
                 key={s.id}
                 onPress={() => handleSportChange(s.id)}
-                className={`px-4 py-2 rounded-full border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="rounded-2xl"
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  backgroundColor: selected ? colors.primary : "white",
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.primary : colors.border,
+                  ...(selected
+                    ? {
+                        shadowColor: colors.primary,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.22,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }
+                    : null),
+                }}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                <Text
+                  style={{ fontFamily: fonts.semibold }}
+                  className={`text-sm ${selected ? "text-white" : "text-ink"}`}
+                >
                   {s.name}
                 </Text>
-              </Pressable>
+              </Bouncy>
             );
           })}
         </View>
@@ -225,8 +294,13 @@ export default function CreateGameScreen() {
         {/* Game Type */}
         <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />
         {forcedTournament ? (
-          <View className="bg-purple-50 self-start px-4 py-2 rounded-full">
-            <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
+          <View
+            className="self-start px-4 py-2 rounded-2xl"
+            style={{ backgroundColor: colors.violetLight }}
+          >
+            <Text style={{ fontFamily: fonts.bold, color: colors.violet }} className="text-sm">
+              🏆 Tournament
+            </Text>
           </View>
         ) : (
           <PillRow<GameType>
@@ -236,6 +310,7 @@ export default function CreateGameScreen() {
             ]}
             value={gameType}
             onChange={setGameType}
+            color={colors.amber}
           />
         )}
 
@@ -259,7 +334,7 @@ export default function CreateGameScreen() {
           {DAYS.map((d) => {
             const selected = selectedDate === d.iso;
             return (
-              <Pressable
+              <Bouncy
                 key={d.iso}
                 onPress={() => {
                   setSelectedDate(d.iso);
@@ -270,13 +345,37 @@ export default function CreateGameScreen() {
                     setStartTime(null);
                   }
                 }}
-                className={`items-center px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="items-center rounded-2xl"
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: selected ? colors.sky : "white",
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.sky : colors.border,
+                  ...(selected
+                    ? {
+                        shadowColor: colors.sky,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.22,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }
+                    : null),
+                }}
               >
-                <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
-                <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
+                <Text
+                  style={{ fontFamily: fonts.medium }}
+                  className={`text-xs ${selected ? "text-white" : "text-muted"}`}
+                >
+                  {d.day}
+                </Text>
+                <Text
+                  style={{ fontFamily: fonts.extrabold }}
+                  className={`text-base mt-0.5 ${selected ? "text-white" : "text-ink"}`}
+                >
                   {d.label}
                 </Text>
-              </Pressable>
+              </Bouncy>
             );
           })}
         </ScrollView>
@@ -293,15 +392,34 @@ export default function CreateGameScreen() {
           ).map((t) => {
             const selected = startTime === t.value;
             return (
-              <Pressable
+              <Bouncy
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="rounded-2xl"
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: selected ? colors.amber : "white",
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.amber : colors.border,
+                  ...(selected
+                    ? {
+                        shadowColor: colors.amber,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.22,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }
+                    : null),
+                }}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                <Text
+                  style={{ fontFamily: fonts.semibold }}
+                  className={`text-sm ${selected ? "text-white" : "text-ink"}`}
+                >
                   {t.label}
                 </Text>
-              </Pressable>
+              </Bouncy>
             );
           })}
         </ScrollView>
@@ -316,6 +434,7 @@ export default function CreateGameScreen() {
             }))}
             value={String(durationDays)}
             onChange={(v) => setDurationDays(parseInt(v, 10))}
+            color={colors.violet}
           />
         ) : (
           <PillRow
@@ -325,6 +444,7 @@ export default function CreateGameScreen() {
             }))}
             value={String(duration)}
             onChange={(v) => setDuration(parseFloat(v))}
+            color={colors.violet}
           />
         )}
 
@@ -332,25 +452,27 @@ export default function CreateGameScreen() {
         {isTournament ? (
           <>
             <SectionLabel title="Number of Teams" required />
-            <TextInput
+            <FieldInput
               value={numberOfTeams}
               onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 8"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={3}
+              focusColor={colors.coral}
+              focusTint={colors.coralLight}
             />
 
             <SectionLabel title="Players per Team" required />
-            <TextInput
+            <FieldInput
               value={playersPerTeam}
               onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 11"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={2}
+              focusColor={colors.coral}
+              focusTint={colors.coralLight}
             />
-            <Text className="text-muted text-xs mt-1">
+            <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs mt-1">
               A player must first form (or join) a team with the required number of
               members — the team is then submitted to you as host for approval.
             </Text>
@@ -366,15 +488,34 @@ export default function CreateGameScreen() {
               {MAX_PLAYERS_OPTIONS.map((n) => {
                 const selected = maxPlayers === n;
                 return (
-                  <Pressable
+                  <Bouncy
                     key={n}
                     onPress={() => setMaxPlayers(n)}
-                    className={`w-12 py-2 rounded-xl border items-center ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                    className="items-center rounded-2xl"
+                    style={{
+                      width: 48,
+                      paddingVertical: 10,
+                      backgroundColor: selected ? colors.coral : "white",
+                      borderWidth: 1.5,
+                      borderColor: selected ? colors.coral : colors.border,
+                      ...(selected
+                        ? {
+                            shadowColor: colors.coral,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.22,
+                            shadowRadius: 8,
+                            elevation: 3,
+                          }
+                        : null),
+                    }}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                    <Text
+                      style={{ fontFamily: fonts.semibold }}
+                      className={`text-sm ${selected ? "text-white" : "text-ink"}`}
+                    >
                       {n}
                     </Text>
-                  </Pressable>
+                  </Bouncy>
                 );
               })}
             </ScrollView>
@@ -392,6 +533,7 @@ export default function CreateGameScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
+          color={colors.primary}
         />
 
         {/* Gender */}
@@ -404,6 +546,7 @@ export default function CreateGameScreen() {
           ]}
           value={gender}
           onChange={setGender}
+          color={colors.sky}
         />
 
         {/* Visibility */}
@@ -415,31 +558,29 @@ export default function CreateGameScreen() {
           ]}
           value={visibility}
           onChange={setVisibility}
+          color={colors.violet}
         />
 
         {/* Entry Fee */}
         <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
-        <View className="flex-row items-center border border-border rounded-xl px-4">
-          <Text className="text-muted mr-2">Rs</Text>
-          <TextInput
-            value={entryFee}
-            onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
-            keyboardType="numeric"
-            placeholder="0"
-            className="flex-1 py-3 text-ink"
-          />
-        </View>
-        <Text className="text-muted text-xs mt-1">
+        <FieldInput
+          value={entryFee}
+          onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
+          keyboardType="numeric"
+          placeholder="0"
+          focusColor={colors.amber}
+          focusTint={colors.amberLight}
+        />
+        <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
         <SectionLabel title="Description" />
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Notes for players (meeting point, equipment, etc.)"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}
           maxLength={300}

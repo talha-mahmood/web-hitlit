@@ -17,12 +17,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useGameDetail, useUpdateGame } from "../../hooks/useGames";
 import { useVenues } from "../../hooks/useVenues";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, fonts } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
+import Bouncy from "../../components/Bouncy";
 import {
   TIME_SLOTS,
   DAYS,
@@ -42,6 +43,47 @@ type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
+
+// A bold, rounded text field with a color-accented focus ring — the same
+// "advanced" treatment as the picker chips, applied to plain text inputs.
+function FieldInput({
+  focusColor = colors.primary,
+  focusTint = colors.primaryLight,
+  containerStyle,
+  ...props
+}: React.ComponentProps<typeof TextInput> & {
+  focusColor?: string;
+  focusTint?: string;
+  containerStyle?: object;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View
+      className="rounded-2xl px-4"
+      style={{
+        borderWidth: 1.5,
+        borderColor: focused ? focusColor : colors.border,
+        backgroundColor: focused ? focusTint : "white",
+        ...containerStyle,
+      }}
+    >
+      <TextInput
+        {...props}
+        onFocus={(e) => {
+          setFocused(true);
+          props.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          props.onBlur?.(e);
+        }}
+        placeholderTextColor={colors.muted}
+        style={[{ fontFamily: fonts.medium, paddingVertical: 12 }, props.style]}
+        className="text-ink"
+      />
+    </View>
+  );
+}
 
 function toHHMM(t: string): string {
   return t.slice(0, 5);
@@ -151,23 +193,33 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
+        <Bouncy onPress={() => navigation.goBack()} className="mr-3 p-1" scaleTo={0.85}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">
+        </Bouncy>
+        <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-base flex-1">
           {isTournament ? "Edit Tournament" : "Edit Game"}
         </Text>
-        <Pressable
+        <Bouncy
           onPress={handleSave}
           disabled={updateGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
+          className="rounded-2xl px-4 py-2.5"
+          style={{
+            backgroundColor: colors.primary,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
         >
           {updateGame.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white font-semibold text-sm">Save</Text>
+            <Text style={{ fontFamily: fonts.bold }} className="text-white text-sm">
+              Save
+            </Text>
           )}
-        </Pressable>
+        </Bouncy>
       </View>
 
       <ScrollView
@@ -177,19 +229,20 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       >
         {/* Title */}
         <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="e.g. Saturday morning football"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
-          maxLength={80}
-        />
+        <FieldInput value={title} onChangeText={setTitle} placeholder="e.g. Saturday morning football" maxLength={80} />
 
         {/* Sport (locked) */}
         <SectionLabel title="Sport" />
-        <View className="px-4 py-3 rounded-xl bg-gray-100 flex-row items-center justify-between">
-          <Text className="text-ink font-medium text-sm">{game.sports?.name}</Text>
-          <Text className="text-muted text-xs">Can't be changed</Text>
+        <View
+          className="px-4 py-3 rounded-2xl flex-row items-center justify-between"
+          style={{ backgroundColor: colors.primaryLight }}
+        >
+          <Text style={{ fontFamily: fonts.semibold }} className="text-ink text-sm">
+            {game.sports?.name}
+          </Text>
+          <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs">
+            Can't be changed
+          </Text>
         </View>
 
         {/* Venue */}
@@ -207,7 +260,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           {dateOptions.map((d) => {
             const selected = selectedDate === d.iso;
             return (
-              <Pressable
+              <Bouncy
                 key={d.iso}
                 onPress={() => {
                   setSelectedDate(d.iso);
@@ -215,11 +268,31 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     setStartTime("");
                   }
                 }}
-                className={`items-center px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="items-center rounded-2xl"
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: selected ? colors.sky : "white",
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.sky : colors.border,
+                  ...(selected
+                    ? {
+                        shadowColor: colors.sky,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.22,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }
+                    : null),
+                }}
               >
-                <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
-                <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{d.label}</Text>
-              </Pressable>
+                <Text style={{ fontFamily: fonts.medium }} className={`text-xs ${selected ? "text-white" : "text-muted"}`}>
+                  {d.day}
+                </Text>
+                <Text style={{ fontFamily: fonts.extrabold }} className={`text-base mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
+                  {d.label}
+                </Text>
+              </Bouncy>
             );
           })}
         </ScrollView>
@@ -237,15 +310,31 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ).map((t) => {
             const selected = startTime === t.value;
             return (
-              <Pressable
+              <Bouncy
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="rounded-2xl"
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: selected ? colors.amber : "white",
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.amber : colors.border,
+                  ...(selected
+                    ? {
+                        shadowColor: colors.amber,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.22,
+                        shadowRadius: 8,
+                        elevation: 3,
+                      }
+                    : null),
+                }}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                <Text style={{ fontFamily: fonts.semibold }} className={`text-sm ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
                 </Text>
-              </Pressable>
+              </Bouncy>
             );
           })}
         </ScrollView>
@@ -260,12 +349,14 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
             }))}
             value={String(durationDays)}
             onChange={(v) => setDurationDays(parseInt(v, 10))}
+            color={colors.violet}
           />
         ) : (
           <PillRow
             options={DURATIONS.map((d) => ({ label: d === 1 ? "1 hr" : `${d} hrs`, value: String(d) as string }))}
             value={String(duration)}
             onChange={(v) => setDuration(parseFloat(v))}
+            color={colors.violet}
           />
         )}
 
@@ -273,23 +364,25 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         {isTournament ? (
           <>
             <SectionLabel title="Number of Teams" required />
-            <TextInput
+            <FieldInput
               value={numberOfTeams}
               onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 8"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={3}
+              focusColor={colors.coral}
+              focusTint={colors.coralLight}
             />
 
             <SectionLabel title="Players per Team" required />
-            <TextInput
+            <FieldInput
               value={playersPerTeam}
               onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 11"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={2}
+              focusColor={colors.coral}
+              focusTint={colors.coralLight}
             />
           </>
         ) : (
@@ -300,23 +393,40 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                 const selected = maxPlayers === n;
                 const disabled = n < minPlayers;
                 return (
-                  <Pressable
+                  <Bouncy
                     key={n}
                     onPress={() => !disabled && setMaxPlayers(n)}
                     disabled={disabled}
-                    className={`w-12 py-2 rounded-xl border items-center ${
-                      selected ? "bg-primary border-primary" : disabled ? "bg-gray-50 border-border" : "bg-white border-border"
-                    }`}
+                    className="items-center rounded-2xl"
+                    style={{
+                      width: 48,
+                      paddingVertical: 10,
+                      backgroundColor: selected ? colors.coral : disabled ? "#F9FAFB" : "white",
+                      borderWidth: 1.5,
+                      borderColor: selected ? colors.coral : colors.border,
+                      ...(selected
+                        ? {
+                            shadowColor: colors.coral,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.22,
+                            shadowRadius: 8,
+                            elevation: 3,
+                          }
+                        : null),
+                    }}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
+                    <Text
+                      style={{ fontFamily: fonts.semibold }}
+                      className={`text-sm ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}
+                    >
                       {n}
                     </Text>
-                  </Pressable>
+                  </Bouncy>
                 );
               })}
             </ScrollView>
             {minPlayers > 0 && (
-              <Text className="text-muted text-xs mt-1">
+              <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs mt-1">
                 {minPlayers} player{minPlayers !== 1 ? "s" : ""} already joined
               </Text>
             )}
@@ -334,6 +444,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
+          color={colors.primary}
         />
 
         {/* Gender */}
@@ -346,6 +457,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ]}
           value={gender}
           onChange={setGender}
+          color={colors.sky}
         />
 
         {/* Visibility */}
@@ -357,31 +469,29 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           ]}
           value={visibility}
           onChange={setVisibility}
+          color={colors.violet}
         />
 
         {/* Entry Fee */}
         <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
-        <View className="flex-row items-center border border-border rounded-xl px-4">
-          <Text className="text-muted mr-2">Rs</Text>
-          <TextInput
-            value={entryFee}
-            onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
-            keyboardType="numeric"
-            placeholder="0"
-            className="flex-1 py-3 text-ink"
-          />
-        </View>
-        <Text className="text-muted text-xs mt-1">
+        <FieldInput
+          value={entryFee}
+          onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
+          keyboardType="numeric"
+          placeholder="0"
+          focusColor={colors.amber}
+          focusTint={colors.amberLight}
+        />
+        <Text style={{ fontFamily: fonts.medium }} className="text-muted text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
         <SectionLabel title="Description" />
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Notes for players (meeting point, equipment, etc.)"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}
           maxLength={300}
@@ -412,9 +522,13 @@ export default function EditGameScreen() {
   if (error || !game) {
     return (
       <View className="flex-1 bg-white items-center justify-center px-6">
-        <Text className="text-ink font-semibold text-base mb-2">Game not found</Text>
+        <Text style={{ fontFamily: fonts.bold }} className="text-ink text-base mb-2">
+          Game not found
+        </Text>
         <Pressable onPress={() => navigation.goBack()}>
-          <Text className="text-primary font-medium">Go back</Text>
+          <Text style={{ fontFamily: fonts.semibold }} className="text-primary">
+            Go back
+          </Text>
         </Pressable>
       </View>
     );
@@ -431,19 +545,21 @@ export default function EditGameScreen() {
           <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">
+          <Text style={{ fontFamily: fonts.extrabold }} className="text-ink text-base">
             {game.game_type === "TOURNAMENT" ? "Edit Tournament" : "Edit Game"}
           </Text>
         </View>
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-ink font-semibold text-base mb-2 text-center">
+          <Text style={{ fontFamily: fonts.bold }} className="text-ink text-base mb-2 text-center">
             {game.creator_id !== userId
               ? `Only the host can edit this ${game.game_type === "TOURNAMENT" ? "tournament" : "game"}`
               : isCancelled
                 ? `This ${game.game_type === "TOURNAMENT" ? "tournament" : "game"} has been cancelled`
                 : `This ${game.game_type === "TOURNAMENT" ? "tournament" : "game"} has already ended`}
           </Text>
-          <Text className="text-muted text-sm text-center">It can no longer be edited.</Text>
+          <Text style={{ fontFamily: fonts.medium }} className="text-muted text-sm text-center">
+            It can no longer be edited.
+          </Text>
         </View>
       </View>
     );
