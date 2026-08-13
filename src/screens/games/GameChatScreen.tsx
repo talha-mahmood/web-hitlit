@@ -106,7 +106,7 @@ export default function GameChatScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={insets.top}
     >
       {/* Header */}

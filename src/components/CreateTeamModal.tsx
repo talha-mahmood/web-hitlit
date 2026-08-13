@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, View, Text, TextInput, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { Modal, View, Text, TextInput, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import { SectionLabel } from "./GameFormControls";
@@ -29,7 +29,10 @@ export default function CreateTeamModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        {/* "padding" on both platforms (not "height") — this is a bottom-anchored
+            sheet with fixed, non-scrolling content, so padding pushes the whole
+            sheet up above the keyboard instead of compressing/clipping it. */}
+        <KeyboardAvoidingView behavior="padding">
           <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 }}>
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">Create a Team</Text>
