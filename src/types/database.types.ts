@@ -1483,7 +1483,7 @@ export type Database = {
       game_visibility_type: "public" | "private" | "squad_only"
       gender_type: "male" | "female" | "other"
       payment_status_type: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED"
-      profile_type: "owner" | "user"
+      profile_type: "owner" | "user" | "superadmin"
       skill_level_type: "beginner" | "intermediate" | "expert"
       squad_member_status_type:
         | "ACTIVE"
@@ -1647,7 +1647,7 @@ export const Constants = {
       game_visibility_type: ["public", "private", "squad_only"],
       gender_type: ["male", "female", "other"],
       payment_status_type: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
-      profile_type: ["owner", "user"],
+      profile_type: ["owner", "user", "superadmin"],
       skill_level_type: ["beginner", "intermediate", "expert"],
       squad_member_status_type: [
         "ACTIVE",
