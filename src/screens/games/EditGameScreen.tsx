@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
   Alert,
@@ -23,6 +22,7 @@ import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
+import FieldInput from "../../components/FieldInput";
 import {
   TIME_SLOTS,
   DAYS,
@@ -42,6 +42,25 @@ type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
+
+// Shared "chip" look for the inline pickers below — same rounded +
+// shadow-when-selected treatment as PillRow.
+function chipStyle(selected: boolean, disabled?: boolean) {
+  return {
+    borderWidth: 1.5,
+    borderColor: selected ? colors.primary : colors.border,
+    backgroundColor: selected ? colors.primary : disabled ? "#F9FAFB" : "white",
+    ...(selected
+      ? {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          elevation: 2,
+        }
+      : null),
+  };
+}
 
 function toHHMM(t: string): string {
   return t.slice(0, 5);
@@ -161,6 +180,13 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           onPress={handleSave}
           disabled={updateGame.isPending}
           className="bg-primary rounded-xl px-4 py-2"
+          style={{
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 3,
+          }}
         >
           {updateGame.isPending ? (
             <ActivityIndicator size="small" color="white" />
@@ -177,17 +203,11 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       >
         {/* Title */}
         <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="e.g. Saturday morning football"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
-          maxLength={80}
-        />
+        <FieldInput value={title} onChangeText={setTitle} placeholder="e.g. Saturday morning football" maxLength={80} />
 
         {/* Sport (locked) */}
         <SectionLabel title="Sport" />
-        <View className="px-4 py-3 rounded-xl bg-gray-100 flex-row items-center justify-between">
+        <View className="px-4 py-3 rounded-2xl bg-gray-100 flex-row items-center justify-between">
           <Text className="text-ink font-medium text-sm">{game.sports?.name}</Text>
           <Text className="text-muted text-xs">Can't be changed</Text>
         </View>
@@ -215,7 +235,8 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     setStartTime("");
                   }
                 }}
-                className={`items-center px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="items-center px-3 py-2 rounded-2xl"
+                style={chipStyle(selected)}
               >
                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
                 <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{d.label}</Text>
@@ -240,7 +261,8 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
               <Pressable
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="px-3 py-2 rounded-2xl"
+                style={chipStyle(selected)}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
                   {t.label}
@@ -273,22 +295,20 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         {isTournament ? (
           <>
             <SectionLabel title="Number of Teams" required />
-            <TextInput
+            <FieldInput
               value={numberOfTeams}
               onChangeText={(t) => setNumberOfTeams(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 8"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={3}
             />
 
             <SectionLabel title="Players per Team" required />
-            <TextInput
+            <FieldInput
               value={playersPerTeam}
               onChangeText={(t) => setPlayersPerTeam(t.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
               placeholder="e.g. 11"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={2}
             />
           </>
@@ -304,9 +324,8 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     key={n}
                     onPress={() => !disabled && setMaxPlayers(n)}
                     disabled={disabled}
-                    className={`w-12 py-2 rounded-xl border items-center ${
-                      selected ? "bg-primary border-primary" : disabled ? "bg-gray-50 border-border" : "bg-white border-border"
-                    }`}
+                    className="w-12 py-2 rounded-2xl items-center"
+                    style={chipStyle(selected, disabled)}
                   >
                     <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
                       {n}
@@ -361,27 +380,23 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
         {/* Entry Fee */}
         <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
-        <View className="flex-row items-center border border-border rounded-xl px-4">
-          <Text className="text-muted mr-2">Rs</Text>
-          <TextInput
-            value={entryFee}
-            onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
-            keyboardType="numeric"
-            placeholder="0"
-            className="flex-1 py-3 text-ink"
-          />
-        </View>
+        <FieldInput
+          value={entryFee}
+          onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
+          keyboardType="numeric"
+          placeholder="0"
+          left={<Text className="text-muted mr-2">Rs</Text>}
+        />
         <Text className="text-muted text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
         <SectionLabel title="Description" />
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Notes for players (meeting point, equipment, etc.)"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}
           maxLength={300}

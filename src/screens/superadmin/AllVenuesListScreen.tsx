@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,8 +7,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAllVenues, useDeleteVenue } from "../../hooks/useSuperadmin";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
+import FieldInput from "../../components/FieldInput";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 
@@ -45,21 +46,19 @@ export default function AllVenuesListScreen() {
           <Pressable
             onPress={() => navigation.navigate("CreateVenue")}
             className="flex-row items-center bg-primary rounded-lg px-3 py-2"
-            style={{ gap: 4 }}
+            style={{ gap: 4, ...primaryButtonShadow }}
           >
             <Ionicons name="add" size={16} color="white" />
             <Text className="text-white text-xs font-semibold">New Venue</Text>
           </Pressable>
         </View>
-        <View className="flex-row items-center border border-border rounded-xl px-4" style={{ gap: 8 }}>
-          <Ionicons name="search-outline" size={18} color={colors.muted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search venues"
-            className="flex-1 py-3 text-ink"
-          />
-        </View>
+        <FieldInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search venues"
+          containerStyle={{ gap: 8 }}
+          left={<Ionicons name="search-outline" size={18} color={colors.muted} />}
+        />
       </View>
 
       {isLoading ? (
@@ -90,6 +89,7 @@ export default function AllVenuesListScreen() {
             <Pressable
               onPress={() => navigation.navigate("AdminDashboard", { venueId: item.id })}
               className="flex-row items-center border border-border rounded-2xl p-4"
+              style={cardShadow}
             >
               <View className="flex-1 mr-3">
                 <View className="flex-row items-center" style={{ gap: 8 }}>

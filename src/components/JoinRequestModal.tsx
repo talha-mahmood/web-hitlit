@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal, View, Text, Pressable, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../constants/theme";
+import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import type { Database } from "../types/database.types";
 import { SectionLabel, PillRow } from "./GameFormControls";
 import LocationPickerField from "./LocationPickerField";
@@ -41,7 +41,13 @@ export default function JoinRequestModal({
             pushes the whole sheet up above the keyboard instead of leaving
             the location field hidden behind it. */}
         <KeyboardAvoidingView behavior="padding">
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 }}>
+          {/* Shadow points up (negative height) since this sheet rises from
+              the bottom of the screen — a downward shadow would just be
+              hidden below the screen edge. */}
+          <View
+            className="bg-white rounded-t-3xl px-5 pt-5"
+            style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">{title}</Text>
               <Pressable onPress={onClose} hitSlop={8}>
@@ -68,6 +74,7 @@ export default function JoinRequestModal({
               onPress={handleSend}
               disabled={!canSend || submitting}
               className={`rounded-xl py-4 items-center mt-6 ${canSend ? "bg-primary" : "bg-gray-200"}`}
+              style={canSend ? primaryButtonShadow : undefined}
             >
               {submitting ? (
                 <ActivityIndicator color="white" />

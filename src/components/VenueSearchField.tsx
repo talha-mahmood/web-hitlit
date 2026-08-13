@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../constants/theme";
+import { colors, cardShadow } from "../constants/theme";
 
 type VenueOption = { id: string; name: string; city: string | null };
 
@@ -65,7 +65,15 @@ export default function VenueSearchField({
 
   return (
     <View>
-      <View className="flex-row items-center border border-border rounded-xl px-4" style={{ gap: 8 }}>
+      <View
+        className="flex-row items-center rounded-2xl px-4"
+        style={{
+          gap: 8,
+          borderWidth: 1.5,
+          borderColor: focused ? colors.primary : colors.border,
+          backgroundColor: focused ? colors.primaryLight : "white",
+        }}
+      >
         <Ionicons name="search-outline" size={18} color={colors.muted} />
         <TextInput
           value={query}
@@ -83,6 +91,7 @@ export default function VenueSearchField({
             blurTimeout.current = setTimeout(() => setFocused(false), 150);
           }}
           placeholder="Search venue by name"
+          placeholderTextColor={colors.muted}
           autoCapitalize="words"
           autoCorrect={false}
           className="flex-1 py-3 text-ink"
@@ -101,7 +110,10 @@ export default function VenueSearchField({
       </View>
 
       {showDropdown && (
-        <View className="border border-border rounded-xl mt-1.5 overflow-hidden" style={{ maxHeight: 220 }}>
+        <View
+          className="bg-white rounded-2xl mt-1.5 overflow-hidden"
+          style={{ maxHeight: 220, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+        >
           {matches.length === 0 ? (
             <Text className="text-muted text-sm px-4 py-3">No venues match "{query}".</Text>
           ) : (

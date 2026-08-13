@@ -335,7 +335,7 @@ export default function ProfileScreen() {
             {/* Sport breakdown donut */}
             <Text className="text-lg font-semibold text-ink mb-3">Sports You Play</Text>
             {sportSegments.length === 0 ? (
-              <View className="border border-border rounded-2xl p-6 items-center mb-6">
+              <View className="bg-white rounded-2xl p-6 items-center mb-6" style={CARD_SHADOW}>
                 <Ionicons name="bar-chart-outline" size={28} color={colors.muted} />
                 <Text className="text-muted text-sm mt-2 text-center">
                   Play your first game to see your sport breakdown here.

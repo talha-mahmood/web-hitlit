@@ -14,7 +14,7 @@ import {
   useRejectTeam,
 } from "../../hooks/useTournamentTeams";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import type { Database } from "../../types/database.types";
@@ -123,7 +123,7 @@ function TeamCard({
   const badge = TEAM_STATUS_BADGE[team.status];
 
   return (
-    <View className="border border-border rounded-2xl p-4">
+    <View className="border border-border rounded-2xl p-4" style={cardShadow}>
       <View className="flex-row items-center justify-between mb-1">
         <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>{team.name}</Text>
         {badge && (
@@ -490,7 +490,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
       {/* Host: teams awaiting approval */}
       {teamsAwaitingHost.length > 0 && (
-        <View className="mx-4 mb-3 border border-border rounded-2xl p-4">
+        <View className="mx-4 mb-3 border border-border rounded-2xl p-4" style={cardShadow}>
           <Text className="text-ink font-semibold text-sm mb-1">
             Teams Awaiting Your Approval ({teamsAwaitingHost.length})
           </Text>

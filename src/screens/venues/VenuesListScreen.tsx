@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,6 +9,7 @@ import { useVenues } from "../../hooks/useVenues";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import SportChip from "../../components/SportChip";
 import VenueCard from "../../components/VenueCard";
+import FieldInput from "../../components/FieldInput";
 import { colors } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -39,15 +40,13 @@ export default function VenuesListScreen() {
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
         <Text className="text-2xl font-bold text-ink mb-4">Venues</Text>
-        <View className="flex-row items-center border border-border rounded-xl px-3 mb-4">
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search venues or city"
-            className="flex-1 py-3 px-2 text-ink"
-          />
-        </View>
+        <FieldInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search venues or city"
+          containerStyle={{ gap: 8, marginBottom: 16 }}
+          left={<Ionicons name="search" size={18} color={colors.muted} />}
+        />
       </View>
 
       <View style={{ paddingVertical: 8 }}>

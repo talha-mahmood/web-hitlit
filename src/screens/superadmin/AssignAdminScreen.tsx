@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image } from "react-native";
+import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useLookupProfileByEmail, useAssignVenueAdmin, useRemoveVenueAdmin } from "../../hooks/useSuperadmin";
 import type { AdminLookupResult } from "../../lib/api/superadmin";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import FieldInput from "../../components/FieldInput";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 
 type Route = RouteProp<SuperAdminStackParamList, "AssignAdmin">;
@@ -77,7 +78,10 @@ export default function AssignAdminScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         {params.currentAdminEmail ? (
-          <View className="border border-border rounded-xl px-4 py-3 mb-6 flex-row items-center justify-between">
+          <View
+            className="border border-border rounded-xl px-4 py-3 mb-6 flex-row items-center justify-between"
+            style={cardShadow}
+          >
             <View className="flex-1 mr-3">
               <Text className="text-muted text-xs">Current admin</Text>
               <Text className="text-ink font-medium text-sm mt-0.5">{params.currentAdminEmail}</Text>
@@ -94,28 +98,33 @@ export default function AssignAdminScreen() {
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Admin's Gmail</Text>
         <View className="flex-row" style={{ gap: 8 }}>
-          <TextInput
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              setResult("not_searched");
-            }}
-            placeholder="someone@gmail.com"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            className="flex-1 border border-border rounded-xl px-4 py-3 text-ink"
-          />
+          <View className="flex-1">
+            <FieldInput
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                setResult("not_searched");
+              }}
+              placeholder="someone@gmail.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
           <Pressable
             onPress={handleLookup}
             disabled={lookup.isPending || !email.trim()}
             className="bg-primary rounded-xl px-4 items-center justify-center"
+            style={primaryButtonShadow}
           >
             {lookup.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Look up</Text>}
           </Pressable>
         </View>
 
         {result && result !== "not_searched" && (
-          <View className="border border-primary bg-primary-light rounded-xl px-4 py-3 mt-4 flex-row items-center">
+          <View
+            className="border border-primary bg-primary-light rounded-xl px-4 py-3 mt-4 flex-row items-center"
+            style={cardShadow}
+          >
             {result.avatar ? (
               <Image source={{ uri: result.avatar }} className="w-10 h-10 rounded-full mr-3" />
             ) : (

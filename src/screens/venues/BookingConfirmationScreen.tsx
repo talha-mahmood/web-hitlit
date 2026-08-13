@@ -3,7 +3,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CommonActions } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../../constants/theme";
+import { colors, heroShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type ConfirmRoute = RouteProp<VenuesStackParamList, "BookingConfirmation">;
@@ -72,7 +72,10 @@ export default function BookingConfirmationScreen() {
           Your court is reserved.{"\n"}We'll see you on the field!
         </Text>
 
-        {/* Details Card */}
+        {/* Details Card — shadow lives on this outer, non-clipping wrapper
+            since a shadow doesn't render on a view with overflow:hidden
+            (needed to clip the header band's corners). */}
+        <View className="w-full rounded-2xl" style={heroShadow}>
         <View className="w-full border border-border rounded-2xl overflow-hidden">
           <View className="bg-primary-light px-4 py-3 flex-row items-center justify-between">
             <Text className="text-primary-dark font-semibold text-sm">Booking Reference</Text>
@@ -99,10 +102,15 @@ export default function BookingConfirmationScreen() {
             />
           </View>
         </View>
+        </View>
       </ScrollView>
 
       <View className="px-4 pb-8 pt-3 border-t border-border" style={{ gap: 10 }}>
-        <Pressable onPress={goToMyBookings} className="bg-primary rounded-xl py-4 items-center">
+        <Pressable
+          onPress={goToMyBookings}
+          className="bg-primary rounded-xl py-4 items-center"
+          style={primaryButtonShadow}
+        >
           <Text className="text-white font-semibold text-base">View My Bookings</Text>
         </Pressable>
         <Pressable onPress={() => navigation.popToTop()} className="items-center py-3">

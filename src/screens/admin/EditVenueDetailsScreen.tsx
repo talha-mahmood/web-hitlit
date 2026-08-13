@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
@@ -17,8 +16,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useUpdateVenue } from "../../hooks/useVenuesAdmin";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import FieldInput from "../../components/FieldInput";
 
 type Route = RouteProp<VenueEditingParamList, "EditVenueDetails">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditVenueDetails">;
@@ -105,6 +105,7 @@ export default function EditVenueDetailsScreen() {
           onPress={handleSave}
           disabled={updateVenue.isPending}
           className="bg-primary rounded-xl px-4 py-2"
+          style={primaryButtonShadow}
         >
           {updateVenue.isPending ? (
             <ActivityIndicator size="small" color="white" />
@@ -119,16 +120,16 @@ export default function EditVenueDetailsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text className="text-muted text-xs font-semibold mb-1.5">Venue Name</Text>
-        <TextInput
+        <FieldInput
           value={name}
           onChangeText={setName}
           placeholder="e.g. Elite Sports Arena"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={80}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Description</Text>
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Describe your venue..."
@@ -136,53 +137,56 @@ export default function EditVenueDetailsScreen() {
           numberOfLines={3}
           maxLength={500}
           style={{ height: 88, textAlignVertical: "top" }}
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Address</Text>
-        <TextInput
+        <FieldInput
           value={address}
           onChangeText={setAddress}
           placeholder="Street address"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={200}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">City</Text>
-        <TextInput
+        <FieldInput
           value={city}
           onChangeText={setCity}
           placeholder="e.g. Karachi"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={60}
         />
 
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Opens (HH:MM)</Text>
-            <TextInput
+            <FieldInput
               value={startTime}
               onChangeText={setStartTime}
               placeholder="06:00"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
               maxLength={5}
               keyboardType="numbers-and-punctuation"
             />
           </View>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Closes (HH:MM)</Text>
-            <TextInput
+            <FieldInput
               value={endTime}
               onChangeText={setEndTime}
               placeholder="23:00"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
               maxLength={5}
               keyboardType="numbers-and-punctuation"
             />
           </View>
         </View>
 
-        <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
+        <View
+          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3"
+          style={cardShadow}
+        >
           <View className="flex-1 mr-3">
             <Text className="text-ink font-medium">Open for bookings</Text>
             <Text className="text-muted text-xs mt-0.5">

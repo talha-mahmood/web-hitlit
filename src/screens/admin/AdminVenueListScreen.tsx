@@ -8,7 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useMyVenues } from "../../hooks/useVenuesAdmin";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
 type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
@@ -55,6 +55,7 @@ export default function AdminVenueListScreen() {
           <Pressable
             onPress={() => navigation.navigate("AdminDashboard", { venueId: item.id })}
             className="flex-row items-center border border-border rounded-2xl p-3"
+            style={cardShadow}
           >
             {item.venue_images[0] ? (
               <Image source={{ uri: item.venue_images[0].image_url }} className="w-14 h-14 rounded-xl bg-gray-100 mr-3" />

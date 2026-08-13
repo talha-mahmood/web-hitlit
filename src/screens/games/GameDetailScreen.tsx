@@ -9,7 +9,7 @@ import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlay
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
@@ -483,81 +483,85 @@ export default function GameDetailScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Game info card */}
-        <View className="mx-4 mt-4 border border-border rounded-2xl overflow-hidden">
-          <View className="bg-primary-light px-4 py-3">
-            <Text className="text-primary-dark font-semibold text-sm">
-              {isTournament ? "Tournament Details" : "Game Details"}
-            </Text>
-          </View>
-          <View className="px-4">
-            <InfoRow
-              icon="pricetag-outline"
-              label={isTournament ? "Tournament ID" : "Game ID"}
-              value={game.game_code}
-              action={
-                (isCreator || hasJoined || isTournamentTeamMember) && (
-                  <Pressable
-                    onPress={handleCopyGameCode}
-                    hitSlop={8}
-                    className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-100"
-                    style={{ gap: 4 }}
-                  >
-                    <Ionicons
-                      name={codeCopied ? "checkmark" : "copy-outline"}
-                      size={14}
-                      color={codeCopied ? colors.primary : colors.muted}
-                    />
-                    <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
-                      {codeCopied ? "Copied" : "Copy"}
-                    </Text>
-                  </Pressable>
-                )
-              }
-            />
-            {isTournament && game.end_date && game.end_date !== game.game_date ? (
-              <>
-                <InfoRow
-                  icon="calendar-outline"
-                  label="Dates"
-                  value={formatDateRangeFull(game.game_date, game.end_date)}
-                />
-                <InfoRow
-                  icon="time-outline"
-                  label="Daily Start Time"
-                  value={formatTime(game.game_date, game.start_time)}
-                />
-              </>
-            ) : (
-              <>
-                <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
-                <InfoRow
-                  icon="time-outline"
-                  label="Time"
-                  value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
-                />
-              </>
-            )}
-            {game.venues && (
+        {/* Game info card — shadow lives on this outer, non-clipping
+            wrapper since a shadow doesn't render on a view with
+            overflow:hidden (needed to clip the header band's corners). */}
+        <View className="mx-4 mt-4 rounded-2xl" style={cardShadow}>
+          <View className="border border-border rounded-2xl overflow-hidden">
+            <View className="bg-primary-light px-4 py-3">
+              <Text className="text-primary-dark font-semibold text-sm">
+                {isTournament ? "Tournament Details" : "Game Details"}
+              </Text>
+            </View>
+            <View className="px-4">
               <InfoRow
-                icon="location-outline"
-                label="Venue"
-                value={`${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`}
+                icon="pricetag-outline"
+                label={isTournament ? "Tournament ID" : "Game ID"}
+                value={game.game_code}
+                action={
+                  (isCreator || hasJoined || isTournamentTeamMember) && (
+                    <Pressable
+                      onPress={handleCopyGameCode}
+                      hitSlop={8}
+                      className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-100"
+                      style={{ gap: 4 }}
+                    >
+                      <Ionicons
+                        name={codeCopied ? "checkmark" : "copy-outline"}
+                        size={14}
+                        color={codeCopied ? colors.primary : colors.muted}
+                      />
+                      <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
+                        {codeCopied ? "Copied" : "Copy"}
+                      </Text>
+                    </Pressable>
+                  )
+                }
               />
-            )}
-            <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} />
-            <InfoRow icon="people-outline" label="Open To" value={genderLabel} />
-            <InfoRow
-              icon="cash-outline"
-              label="Entry Fee"
-              value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
-            />
+              {isTournament && game.end_date && game.end_date !== game.game_date ? (
+                <>
+                  <InfoRow
+                    icon="calendar-outline"
+                    label="Dates"
+                    value={formatDateRangeFull(game.game_date, game.end_date)}
+                  />
+                  <InfoRow
+                    icon="time-outline"
+                    label="Daily Start Time"
+                    value={formatTime(game.game_date, game.start_time)}
+                  />
+                </>
+              ) : (
+                <>
+                  <InfoRow icon="calendar-outline" label="Date" value={formatDateFull(game.game_date)} />
+                  <InfoRow
+                    icon="time-outline"
+                    label="Time"
+                    value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
+                  />
+                </>
+              )}
+              {game.venues && (
+                <InfoRow
+                  icon="location-outline"
+                  label="Venue"
+                  value={`${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`}
+                />
+              )}
+              <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} />
+              <InfoRow icon="people-outline" label="Open To" value={genderLabel} />
+              <InfoRow
+                icon="cash-outline"
+                label="Entry Fee"
+                value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
+              />
+            </View>
           </View>
         </View>
 
         {/* Description */}
         {!!game.description && (
-          <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
+          <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
             <Text className="text-ink font-semibold text-sm mb-2">
               About this {isTournament ? "tournament" : "game"}
             </Text>
@@ -601,7 +605,7 @@ export default function GameDetailScreen() {
 
             {/* Pending join requests — host only */}
             {isCreator && pendingRequests.length > 0 && (
-              <View className="mx-4 mt-4 border border-border rounded-2xl p-4">
+              <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
                 <Text className="text-ink font-semibold text-sm mb-1">
                   Join Requests ({pendingRequests.length})
                 </Text>
@@ -631,7 +635,10 @@ export default function GameDetailScreen() {
         )}
 
         {/* Host */}
-        <View className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl p-4" style={{ gap: 12 }}>
+        <View
+          className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl p-4"
+          style={{ gap: 12, ...cardShadow }}
+        >
           {game.profiles?.avatar ? (
             <Image
               source={{ uri: game.profiles.avatar }}
@@ -694,7 +701,11 @@ export default function GameDetailScreen() {
               <Text className="text-muted font-semibold">Game is Full</Text>
             </View>
           ) : (
-            <Pressable onPress={handleJoin} className="bg-primary rounded-xl py-4 items-center">
+            <Pressable
+              onPress={handleJoin}
+              className="bg-primary rounded-xl py-4 items-center"
+              style={primaryButtonShadow}
+            >
               <Text className="text-white font-semibold text-base">
                 {game.entry_fee > 0
                   ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}`

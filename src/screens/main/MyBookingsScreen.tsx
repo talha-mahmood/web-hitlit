@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMyBookings, useCancelBooking } from "../../hooks/useBookings";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { BookingWithCourt } from "../../lib/api/bookings";
 
 function formatBookingDate(isoStr: string): string {
@@ -76,7 +76,7 @@ function BookingCard({
     isFuture && (booking.status === "CONFIRMED" || booking.status === "PENDING");
 
   return (
-    <View className="border border-border rounded-2xl mb-3 overflow-hidden">
+    <View className="border border-border rounded-2xl mb-3" style={cardShadow}>
       <View className="px-4 py-4">
         <View className="flex-row items-start justify-between mb-1">
           <View className="flex-1 mr-2">

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   Image,
   ActivityIndicator,
@@ -15,6 +14,8 @@ import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { primaryButtonShadow } from "../../constants/theme";
+import FieldInput from "../../components/FieldInput";
 
 export default function ProfileSetupScreen() {
   const session = useAuthStore((s) => s.session);
@@ -109,7 +110,17 @@ export default function ProfileSetupScreen() {
         </Text>
 
         <View className="items-center mb-8">
-          <Pressable onPress={pickAndUploadPhoto} className="relative">
+          <Pressable
+            onPress={pickAndUploadPhoto}
+            className="relative"
+            style={{
+              shadowColor: "#16A34A",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.25,
+              shadowRadius: 12,
+              elevation: 4,
+            }}
+          >
             {avatarUrl ? (
               <Image source={{ uri: avatarUrl }} className="w-24 h-24 rounded-full bg-primary-light" />
             ) : (
@@ -136,17 +147,19 @@ export default function ProfileSetupScreen() {
           <Text className="text-muted">Full name</Text>
           <Text className="text-red-500 ml-1">*</Text>
         </View>
-        <TextInput
+        <FieldInput
           value={fullName}
           onChangeText={setFullName}
           placeholder="Your name"
-          className="border border-border rounded-xl px-4 py-3 text-ink text-base mb-8"
+          className="text-base"
+          containerStyle={{ marginBottom: 32 }}
         />
 
         <Pressable
           onPress={handleSave}
           disabled={isSaving}
           className="bg-primary rounded-xl py-4 items-center"
+          style={primaryButtonShadow}
         >
           {isSaving ? (
             <ActivityIndicator color="#fff" />

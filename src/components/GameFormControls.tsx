@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { colors } from "../constants/theme";
 
 export function SectionLabel({ title, required }: { title: string; required?: boolean }) {
   return (
@@ -26,7 +27,21 @@ export function PillRow<T extends string>({
           <Pressable
             key={o.value}
             onPress={() => onChange(o.value)}
-            className={`px-4 py-2 rounded-full border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+            className="px-4 py-2.5 rounded-2xl"
+            style={{
+              borderWidth: 1.5,
+              borderColor: selected ? colors.primary : colors.border,
+              backgroundColor: selected ? colors.primary : "white",
+              ...(selected
+                ? {
+                    shadowColor: colors.primary,
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    elevation: 2,
+                  }
+                : null),
+            }}
           >
             <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
               {o.label}

@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Alert, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useAddFacility, useDeleteFacility } from "../../hooks/useVenuesAdmin";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, heroShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import FieldInput from "../../components/FieldInput";
 
 type Route = RouteProp<VenueEditingParamList, "ManageFacilities">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageFacilities">;
@@ -80,7 +81,7 @@ export default function ManageFacilitiesScreen() {
         <Pressable
           onPress={() => setShowAdd(true)}
           className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
-          style={{ gap: 4 }}
+          style={{ gap: 4, ...primaryButtonShadow }}
         >
           <Ionicons name="add" size={14} color="white" />
           <Text className="text-white text-xs font-semibold">Add</Text>
@@ -97,7 +98,7 @@ export default function ManageFacilitiesScreen() {
           </View>
         ) : (
           facilities.map((f) => (
-            <View key={f.id} className="border border-border rounded-xl px-4 py-3 flex-row items-center justify-between">
+            <View key={f.id} className="border border-border rounded-xl px-4 py-3 flex-row items-center justify-between" style={cardShadow}>
               <View className="flex-1 mr-3">
                 <Text className="text-ink font-medium text-sm">{f.name}</Text>
                 {f.description ? <Text className="text-muted text-xs mt-0.5">{f.description}</Text> : null}
@@ -113,7 +114,12 @@ export default function ManageFacilitiesScreen() {
       <Modal visible={showAdd} transparent animationType="slide" onRequestClose={() => setShowAdd(false)}>
         <View className="flex-1 bg-black/40 justify-end">
           <KeyboardAvoidingView behavior="padding">
-            <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 }}>
+            {/* Shadow points up (negative height) since this sheet rises
+                from the bottom of the screen. */}
+            <View
+              className="bg-white rounded-t-3xl px-5 pt-5"
+              style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+            >
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-lg font-bold text-ink">Add Amenity</Text>
                 <Pressable onPress={() => setShowAdd(false)} hitSlop={8}>
@@ -122,27 +128,27 @@ export default function ManageFacilitiesScreen() {
               </View>
 
               <Text className="text-muted text-xs font-semibold mb-1.5">Name</Text>
-              <TextInput
+              <FieldInput
                 value={name}
                 onChangeText={setName}
                 placeholder="e.g. Free Parking"
-                className="border border-border rounded-xl px-4 py-3 text-ink mb-3"
+                containerStyle={{ marginBottom: 12 }}
                 maxLength={60}
               />
               <Text className="text-muted text-xs font-semibold mb-1.5">Type (optional)</Text>
-              <TextInput
+              <FieldInput
                 value={type}
                 onChangeText={setType}
                 placeholder="e.g. parking"
-                className="border border-border rounded-xl px-4 py-3 text-ink mb-3"
+                containerStyle={{ marginBottom: 12 }}
                 maxLength={40}
               />
               <Text className="text-muted text-xs font-semibold mb-1.5">Description (optional)</Text>
-              <TextInput
+              <FieldInput
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Extra details"
-                className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+                containerStyle={{ marginBottom: 16 }}
                 maxLength={200}
               />
 
@@ -150,6 +156,7 @@ export default function ManageFacilitiesScreen() {
                 onPress={handleAdd}
                 disabled={addFacility.isPending}
                 className="rounded-xl py-4 items-center bg-primary"
+                style={primaryButtonShadow}
               >
                 {addFacility.isPending ? (
                   <ActivityIndicator color="white" />

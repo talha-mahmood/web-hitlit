@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Modal, View, Text, TextInput, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../constants/theme";
+import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { SectionLabel } from "./GameFormControls";
+import FieldInput from "./FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../lib/nameValidation";
 
 export default function CreateTeamModal({
@@ -34,7 +35,12 @@ export default function CreateTeamModal({
             auto-focused field, so padding pushes the whole sheet up above
             the keyboard instead of leaving it hidden behind it. */}
         <KeyboardAvoidingView behavior="padding">
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 }}>
+          {/* Shadow points up (negative height) since this sheet rises from
+              the bottom of the screen. */}
+          <View
+            className="bg-white rounded-t-3xl px-5 pt-5"
+            style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">Create a Team</Text>
               <Pressable onPress={onClose} hitSlop={8}>
@@ -47,11 +53,10 @@ export default function CreateTeamModal({
             </Text>
 
             <SectionLabel title="Team Name" required />
-            <TextInput
+            <FieldInput
               value={name}
               onChangeText={setName}
               placeholder="e.g. Thunder Strikers"
-              className="border border-border rounded-xl px-4 py-3 text-ink"
               maxLength={60}
               autoFocus
             />
@@ -60,6 +65,7 @@ export default function CreateTeamModal({
               onPress={handleCreate}
               disabled={!name.trim() || submitting}
               className={`rounded-xl py-4 items-center mt-6 ${name.trim() ? "bg-primary" : "bg-gray-200"}`}
+              style={name.trim() ? primaryButtonShadow : undefined}
             >
               {submitting ? (
                 <ActivityIndicator color="white" />

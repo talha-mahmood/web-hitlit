@@ -18,3 +18,34 @@ export const spacing = {
   lg: 24,
   xl: 32,
 };
+
+// Soft "lifted" shadow for list/detail cards — background stays white, this
+// just gives flat bordered boxes some depth. Spread into a card's style prop
+// alongside its existing className.
+export const cardShadow = {
+  shadowColor: "#0F172A",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.08,
+  shadowRadius: 12,
+  elevation: 3,
+};
+
+// Heavier variant for large, singular, centered hero cards (auth screens,
+// modals) — same recipe as the login screen's card.
+export const heroShadow = {
+  shadowColor: "#000000",
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.18,
+  shadowRadius: 20,
+  elevation: 8,
+};
+
+// Tinted shadow for primary (green) CTA buttons — gives them a bit of lift
+// instead of sitting flush with the page.
+export const primaryButtonShadow = {
+  shadowColor: colors.primary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.25,
+  shadowRadius: 8,
+  elevation: 3,
+};

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCreateVenue } from "../../hooks/useSuperadmin";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { colors } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
+import FieldInput from "../../components/FieldInput";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "CreateVenue">;
 
@@ -65,7 +66,12 @@ export default function CreateVenueScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Create Venue</Text>
-        <Pressable onPress={handleCreate} disabled={createVenue.isPending} className="bg-primary rounded-xl px-4 py-2">
+        <Pressable
+          onPress={handleCreate}
+          disabled={createVenue.isPending}
+          className="bg-primary rounded-xl px-4 py-2"
+          style={primaryButtonShadow}
+        >
           {createVenue.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
@@ -79,16 +85,16 @@ export default function CreateVenueScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text className="text-muted text-xs font-semibold mb-1.5">Venue Name</Text>
-        <TextInput
+        <FieldInput
           value={name}
           onChangeText={setName}
           placeholder="e.g. Elite Sports Arena"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={80}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Description</Text>
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Describe this venue..."
@@ -96,45 +102,45 @@ export default function CreateVenueScreen() {
           numberOfLines={3}
           maxLength={500}
           style={{ height: 88, textAlignVertical: "top" }}
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Address</Text>
-        <TextInput
+        <FieldInput
           value={address}
           onChangeText={setAddress}
           placeholder="Street address"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={200}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">City</Text>
-        <TextInput
+        <FieldInput
           value={city}
           onChangeText={setCity}
           placeholder="e.g. Karachi"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={60}
         />
 
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Opens (HH:MM)</Text>
-            <TextInput
+            <FieldInput
               value={startTime}
               onChangeText={setStartTime}
               placeholder="06:00"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
               maxLength={5}
             />
           </View>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Closes (HH:MM)</Text>
-            <TextInput
+            <FieldInput
               value={endTime}
               onChangeText={setEndTime}
               placeholder="23:00"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
               maxLength={5}
             />
           </View>
@@ -143,22 +149,22 @@ export default function CreateVenueScreen() {
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Latitude (optional)</Text>
-            <TextInput
+            <FieldInput
               value={latitude}
               onChangeText={setLatitude}
               placeholder="24.8607"
               keyboardType="numbers-and-punctuation"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
             />
           </View>
           <View className="flex-1">
             <Text className="text-muted text-xs font-semibold mb-1.5">Longitude (optional)</Text>
-            <TextInput
+            <FieldInput
               value={longitude}
               onChangeText={setLongitude}
               placeholder="67.0011"
               keyboardType="numbers-and-punctuation"
-              className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+              containerStyle={{ marginBottom: 16 }}
             />
           </View>
         </View>

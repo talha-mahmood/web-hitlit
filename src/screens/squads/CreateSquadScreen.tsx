@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
   Alert,
@@ -16,11 +15,12 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCreateSquad } from "../../hooks/useSquads";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
+import FieldInput from "../../components/FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
@@ -86,6 +86,7 @@ export default function CreateSquadScreen() {
           onPress={handleCreate}
           disabled={createSquad.isPending}
           className="bg-primary rounded-xl px-4 py-2"
+          style={primaryButtonShadow}
         >
           {createSquad.isPending ? (
             <ActivityIndicator size="small" color="white" />
@@ -102,11 +103,10 @@ export default function CreateSquadScreen() {
       >
         {/* Name */}
         <SectionLabel title="Squad Name" required />
-        <TextInput
+        <FieldInput
           value={name}
           onChangeText={setName}
           placeholder="e.g. Weekend Warriors"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           maxLength={80}
         />
 
@@ -128,11 +128,10 @@ export default function CreateSquadScreen() {
 
         {/* Description */}
         <SectionLabel title="Description" />
-        <TextInput
+        <FieldInput
           value={description}
           onChangeText={setDescription}
           placeholder="Notes about your squad (how often you play, vibe, etc.)"
-          className="border border-border rounded-xl px-4 py-3 text-ink"
           multiline
           numberOfLines={3}
           maxLength={300}

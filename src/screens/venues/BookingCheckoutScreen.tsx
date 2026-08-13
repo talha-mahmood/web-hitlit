@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCreateBooking } from "../../hooks/useBookings";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type CheckoutRoute = RouteProp<VenuesStackParamList, "BookingCheckout">;
@@ -94,32 +94,39 @@ export default function BookingCheckoutScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Booking Summary */}
-        <View className="border border-border rounded-2xl overflow-hidden mb-5">
-          <View className="bg-primary-light px-4 py-3">
-            <Text className="text-primary-dark font-semibold text-sm">Booking Summary</Text>
-          </View>
-          <View className="px-4 py-4" style={{ gap: 12 }}>
-            <SummaryRow icon="business-outline" label="Venue" value={venueName} />
-            <SummaryRow icon="tennisball-outline" label="Court" value={courtName} />
-            <View className="h-px bg-border" />
-            <SummaryRow icon="calendar-outline" label="Date" value={formatDateFull(date)} />
-            <SummaryRow
-              icon="time-outline"
-              label="Time"
-              value={`${formatTime(startTime)} – ${formatTime(endTime)}`}
-            />
-            <SummaryRow icon="hourglass-outline" label="Duration" value="1 hour" />
-            <View className="h-px bg-border" />
-            <View className="flex-row items-center justify-between">
-              <Text className="text-muted text-sm">Total Amount</Text>
-              <Text className="text-ink font-bold text-xl">Rs {totalAmount.toLocaleString()}</Text>
+        {/* Booking Summary — shadow lives on this outer, non-clipping
+            wrapper since a shadow doesn't render on a view with
+            overflow:hidden (needed to clip the header band's corners). */}
+        <View className="rounded-2xl mb-5" style={cardShadow}>
+          <View className="border border-border rounded-2xl overflow-hidden">
+            <View className="bg-primary-light px-4 py-3">
+              <Text className="text-primary-dark font-semibold text-sm">Booking Summary</Text>
+            </View>
+            <View className="px-4 py-4" style={{ gap: 12 }}>
+              <SummaryRow icon="business-outline" label="Venue" value={venueName} />
+              <SummaryRow icon="tennisball-outline" label="Court" value={courtName} />
+              <View className="h-px bg-border" />
+              <SummaryRow icon="calendar-outline" label="Date" value={formatDateFull(date)} />
+              <SummaryRow
+                icon="time-outline"
+                label="Time"
+                value={`${formatTime(startTime)} – ${formatTime(endTime)}`}
+              />
+              <SummaryRow icon="hourglass-outline" label="Duration" value="1 hour" />
+              <View className="h-px bg-border" />
+              <View className="flex-row items-center justify-between">
+                <Text className="text-muted text-sm">Total Amount</Text>
+                <Text className="text-ink font-bold text-xl">Rs {totalAmount.toLocaleString()}</Text>
+              </View>
             </View>
           </View>
         </View>
 
         {/* Payment Method */}
-        <View className="border border-border rounded-2xl px-4 py-4 flex-row items-center" style={{ gap: 12 }}>
+        <View
+          className="border border-border rounded-2xl px-4 py-4 flex-row items-center"
+          style={{ gap: 12, ...cardShadow }}
+        >
           <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
             <Ionicons name="cash-outline" size={20} color={colors.primary} />
           </View>
@@ -138,6 +145,7 @@ export default function BookingCheckoutScreen() {
           onPress={handleConfirm}
           disabled={createBooking.isPending}
           className="bg-primary rounded-xl py-4 items-center"
+          style={primaryButtonShadow}
         >
           {createBooking.isPending ? (
             <ActivityIndicator color="#ffffff" />

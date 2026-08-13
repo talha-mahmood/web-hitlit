@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ScrollView,
   KeyboardAvoidingView,
@@ -18,8 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useAddCourt, useUpdateCourt } from "../../hooks/useVenuesAdmin";
 import { useSports } from "../../hooks/useSports";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import FieldInput from "../../components/FieldInput";
 
 type Route = RouteProp<VenueEditingParamList, "EditCourt">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditCourt">;
@@ -111,7 +111,12 @@ export default function EditCourtScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">{isEditing ? "Edit Court" : "Add Court"}</Text>
-        <Pressable onPress={handleSave} disabled={isPending} className="bg-primary rounded-xl px-4 py-2">
+        <Pressable
+          onPress={handleSave}
+          disabled={isPending}
+          className="bg-primary rounded-xl px-4 py-2"
+          style={primaryButtonShadow}
+        >
           {isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Save</Text>}
         </Pressable>
       </View>
@@ -121,11 +126,11 @@ export default function EditCourtScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text className="text-muted text-xs font-semibold mb-1.5">Court Name</Text>
-        <TextInput
+        <FieldInput
           value={name}
           onChangeText={setName}
           placeholder="e.g. Court 1"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
           maxLength={60}
         />
 
@@ -137,7 +142,21 @@ export default function EditCourtScreen() {
               <Pressable
                 key={s.id}
                 onPress={() => setSportsId(s.id)}
-                className={`px-3 py-2 rounded-xl border ${selected ? "bg-primary border-primary" : "bg-white border-border"}`}
+                className="px-3 py-2 rounded-xl"
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.primary : "white",
+                  ...(selected
+                    ? {
+                        shadowColor: colors.primary,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 6,
+                        elevation: 2,
+                      }
+                    : null),
+                }}
               >
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{s.name}</Text>
               </Pressable>
@@ -146,32 +165,35 @@ export default function EditCourtScreen() {
         </ScrollView>
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Price per Hour (Rs)</Text>
-        <TextInput
+        <FieldInput
           value={pricePerHour}
           onChangeText={setPricePerHour}
           placeholder="e.g. 2000"
           keyboardType="numeric"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Capacity (optional)</Text>
-        <TextInput
+        <FieldInput
           value={capacity}
           onChangeText={setCapacity}
           placeholder="Max players"
           keyboardType="numeric"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Surface Type (optional)</Text>
-        <TextInput
+        <FieldInput
           value={surfaceType}
           onChangeText={setSurfaceType}
           placeholder="e.g. Artificial Turf"
-          className="border border-border rounded-xl px-4 py-3 text-ink mb-4"
+          containerStyle={{ marginBottom: 16 }}
         />
 
-        <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
+        <View
+          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3"
+          style={cardShadow}
+        >
           <View className="flex-1 mr-3">
             <Text className="text-ink font-medium">Active</Text>
             <Text className="text-muted text-xs mt-0.5">Turn off to hide this court from bookings.</Text>

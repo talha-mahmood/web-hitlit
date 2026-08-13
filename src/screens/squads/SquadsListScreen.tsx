@@ -1,11 +1,12 @@
-import { View, Text, FlatList, Pressable, TextInput, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useSquads } from "../../hooks/useSquads";
-import { colors } from "../../constants/theme";
+import FieldInput from "../../components/FieldInput";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
 import { useAuthStore } from "../../store/authStore";
@@ -30,10 +31,11 @@ function SquadCard({ squad, onPress, currentUserId }: {
   const skillStyle = skill ? SKILL_COLORS[skill] : null;
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="border border-border rounded-2xl mb-3 overflow-hidden bg-white"
-    >
+    // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
+    // render on a view with overflow:hidden (needed below to clip the top
+    // accent bar to the rounded corners), so it has to sit one level up.
+    <Pressable onPress={onPress} className="mb-3" style={cardShadow}>
+      <View className="border border-border rounded-2xl overflow-hidden bg-white">
       <View className="bg-primary h-1" />
       <View className="px-4 pt-3 pb-4">
         <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
@@ -83,6 +85,7 @@ function SquadCard({ squad, onPress, currentUserId }: {
           </Text>
         </View>
       </View>
+      </View>
     </Pressable>
   );
 }
@@ -111,7 +114,7 @@ export default function SquadsListScreen() {
         <Pressable
           onPress={() => navigation.navigate("CreateSquad")}
           className="flex-row items-center bg-primary rounded-xl px-3 py-2"
-          style={{ gap: 4 }}
+          style={{ gap: 4, ...primaryButtonShadow }}
         >
           <Ionicons name="add" size={18} color="white" />
           <Text className="text-white font-semibold text-sm">Create</Text>
@@ -120,22 +123,23 @@ export default function SquadsListScreen() {
 
       {/* Search by squad name or squad ID */}
       <View className="px-5 mb-3">
-        <View className="flex-row items-center border border-border rounded-xl px-3" style={{ gap: 8 }}>
-          <Ionicons name="search-outline" size={18} color={colors.muted} />
-          <TextInput
-            value={searchInput}
-            onChangeText={setSearchInput}
-            placeholder="Search by squad name or squad ID"
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="flex-1 py-2.5 text-ink text-sm"
-          />
-          {searchInput.length > 0 && (
-            <Pressable onPress={() => setSearchInput("")} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={colors.border} />
-            </Pressable>
-          )}
-        </View>
+        <FieldInput
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder="Search by squad name or squad ID"
+          autoCapitalize="none"
+          autoCorrect={false}
+          className="text-sm"
+          containerStyle={{ gap: 8 }}
+          left={<Ionicons name="search-outline" size={18} color={colors.muted} />}
+          right={
+            searchInput.length > 0 ? (
+              <Pressable onPress={() => setSearchInput("")} hitSlop={8}>
+                <Ionicons name="close-circle" size={18} color={colors.border} />
+              </Pressable>
+            ) : undefined
+          }
+        />
       </View>
 
       {/* Squads list */}
