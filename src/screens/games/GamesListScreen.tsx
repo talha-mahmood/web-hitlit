@@ -1,5 +1,5 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
-import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -88,7 +88,7 @@ function GameCard({
           render on a view with overflow:hidden (needed below to clip the top
           accent bar to the rounded corners), so it has to sit one level up. */}
       <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
-        <View className="border border-border rounded-2xl overflow-hidden bg-white mb-3">
+        <View className="border border-border rounded-2xl overflow-hidden bg-white">
           {/* Top accent bar keyed to sport */}
           <View className="bg-primary h-1" />
           <View className="px-4 pt-3 pb-4">
@@ -204,7 +204,6 @@ export default function GamesListScreen() {
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
     route.params?.sportId
   );
-  const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const gameType = route.params?.gameType;
@@ -249,61 +248,36 @@ export default function GamesListScreen() {
       </View>
 
       {/* Search by name or ID */}
-      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 8 }}>
-        <View className="flex-1">
-          <SearchField
-            value={searchInput}
-            onChangeText={setSearchInput}
-            prefix="Search by "
-            variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-        <Pressable
-          onPress={() => setShowFilters((v) => !v)}
-          className="w-11 h-11 rounded-2xl bg-primary items-center justify-center"
-          style={primaryButtonShadow}
-        >
-          <Ionicons name="filter" size={18} color="white" />
-          {!!selectedSportId && (
-            <View
-              style={{
-                position: "absolute",
-                top: 7,
-                right: 7,
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "white",
-              }}
-            />
-          )}
-        </Pressable>
+      <View className="px-5 mb-3">
+        <SearchField
+          value={searchInput}
+          onChangeText={setSearchInput}
+          prefix="Search by "
+          variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
       </View>
 
-      {/* Sport filter chips — hidden behind the filter icon until tapped */}
-      {showFilters && (
-        <Animated.View entering={FadeInDown.duration(200)} exiting={FadeOutUp.duration(150)} style={{ paddingVertical: 6 }}>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={sports ?? []}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            renderItem={({ item }) => (
-              <SportChip
-                label={item.name}
-                selected={selectedSportId === item.id}
-                onPress={() => {
-                  setSelectedSportId((cur) => (cur === item.id ? undefined : item.id));
-                  setShowFilters(false);
-                }}
-              />
-            )}
-          />
-        </Animated.View>
-      )}
+      {/* Sport filter chips */}
+      <View style={{ paddingVertical: 6 }}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={sports ?? []}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+          renderItem={({ item }) => (
+            <SportChip
+              label={item.name}
+              selected={selectedSportId === item.id}
+              onPress={() =>
+                setSelectedSportId((cur) => (cur === item.id ? undefined : item.id))
+              }
+            />
+          )}
+        />
+      </View>
 
       {/* Games list */}
       {isLoading ? (
