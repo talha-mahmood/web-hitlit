@@ -210,6 +210,13 @@ export default function GamesListScreen() {
   const gameType = route.params?.gameType;
   const isTournamentList = gameType === "TOURNAMENT";
 
+  // navigation.navigate() re-focuses this screen (already mounted in the
+  // stack) instead of remounting it, so a new sportId param wouldn't
+  // otherwise reach the useState initializer above — sync it explicitly.
+  useEffect(() => {
+    setSelectedSportId(route.params?.sportId);
+  }, [route.params?.sportId]);
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
     return () => clearTimeout(t);

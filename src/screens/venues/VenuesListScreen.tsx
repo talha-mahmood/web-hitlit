@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, FlatList, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
@@ -26,6 +26,13 @@ export default function VenuesListScreen() {
     route.params?.sportId
   );
   const [showFilters, setShowFilters] = useState(false);
+
+  // navigation.navigate() re-focuses this screen (already mounted in the
+  // stack) instead of remounting it, so a new sportId param wouldn't
+  // otherwise reach the useState initializer above — sync it explicitly.
+  useEffect(() => {
+    setSelectedSportId(route.params?.sportId);
+  }, [route.params?.sportId]);
 
   const { data: sports } = useSports();
   const {
