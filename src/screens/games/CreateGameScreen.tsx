@@ -322,8 +322,9 @@ export default function CreateGameScreen() {
         <Bouncy
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
+          className="rounded-xl px-4 py-2"
           style={{
+            backgroundColor: colors.primary,
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.25,
