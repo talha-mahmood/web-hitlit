@@ -88,8 +88,8 @@ export default function CreateSquadScreen() {
         <Bouncy
           onPress={handleCreate}
           disabled={createSquad.isPending}
-          className="rounded-xl px-4 py-2"
-          style={{ backgroundColor: colors.primary, ...primaryButtonShadow }}
+          className="bg-primary rounded-xl px-4 py-2"
+          style={primaryButtonShadow}
         >
           {createSquad.isPending ? (
             <ActivityIndicator size="small" color="white" />
