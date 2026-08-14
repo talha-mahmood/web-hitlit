@@ -34,7 +34,7 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
       {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
           render on a view with overflow:hidden (needed below to clip the top
           accent bar to the rounded corners), so it has to sit one level up. */}
-      <Bouncy onPress={onPress} className="mb-5" style={homeCardShadow} scaleTo={0.98}>
+      <Bouncy onPress={onPress} className="mb-3" style={homeCardShadow} scaleTo={0.98}>
         <View
           className="rounded-2xl overflow-hidden bg-white"
           style={{ borderWidth: 1, borderColor: homeCardBorderColor }}

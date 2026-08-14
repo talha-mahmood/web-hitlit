@@ -75,7 +75,7 @@ export default function CreateVenueScreen() {
           {createVenue.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white font-semibold text-sm">Post</Text>
+            <Text className="text-white font-semibold text-sm">Create</Text>
           )}
         </Pressable>
       </View>
