@@ -18,12 +18,6 @@ cssInterop(AnimatedPressable, { className: "style" });
 // release — used for tactile press feedback on cards/buttons. Uses
 // react-native-reanimated (already installed and linked in this project),
 // so no new native dependency/build is needed.
-//
-// Prefer inline style colors (e.g. `style={{ backgroundColor: colors.primary }}`)
-// over a Tailwind `bg-*` className on this component — a bg-primary Post
-// button here once rendered invisible (transparent bg, no error) because
-// the className-driven color didn't reliably resolve through cssInterop on
-// this wrapped Animated component. Layout/spacing classNames are fine.
 export default function Bouncy({
   children,
   onPress,
