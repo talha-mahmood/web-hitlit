@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useGames, useFavoriteGameIds, useToggleFavoriteGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
-import SportChip from "../../components/SportChip";
 import SearchField from "../../components/SearchField";
+import SportFilterDropdown from "../../components/SportFilterDropdown";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -204,6 +204,7 @@ export default function GamesListScreen() {
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
     route.params?.sportId
   );
+  const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const gameType = route.params?.gameType;
@@ -248,36 +249,50 @@ export default function GamesListScreen() {
       </View>
 
       {/* Search by name or ID */}
-      <View className="px-5 mb-3">
-        <SearchField
-          value={searchInput}
-          onChangeText={setSearchInput}
-          prefix="Search by "
-          variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </View>
-
-      {/* Sport filter chips */}
-      <View style={{ paddingVertical: 6 }}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={sports ?? []}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          renderItem={({ item }) => (
-            <SportChip
-              label={item.name}
-              selected={selectedSportId === item.id}
-              onPress={() =>
-                setSelectedSportId((cur) => (cur === item.id ? undefined : item.id))
-              }
+      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 8 }}>
+        <View className="flex-1">
+          <SearchField
+            value={searchInput}
+            onChangeText={setSearchInput}
+            prefix="Search by "
+            variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+        <Pressable
+          onPress={() => setShowFilters((v) => !v)}
+          className="w-11 h-11 rounded-2xl bg-primary items-center justify-center"
+          style={primaryButtonShadow}
+        >
+          <Ionicons name="filter" size={18} color="white" />
+          {!!selectedSportId && (
+            <View
+              style={{
+                position: "absolute",
+                top: 7,
+                right: 7,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "white",
+              }}
             />
           )}
-        />
+        </Pressable>
       </View>
+
+      {/* Sport filter dropdown — hidden behind the filter icon until tapped */}
+      {showFilters && (
+        <SportFilterDropdown
+          sports={sports ?? []}
+          selectedSportId={selectedSportId}
+          onSelect={(id) => {
+            setSelectedSportId(id);
+            setShowFilters(false);
+          }}
+        />
+      )}
 
       {/* Games list */}
       {isLoading ? (
