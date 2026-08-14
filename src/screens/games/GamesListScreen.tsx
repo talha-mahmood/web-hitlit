@@ -224,7 +224,7 @@ export default function GamesListScreen() {
   const toggleFavorite = useToggleFavoriteGame();
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 mb-4">
         <View className="flex-row items-center" style={{ gap: 8 }}>

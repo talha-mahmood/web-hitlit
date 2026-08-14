@@ -36,7 +36,7 @@ export default function VenuesListScreen() {
   const toggleFavorite = useToggleFavoriteVenue();
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
         <Text className="text-2xl font-bold text-ink mb-4">Venues</Text>
         <SearchField

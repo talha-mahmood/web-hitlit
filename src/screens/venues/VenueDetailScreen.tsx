@@ -39,7 +39,7 @@ export default function VenueDetailScreen() {
 
   if (isLoading || !venue) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -48,7 +48,7 @@ export default function VenueDetailScreen() {
   const images = [...venue.venue_images].sort((a, b) => a.display_order - b.display_order);
 
   return (
-    <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1 bg-gray-100" showsVerticalScrollIndicator={false}>
       <View className="relative">
         {images.length > 0 ? (
           <ScrollView

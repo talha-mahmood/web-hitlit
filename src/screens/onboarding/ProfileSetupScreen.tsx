@@ -101,7 +101,7 @@ export default function ProfileSetupScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-white"
+      className="flex-1 bg-gray-100"
     >
       <View className="flex-1 px-6 pt-16">
         <Text className="text-2xl font-bold text-ink">Complete your profile</Text>

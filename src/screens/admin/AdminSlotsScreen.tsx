@@ -84,7 +84,7 @@ export default function AdminSlotsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}
@@ -97,7 +97,7 @@ export default function AdminSlotsScreen() {
         </Text>
       </View>
 
-      <View className="border-b border-border bg-white">
+      <View className="border-b border-border bg-gray-100">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

@@ -95,14 +95,14 @@ export default function EditCourtScreen() {
 
   if (isLoading || (isEditing && !initialized)) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}

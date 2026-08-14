@@ -57,7 +57,7 @@ export default function CreateVenueScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border"
         style={{ paddingTop: insets.top + 16 }}

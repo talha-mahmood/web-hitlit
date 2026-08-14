@@ -39,7 +39,7 @@ export default function AllVenuesListScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       <View className="px-5" style={{ paddingTop: insets.top + 16, paddingBottom: 12 }}>
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-2xl font-bold text-ink">All Venues</Text>

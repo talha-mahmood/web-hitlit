@@ -118,7 +118,7 @@ export default function HomeScreen() {
 
   return (
     <FlatList
-      className="flex-1 bg-white"
+      className="flex-1 bg-gray-100"
       ListHeaderComponent={
         <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
           <View className="flex-row items-center mb-5" style={{ gap: 12 }}>

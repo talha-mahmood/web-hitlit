@@ -128,7 +128,7 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center justify-between px-5 mb-4">
         <View className="flex-row items-center" style={{ gap: 10 }}>
           <Pressable onPress={() => navigation.goBack()} className="p-1 -ml-1">

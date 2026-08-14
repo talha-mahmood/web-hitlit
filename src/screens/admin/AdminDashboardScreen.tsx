@@ -58,14 +58,14 @@ export default function AdminDashboardScreen() {
 
   if (isLoading || !venue) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 32 }}>
+    <ScrollView className="flex-1 bg-gray-100" contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 32 }}>
       <View className="px-6">
         <View className="flex-row items-center justify-between mb-1">
           <Text className="text-2xl font-bold text-ink flex-1" numberOfLines={1}>

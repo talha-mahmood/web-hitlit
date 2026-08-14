@@ -38,7 +38,7 @@ export default function SlotPickerScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
@@ -54,7 +54,7 @@ export default function SlotPickerScreen() {
       </View>
 
       {/* Date Strip */}
-      <View className="border-b border-border bg-white">
+      <View className="border-b border-border bg-gray-100">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

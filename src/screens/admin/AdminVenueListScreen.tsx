@@ -27,14 +27,14 @@ export default function AdminVenueListScreen() {
 
   if (isLoading || (venues && venues.length === 1)) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       <View className="px-6" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <Text className="text-2xl font-bold text-ink">Your Venues</Text>
       </View>

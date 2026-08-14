@@ -117,7 +117,7 @@ export default function SquadsListScreen() {
   });
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 mb-4">
         <Text className="text-2xl font-bold text-ink">Squads</Text>
