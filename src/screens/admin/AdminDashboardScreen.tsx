@@ -13,14 +13,9 @@ import type { VenueEditingParamList } from "../../navigation/adminTypes";
 type Route = RouteProp<VenueEditingParamList, "AdminDashboard">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminDashboard">;
 
-const CARD_SHADOW = {
+const CARD_BORDER = {
   borderWidth: 1,
   borderColor: "rgba(17, 24, 39, 0.06)",
-  shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.1,
-  shadowRadius: 14,
-  elevation: 4,
 } as const;
 
 function QuickLinkCard({
@@ -33,7 +28,7 @@ function QuickLinkCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_SHADOW }}>
+    <Pressable onPress={onPress} className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_BORDER }}>
       <View
         className="items-center justify-center rounded-full mb-3"
         style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
@@ -80,15 +75,15 @@ export default function AdminDashboardScreen() {
         <Text className="text-muted text-sm mb-6">{venue.city ?? "City not set"}</Text>
 
         <View className="flex-row" style={{ gap: 12 }}>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_SHADOW}>
+          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
             <Text className="text-ink font-extrabold text-2xl">{todaysBookings.length}</Text>
             <Text className="text-muted text-xs mt-0.5">Today's Bookings</Text>
           </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_SHADOW}>
+          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
             <Text className="text-ink font-extrabold text-2xl">{courtsCount}</Text>
             <Text className="text-muted text-xs mt-0.5">Courts</Text>
           </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_SHADOW}>
+          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
             <Text className="text-ink font-extrabold text-2xl">{venue.rating.toFixed(1)}</Text>
             <Text className="text-muted text-xs mt-0.5">Rating</Text>
           </View>

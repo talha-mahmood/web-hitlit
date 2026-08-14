@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAllVenues, useDeleteVenue } from "../../hooks/useSuperadmin";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
 
@@ -83,7 +83,6 @@ export default function AllVenuesListScreen() {
             <Pressable
               onPress={() => navigation.navigate("AdminDashboard", { venueId: item.id })}
               className="flex-row items-center border border-border rounded-2xl p-4"
-              style={cardShadow}
             >
               <View className="flex-1 mr-3">
                 <View className="flex-row items-center" style={{ gap: 8 }}>

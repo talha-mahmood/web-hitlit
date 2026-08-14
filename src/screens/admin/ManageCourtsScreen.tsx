@@ -4,7 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useDeleteCourt } from "../../hooks/useVenuesAdmin";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourts">;
@@ -75,7 +75,6 @@ export default function ManageCourtsScreen() {
               key={court.id}
               onPress={() => navigation.navigate("EditCourt", { venueId: params.venueId, courtId: court.id })}
               className="border border-border rounded-2xl p-4 flex-row items-center justify-between"
-              style={cardShadow}
             >
               <View className="flex-1 mr-3">
                 <View className="flex-row items-center" style={{ gap: 8 }}>

@@ -5,7 +5,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useAddFacility, useDeleteFacility } from "../../hooks/useVenuesAdmin";
-import { colors, cardShadow, heroShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, heroShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 
@@ -98,7 +98,7 @@ export default function ManageFacilitiesScreen() {
           </View>
         ) : (
           facilities.map((f) => (
-            <View key={f.id} className="border border-border rounded-xl px-4 py-3 flex-row items-center justify-between" style={cardShadow}>
+            <View key={f.id} className="border border-border rounded-xl px-4 py-3 flex-row items-center justify-between">
               <View className="flex-1 mr-3">
                 <Text className="text-ink font-medium text-sm">{f.name}</Text>
                 {f.description ? <Text className="text-muted text-xs mt-0.5">{f.description}</Text> : null}

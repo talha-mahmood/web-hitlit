@@ -16,7 +16,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useUpdateVenue } from "../../hooks/useVenuesAdmin";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 
@@ -183,10 +183,7 @@ export default function EditVenueDetailsScreen() {
           </View>
         </View>
 
-        <View
-          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3"
-          style={cardShadow}
-        >
+        <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
           <View className="flex-1 mr-3">
             <Text className="text-ink font-medium">Open for bookings</Text>
             <Text className="text-muted text-xs mt-0.5">
