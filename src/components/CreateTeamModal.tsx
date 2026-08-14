@@ -42,9 +42,26 @@ export default function CreateTeamModal({
             style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
-              <Text className="text-lg font-bold text-ink">Create a Team</Text>
               <Pressable onPress={onClose} hitSlop={8}>
                 <Ionicons name="close" size={22} color={colors.muted} />
+              </Pressable>
+              <Text className="text-lg font-bold text-ink flex-1 text-center">Create a Team</Text>
+              <Pressable
+                onPress={handleCreate}
+                disabled={!name.trim() || submitting}
+                className="rounded-xl px-4 py-2"
+                style={{
+                  backgroundColor: name.trim() ? colors.primary : "#E5E7EB",
+                  ...(name.trim() ? primaryButtonShadow : null),
+                }}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className={`font-semibold text-sm ${name.trim() ? "text-white" : "text-muted"}`}>
+                    Post
+                  </Text>
+                )}
               </Pressable>
             </View>
             <Text className="text-muted text-sm mb-2">
@@ -60,21 +77,6 @@ export default function CreateTeamModal({
               maxLength={60}
               autoFocus
             />
-
-            <Pressable
-              onPress={handleCreate}
-              disabled={!name.trim() || submitting}
-              className={`rounded-xl py-4 items-center mt-6 ${name.trim() ? "bg-primary" : "bg-gray-200"}`}
-              style={name.trim() ? primaryButtonShadow : undefined}
-            >
-              {submitting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className={`font-semibold text-base ${name.trim() ? "text-white" : "text-muted"}`}>
-                  Post
-                </Text>
-              )}
-            </Pressable>
           </View>
         </KeyboardAvoidingView>
       </View>
