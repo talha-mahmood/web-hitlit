@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Pressable,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -85,18 +86,23 @@ export default function CreateSquadScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Bouncy>
         <Text className="text-base font-bold text-ink flex-1">Create Squad</Text>
-        <Bouncy
+        <Pressable
           onPress={handleCreate}
           disabled={createSquad.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
-          style={primaryButtonShadow}
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            ...primaryButtonShadow,
+          }}
         >
           {createSquad.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
             <Text className="text-white font-semibold text-sm">Post</Text>
           )}
-        </Bouncy>
+        </Pressable>
       </View>
 
       <ScrollView

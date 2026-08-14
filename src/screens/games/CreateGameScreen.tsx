@@ -319,11 +319,14 @@ export default function CreateGameScreen() {
         <Text className="text-base font-bold text-ink flex-1">
           {isTournament ? "Create Tournament" : "Create Game"}
         </Text>
-        <Bouncy
+        <Pressable
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
           style={{
+            backgroundColor: colors.primary,
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.25,
@@ -336,7 +339,7 @@ export default function CreateGameScreen() {
           ) : (
             <Text className="text-white font-semibold text-sm">Post</Text>
           )}
-        </Bouncy>
+        </Pressable>
       </View>
 
       <ScrollView
