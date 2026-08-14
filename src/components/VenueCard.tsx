@@ -56,6 +56,7 @@ export default function VenueCard({
               name={isFavorite ? "heart" : "heart-outline"}
               size={18}
               color={isFavorite ? colors.danger : colors.ink}
+              margin={9}
             />
           </Bouncy>
         </View>

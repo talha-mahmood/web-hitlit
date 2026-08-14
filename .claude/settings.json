@@ -1,4 +1,20 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -rn \"supabase\\\\.channel\\(\\\\|\\\\.channel\\(\\\\`\" /Users/hamza/Desktop/Shoaib_bhai_Project/playo-clone/src)",
+      "Bash(grep -noiE '\"[^\"]*game[^\"]*\"|`[^`]*game[^`]*`' src/screens/games/GameDetailScreen.tsx)",
+      "Bash(grep -noiE '\"[^\"]*game[^\"]*\"|`[^`]*game[^`]*`' src/screens/games/CreateGameScreen.tsx)",
+      "Bash(grep -noiE '\"[^\"]*game[^\"]*\"|`[^`]*game[^`]*`' src/screens/games/EditGameScreen.tsx)",
+      "Bash(grep -noiE '\"[^\"]*game[^\"]*\"|`[^`]*game[^`]*`' src/screens/games/GamesListScreen.tsx)",
+      "Bash(grep -noiE '\"[^\"]*game[^\"]*\"|`[^`]*game[^`]*`' src/screens/games/GameChatScreen.tsx)",
+      "Bash(node -e ' *)",
+      "Bash(xargs -I{} sh -c 'grep -l \"Glyphs\" \"{}\" 2>/dev/null')",
+      "Read(//private/tmp/claude-501/**)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp\\)$\")"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }
