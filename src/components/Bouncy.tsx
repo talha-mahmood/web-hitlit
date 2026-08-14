@@ -18,14 +18,6 @@ cssInterop(AnimatedPressable, { className: "style" });
 // release — used for tactile press feedback on cards/buttons. Uses
 // react-native-reanimated (already installed and linked in this project),
 // so no new native dependency/build is needed.
-//
-// A Post button here once rendered invisible (transparent bg, no error)
-// while combining a `className` (bg-primary + layout) with an explicit
-// `style` prop — the className-driven half silently didn't apply. Once a
-// caller needs `style` for anything (colors, shadows, ...), skip
-// `className` on that instance entirely and put layout (padding,
-// borderRadius, ...) in the same `style` object instead. Plain
-// layout-only `className`s with no accompanying `style` prop are fine.
 export default function Bouncy({
   children,
   onPress,
@@ -46,7 +38,6 @@ export default function Bouncy({
 
   return (
     <AnimatedPressable
-      {...rest}
       onPress={onPress}
       disabled={disabled}
       onPressIn={() => {
@@ -56,6 +47,7 @@ export default function Bouncy({
         scale.value = withSpring(1, { damping: 10, stiffness: 200 });
       }}
       style={[style, animatedStyle]}
+      {...rest}
     >
       {children}
     </AnimatedPressable>
