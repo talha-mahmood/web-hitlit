@@ -16,7 +16,7 @@ import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
 import WavingHandIcon from "../../components/WavingHandIcon";
 import { useAuthStore } from "../../store/authStore";
-import { colors, homeCardShadow, homeCardBorderColor } from "../../constants/theme";
+import { colors } from "../../constants/theme";
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "HomeFeed">,
@@ -42,8 +42,12 @@ function HomeActionCard({
         width: "48%",
         height: 120,
         borderWidth: 1,
-        borderColor: homeCardBorderColor,
-        ...homeCardShadow,
+        borderColor: "rgba(17, 24, 39, 0.06)",
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 18,
+        elevation: 6,
       }}
     >
       <View>

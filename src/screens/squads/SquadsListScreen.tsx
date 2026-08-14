@@ -9,7 +9,7 @@ import { useSquads } from "../../hooks/useSquads";
 import SearchField from "../../components/SearchField";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
-import { colors, homeCardShadow, homeCardBorderColor, primaryButtonShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
 import { useAuthStore } from "../../store/authStore";
@@ -34,11 +34,8 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
       {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
           render on a view with overflow:hidden (needed below to clip the top
           accent bar to the rounded corners), so it has to sit one level up. */}
-      <Bouncy onPress={onPress} className="mb-3" style={homeCardShadow} scaleTo={0.98}>
-        <View
-          className="rounded-2xl overflow-hidden bg-white"
-          style={{ borderWidth: 1, borderColor: homeCardBorderColor }}
-        >
+      <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
+        <View className="border border-border rounded-2xl overflow-hidden bg-white">
         <View className="bg-primary h-1" />
         <View className="px-4 pt-3 pb-4">
           <View className="flex-row items-center mb-2.5" style={{ gap: 8 }}>
