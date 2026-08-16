@@ -21,7 +21,6 @@ export default function CreateVenueScreen() {
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
-  const [phone, setPhone] = useState("");
   const [startTime, setStartTime] = useState("06:00");
   const [endTime, setEndTime] = useState("23:00");
   const [latitude, setLatitude] = useState("");
@@ -43,7 +42,6 @@ export default function CreateVenueScreen() {
         description: description.trim(),
         address: address.trim(),
         city: city.trim(),
-        phone: phone.trim(),
         startTime,
         endTime,
         latitude: latitude ? parseFloat(latitude) : null,
@@ -123,16 +121,6 @@ export default function CreateVenueScreen() {
           placeholder="e.g. Karachi"
           containerStyle={{ marginBottom: 16 }}
           maxLength={60}
-        />
-
-        <Text className="text-muted text-xs font-semibold mb-1.5">Booking Phone Number</Text>
-        <FieldInput
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="e.g. 0300 1234567"
-          keyboardType="phone-pad"
-          containerStyle={{ marginBottom: 16 }}
-          maxLength={20}
         />
 
         <View className="flex-row" style={{ gap: 12 }}>

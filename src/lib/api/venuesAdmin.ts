@@ -9,16 +9,7 @@ export type MyVenueListItem = Venue & {
 export type VenueUpdateInput = Partial<
   Pick<
     Venue,
-    | "name"
-    | "description"
-    | "address"
-    | "city"
-    | "start_time"
-    | "end_time"
-    | "isactive"
-    | "latitude"
-    | "longitude"
-    | "phone"
+    "name" | "description" | "address" | "city" | "start_time" | "end_time" | "isactive" | "latitude" | "longitude"
   >
 >;
 
@@ -31,7 +22,6 @@ export type CreateVenueInput = {
   endTime: string;
   latitude: number | null;
   longitude: number | null;
-  phone: string;
 };
 
 export type CourtInput = {
@@ -91,7 +81,6 @@ export async function createVenue(input: CreateVenueInput): Promise<Venue> {
       end_time: input.endTime,
       latitude: input.latitude,
       longitude: input.longitude,
-      phone: input.phone || null,
       venue_owner_id: null,
       isactive: true,
     })
