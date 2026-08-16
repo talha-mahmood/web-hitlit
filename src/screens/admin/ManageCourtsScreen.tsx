@@ -86,7 +86,8 @@ export default function ManageCourtsScreen() {
                   )}
                 </View>
                 <Text className="text-muted text-xs mt-0.5">
-                  {court.sports?.name ?? "Sport not set"} · Rs {court.price_per_hour.toLocaleString()}/hr
+                  {court.sports?.name ?? "Sport not set"} ·{" "}
+                  {court.price_per_hour != null ? `Rs ${court.price_per_hour.toLocaleString()}/hr` : "Call for pricing"}
                 </Text>
               </View>
               <Pressable

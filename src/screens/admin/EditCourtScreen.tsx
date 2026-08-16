@@ -49,7 +49,7 @@ export default function EditCourtScreen() {
       if (existingCourt) {
         setName(existingCourt.name);
         setSportsId(existingCourt.sports_id);
-        setPricePerHour(String(existingCourt.price_per_hour));
+        setPricePerHour(existingCourt.price_per_hour != null ? String(existingCourt.price_per_hour) : "");
         setCapacity(existingCourt.capacity != null ? String(existingCourt.capacity) : "");
         setSurfaceType(existingCourt.surface_type ?? "");
         setIsactive(existingCourt.isactive);

@@ -124,7 +124,7 @@ export type Database = {
           id: string
           isactive: boolean
           name: string
-          price_per_hour: number
+          price_per_hour: number | null
           sports_id: string
           surface_type: string | null
           updated_at: string
@@ -137,7 +137,7 @@ export type Database = {
           id?: string
           isactive?: boolean
           name: string
-          price_per_hour?: number
+          price_per_hour?: number | null
           sports_id: string
           surface_type?: string | null
           updated_at?: string
@@ -150,7 +150,7 @@ export type Database = {
           id?: string
           isactive?: boolean
           name?: string
-          price_per_hour?: number
+          price_per_hour?: number | null
           sports_id?: string
           surface_type?: string | null
           updated_at?: string
