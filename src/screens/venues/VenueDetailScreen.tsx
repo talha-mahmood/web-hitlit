@@ -183,9 +183,7 @@ export default function VenueDetailScreen() {
                     {court.surface_type ? ` · ${court.surface_type}` : ""}
                   </Text>
                 </View>
-                <Text className="text-primary font-semibold">
-                  {court.price_per_hour != null ? `Rs ${court.price_per_hour}/hr` : "Call for pricing"}
-                </Text>
+                <Text className="text-primary font-semibold">Rs {court.price_per_hour}/hr</Text>
               </View>
             ))}
           </View>
