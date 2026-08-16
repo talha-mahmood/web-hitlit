@@ -1395,6 +1395,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          phone: string | null
           rating: number
           start_time: string | null
           updated_at: string
@@ -1413,6 +1414,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          phone?: string | null
           rating?: number
           start_time?: string | null
           updated_at?: string
@@ -1431,6 +1433,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          phone?: string | null
           rating?: number
           start_time?: string | null
           updated_at?: string
@@ -1682,4 +1685,3 @@ export const Constants = {
     },
   },
 } as const
-

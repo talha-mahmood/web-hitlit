@@ -34,6 +34,7 @@ export default function EditVenueDetailsScreen() {
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [isactive, setIsactive] = useState(true);
@@ -45,6 +46,7 @@ export default function EditVenueDetailsScreen() {
       setDescription(venue.description ?? "");
       setAddress(venue.address ?? "");
       setCity(venue.city ?? "");
+      setPhone(venue.phone ?? "");
       setStartTime(venue.start_time?.slice(0, 5) ?? "");
       setEndTime(venue.end_time?.slice(0, 5) ?? "");
       setIsactive(venue.isactive);
@@ -72,6 +74,7 @@ export default function EditVenueDetailsScreen() {
         description: description.trim(),
         address: address.trim(),
         city: city.trim(),
+        phone: phone.trim() || null,
         start_time: startTime || null,
         end_time: endTime || null,
         isactive,
@@ -156,6 +159,16 @@ export default function EditVenueDetailsScreen() {
           placeholder="e.g. Karachi"
           containerStyle={{ marginBottom: 16 }}
           maxLength={60}
+        />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Booking Phone Number</Text>
+        <FieldInput
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="e.g. 0300 1234567"
+          keyboardType="phone-pad"
+          containerStyle={{ marginBottom: 16 }}
+          maxLength={20}
         />
 
         <View className="flex-row" style={{ gap: 12 }}>
