@@ -7,6 +7,7 @@ type SquadMemberRow = Database["public"]["Tables"]["squad_members"]["Row"];
 
 export type SquadListItem = SquadRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
+  sports: { id: string; name: string } | null;
   squad_members: {
     id: string;
     status: SquadMemberRow["status"];
@@ -17,6 +18,7 @@ export type SquadListItem = SquadRow & {
 
 export type SquadDetail = SquadRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
+  sports: { id: string; name: string } | null;
   squad_members: (Pick<
     SquadMemberRow,
     "id" | "status" | "user_id" | "joined_at" | "role" | "skill_level" | "location"
@@ -34,11 +36,14 @@ export type SquadDetail = SquadRow & {
 export type CreateSquadParams = {
   ownerId: string;
   name: string;
+  sportId: string;
   skillLevel: Database["public"]["Enums"]["skill_level_type"] | null;
   location: string;
   description: string;
 };
 
+// Sport is intentionally excluded — same reasoning as games' UpdateGameParams:
+// changing it post-creation would strand members who joined for a specific sport.
 export type UpdateSquadParams = {
   squadId: string;
   name: string;
@@ -48,10 +53,10 @@ export type UpdateSquadParams = {
 };
 
 const LIST_SELECT =
-  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, profiles(avatar, full_name))";
+  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, profiles(avatar, full_name))";
 
 const DETAIL_SELECT =
-  "*, profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";
+  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";
 
 // PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
 // term containing them would otherwise malform the request — strip them.
@@ -94,6 +99,7 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
     .insert({
       squad_owner_id: params.ownerId,
       name: params.name,
+      sport_id: params.sportId,
       skill_level: params.skillLevel,
       location: params.location || null,
       description: params.description || null,

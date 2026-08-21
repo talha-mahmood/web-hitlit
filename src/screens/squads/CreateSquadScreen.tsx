@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCreateSquad } from "../../hooks/useSquads";
+import { useSports } from "../../hooks/useSports";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
@@ -23,6 +24,7 @@ import LocationPickerField from "../../components/LocationPickerField";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
+import SportHeroBadge from "../../components/SportHeroBadge";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
@@ -33,16 +35,23 @@ export default function CreateSquadScreen() {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createSquad = useCreateSquad();
+  const { data: sports } = useSports();
 
   const [name, setName] = useState("");
+  const [sportId, setSportId] = useState<string | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const selectedSportName = sports?.find((s) => s.id === sportId)?.name ?? null;
 
   const handleCreate = async () => {
     if (!userId) return;
     if (!isValidName(name)) {
       Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
+      return;
+    }
+    if (!sportId) {
+      Alert.alert("Missing Info", "Please select a sport.");
       return;
     }
     if (!skillLevel) {
@@ -57,6 +66,7 @@ export default function CreateSquadScreen() {
       const squad = await createSquad.mutateAsync({
         ownerId: userId,
         name: name.trim(),
+        sportId,
         skillLevel,
         location: location.trim(),
         description: description.trim(),
@@ -117,6 +127,20 @@ export default function CreateSquadScreen() {
           onChangeText={setName}
           placeholder="e.g. Weekend Warriors"
           maxLength={80}
+        />
+
+        {/* Sport */}
+        <SectionLabel title="Sport" required />
+        {selectedSportName && (
+          <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
+            <SportHeroBadge sportName={selectedSportName} />
+            <Text className="text-ink font-semibold flex-1">{selectedSportName}</Text>
+          </View>
+        )}
+        <PillRow
+          options={(sports ?? []).map((s) => ({ label: s.name, value: s.id }))}
+          value={sportId}
+          onChange={setSportId}
         />
 
         {/* Skill Level */}

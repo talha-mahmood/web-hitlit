@@ -457,6 +457,7 @@ export default function SquadDetailScreen() {
               )
             }
           />
+          {squad.sports && <InfoRow icon="football-outline" label="Sport" value={squad.sports.name} />}
           <InfoRow
             icon="speedometer-outline"
             label="Skill Level"

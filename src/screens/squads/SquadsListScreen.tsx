@@ -73,6 +73,14 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
             </Text>
           </View>
 
+          {squad.sports && (
+            <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
+              <View className="bg-primary-light px-2 py-0.5 rounded-full">
+                <Text className="text-primary text-xs font-semibold">{squad.sports.name}</Text>
+              </View>
+            </View>
+          )}
+
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center flex-1 mr-2" style={{ gap: 6 }}>
               {skillColor && skill && (

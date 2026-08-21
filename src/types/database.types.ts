@@ -1109,6 +1109,7 @@ export type Database = {
           min_players: number | null
           name: string
           skill_level: Database["public"]["Enums"]["skill_level_type"] | null
+          sport_id: string | null
           squad_code: string
           squad_owner_id: string
           updated_at: string
@@ -1123,6 +1124,7 @@ export type Database = {
           min_players?: number | null
           name: string
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          sport_id?: string | null
           squad_code?: string
           squad_owner_id: string
           updated_at?: string
@@ -1137,11 +1139,19 @@ export type Database = {
           min_players?: number | null
           name?: string
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          sport_id?: string | null
           squad_code?: string
           squad_owner_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "squads_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "squads_squad_owner_id_fkey"
             columns: ["squad_owner_id"]
