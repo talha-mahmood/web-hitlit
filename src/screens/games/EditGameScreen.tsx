@@ -88,6 +88,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
 
   const [title, setTitle] = useState(game.title);
   const [venueId, setVenueId] = useState<string | null>(game.venue_id);
+  const [customVenueName, setCustomVenueName] = useState<string | null>(game.custom_venue_name);
   const [selectedDate, setSelectedDate] = useState(game.game_date);
   const [startTime, setStartTime] = useState(toHHMM(game.start_time));
   const [duration, setDuration] = useState(diffHours(toHHMM(game.start_time), toHHMM(game.end_time)));
@@ -126,8 +127,8 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       );
       return;
     }
-    if (!venueId) {
-      Alert.alert("Missing Info", "Please select a venue.");
+    if (!venueId && !customVenueName) {
+      Alert.alert("Missing Info", "Please select or enter a venue.");
       return;
     }
     if (!startTime) {
@@ -147,6 +148,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         gameId: game.id,
         title: title.trim(),
         venueId,
+        customVenueName,
         gameDate: selectedDate,
         endDate: endDateValue,
         startTime: `${startTime}:00`,
@@ -218,7 +220,9 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           venues={venues}
           loading={venuesLoading}
           selectedVenueId={venueId}
+          customVenueName={customVenueName}
           onSelect={(id) => setVenueId(id || null)}
+          onSelectCustom={(name) => setCustomVenueName(name || null)}
         />
 
         {/* Date */}

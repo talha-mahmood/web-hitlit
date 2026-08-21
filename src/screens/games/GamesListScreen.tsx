@@ -140,12 +140,12 @@ function GameCard({
             </Text>
 
             {/* Row 4: Location */}
-            {game.venues && (
+            {(game.venues || game.custom_venue_name) && (
               <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
                 <Ionicons name="location-outline" size={13} color={colors.muted} />
                 <Text className="text-muted text-sm" numberOfLines={1}>
-                  {game.venues.name}
-                  {game.venues.city ? ` · ${game.venues.city}` : ""}
+                  {game.venues ? game.venues.name : game.custom_venue_name}
+                  {game.venues?.city ? ` · ${game.venues.city}` : ""}
                 </Text>
               </View>
             )}

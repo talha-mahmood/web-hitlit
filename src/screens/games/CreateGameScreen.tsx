@@ -200,6 +200,7 @@ export default function CreateGameScreen() {
   const [gameType, setGameType] = useState<GameType>(forcedTournament ? "TOURNAMENT" : "REGULAR");
   const [sportId, setSportId] = useState<string | null>(null);
   const [venueId, setVenueId] = useState<string | null>(null);
+  const [customVenueName, setCustomVenueName] = useState<string | null>(null);
   const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: sportId ?? undefined });
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -222,6 +223,7 @@ export default function CreateGameScreen() {
   const handleSportChange = (id: string) => {
     setSportId(id);
     setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
+    setCustomVenueName(null);
   };
 
   // Keep `teamNames` sized to match the selected team count, preserving
@@ -251,8 +253,8 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a sport.");
       return;
     }
-    if (!venueId) {
-      Alert.alert("Missing Info", "Please select a venue.");
+    if (!venueId && !customVenueName) {
+      Alert.alert("Missing Info", "Please select or enter a venue.");
       return;
     }
     if (!startTime) {
@@ -305,6 +307,7 @@ export default function CreateGameScreen() {
         title: title.trim(),
         sportId,
         venueId,
+        customVenueName,
         gameDate: selectedDate,
         endDate: endDateValue,
         startTime: `${startTime}:00`,
@@ -433,7 +436,9 @@ export default function CreateGameScreen() {
           venues={venues}
           loading={sportId != null && venuesLoading}
           selectedVenueId={venueId}
+          customVenueName={customVenueName}
           onSelect={(id) => setVenueId(id || null)}
+          onSelectCustom={(name) => setCustomVenueName(name || null)}
           disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
         />
 

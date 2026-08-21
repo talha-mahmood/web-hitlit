@@ -40,7 +40,11 @@ export type CreateGameParams = {
   creatorId: string;
   title: string;
   sportId: string;
+  // Exactly one of these is set (or both null pre-selection) — a real,
+  // managed venue vs. free text the host typed because theirs wasn't listed.
+  // See games_venue_or_custom_check.
   venueId: string | null;
+  customVenueName: string | null;
   gameDate: string;
   startTime: string;
   endTime: string;
@@ -64,6 +68,7 @@ export type UpdateGameParams = {
   gameId: string;
   title: string;
   venueId: string | null;
+  customVenueName: string | null;
   gameDate: string;
   startTime: string;
   endTime: string;
@@ -155,6 +160,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       title: params.title,
       sport_id: params.sportId,
       venue_id: params.venueId,
+      custom_venue_name: params.customVenueName,
       game_date: params.gameDate,
       end_date: params.endDate,
       start_time: params.startTime,
@@ -205,6 +211,7 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
     .update({
       title: params.title,
       venue_id: params.venueId,
+      custom_venue_name: params.customVenueName,
       game_date: params.gameDate,
       end_date: params.endDate,
       start_time: params.startTime,

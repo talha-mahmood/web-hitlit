@@ -598,11 +598,15 @@ export default function GameDetailScreen() {
               />
             </>
           )}
-          {game.venues && (
+          {(game.venues || game.custom_venue_name) && (
             <InfoRow
               icon="location-outline"
               label="Venue"
-              value={`${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`}
+              value={
+                game.venues
+                  ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`
+                  : (game.custom_venue_name as string)
+              }
             />
           )}
           <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />

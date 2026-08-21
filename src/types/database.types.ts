@@ -542,6 +542,7 @@ export type Database = {
           court_id: string | null
           created_at: string
           creator_id: string
+          custom_venue_name: string | null
           deleted_at: string | null
           description: string | null
           end_date: string | null
@@ -581,6 +582,7 @@ export type Database = {
           court_id?: string | null
           created_at?: string
           creator_id: string
+          custom_venue_name?: string | null
           deleted_at?: string | null
           description?: string | null
           end_date?: string | null
@@ -620,6 +622,7 @@ export type Database = {
           court_id?: string | null
           created_at?: string
           creator_id?: string
+          custom_venue_name?: string | null
           deleted_at?: string | null
           description?: string | null
           end_date?: string | null

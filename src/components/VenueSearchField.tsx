@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 
@@ -11,13 +11,21 @@ export default function VenueSearchField({
   venues,
   loading,
   selectedVenueId,
+  customVenueName,
   onSelect,
+  onSelectCustom,
   disabledReason,
 }: {
   venues: VenueOption[] | undefined;
   loading: boolean;
   selectedVenueId: string | null;
+  // A free-text venue name the user entered because their venue wasn't in
+  // the dropdown — mutually exclusive with selectedVenueId (see
+  // games_venue_or_custom_check). Optional so this component still works
+  // wherever a caller hasn't wired up the custom-venue flow.
+  customVenueName?: string | null;
   onSelect: (venueId: string) => void;
+  onSelectCustom?: (name: string) => void;
   // Shown instead of the search field when venue selection isn't available
   // yet (e.g. "Select a sport to see venues that offer it.").
   disabledReason?: string;
@@ -39,15 +47,24 @@ export default function VenueSearchField({
   // the user's own typing while they're actively searching.
   useEffect(() => {
     if (!focused) {
-      setQuery(selectedVenue?.name ?? "");
+      setQuery(selectedVenue?.name ?? customVenueName ?? "");
     }
-  }, [selectedVenue?.id, selectedVenue?.name, focused]);
+  }, [selectedVenue?.id, selectedVenue?.name, customVenueName, focused]);
 
   const matches = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return venues ?? [];
     return (venues ?? []).filter((v) => v.name.toLowerCase().startsWith(trimmed));
   }, [venues, query]);
+
+  const trimmedQuery = query.trim();
+  // Only offer "use as custom venue" once the typed text doesn't already
+  // exactly match a real venue — otherwise picking a suggestion and typing
+  // the custom option would do the same thing, which is confusing.
+  const canUseCustom =
+    !!onSelectCustom &&
+    trimmedQuery.length > 0 &&
+    !matches.some((v) => v.name.toLowerCase() === trimmedQuery.toLowerCase());
 
   const showDropdown = focused && !loading;
 
@@ -57,10 +74,6 @@ export default function VenueSearchField({
 
   if (loading) {
     return <ActivityIndicator color={colors.primary} />;
-  }
-
-  if (!venues || venues.length === 0) {
-    return <Text className="text-muted text-sm">No venues found for this sport yet.</Text>;
   }
 
   return (
@@ -84,7 +97,9 @@ export default function VenueSearchField({
           value={query}
           onChangeText={(t) => {
             setQuery(t);
-            if (selectedVenueId) onSelect(""); // typing invalidates the previous pick
+            // Typing invalidates whichever pick was previously made.
+            if (selectedVenueId) onSelect("");
+            if (customVenueName) onSelectCustom?.("");
           }}
           onFocus={() => {
             if (blurTimeout.current) clearTimeout(blurTimeout.current);
@@ -106,6 +121,7 @@ export default function VenueSearchField({
             onPress={() => {
               setQuery("");
               if (selectedVenueId) onSelect("");
+              if (customVenueName) onSelectCustom?.("");
             }}
             hitSlop={8}
           >
@@ -117,12 +133,15 @@ export default function VenueSearchField({
       {showDropdown && (
         <View
           className="bg-white rounded-2xl mt-1.5 overflow-hidden"
-          style={{ maxHeight: 220, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+          style={{ maxHeight: 260, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
         >
-          {matches.length === 0 ? (
-            <Text className="text-muted text-sm px-4 py-3">No venues match "{query}".</Text>
-          ) : (
-            matches.slice(0, MAX_RESULTS).map((v) => (
+          <ScrollView bounces={false} keyboardShouldPersistTaps="handled">
+            {matches.length === 0 && !canUseCustom && (
+              <Text className="text-muted text-sm px-4 py-3">
+                {venues && venues.length > 0 ? `No venues match "${query}".` : "No venues found for this sport yet."}
+              </Text>
+            )}
+            {matches.slice(0, MAX_RESULTS).map((v) => (
               <Pressable
                 key={v.id}
                 // onPress fires after TextInput's onBlur on RN — fine, since
@@ -141,8 +160,24 @@ export default function VenueSearchField({
                   {v.city ?? "—"}
                 </Text>
               </Pressable>
-            ))
-          )}
+            ))}
+            {canUseCustom && (
+              <Pressable
+                onPress={() => {
+                  onSelectCustom?.(trimmedQuery);
+                  setQuery(trimmedQuery);
+                  setFocused(false);
+                }}
+                className="flex-row items-center px-4 py-3"
+                style={{ gap: 8 }}
+              >
+                <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+                <Text className="text-primary text-sm font-medium flex-1" numberOfLines={1}>
+                  Use "{trimmedQuery}" as your venue
+                </Text>
+              </Pressable>
+            )}
+          </ScrollView>
         </View>
       )}
     </View>
