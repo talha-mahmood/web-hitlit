@@ -8,11 +8,18 @@ import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
+import {
+  useMyPendingGameInvite,
+  useCreateGameInvite,
+  useAcceptGameInvite,
+  useDeclineGameInvite,
+} from "../../hooks/useInvites";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import InviteUsersModal from "../../components/InviteUsersModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import DetailSportBackdrop from "../../components/DetailSportBackdrop";
@@ -234,6 +241,7 @@ export default function GameDetailScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
   // Only meaningful once `game` has loaded and turned out to be a tournament —
@@ -249,6 +257,10 @@ export default function GameDetailScreen() {
   const approvePlayer = useApprovePlayer(params.gameId);
   const rejectPlayer = useRejectPlayer(params.gameId);
   const removePlayer = useRemovePlayer(params.gameId);
+  const { data: myGameInvite } = useMyPendingGameInvite(params.gameId, userId);
+  const createInvite = useCreateGameInvite(params.gameId);
+  const acceptInvite = useAcceptGameInvite(params.gameId);
+  const declineInvite = useDeclineGameInvite(params.gameId);
 
   if (isLoading) {
     return (
@@ -454,6 +466,28 @@ export default function GameDetailScreen() {
     );
   };
 
+  const handleAcceptInvite = () => {
+    if (!myGameInvite) return;
+    acceptInvite.mutate(myGameInvite.id, {
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not accept invite."),
+    });
+  };
+
+  const handleDeclineInvite = () => {
+    if (!myGameInvite) return;
+    Alert.alert("Decline Invite", `Decline the invite to "${game.title}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Decline",
+        style: "destructive",
+        onPress: () =>
+          declineInvite.mutate(myGameInvite.id, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not decline invite."),
+          }),
+      },
+    ]);
+  };
+
   const handleCopyGameCode = async () => {
     await Clipboard.setStringAsync(game.game_code);
     setCodeCopied(true);
@@ -494,6 +528,11 @@ export default function GameDetailScreen() {
             )}
           </View>
         </View>
+        {isCreator && !isCancelled && !hasEnded && (
+          <Pressable onPress={() => setShowInviteModal(true)} className="mr-2 p-1">
+            <Ionicons name="person-add-outline" size={22} color={colors.ink} />
+          </Pressable>
+        )}
         {isCreator && !isTournament && !isCancelled && !hasEnded && (
           <Pressable
             onPress={() => navigation.navigate("EditGame", { gameId: game.id })}
@@ -538,6 +577,43 @@ export default function GameDetailScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Pending host invite — shown regardless of game_type, since the
+            normal bottom join CTA is hidden entirely for a tournament
+            non-host (joining a tournament happens via a team below instead). */}
+        {myGameInvite && (
+          <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <Text className="text-ink font-semibold text-sm mb-1">
+              {myGameInvite.profiles?.full_name ?? "The host"} invited you to{" "}
+              {isTournament ? "this tournament" : "this game"}
+            </Text>
+            <Text className="text-muted text-xs mb-3">
+              {isTournament
+                ? "Accept to let them know you're in, then join a team below."
+                : "Accept to join instantly — no approval needed."}
+            </Text>
+            <View className="flex-row" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleDeclineInvite}
+                disabled={declineInvite.isPending || acceptInvite.isPending}
+                className="flex-1 border border-danger rounded-lg py-2.5 items-center"
+              >
+                <Text className="text-danger font-semibold text-sm">Decline</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleAcceptInvite}
+                disabled={declineInvite.isPending || acceptInvite.isPending}
+                className="flex-1 bg-primary rounded-lg py-2.5 items-center"
+              >
+                {acceptInvite.isPending ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white font-semibold text-sm">Accept</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Game info — plain rows, no card chrome */}
         <View className="px-5 mt-5">
           <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
@@ -792,6 +868,17 @@ export default function GameDetailScreen() {
             ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.`
             : "The host must approve your request before you're added."
         }
+      />
+
+      <InviteUsersModal
+        visible={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        title={`Invite Players · ${game.title}`}
+        excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id)]}
+        onInvite={async (user) => {
+          if (!userId) return;
+          await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
+        }}
       />
     </View>
   );

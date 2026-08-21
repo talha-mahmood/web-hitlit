@@ -15,10 +15,17 @@ import {
   useRemoveMember,
 } from "../../hooks/useSquads";
 import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
+import {
+  useMyPendingSquadInvite,
+  useCreateSquadInvite,
+  useAcceptSquadInvite,
+  useDeclineSquadInvite,
+} from "../../hooks/useInvites";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import InviteUsersModal from "../../components/InviteUsersModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import DetailSportBackdrop from "../../components/DetailSportBackdrop";
@@ -191,6 +198,7 @@ export default function SquadDetailScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const { data: squad, isLoading, error } = useSquadDetail(params.squadId);
   const { data: chatUnreadCount } = useSquadChatUnreadCount(squad?.id, userId);
@@ -200,6 +208,10 @@ export default function SquadDetailScreen() {
   const approveMember = useApproveMember(params.squadId);
   const rejectMember = useRejectMember(params.squadId);
   const removeMember = useRemoveMember(params.squadId);
+  const { data: mySquadInvite } = useMyPendingSquadInvite(params.squadId, userId);
+  const createInvite = useCreateSquadInvite(params.squadId);
+  const acceptInvite = useAcceptSquadInvite(params.squadId);
+  const declineInvite = useDeclineSquadInvite(params.squadId);
 
   if (isLoading) {
     return (
@@ -365,6 +377,28 @@ export default function SquadDetailScreen() {
     setTimeout(() => setCodeCopied(false), 1500);
   };
 
+  const handleAcceptInvite = () => {
+    if (!mySquadInvite) return;
+    acceptInvite.mutate(mySquadInvite.id, {
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not accept invite."),
+    });
+  };
+
+  const handleDeclineInvite = () => {
+    if (!mySquadInvite) return;
+    Alert.alert("Decline Invite", `Decline the invite to "${squad.name}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Decline",
+        style: "destructive",
+        onPress: () =>
+          declineInvite.mutate(mySquadInvite.id, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not decline invite."),
+          }),
+      },
+    ]);
+  };
+
   const isBusy = joinSquad.isPending || leaveSquad.isPending || disbandSquad.isPending;
   const isApprovingOrRejecting = approveMember.isPending || rejectMember.isPending || removeMember.isPending;
 
@@ -393,6 +427,11 @@ export default function SquadDetailScreen() {
             </Text>
           </View>
         </View>
+        {isOwner && (
+          <Pressable onPress={() => setShowInviteModal(true)} className="mr-2 p-1">
+            <Ionicons name="person-add-outline" size={22} color={colors.ink} />
+          </Pressable>
+        )}
         {isOwner && (
           <Pressable
             onPress={() => navigation.navigate("EditSquad", { squadId: squad.id })}
@@ -427,6 +466,35 @@ export default function SquadDetailScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+        {mySquadInvite && (
+          <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <Text className="text-ink font-semibold text-sm mb-1">
+              {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this squad
+            </Text>
+            <Text className="text-muted text-xs mb-3">Accept to join instantly — no approval needed.</Text>
+            <View className="flex-row" style={{ gap: 8 }}>
+              <Pressable
+                onPress={handleDeclineInvite}
+                disabled={declineInvite.isPending || acceptInvite.isPending}
+                className="flex-1 border border-danger rounded-lg py-2.5 items-center"
+              >
+                <Text className="text-danger font-semibold text-sm">Decline</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleAcceptInvite}
+                disabled={declineInvite.isPending || acceptInvite.isPending}
+                className="flex-1 bg-primary rounded-lg py-2.5 items-center"
+              >
+                {acceptInvite.isPending ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white font-semibold text-sm">Accept</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Squad info — plain rows, no card chrome */}
         <View className="px-5 mt-5">
           <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
@@ -618,6 +686,17 @@ export default function SquadDetailScreen() {
         submitting={joinSquad.isPending}
         title="Request to Join"
         subtitle="The captain must approve your request before you're added."
+      />
+
+      <InviteUsersModal
+        visible={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        title={`Invite Players · ${squad.name}`}
+        excludeIds={[squad.squad_owner_id, ...squad.squad_members.map((m) => m.user_id)]}
+        onInvite={async (user) => {
+          if (!userId) return;
+          await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
+        }}
       />
     </View>
   );

@@ -38,6 +38,11 @@ const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: s
   game_cancelled: { icon: "alert-circle", color: "#DC2626", bg: "bg-red-50" },
   team_pending_approval: { icon: "hourglass", color: "#D97706", bg: "bg-yellow-50" },
   game_invite: { icon: "mail", color: "#3B82F6", bg: "bg-blue-50" },
+  squad_invite: { icon: "mail", color: "#3B82F6", bg: "bg-blue-50" },
+  game_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
+  squad_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
+  game_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
+  squad_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
 };
 const DEFAULT_META = { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
 

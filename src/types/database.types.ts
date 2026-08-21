@@ -999,6 +999,61 @@ export type Database = {
           },
         ]
       }
+      squad_invites: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          invited_by: string
+          invited_user_id: string
+          squad_id: string
+          status: Database["public"]["Enums"]["squad_invite_status_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          invited_by: string
+          invited_user_id: string
+          squad_id: string
+          status?: Database["public"]["Enums"]["squad_invite_status_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          invited_by?: string
+          invited_user_id?: string
+          squad_id?: string
+          status?: Database["public"]["Enums"]["squad_invite_status_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_invites_invited_user_id_fkey"
+            columns: ["invited_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_invites_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       squad_members: {
         Row: {
           created_at: string
@@ -1476,6 +1531,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      accept_squad_invite: { Args: { p_invite_id: string }; Returns: undefined }
       create_notification: {
         Args: {
           p_body: string
@@ -1484,6 +1541,11 @@ export type Database = {
           p_type: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      decline_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      decline_squad_invite: {
+        Args: { p_invite_id: string }
         Returns: undefined
       }
       delete_old_game_messages: { Args: never; Returns: undefined }
@@ -1550,6 +1612,7 @@ export type Database = {
       payment_status_type: "PENDING" | "SUCCESS" | "FAILED" | "REFUNDED"
       profile_type: "owner" | "user" | "superadmin"
       skill_level_type: "beginner" | "intermediate" | "expert"
+      squad_invite_status_type: "pending" | "accepted" | "declined"
       squad_member_status_type:
         | "ACTIVE"
         | "LEFT"
@@ -1716,6 +1779,7 @@ export const Constants = {
       payment_status_type: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
       profile_type: ["owner", "user", "superadmin"],
       skill_level_type: ["beginner", "intermediate", "expert"],
+      squad_invite_status_type: ["pending", "accepted", "declined"],
       squad_member_status_type: [
         "ACTIVE",
         "LEFT",
