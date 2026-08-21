@@ -6,7 +6,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useSquads } from "../../hooks/useSquads";
+import { useSports } from "../../hooks/useSports";
 import SearchField from "../../components/SearchField";
+import SportFilterDropdown from "../../components/SportFilterDropdown";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -14,6 +16,7 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import type { SquadListItem } from "../../lib/api/squads";
 import { useAuthStore } from "../../store/authStore";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
+import { matchesLocationQuery } from "../../lib/locationFilter";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
 
@@ -114,15 +117,29 @@ export default function SquadsListScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [debouncedLocation, setDebouncedLocation] = useState("");
+  const [selectedSportId, setSelectedSportId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const { data: squads, isLoading, isRefetching, refetch } = useSquads({
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedLocation(locationInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [locationInput]);
+
+  const { data: sports } = useSports();
+  const { data: squadsData, isLoading, isRefetching, refetch } = useSquads({
     search: debouncedSearch || undefined,
+    sportId: selectedSportId,
   });
+  const squads = debouncedLocation
+    ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], debouncedLocation))
+    : squadsData;
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
@@ -140,16 +157,63 @@ export default function SquadsListScreen() {
       </View>
 
       {/* Search by squad name or squad ID */}
-      <View className="px-5 mb-3">
-        <SearchField
-          value={searchInput}
-          onChangeText={setSearchInput}
-          prefix="Search by "
-          variants={["squad name", "squad ID"]}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 8 }}>
+        <View className="flex-1">
+          <SearchField
+            value={searchInput}
+            onChangeText={setSearchInput}
+            prefix="Search by "
+            variants={["squad name", "squad ID"]}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+        <Pressable
+          onPress={() => setShowFilters((v) => !v)}
+          className="w-11 h-11 rounded-2xl bg-primary items-center justify-center"
+          style={primaryButtonShadow}
+        >
+          <Ionicons name="filter" size={18} color="white" />
+          {(!!debouncedLocation || !!selectedSportId) && (
+            <View
+              style={{
+                position: "absolute",
+                top: 7,
+                right: 7,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "white",
+              }}
+            />
+          )}
+        </Pressable>
       </View>
+
+      {/* Location + sport filters — hidden behind the filter icon until tapped */}
+      {showFilters && (
+        <View className="px-5 mb-3">
+          <SearchField
+            value={locationInput}
+            onChangeText={setLocationInput}
+            prefix="Filter by "
+            variants={["location", "city", "area"]}
+            autoCapitalize="none"
+            autoCorrect={false}
+            icon="location-outline"
+          />
+        </View>
+      )}
+      {showFilters && (
+        <SportFilterDropdown
+          sports={sports ?? []}
+          selectedSportId={selectedSportId}
+          onSelect={(id) => {
+            setSelectedSportId(id);
+            setShowFilters(false);
+          }}
+        />
+      )}
 
       {/* Squads list */}
       {isLoading ? (
@@ -161,12 +225,18 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch ? (
+            debouncedSearch || debouncedLocation || selectedSportId ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No squads found</Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  No squads match "{debouncedSearch}". Try a different name or squad ID.
+                  {debouncedSearch && debouncedLocation
+                    ? `No squads match "${debouncedSearch}" near "${debouncedLocation}".`
+                    : debouncedLocation
+                      ? `No squads found near "${debouncedLocation}".`
+                      : debouncedSearch
+                        ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
+                        : "No squads match this sport filter yet."}
                 </Text>
               </View>
             ) : (

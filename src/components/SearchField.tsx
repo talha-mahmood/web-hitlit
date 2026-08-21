@@ -26,6 +26,7 @@ export default function SearchField({
   autoCorrect,
   keyboardType,
   containerStyle,
+  icon = "search-outline",
 }: {
   value: string;
   onChangeText: (t: string) => void;
@@ -35,6 +36,7 @@ export default function SearchField({
   autoCorrect?: boolean;
   keyboardType?: ComponentProps<typeof TextInput>["keyboardType"];
   containerStyle?: object;
+  icon?: ComponentProps<typeof Ionicons>["name"];
 }) {
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
@@ -83,7 +85,7 @@ export default function SearchField({
         containerStyle,
       ]}
     >
-      <Ionicons name="search-outline" size={18} color={colors.muted} />
+      <Ionicons name={icon} size={18} color={colors.muted} />
       <View className="flex-1 ml-2" style={{ justifyContent: "center" }}>
         <TextInput
           value={value}

@@ -65,7 +65,7 @@ function sanitizeSearchTerm(term: string): string {
 }
 
 export async function fetchSquads(
-  filters: { search?: string } = {}
+  filters: { search?: string; sportId?: string } = {}
 ): Promise<SquadListItem[]> {
   let query = supabase
     .from("squads")
@@ -73,6 +73,9 @@ export async function fetchSquads(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
+  if (filters.sportId) {
+    query = query.eq("sport_id", filters.sportId);
+  }
   const search = filters.search ? sanitizeSearchTerm(filters.search) : "";
   if (search) {
     query = query.or(`name.ilike.%${search}%,squad_code.ilike.%${search}%`);

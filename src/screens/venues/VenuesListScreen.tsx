@@ -26,6 +26,8 @@ export default function VenuesListScreen() {
     route.params?.sportId
   );
   const [showFilters, setShowFilters] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [debouncedLocation, setDebouncedLocation] = useState("");
 
   // navigation.navigate() re-focuses this screen (already mounted in the
   // stack) instead of remounting it, so a new sportId param wouldn't
@@ -34,13 +36,22 @@ export default function VenuesListScreen() {
     setSelectedSportId(route.params?.sportId);
   }, [route.params?.sportId]);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedLocation(locationInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [locationInput]);
+
   const { data: sports } = useSports();
   const {
     data: venues,
     isLoading,
     isRefetching,
     refetch,
-  } = useVenues({ search: search || undefined, sportId: selectedSportId });
+  } = useVenues({
+    search: search || undefined,
+    sportId: selectedSportId,
+    location: debouncedLocation || undefined,
+  });
   const { data: favoriteIds } = useFavoriteVenueIds();
   const toggleFavorite = useToggleFavoriteVenue();
 
@@ -54,7 +65,7 @@ export default function VenuesListScreen() {
               value={search}
               onChangeText={setSearch}
               prefix="Search by "
-              variants={["venue name", "city"]}
+              variants={["venue name"]}
             />
           </View>
           <Pressable
@@ -63,7 +74,7 @@ export default function VenuesListScreen() {
             style={primaryButtonShadow}
           >
             <Ionicons name="filter" size={18} color="white" />
-            {!!selectedSportId && (
+            {(!!selectedSportId || !!debouncedLocation) && (
               <View
                 style={{
                   position: "absolute",
@@ -80,6 +91,19 @@ export default function VenuesListScreen() {
         </View>
       </View>
 
+      {showFilters && (
+        <View className="px-5 mb-3">
+          <SearchField
+            value={locationInput}
+            onChangeText={setLocationInput}
+            prefix="Filter by "
+            variants={["location", "city", "area"]}
+            autoCapitalize="none"
+            autoCorrect={false}
+            icon="location-outline"
+          />
+        </View>
+      )}
       {showFilters && (
         <SportFilterDropdown
           sports={sports ?? []}
@@ -103,7 +127,7 @@ export default function VenuesListScreen() {
           }
           ListEmptyComponent={
             <Text className="text-muted text-center mt-10">
-              No venues found. Try a different search or sport.
+              No venues found. Try a different search, location, or sport.
             </Text>
           }
           renderItem={({ item, index }) => (

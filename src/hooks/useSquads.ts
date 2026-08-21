@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
-export function useSquads(filters: { search?: string } = {}) {
+export function useSquads(filters: { search?: string; sportId?: string } = {}) {
   const qc = useQueryClient();
   const query = useQuery({
     queryKey: ["squads", filters],

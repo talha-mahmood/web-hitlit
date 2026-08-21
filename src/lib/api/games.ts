@@ -8,7 +8,7 @@ type TournamentTeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"]
 
 export type GameListItem = GameRow & {
   sports: { id: string; name: string } | null;
-  venues: { id: string; name: string; city: string | null } | null;
+  venues: { id: string; name: string; city: string | null; address: string | null } | null;
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   game_players: {
     id: string;
@@ -84,7 +84,7 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order)";
+  "*, sports(id, name), venues(id, name, city, address), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order)";
 
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";

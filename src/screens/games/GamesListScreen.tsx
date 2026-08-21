@@ -17,6 +17,7 @@ import type { GameListItem } from "../../lib/api/games";
 import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
+import { matchesLocationQuery } from "../../lib/locationFilter";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
@@ -238,6 +239,8 @@ export default function GamesListScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [locationInput, setLocationInput] = useState("");
+  const [debouncedLocation, setDebouncedLocation] = useState("");
   const gameType = route.params?.gameType;
   const isTournamentList = gameType === "TOURNAMENT";
 
@@ -253,12 +256,25 @@ export default function GamesListScreen() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedLocation(locationInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [locationInput]);
+
   const { data: sports } = useSports();
-  const { data: games, isLoading, isRefetching, refetch } = useGames({
+  const { data: gamesData, isLoading, isRefetching, refetch } = useGames({
     sportId: selectedSportId,
     search: debouncedSearch || undefined,
     gameType,
   });
+  const games = debouncedLocation
+    ? (gamesData ?? []).filter((g) =>
+        matchesLocationQuery(
+          [g.venues?.name, g.venues?.city, g.venues?.address, g.custom_venue_name],
+          debouncedLocation
+        )
+      )
+    : gamesData;
   const { data: favoriteIds } = useFavoriteGameIds(userId);
   const toggleFavorite = useToggleFavoriteGame();
 
@@ -304,7 +320,7 @@ export default function GamesListScreen() {
           style={primaryButtonShadow}
         >
           <Ionicons name="filter" size={18} color="white" />
-          {!!selectedSportId && (
+          {(!!selectedSportId || !!debouncedLocation) && (
             <View
               style={{
                 position: "absolute",
@@ -320,7 +336,20 @@ export default function GamesListScreen() {
         </Pressable>
       </View>
 
-      {/* Sport filter dropdown — hidden behind the filter icon until tapped */}
+      {/* Location + sport filters — hidden behind the filter icon until tapped */}
+      {showFilters && (
+        <View className="px-5 mb-3">
+          <SearchField
+            value={locationInput}
+            onChangeText={setLocationInput}
+            prefix="Filter by "
+            variants={["location", "city", "area"]}
+            autoCapitalize="none"
+            autoCorrect={false}
+            icon="location-outline"
+          />
+        </View>
+      )}
       {showFilters && (
         <SportFilterDropdown
           sports={sports ?? []}
@@ -342,15 +371,18 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch ? (
+            debouncedSearch || debouncedLocation ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
                   No {isTournamentList ? "tournaments" : "games"} found
                 </Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  No {isTournamentList ? "tournaments" : "games"} match "{debouncedSearch}". Try a different
-                  name or {isTournamentList ? "tournament" : "game"} ID.
+                  {debouncedSearch && debouncedLocation
+                    ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}" near "${debouncedLocation}".`
+                    : debouncedLocation
+                      ? `No ${isTournamentList ? "tournaments" : "games"} found near "${debouncedLocation}".`
+                      : `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}". Try a different name or ${isTournamentList ? "tournament" : "game"} ID.`}
                 </Text>
               </View>
             ) : (

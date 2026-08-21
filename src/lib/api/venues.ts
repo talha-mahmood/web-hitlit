@@ -21,11 +21,18 @@ export type VenueDetail = Venue & {
 
 export type VenueFilters = {
   search?: string;
-  city?: string;
+  // Matches against city or address (e.g. "Lahore", "DHA Phase 6", "Gulberg").
+  location?: string;
   sportId?: string;
 };
 
 const VENUE_LIST_SELECT = `*, venue_images(image_url, display_order), court(id, sports_id, price_per_hour, sports(name, icon))`;
+
+// PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
+// term containing them would otherwise malform the request — strip them.
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, " ").trim();
+}
 
 export async function fetchVenues(filters: VenueFilters = {}): Promise<VenueListItem[]> {
   const courtRelation = filters.sportId ? "court!inner" : "court";
@@ -39,8 +46,9 @@ export async function fetchVenues(filters: VenueFilters = {}): Promise<VenueList
   if (filters.sportId) {
     query = query.eq("court.sports_id", filters.sportId);
   }
-  if (filters.city) {
-    query = query.ilike("city", `%${filters.city}%`);
+  const location = filters.location ? sanitizeSearchTerm(filters.location) : "";
+  if (location) {
+    query = query.or(`city.ilike.%${location}%,address.ilike.%${location}%`);
   }
   if (filters.search) {
     query = query.ilike("name", `%${filters.search}%`);
