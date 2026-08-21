@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -106,7 +105,13 @@ export default function GameChatScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-gray-100"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      // "height" was never actually proven to work for this layout — every
+      // other Android screen using it (CreateGameScreen, etc.) has no fixed
+      // bottom bar; their bottom action lives in the header. This screen's
+      // composer is a fixed sibling below the FlatList, so it needs "padding"
+      // (pushes the whole column, composer included, up together) on both
+      // platforms rather than a height recalculation.
+      behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
       {/* Header */}
@@ -139,6 +144,7 @@ export default function GameChatScreen() {
       ) : (
         <FlatList
           ref={listRef}
+          className="flex-1"
           data={messages ?? []}
           keyExtractor={(m) => m.id}
           renderItem={({ item }) => <MessageBubble message={item} isOwn={item.sender_id === userId} />}
