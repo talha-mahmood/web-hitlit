@@ -127,7 +127,7 @@ function TeamCard({
   const isUnclaimed = team.captain_id === null;
 
   return (
-    <View className="border border-border rounded-2xl p-4" style={cardShadow}>
+    <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
       <View className="flex-row items-center justify-between mb-1">
         <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>{team.name}</Text>
         {badge && (
@@ -298,7 +298,7 @@ function FixturesPanel({
   const fixtures = computeFixtures(format, teamNames);
   if (fixtures.length === 0) return null;
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
       <View className="flex-row items-center justify-between mb-2">
         <Text className="text-ink font-semibold text-sm">Fixtures</Text>
         <View className="bg-indigo-50 px-2 py-0.5 rounded-full">
@@ -536,7 +536,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
       {/* Host: teams awaiting approval */}
       {teamsAwaitingHost.length > 0 && (
-        <View className="mx-4 mb-3 border border-border rounded-2xl p-4" style={cardShadow}>
+        <View className="mx-4 mb-3 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
           <Text className="text-ink font-semibold text-sm mb-1">
             Teams Awaiting Your Approval ({teamsAwaitingHost.length})
           </Text>

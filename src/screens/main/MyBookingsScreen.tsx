@@ -76,7 +76,7 @@ function BookingCard({
     isFuture && (booking.status === "CONFIRMED" || booking.status === "PENDING");
 
   return (
-    <View className="border border-border rounded-2xl mb-3" style={cardShadow}>
+    <View className="border border-border rounded-2xl bg-white mb-3" style={cardShadow}>
       <View className="px-4 py-4">
         <View className="flex-row items-start justify-between mb-1">
           <View className="flex-1 mr-2">

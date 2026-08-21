@@ -124,7 +124,7 @@ export default function BookingCheckoutScreen() {
 
         {/* Payment Method */}
         <View
-          className="border border-border rounded-2xl px-4 py-4 flex-row items-center"
+          className="border border-border rounded-2xl bg-white px-4 py-4 flex-row items-center"
           style={{ gap: 12, ...cardShadow }}
         >
           <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
