@@ -1,0 +1,89 @@
+import { supabase } from "../supabase";
+import type { Database } from "../../types/database.types";
+
+type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
+
+export type TopPlayer = {
+  userId: string;
+  fullName: string | null;
+  avatar: string | null;
+  city: string | null;
+  skillLevel: SkillLevel | null;
+  gamesPlayedTotal: number;
+  tournamentsPlayedTotal: number;
+  gamesHostedTotal: number;
+  hoursPlayedTotal: number;
+};
+
+// Reads via a SECURITY DEFINER RPC (get_top_players) since the underlying
+// game_history table is locked to `user_id = auth.uid()` by RLS — this
+// aggregates every player's counts without exposing raw per-game rows.
+export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
+  const { data, error } = await supabase.rpc("get_top_players", {
+    p_sport_id: sportId ?? undefined,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => ({
+    userId: row.user_id,
+    fullName: row.full_name,
+    avatar: row.avatar,
+    city: row.city,
+    skillLevel: row.skill_level,
+    gamesPlayedTotal: row.games_played,
+    tournamentsPlayedTotal: row.tournaments_played,
+    gamesHostedTotal: row.games_hosted,
+    hoursPlayedTotal: Number(row.hours_played),
+  }));
+}
+
+export type PlayerSportBreakdownEntry = { sportId: string; sportName: string; count: number };
+
+export type PlayerPublicProfile = {
+  id: string;
+  fullName: string | null;
+  avatar: string | null;
+  city: string | null;
+  bio: string | null;
+  skillLevel: SkillLevel | null;
+  gamesPlayedTotal: number;
+  tournamentsPlayedTotal: number;
+  gamesHostedTotal: number;
+  hoursPlayedTotal: number;
+  computedSkillLevel: SkillLevel | null;
+  sportBreakdown: PlayerSportBreakdownEntry[];
+};
+
+// Basic identity comes straight from `profiles` (publicly readable); the
+// activity aggregates come via the same SECURITY DEFINER RPC pattern as
+// fetchTopPlayers, scoped to a single player.
+export async function fetchPlayerPublicProfile(userId: string): Promise<PlayerPublicProfile> {
+  const [profileRes, statsRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, avatar, city, bio, skill_level")
+      .eq("id", userId)
+      .single(),
+    supabase.rpc("get_player_public_stats", { p_user_id: userId }).single(),
+  ]);
+  if (profileRes.error) throw new Error(profileRes.error.message);
+  if (statsRes.error) throw new Error(statsRes.error.message);
+
+  const profile = profileRes.data;
+  const stats = statsRes.data;
+  const sportBreakdown = (stats.sport_breakdown as unknown as PlayerSportBreakdownEntry[] | null) ?? [];
+
+  return {
+    id: profile.id,
+    fullName: profile.full_name,
+    avatar: profile.avatar,
+    city: profile.city,
+    bio: profile.bio,
+    skillLevel: profile.skill_level,
+    gamesPlayedTotal: stats.games_played,
+    tournamentsPlayedTotal: stats.tournaments_played,
+    gamesHostedTotal: stats.games_hosted,
+    hoursPlayedTotal: Number(stats.hours_played),
+    computedSkillLevel: stats.computed_skill_level,
+    sportBreakdown: sportBreakdown.sort((a, b) => b.count - a.count),
+  };
+}

@@ -1,0 +1,151 @@
+import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { usePlayerPublicProfile } from "../../hooks/usePlayers";
+import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
+import { getSportIcon } from "../../lib/sportIcons";
+import { colors, cardShadow } from "../../constants/theme";
+import Bouncy from "../../components/Bouncy";
+import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
+
+type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
+type Route = RouteProp<HomeStackParamList, "PlayerProfile">;
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function StatBlock({ value, label }: { value: string | number; label: string }) {
+  return (
+    <View className="bg-white rounded-2xl p-4 items-center" style={{ width: "31%", ...cardShadow }}>
+      <Text className="text-ink font-extrabold text-xl">{value}</Text>
+      <Text className="text-muted text-xs mt-1 text-center">{label}</Text>
+    </View>
+  );
+}
+
+export default function PlayerProfileScreen() {
+  const navigation = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const insets = useSafeAreaInsets();
+  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId);
+
+  const rating = computeRating(player);
+  const tier = getRatingTierInfo(rating);
+  const effectiveSkillLevel = player?.skillLevel ?? player?.computedSkillLevel ?? null;
+
+  return (
+    <View className="flex-1 bg-gray-100">
+      <View
+        className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
+        style={{ paddingTop: insets.top + 16 }}
+      >
+        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </Bouncy>
+        <Text className="text-base font-bold text-ink flex-1" numberOfLines={1}>
+          {player?.fullName ?? "Player Profile"}
+        </Text>
+      </View>
+
+      {isLoading || !player ? (
+        <ActivityIndicator color={colors.primary} className="mt-10" />
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="items-center mb-5">
+            {player.avatar ? (
+              <Image source={{ uri: player.avatar }} className="w-20 h-20 rounded-full bg-primary-light mb-3" />
+            ) : (
+              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center mb-3">
+                <Text className="text-2xl font-bold text-primary">
+                  {(player.fullName ?? "?").charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <Text className="text-xl font-bold text-ink">{player.fullName ?? "Player"}</Text>
+            {player.city && (
+              <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+                <Ionicons name="location-outline" size={13} color={colors.muted} />
+                <Text className="text-muted text-sm">{player.city}</Text>
+              </View>
+            )}
+          </View>
+
+          {!!player.bio && (
+            <View className="bg-white rounded-2xl p-4 mb-5" style={cardShadow}>
+              <Text className="text-muted text-sm leading-relaxed">{player.bio}</Text>
+            </View>
+          )}
+
+          {/* Rating card — same tiers/formula as your own Profile screen */}
+          <View className="bg-white rounded-2xl p-4 mb-5" style={cardShadow}>
+            <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
+              RATING
+            </Text>
+            <View className="flex-row items-center justify-between mb-2">
+              <View className="flex-row items-center" style={{ gap: 10 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 40, height: 40, backgroundColor: tier.bg }}
+                >
+                  <Ionicons name="flame" size={20} color={tier.color} />
+                </View>
+                <Text className="text-ink font-extrabold" style={{ fontSize: 30, lineHeight: 34 }}>
+                  {rating}
+                </Text>
+              </View>
+              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: tier.bg }}>
+                <Text className="text-xs font-bold" style={{ color: tier.color }}>
+                  {tier.label}
+                </Text>
+              </View>
+            </View>
+            {effectiveSkillLevel && (
+              <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+                <Ionicons name="medal-outline" size={14} color={colors.muted} />
+                <Text className="text-muted text-xs">{capitalize(effectiveSkillLevel)} skill level</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Stat grid */}
+          <View className="flex-row justify-between mb-5">
+            <StatBlock value={player.gamesPlayedTotal} label="Games Played" />
+            <StatBlock value={player.tournamentsPlayedTotal} label="Tournaments" />
+            <StatBlock value={player.gamesHostedTotal} label="Hosted" />
+          </View>
+
+          {/* Sport breakdown */}
+          {player.sportBreakdown.length > 0 && (
+            <>
+              <Text className="text-base font-semibold text-ink mb-3">Sports Played</Text>
+              <View className="flex-row flex-wrap mb-3" style={{ gap: 8 }}>
+                {player.sportBreakdown.map((s) => {
+                  const { icon, bg, fg } = getSportIcon(s.sportName);
+                  return (
+                    <View
+                      key={s.sportId}
+                      className="flex-row items-center rounded-full px-3 py-1.5"
+                      style={{ backgroundColor: bg, gap: 6 }}
+                    >
+                      <MaterialCommunityIcons name={icon} size={14} color={fg} />
+                      <Text className="text-xs font-semibold" style={{ color: fg }}>
+                        {s.sportName} · {s.count}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+}

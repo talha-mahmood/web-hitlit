@@ -186,6 +186,12 @@ export default function HomeScreen() {
               emoji="🤝"
               onPress={() => navigation.navigate("Squads", { screen: "SquadsList" })}
             />
+            <HomeActionCard
+              title="Players Dashboard"
+              subtitle="See who's top rated"
+              emoji="📊"
+              onPress={() => navigation.navigate("PlayersDashboard")}
+            />
           </View>
 
           <Text className="text-lg font-semibold text-ink mb-3">Popular venues</Text>

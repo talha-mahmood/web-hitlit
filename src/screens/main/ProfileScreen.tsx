@@ -10,6 +10,7 @@ import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
 import type { ProfileStats } from "../../lib/api/profileStats";
+import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
 import DonutChart from "../../components/DonutChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors } from "../../constants/theme";
@@ -33,55 +34,6 @@ const CARD_SHADOW = {
   shadowRadius: 14,
   elevation: 4,
 } as const;
-
-// A numeric rating (à la 8 Ball Pool / Chess.com) rather than a skill ELO —
-// this app has no win/loss data to base a real competitive rating on, so
-// it's activity-driven: it only ever goes up as you play more, host, and
-// enter tournaments. Deliberately slow: everyone starts at 0, and a regular
-// game is worth 1 point, so a rating of 100 genuinely means ~100 games
-// played — reaching it should take real, sustained participation.
-const BASE_RATING = 0;
-const POINTS_PER_GAME = 1;
-const POINTS_PER_TOURNAMENT = 3;
-const POINTS_PER_HOSTED_GAME = 2;
-
-const RATING_TIERS = [
-  { label: "Rookie", min: 0, color: "#6B7280", bg: "#F3F4F6" },
-  { label: "Bronze", min: 10, color: "#B45309", bg: "#FFFBEB" },
-  { label: "Silver", min: 25, color: "#64748B", bg: "#F1F5F9" },
-  { label: "Gold", min: 50, color: "#CA8A04", bg: "#FEFCE8" },
-  { label: "Platinum", min: 100, color: "#0891B2", bg: "#ECFEFF" },
-  { label: "Diamond", min: 200, color: "#7C3AED", bg: "#F5F3FF" },
-] as const;
-
-function computeRating(stats: ProfileStats | undefined): number {
-  if (!stats) return BASE_RATING;
-  const regularGames = Math.max(0, stats.gamesPlayedTotal - stats.tournamentsPlayedTotal);
-  return (
-    BASE_RATING +
-    regularGames * POINTS_PER_GAME +
-    stats.tournamentsPlayedTotal * POINTS_PER_TOURNAMENT +
-    stats.gamesHostedTotal * POINTS_PER_HOSTED_GAME
-  );
-}
-
-function getRatingTierInfo(rating: number) {
-  let idx = 0;
-  for (let i = 0; i < RATING_TIERS.length; i++) {
-    if (rating >= RATING_TIERS[i].min) idx = i;
-  }
-  const current = RATING_TIERS[idx];
-  const next = RATING_TIERS[idx + 1] ?? null;
-  const progress = next ? (rating - current.min) / (next.min - current.min) : 1;
-  return {
-    label: current.label,
-    color: current.color,
-    bg: current.bg,
-    progress: Math.max(0, Math.min(1, progress)),
-    nextLabel: next?.label ?? null,
-    remaining: next ? next.min - rating : 0,
-  };
-}
 
 function formatMonthYear(iso: string): string {
   return new Date(iso).toLocaleDateString("en-PK", { month: "long", year: "numeric" });

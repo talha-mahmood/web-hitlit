@@ -10,6 +10,8 @@ import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
+import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
+import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 
@@ -31,6 +33,8 @@ export type HomeStackParamList = {
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };
+  PlayersDashboard: undefined;
+  PlayerProfile: { userId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -49,6 +53,8 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
+      <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
+      <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
     </Stack.Navigator>
   );
 }

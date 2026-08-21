@@ -1495,6 +1495,31 @@ export type Database = {
           start_time: string
         }[]
       }
+      get_player_public_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          computed_skill_level: Database["public"]["Enums"]["skill_level_type"]
+          games_hosted: number
+          games_played: number
+          hours_played: number
+          sport_breakdown: Json
+          tournaments_played: number
+        }[]
+      }
+      get_top_players: {
+        Args: { p_limit?: number; p_sport_id?: string }
+        Returns: {
+          avatar: string
+          city: string
+          full_name: string
+          games_hosted: number
+          games_played: number
+          hours_played: number
+          skill_level: Database["public"]["Enums"]["skill_level_type"]
+          tournaments_played: number
+          user_id: string
+        }[]
+      }
       is_superadmin: { Args: never; Returns: boolean }
     }
     Enums: {
