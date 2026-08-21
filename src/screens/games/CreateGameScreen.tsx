@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
+import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -49,6 +50,7 @@ type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
+type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
 
 // Shared "chip" look for the inline pickers below (sport, date, time, max
 // players) — same rounded + shadow-when-selected treatment as PillRow.
@@ -206,6 +208,8 @@ export default function CreateGameScreen() {
   const [maxPlayers, setMaxPlayers] = useState<number>(10);
   const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
+  const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat | null>(null);
+  const [teamNames, setTeamNames] = useState<string[]>([]);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   // Visibility isn't a user-facing choice (removed from the form) — every
   // game/tournament created here is public, matching the games list query's
@@ -218,6 +222,17 @@ export default function CreateGameScreen() {
   const handleSportChange = (id: string) => {
     setSportId(id);
     setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
+  };
+
+  // Keep `teamNames` sized to match the selected team count, preserving
+  // whatever the host already typed for the slots that still exist.
+  const handleNumberOfTeamsChange = (n: number) => {
+    setNumberOfTeams(n);
+    setTeamNames((prev) => {
+      const next = prev.slice(0, n);
+      while (next.length < n) next.push("");
+      return next;
+    });
   };
 
   const isTournament = gameType === "TOURNAMENT";
@@ -258,6 +273,22 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a number of teams (2+) and players per team.");
       return;
     }
+    const trimmedTeamNames = teamNames.map((n) => n.trim());
+    if (isTournament) {
+      if (!tournamentFormat) {
+        Alert.alert("Missing Info", "Please select a tournament format (Knockout or League).");
+        return;
+      }
+      if (trimmedTeamNames.some((n) => !n)) {
+        Alert.alert("Missing Info", "Please enter a name for every team.");
+        return;
+      }
+      const uniqueNames = new Set(trimmedTeamNames.map((n) => n.toLowerCase()));
+      if (uniqueNames.size !== trimmedTeamNames.length) {
+        Alert.alert("Duplicate Team Names", "Team names must be unique.");
+        return;
+      }
+    }
 
     // Regular games run start_time..end_time on a single game_date. A
     // tournament instead spans durationDays calendar days starting at
@@ -289,7 +320,11 @@ export default function CreateGameScreen() {
         gameType,
         numberOfTeams: isTournament ? teams : null,
         playersPerTeam: isTournament ? perTeam : null,
+        tournamentFormat: isTournament ? tournamentFormat : null,
       });
+      if (isTournament) {
+        await createTournamentTeamPlaceholders(game.id, trimmedTeamNames);
+      }
       navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
       Alert.alert(
@@ -483,7 +518,7 @@ export default function CreateGameScreen() {
                   key={n}
                   n={n}
                   selected={numberOfTeams === n}
-                  onPress={() => setNumberOfTeams(n)}
+                  onPress={() => handleNumberOfTeamsChange(n)}
                 />
               ))}
             </ScrollView>
@@ -506,9 +541,38 @@ export default function CreateGameScreen() {
             </ScrollView>
             <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
 
+            <SectionLabel title="Tournament Format" required />
+            <PillRow<TournamentFormat>
+              options={[
+                { label: "Knockout", value: "KNOCKOUT" },
+                { label: "League", value: "LEAGUE" },
+              ]}
+              value={tournamentFormat}
+              onChange={setTournamentFormat}
+            />
+
+            {numberOfTeams != null && numberOfTeams > 0 && (
+              <>
+                <SectionLabel title="Team Names" required />
+                <View style={{ gap: 8 }}>
+                  {teamNames.map((name, i) => (
+                    <FieldInput
+                      key={i}
+                      value={name}
+                      onChangeText={(t) =>
+                        setTeamNames((prev) => prev.map((n, idx) => (idx === i ? t : n)))
+                      }
+                      placeholder={`Team ${i + 1} name`}
+                      maxLength={40}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
+
             <Text className="text-muted text-xs mt-3">
-              A player must first form (or join) a team with the required number of
-              members — the team is then submitted to you as host for approval.
+              Whoever joins an empty team slot first becomes its captain and can then
+              recruit teammates — full teams are submitted to you as host for approval.
             </Text>
           </>
         ) : (

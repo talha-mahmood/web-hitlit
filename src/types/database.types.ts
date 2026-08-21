@@ -567,6 +567,9 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["game_status_type"]
           title: string
+          tournament_format:
+            | Database["public"]["Enums"]["tournament_format_type"]
+            | null
           updated_at: string
           venue_id: string | null
           visibility: Database["public"]["Enums"]["game_visibility_type"]
@@ -603,6 +606,9 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["game_status_type"]
           title: string
+          tournament_format?:
+            | Database["public"]["Enums"]["tournament_format_type"]
+            | null
           updated_at?: string
           venue_id?: string | null
           visibility?: Database["public"]["Enums"]["game_visibility_type"]
@@ -639,6 +645,9 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["game_status_type"]
           title?: string
+          tournament_format?:
+            | Database["public"]["Enums"]["tournament_format_type"]
+            | null
           updated_at?: string
           venue_id?: string | null
           visibility?: Database["public"]["Enums"]["game_visibility_type"]
@@ -1198,32 +1207,35 @@ export type Database = {
       }
       tournament_teams: {
         Row: {
-          captain_id: string
+          captain_id: string | null
           created_at: string
           deleted_at: string | null
           game_id: string
           id: string
           name: string
+          sort_order: number | null
           status: Database["public"]["Enums"]["tournament_team_status_type"]
           updated_at: string
         }
         Insert: {
-          captain_id: string
+          captain_id?: string | null
           created_at?: string
           deleted_at?: string | null
           game_id: string
           id?: string
           name: string
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
           updated_at?: string
         }
         Update: {
-          captain_id?: string
+          captain_id?: string | null
           created_at?: string
           deleted_at?: string | null
           game_id?: string
           id?: string
           name?: string
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
           updated_at?: string
         }
@@ -1507,6 +1519,7 @@ export type Database = {
         | "PENDING"
         | "DECLINED"
       squad_role_type: "captain" | "member"
+      tournament_format_type: "KNOCKOUT" | "LEAGUE"
       tournament_team_status_type:
         | "FORMING"
         | "PENDING_HOST_APPROVAL"
@@ -1673,6 +1686,7 @@ export const Constants = {
         "DECLINED",
       ],
       squad_role_type: ["captain", "member"],
+      tournament_format_type: ["KNOCKOUT", "LEAGUE"],
       tournament_team_status_type: [
         "FORMING",
         "PENDING_HOST_APPROVAL",
@@ -1682,4 +1696,3 @@ export const Constants = {
     },
   },
 } as const
-

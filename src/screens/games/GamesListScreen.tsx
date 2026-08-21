@@ -16,6 +16,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
 import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
+import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
@@ -81,6 +82,17 @@ function GameCard({
       ? formatDateRange(game.game_date, game.end_date)
       : `${dayLabel(game.game_date)} · ${formatTimeRange(game.start_time, game.end_time)}`;
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
+
+  // Fixtures are derived from the host's ordered team-name list — same logic
+  // as the full list on TournamentTeamsSection, just capped for card space.
+  const orderedTeamNames = [...game.tournament_teams]
+    .filter((t) => t.status !== "REJECTED")
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((t) => t.name);
+  const fixtures = game.tournament_format
+    ? computeFixtures(game.tournament_format, orderedTeamNames)
+    : [];
+  const FIXTURES_PREVIEW_LIMIT = 2;
 
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
@@ -171,6 +183,25 @@ function GameCard({
                 </View>
               )}
             </View>
+
+            {/* Row 5b: fixtures preview (tournament only, once teams exist) */}
+            {fixtures.length > 0 && (
+              <View className="bg-indigo-50/60 rounded-xl px-3 py-2 mt-2" style={{ gap: 2 }}>
+                <Text className="text-indigo-700 text-xs font-semibold mb-0.5">
+                  {TOURNAMENT_FORMAT_LABEL[game.tournament_format!]} Fixtures
+                </Text>
+                {fixtures.slice(0, FIXTURES_PREVIEW_LIMIT).map((f, i) => (
+                  <Text key={i} className="text-ink text-xs" numberOfLines={1}>
+                    {f.teamA} vs {f.teamB ?? "Bye"}
+                  </Text>
+                ))}
+                {fixtures.length > FIXTURES_PREVIEW_LIMIT && (
+                  <Text className="text-muted text-xs mt-0.5">
+                    +{fixtures.length - FIXTURES_PREVIEW_LIMIT} more
+                  </Text>
+                )}
+              </View>
+            )}
 
             {/* Row 6: skill pill + creator + entry fee */}
             <View className="flex-row items-center justify-between mt-2.5">

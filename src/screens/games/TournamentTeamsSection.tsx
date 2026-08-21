@@ -20,6 +20,7 @@ import JoinRequestModal from "../../components/JoinRequestModal";
 import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
+import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
@@ -121,6 +122,9 @@ function TeamCard({
   const isRosterEditable = team.status === "FORMING" || team.status === "REJECTED";
   const playersNeeded = Math.max(requiredSize - joinedMembers.length, 0);
   const badge = TEAM_STATUS_BADGE[team.status];
+  // Host pre-seeds team name slots with no captain — whoever joins first
+  // claims it (see requestToJoinTeam / claim_team_on_first_join trigger).
+  const isUnclaimed = team.captain_id === null;
 
   return (
     <View className="border border-border rounded-2xl p-4" style={cardShadow}>
@@ -133,7 +137,8 @@ function TeamCard({
         )}
       </View>
       <Text className="text-muted text-xs mb-3">
-        {joinedMembers.length}/{requiredSize || "—"} players · Captain: {team.profiles?.full_name ?? "Unknown"}
+        {joinedMembers.length}/{requiredSize || "—"} players · Captain:{" "}
+        {isUnclaimed ? "Open — first to join leads this team" : team.profiles?.full_name ?? "Unknown"}
       </Text>
 
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
@@ -272,11 +277,45 @@ function TeamCard({
               disabled={disabled}
               className="bg-primary rounded-lg py-2 items-center"
             >
-              <Text className="text-white text-xs font-semibold">Request to Join Team</Text>
+              <Text className="text-white text-xs font-semibold">
+                {isUnclaimed ? "Join & Become Captain" : "Request to Join Team"}
+              </Text>
             </Pressable>
           ) : null}
         </View>
       )}
+    </View>
+  );
+}
+
+function FixturesPanel({
+  format,
+  teamNames,
+}: {
+  format: Database["public"]["Enums"]["tournament_format_type"];
+  teamNames: string[];
+}) {
+  const fixtures = computeFixtures(format, teamNames);
+  if (fixtures.length === 0) return null;
+  return (
+    <View className="mx-4 mt-4 border border-border rounded-2xl p-4" style={cardShadow}>
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-ink font-semibold text-sm">Fixtures</Text>
+        <View className="bg-indigo-50 px-2 py-0.5 rounded-full">
+          <Text className="text-indigo-700 text-xs font-medium">{TOURNAMENT_FORMAT_LABEL[format]}</Text>
+        </View>
+      </View>
+      <View style={{ gap: 8 }}>
+        {fixtures.map((f, i) => (
+          <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+            <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{f.teamA}</Text>
+            <Text className="text-muted text-xs mx-2">vs</Text>
+            <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>
+              {f.teamB ?? "Bye"}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -337,10 +376,13 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     approveTeam.isPending ||
     rejectTeam.isPending;
 
+  const joinRequestTeam = joinRequestTeamId ? teams.find((t) => t.id === joinRequestTeamId) : undefined;
+  const isJoinRequestClaim = joinRequestTeam?.captain_id === null;
+
   const handleSubmitJoinRequest = (skillLevel: SkillLevel, location: string) => {
     if (!userId || !joinRequestTeamId) return;
     requestToJoinTeam.mutate(
-      { teamId: joinRequestTeamId, userId, skillLevel, location },
+      { teamId: joinRequestTeamId, userId, skillLevel, location, captainId: joinRequestTeam?.captain_id ?? null },
       {
         onSuccess: () => setJoinRequestTeamId(null),
         onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
@@ -472,6 +514,10 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
   return (
     <View>
+      {game.tournament_format && (
+        <FixturesPanel format={game.tournament_format} teamNames={activeTeams.map((t) => t.name)} />
+      )}
+
       <View className="mx-4 mt-4 flex-row items-center justify-between mb-3">
         <Text className="text-ink font-semibold text-sm">
           Teams ({activeTeams.length}/{requiredTeams || "—"})
@@ -576,8 +622,12 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         visible={!!joinRequestTeamId}
         onClose={() => setJoinRequestTeamId(null)}
         submitting={requestToJoinTeam.isPending}
-        title="Request to Join Team"
-        subtitle="The team captain will see this and can approve or reject your request."
+        title={isJoinRequestClaim ? "Join & Become Captain" : "Request to Join Team"}
+        subtitle={
+          isJoinRequestClaim
+            ? "This team has no captain yet — you'll join instantly and lead it."
+            : "The team captain will see this and can approve or reject your request."
+        }
         onSubmit={handleSubmitJoinRequest}
       />
     </View>

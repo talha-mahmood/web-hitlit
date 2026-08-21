@@ -16,7 +16,12 @@ export type GameListItem = GameRow & {
     user_id: string;
     profiles: { avatar: string | null; full_name: string | null } | null;
   }[];
-  tournament_teams: { id: string; status: TournamentTeamRow["status"] }[];
+  tournament_teams: {
+    id: string;
+    name: string;
+    status: TournamentTeamRow["status"];
+    sort_order: number | null;
+  }[];
 };
 
 export type GameDetail = GameRow & {
@@ -49,6 +54,7 @@ export type CreateGameParams = {
   // Only meaningful when gameType is TOURNAMENT.
   numberOfTeams: number | null;
   playersPerTeam: number | null;
+  tournamentFormat: Database["public"]["Enums"]["tournament_format_type"] | null;
   endDate: string | null;
 };
 
@@ -73,7 +79,7 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, status)";
+  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order)";
 
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";
@@ -164,6 +170,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       game_type: params.gameType,
       number_of_teams: params.numberOfTeams,
       players_per_team: params.playersPerTeam,
+      tournament_format: params.tournamentFormat,
       bring_equipment: false,
       cost_shared: false,
       pay_and_join: params.entryFee > 0,

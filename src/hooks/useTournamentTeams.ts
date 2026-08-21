@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchTeamsForTournament,
   createTeam,
+  createTournamentTeamPlaceholders,
   requestToJoinTeam,
   approveTeamMember,
   rejectTeamMember,
@@ -82,12 +83,14 @@ export function useRequestToJoinTeam(gameId: string) {
       userId,
       skillLevel,
       location,
+      captainId,
     }: {
       teamId: string;
       userId: string;
       skillLevel: SkillLevel;
       location: string;
-    }) => requestToJoinTeam(teamId, userId, skillLevel, location),
+      captainId: string | null;
+    }) => requestToJoinTeam(teamId, userId, skillLevel, location, captainId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

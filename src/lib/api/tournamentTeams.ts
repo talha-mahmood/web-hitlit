@@ -25,6 +25,7 @@ export async function fetchTeamsForTournament(gameId: string): Promise<Tournamen
     .select(TEAM_SELECT)
     .eq("game_id", gameId)
     .is("deleted_at", null)
+    .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as TournamentTeam[];
@@ -59,24 +60,61 @@ export async function createTeam(
   return data;
 }
 
+// Host-only: pre-seed the tournament's team slots with names at creation time
+// — captain_id starts null on every row ("unclaimed"); whoever joins first
+// (see requestToJoinTeam) becomes that team's captain. sort_order preserves
+// the host's entry order for fixture pairing, since a single bulk insert can
+// give every row the same created_at.
+export async function createTournamentTeamPlaceholders(
+  gameId: string,
+  teamNames: string[]
+): Promise<TeamRow[]> {
+  const { data, error } = await supabase
+    .from("tournament_teams")
+    .insert(
+      teamNames.map((name, i) => ({
+        game_id: gameId,
+        name,
+        captain_id: null,
+        status: "FORMING" as const,
+        sort_order: i,
+      }))
+    )
+    .select();
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("Team names must be unique within a tournament.");
+    }
+    throw new Error(error.message);
+  }
+  return data;
+}
+
+// Joining an unclaimed team (captain_id null) inserts straight as JOINED —
+// a DB trigger then assigns that user as the team's captain. Joining an
+// already-captained team instead sends a PENDING request for the captain to
+// approve, same as before. `captainId` should be the team's *current*
+// captain_id (from the already-fetched team object) so the caller doesn't
+// need an extra round trip to know which path applies.
 export async function requestToJoinTeam(
   teamId: string,
   userId: string,
   skillLevel: SkillLevel,
-  location: string
+  location: string,
+  captainId: string | null
 ): Promise<void> {
+  const isClaim = captainId === null;
   const { error } = await supabase.from("tournament_team_members").insert({
     team_id: teamId,
     user_id: userId,
-    status: "PENDING",
+    status: isClaim ? "JOINED" : "PENDING",
     skill_level: skillLevel,
     location: location || null,
+    joined_at: isClaim ? new Date().toISOString() : null,
   });
   if (error) throw new Error(error.message);
 }
 
-// A DB trigger (check_tournament_team_full) auto-flips the team to
-// PENDING_HOST_APPROVAL once this approval fills the last slot.
 export async function approveTeamMember(memberId: string): Promise<void> {
   const { error } = await supabase
     .from("tournament_team_members")
