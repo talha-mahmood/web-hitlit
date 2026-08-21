@@ -1,19 +1,21 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useGames, useFavoriteGameIds, useToggleFavoriteGame } from "../../hooks/useGames";
+import { useGames, useJoinGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import SearchField from "../../components/SearchField";
 import SportFilterDropdown from "../../components/SportFilterDropdown";
+import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
+import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
@@ -21,6 +23,11 @@ import { matchesLocationQuery } from "../../lib/locationFilter";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
+
+// Matches the header's Create button's rendered footprint (px-3 py-2 +
+// "Create" text + its icon) so the card's Join CTA reads as the same size
+// even though its own label has no icon and varies ("Join"/"Joined"/"Requested").
+const JOIN_BUTTON_MIN_WIDTH = 96;
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const fmt = (t: string) =>
@@ -47,20 +54,23 @@ function formatDateRange(gameDate: string, endDate: string): string {
 function GameCard({
   game,
   onPress,
+  onJoinPress,
   currentUserId,
   index,
-  isFavorite,
-  onToggleFavorite,
 }: {
   game: GameListItem;
   onPress: () => void;
+  // Regular games only — opens the join-request modal right from the card.
+  // Tournaments have no single "join" action (you pick a team on the detail
+  // screen), so their card CTA just navigates via `onPress` instead.
+  onJoinPress: () => void;
   currentUserId?: string;
   index: number;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
 }) {
   const isTournament = game.game_type === "TOURNAMENT";
   const joined = game.game_players.filter((p) => p.status === "JOINED");
+  const hasJoined = !isTournament && game.game_players.some((p) => p.user_id === currentUserId && p.status === "JOINED");
+  const hasRequested = !isTournament && game.game_players.some((p) => p.user_id === currentUserId && p.status === "PENDING");
   // Only teams the host has actually approved count toward the tournament's
   // roster — a team that's still forming or awaiting approval hasn't secured
   // a slot yet, so it shouldn't move the "X/Y teams" count.
@@ -104,19 +114,43 @@ function GameCard({
         <View className="border border-border rounded-2xl overflow-hidden bg-white mb-3">
           {/* Top accent bar keyed to sport */}
           <View className="bg-primary h-1" />
-          <View className="px-4 pt-3 pb-4">
-            {/* Row 1: time/date badge + favorite */}
+          <View className="px-5 pt-4 pb-5">
+            {/* Row 1: time/date badge + Join CTA (top-right, sized/shaped like
+                the header's Create button) — hidden for the host, and once
+                full (the "Full" badge in Row 5 already says so). Nested
+                Bouncy so a tap here doesn't also trigger the card's own
+                onPress. */}
             <View className="flex-row items-center justify-between mb-2.5">
               <View style={{ backgroundColor: badgeColor, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
                 <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{badgeLabel}</Text>
               </View>
-              <Bouncy onPress={onToggleFavorite} scaleTo={0.75} hitSlop={8}>
-                <Ionicons
-                  name={isFavorite ? "heart" : "heart-outline"}
-                  size={20}
-                  color={isFavorite ? colors.danger : colors.muted}
-                />
-              </Bouncy>
+              {!isMyGame && !isFull && (
+                <Bouncy onPress={isTournament ? onPress : onJoinPress} scaleTo={0.94}>
+                  {hasJoined ? (
+                    <View
+                      className="flex-row items-center justify-center bg-green-50 rounded-xl px-3 py-2"
+                      style={{ gap: 4, minWidth: JOIN_BUTTON_MIN_WIDTH }}
+                    >
+                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                      <Text className="text-primary font-semibold text-sm">Joined</Text>
+                    </View>
+                  ) : hasRequested ? (
+                    <View
+                      className="items-center justify-center bg-orange-50 rounded-xl px-3 py-2"
+                      style={{ minWidth: JOIN_BUTTON_MIN_WIDTH }}
+                    >
+                      <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                    </View>
+                  ) : (
+                    <View
+                      className="items-center justify-center bg-primary rounded-xl px-3 py-2"
+                      style={{ minWidth: JOIN_BUTTON_MIN_WIDTH, ...primaryButtonShadow }}
+                    >
+                      <Text className="text-white font-semibold text-sm">Join</Text>
+                    </View>
+                  )}
+                </Bouncy>
+              )}
             </View>
 
             {/* Row 2: avatar stack + going/teams count */}
@@ -275,8 +309,25 @@ export default function GamesListScreen() {
         )
       )
     : gamesData;
-  const { data: favoriteIds } = useFavoriteGameIds(userId);
-  const toggleFavorite = useToggleFavoriteGame();
+
+  // Join-request modal is a single shared instance (not one per card) —
+  // this tracks which regular game (if any) it's currently open for.
+  const [joinTargetGame, setJoinTargetGame] = useState<GameListItem | null>(null);
+  const joinGame = useJoinGame();
+  const handleSubmitJoinRequest = (
+    skillLevel: Database["public"]["Enums"]["skill_level_type"],
+    location: string
+  ) => {
+    if (!userId || !joinTargetGame) return;
+    joinGame.mutate(
+      { gameId: joinTargetGame.id, userId, skillLevel, location },
+      {
+        onSuccess: () => setJoinTargetGame(null),
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
+      }
+    );
+  };
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
@@ -410,18 +461,25 @@ export default function GamesListScreen() {
               game={item}
               currentUserId={userId}
               index={index}
-              isFavorite={favoriteIds?.has(item.id) ?? false}
-              onToggleFavorite={() =>
-                toggleFavorite.mutate({
-                  gameId: item.id,
-                  isFavorite: !(favoriteIds?.has(item.id) ?? false),
-                })
-              }
               onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
+              onJoinPress={() => setJoinTargetGame(item)}
             />
           )}
         />
       )}
+
+      <JoinRequestModal
+        visible={!!joinTargetGame}
+        onClose={() => setJoinTargetGame(null)}
+        onSubmit={handleSubmitJoinRequest}
+        submitting={joinGame.isPending}
+        title="Request to Join"
+        subtitle={
+          joinTargetGame && joinTargetGame.entry_fee > 0
+            ? `Entry fee: Rs ${joinTargetGame.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.`
+            : "The host must approve your request before you're added."
+        }
+      />
     </View>
   );
 }

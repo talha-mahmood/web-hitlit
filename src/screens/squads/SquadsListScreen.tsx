@@ -1,34 +1,44 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useSquads } from "../../hooks/useSquads";
+import { useSquads, useJoinSquad } from "../../hooks/useSquads";
 import { useSports } from "../../hooks/useSports";
 import SearchField from "../../components/SearchField";
 import SportFilterDropdown from "../../components/SportFilterDropdown";
+import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
+import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 import { matchesLocationQuery } from "../../lib/locationFilter";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
 
-function SquadCard({ squad, onPress, currentUserId, index }: {
+// Matches the header's Create button's rendered footprint (px-3 py-2 +
+// "Create" text + its icon) so the card's Join CTA reads as the same size
+// even though its own label has no icon and varies ("Join"/"Joined"/"Requested").
+const JOIN_BUTTON_MIN_WIDTH = 96;
+
+function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
   squad: SquadListItem;
   onPress: () => void;
+  onJoinPress: () => void;
   currentUserId?: string;
   index: number;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
   const isMySquad = squad.squad_owner_id === currentUserId;
+  const hasJoined = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
+  const hasRequested = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
   const skill = squad.skill_level;
   const skillColor = skill ? SQUAD_SKILL_COLORS[skill] : null;
 
@@ -40,7 +50,11 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
       <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
         <View className="border border-border rounded-2xl overflow-hidden bg-white mb-3">
         <View className="bg-primary h-1" />
-        <View className="px-4 pt-3 pb-4">
+        <View className="px-5 pt-4 pb-5">
+          {/* Join CTA sits top-right, sized/shaped like the header's Create
+              button — hidden for the owner, and once full (the "Full" badge
+              here already says so). Nested Bouncy so tapping it doesn't also
+              trigger the card's own onPress. */}
           <View className="flex-row items-center mb-2.5" style={{ gap: 8 }}>
             <AvatarStack
               people={active.map((m) => ({
@@ -62,6 +76,33 @@ function SquadCard({ squad, onPress, currentUserId, index }: {
               <View className="bg-red-50 px-2 py-0.5 rounded-full">
                 <Text className="text-red-600 text-xs font-medium">Full</Text>
               </View>
+            )}
+            {!isMySquad && !isFull && (
+              <Bouncy onPress={onJoinPress} scaleTo={0.94}>
+                {hasJoined ? (
+                  <View
+                    className="flex-row items-center justify-center bg-green-50 rounded-xl px-3 py-2"
+                    style={{ gap: 4, minWidth: JOIN_BUTTON_MIN_WIDTH }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Text className="text-primary font-semibold text-sm">Joined</Text>
+                  </View>
+                ) : hasRequested ? (
+                  <View
+                    className="items-center justify-center bg-orange-50 rounded-xl px-3 py-2"
+                    style={{ minWidth: JOIN_BUTTON_MIN_WIDTH }}
+                  >
+                    <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                  </View>
+                ) : (
+                  <View
+                    className="items-center justify-center bg-primary rounded-xl px-3 py-2"
+                    style={{ minWidth: JOIN_BUTTON_MIN_WIDTH, ...primaryButtonShadow }}
+                  >
+                    <Text className="text-white font-semibold text-sm">Join</Text>
+                  </View>
+                )}
+              </Bouncy>
             )}
           </View>
 
@@ -140,6 +181,25 @@ export default function SquadsListScreen() {
   const squads = debouncedLocation
     ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], debouncedLocation))
     : squadsData;
+
+  // Join-request modal is a single shared instance (not one per card) —
+  // this tracks which squad (if any) it's currently open for.
+  const [joinTargetSquad, setJoinTargetSquad] = useState<SquadListItem | null>(null);
+  const joinSquad = useJoinSquad();
+  const handleSubmitJoinRequest = (
+    skillLevel: Database["public"]["Enums"]["skill_level_type"],
+    location: string
+  ) => {
+    if (!userId || !joinTargetSquad) return;
+    joinSquad.mutate(
+      { squadId: joinTargetSquad.id, userId, skillLevel, location },
+      {
+        onSuccess: () => setJoinTargetSquad(null),
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
+      }
+    );
+  };
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
@@ -261,10 +321,20 @@ export default function SquadsListScreen() {
               currentUserId={userId}
               index={index}
               onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
+              onJoinPress={() => setJoinTargetSquad(item)}
             />
           )}
         />
       )}
+
+      <JoinRequestModal
+        visible={!!joinTargetSquad}
+        onClose={() => setJoinTargetSquad(null)}
+        onSubmit={handleSubmitJoinRequest}
+        submitting={joinSquad.isPending}
+        title="Request to Join"
+        subtitle="The squad captain will see this and can approve or reject your request."
+      />
     </View>
   );
 }
