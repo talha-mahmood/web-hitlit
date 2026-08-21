@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Alert } from "react-native";
+import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Alert, KeyboardAvoidingView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
 import { useUserSearch } from "../hooks/useInvites";
@@ -60,6 +60,7 @@ export default function InviteUsersModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
+        <KeyboardAvoidingView behavior="padding">
         <View
           className="bg-white rounded-t-3xl px-5 pt-5"
           style={{ maxHeight: "80%", paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
@@ -143,6 +144,7 @@ export default function InviteUsersModal({
             )}
           </ScrollView>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
