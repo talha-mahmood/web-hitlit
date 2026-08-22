@@ -39,7 +39,7 @@ export default function SplashScreen() {
           spinStyle,
         ]}
       />
-      <Text className="text-2xl font-extrabold text-white mt-6 tracking-wide">PlayFast</Text>
+      <Text className="text-2xl font-extrabold text-white mt-6 tracking-wide">PlayOye</Text>
     </View>
   );
 }

@@ -44,7 +44,7 @@ export default function LoginScreen() {
           style={{ width: 84, height: 84, borderRadius: 42 }}
         />
         <Text className="text-2xl font-extrabold text-ink mt-5 text-center">
-          Welcome to PlayFast
+          Welcome to PlayOye
         </Text>
         <Text className="text-muted text-center mt-2 text-sm px-2">
           Find players, book courts, and get in the game.

@@ -79,7 +79,7 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
           style={{ color: slide.accentColor, letterSpacing: 1.4 }}
           className="text-[11px] font-bold uppercase mb-1.5"
         >
-          PlayFast
+          PlayOye
         </Text>
         <Text className="text-white text-xl font-extrabold leading-6" numberOfLines={2}>
           {slide.title}

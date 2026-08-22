@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "PlayFast",
+    "name": "PlayOye",
     "slug": "hamza-playpal-app",
-    "scheme": "playfast",
+    "scheme": "playoye",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.playfast.app"
+      "bundleIdentifier": "com.playoye.app"
     },
     "android": {
-      "package": "com.playfast.app",
+      "package": "com.playoye.app",
       "adaptiveIcon": {
         "backgroundColor": "#002C13",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -32,13 +32,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "PlayFast needs access to your photos so you can set a profile picture."
+          "photosPermission": "PlayOye needs access to your photos so you can set a profile picture."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "PlayFast needs your location to set your squad's location automatically."
+          "locationWhenInUsePermission": "PlayOye needs your location to set your squad's location automatically."
         }
       ],
       "@react-native-google-signin/google-signin"
