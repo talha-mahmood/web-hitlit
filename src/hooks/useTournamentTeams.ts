@@ -9,8 +9,6 @@ import {
   rejectTeamMember,
   removeTeamMember,
   leaveTeam,
-  submitTeamForApproval,
-  approveTeam,
   rejectTeam,
 } from "../lib/api/tournamentTeams";
 import { supabase } from "../lib/supabase";
@@ -84,13 +82,15 @@ export function useRequestToJoinTeam(gameId: string) {
       skillLevel,
       location,
       captainId,
+      isHost,
     }: {
       teamId: string;
       userId: string;
       skillLevel: SkillLevel;
       location: string;
       captainId: string | null;
-    }) => requestToJoinTeam(teamId, userId, skillLevel, location, captainId),
+      isHost: boolean;
+    }) => requestToJoinTeam(teamId, userId, skillLevel, location, captainId, isHost),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },
@@ -132,27 +132,6 @@ export function useLeaveTeam(gameId: string) {
   return useMutation({
     mutationFn: ({ teamId, userId }: { teamId: string; userId: string }) =>
       leaveTeam(teamId, userId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
-    },
-  });
-}
-
-export function useSubmitTeam(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ teamId, isHostOwnTeam }: { teamId: string; isHostOwnTeam: boolean }) =>
-      submitTeamForApproval(teamId, isHostOwnTeam),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
-    },
-  });
-}
-
-export function useApproveTeam(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (teamId: string) => approveTeam(teamId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

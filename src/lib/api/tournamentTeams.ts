@@ -93,17 +93,21 @@ export async function createTournamentTeamPlaceholders(
 // Joining an unclaimed team (captain_id null) inserts straight as JOINED —
 // a DB trigger then assigns that user as the team's captain. Joining an
 // already-captained team instead sends a PENDING request for the captain to
-// approve, same as before. `captainId` should be the team's *current*
-// captain_id (from the already-fetched team object) so the caller doesn't
-// need an extra round trip to know which path applies.
+// approve, unless the joiner is the tournament host: the host can join any
+// team instantly too (RLS allows this specifically for games.creator_id;
+// the claim-on-first-join trigger only touches captain_id when it's still
+// null, so this never displaces an existing captain). `captainId` should be
+// the team's *current* captain_id (from the already-fetched team object) so
+// the caller doesn't need an extra round trip to know which path applies.
 export async function requestToJoinTeam(
   teamId: string,
   userId: string,
   skillLevel: SkillLevel,
   location: string,
-  captainId: string | null
+  captainId: string | null,
+  isHost: boolean
 ): Promise<void> {
-  const isClaim = captainId === null;
+  const isClaim = captainId === null || isHost;
   const { error } = await supabase.from("tournament_team_members").insert({
     team_id: teamId,
     user_id: userId,
@@ -149,31 +153,10 @@ export async function leaveTeam(teamId: string, userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// Captain-only: submit a full team to the tournament host for approval
-// (or resubmit after a rejection). The DB enforces that the caller is the
-// captain and that the team is actually full before allowing this.
-//
-// If the captain is also the tournament host, there's no one else who could
-// meaningfully approve the team — the DB allows that specific case to jump
-// straight to APPROVED instead of PENDING_HOST_APPROVAL (see
-// enforce_team_status_transition), so it's a single button either way.
-export async function submitTeamForApproval(teamId: string, isHostOwnTeam: boolean): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_teams")
-    .update({ status: isHostOwnTeam ? "APPROVED" : "PENDING_HOST_APPROVAL" })
-    .eq("id", teamId);
-  if (error) throw new Error(error.message);
-}
-
-// Host-only actions: approve/reject a team once it's full and awaiting them.
-export async function approveTeam(teamId: string): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_teams")
-    .update({ status: "APPROVED" })
-    .eq("id", teamId);
-  if (error) throw new Error(error.message);
-}
-
+// A team joins the tournament automatically the moment its roster fills up
+// (see the auto_approve_full_team DB trigger) — no captain submission or
+// host approval step. This is the host's one remaining team-level action:
+// pull an already-approved team back out of the tournament.
 export async function rejectTeam(teamId: string): Promise<void> {
   const { error } = await supabase
     .from("tournament_teams")

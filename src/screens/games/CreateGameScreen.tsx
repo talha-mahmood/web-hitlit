@@ -18,6 +18,7 @@ import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
+import { createPools } from "../../lib/api/tournamentPools";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -38,6 +39,8 @@ import {
   MAX_PLAYERS_OPTIONS,
   NUMBER_OF_TEAMS_OPTIONS,
   PLAYERS_PER_TEAM_OPTIONS,
+  NUMBER_OF_GROUPS_OPTIONS,
+  TEAMS_PER_GROUP_OPTIONS,
   addMinutes,
   addDays,
   isTimeSlotPast,
@@ -51,6 +54,24 @@ type Visibility = Database["public"]["Enums"]["game_visibility_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
+
+// Knockout needs an even team count so every round pairs up cleanly, with
+// no lingering odd team out. League can't have exactly 3 — round-robin math
+// works for any other count, but this app's format specifically excludes 3.
+// Pool's own team-count constraint depends on the group count too (see
+// isValidGroupCount below), so it isn't checked here.
+function isValidTeamCount(format: TournamentFormat | null, n: number): boolean {
+  if (format === "KNOCKOUT") return n % 2 === 0;
+  if (format === "LEAGUE") return n !== 3;
+  return true;
+}
+
+// Pool's total team count is derived as groups × teams-per-group (picked
+// separately below), so it's always evenly divisible by construction — the
+// group count itself just needs to be even.
+function isValidGroupCount(n: number): boolean {
+  return n >= 2 && n % 2 === 0;
+}
 
 // Shared "chip" look for the inline pickers below (sport, date, time, max
 // players) — same rounded + shadow-when-selected treatment as PillRow.
@@ -211,6 +232,9 @@ export default function CreateGameScreen() {
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat | null>(null);
   const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [numberOfGroups, setNumberOfGroups] = useState<number | null>(null);
+  const [groupNames, setGroupNames] = useState<string[]>([]);
+  const [teamsPerGroup, setTeamsPerGroup] = useState<number | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   // Visibility isn't a user-facing choice (removed from the form) — every
   // game/tournament created here is public, matching the games list query's
@@ -226,15 +250,65 @@ export default function CreateGameScreen() {
     setCustomVenueName(null);
   };
 
-  // Keep `teamNames` sized to match the selected team count, preserving
-  // whatever the host already typed for the slots that still exist.
+  // Keep `teamNames` sized to match the current total team count,
+  // preserving whatever the host already typed for the slots that still
+  // exist.
+  const resizeTeamNames = (total: number | null) => {
+    setTeamNames((prev) => {
+      if (!total) return [];
+      const next = prev.slice(0, total);
+      while (next.length < total) next.push("");
+      return next;
+    });
+  };
+
+  // KNOCKOUT/LEAGUE: team count is picked directly.
   const handleNumberOfTeamsChange = (n: number) => {
     setNumberOfTeams(n);
-    setTeamNames((prev) => {
+    resizeTeamNames(n);
+  };
+
+  // POOL: team count is derived (groups × teams-per-group), not picked
+  // directly — recompute the total and resize both the group-name and
+  // team-name slots whenever either factor changes.
+  const handleNumberOfGroupsChange = (n: number) => {
+    setNumberOfGroups(n);
+    setGroupNames((prev) => {
       const next = prev.slice(0, n);
       while (next.length < n) next.push("");
       return next;
     });
+    const total = teamsPerGroup ? n * teamsPerGroup : null;
+    setNumberOfTeams(total);
+    resizeTeamNames(total);
+  };
+
+  const handleTeamsPerGroupChange = (n: number) => {
+    setTeamsPerGroup(n);
+    const total = numberOfGroups ? numberOfGroups * n : null;
+    setNumberOfTeams(total);
+    resizeTeamNames(total);
+  };
+
+  // Changing format can make the already-selected team count invalid (e.g.
+  // switching to Knockout with 3 teams already picked) — clear it rather
+  // than leave a stale, now-invalid selection in place. Pool derives its
+  // team count from groups × teams-per-group rather than a direct pick, so
+  // switching to/from it clears whichever side no longer applies.
+  const handleTournamentFormatChange = (format: TournamentFormat) => {
+    setTournamentFormat(format);
+    if (format === "POOL") {
+      setNumberOfTeams(null);
+      setTeamNames([]);
+    } else {
+      setNumberOfGroups(null);
+      setGroupNames([]);
+      setTeamsPerGroup(null);
+      if (numberOfTeams !== null && !isValidTeamCount(format, numberOfTeams)) {
+        setNumberOfTeams(null);
+        setTeamNames([]);
+      }
+    }
   };
 
   const isTournament = gameType === "TOURNAMENT";
@@ -269,16 +343,29 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a skill level.");
       return;
     }
+    if (isTournament && !tournamentFormat) {
+      Alert.alert("Missing Info", "Please select a tournament format (Knockout, League, or Pool).");
+      return;
+    }
+    if (isTournament && tournamentFormat === "POOL" && (!teamsPerGroup || !numberOfGroups)) {
+      Alert.alert("Missing Info", "Please select a number of teams in each group and a number of groups.");
+      return;
+    }
     const teams = numberOfTeams ?? 0;
     const perTeam = playersPerTeam ?? 0;
     if (isTournament && (teams < 2 || perTeam < 1)) {
-      Alert.alert("Missing Info", "Please select a number of teams (2+) and players per team.");
+      Alert.alert("Missing Info", "Please select a number of teams and players per team.");
       return;
     }
     const trimmedTeamNames = teamNames.map((n) => n.trim());
     if (isTournament) {
-      if (!tournamentFormat) {
-        Alert.alert("Missing Info", "Please select a tournament format (Knockout or League).");
+      if (tournamentFormat !== "POOL" && !isValidTeamCount(tournamentFormat, teams)) {
+        Alert.alert(
+          "Invalid Team Count",
+          tournamentFormat === "KNOCKOUT"
+            ? "Knockout tournaments need an even number of teams."
+            : "League tournaments can't have exactly 3 teams. Please choose a different number."
+        );
         return;
       }
       if (trimmedTeamNames.some((n) => !n)) {
@@ -288,6 +375,24 @@ export default function CreateGameScreen() {
       const uniqueNames = new Set(trimmedTeamNames.map((n) => n.toLowerCase()));
       if (uniqueNames.size !== trimmedTeamNames.length) {
         Alert.alert("Duplicate Team Names", "Team names must be unique.");
+        return;
+      }
+    }
+
+    const trimmedGroupNames = groupNames.map((n) => n.trim());
+    if (tournamentFormat === "POOL") {
+      const groups = numberOfGroups ?? 0;
+      if (!isValidGroupCount(groups)) {
+        Alert.alert("Invalid Group Count", "Pool tournaments need an even number of groups.");
+        return;
+      }
+      if (trimmedGroupNames.some((n) => !n)) {
+        Alert.alert("Missing Info", "Please enter a name for every group.");
+        return;
+      }
+      const uniqueGroupNames = new Set(trimmedGroupNames.map((n) => n.toLowerCase()));
+      if (uniqueGroupNames.size !== trimmedGroupNames.length) {
+        Alert.alert("Duplicate Group Names", "Group names must be unique.");
         return;
       }
     }
@@ -327,6 +432,9 @@ export default function CreateGameScreen() {
       });
       if (isTournament) {
         await createTournamentTeamPlaceholders(game.id, trimmedTeamNames);
+        if (tournamentFormat === "POOL") {
+          await createPools(game.id, trimmedGroupNames);
+        }
       }
       navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
@@ -512,49 +620,140 @@ export default function CreateGameScreen() {
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
           <>
-            <SectionLabel title="Number of Teams" required />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              {NUMBER_OF_TEAMS_OPTIONS.map((n) => (
-                <CountChipItem
-                  key={n}
-                  n={n}
-                  selected={numberOfTeams === n}
-                  onPress={() => handleNumberOfTeamsChange(n)}
-                />
-              ))}
-            </ScrollView>
-            <IconPoolPreview count={numberOfTeams ?? 0} icon="shield" />
-
-            <SectionLabel title="Players per Team" required />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
-                <CountChipItem
-                  key={n}
-                  n={n}
-                  selected={playersPerTeam === n}
-                  onPress={() => setPlayersPerTeam(n)}
-                />
-              ))}
-            </ScrollView>
-            <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
-
             <SectionLabel title="Tournament Format" required />
             <PillRow<TournamentFormat>
               options={[
                 { label: "Knockout", value: "KNOCKOUT" },
                 { label: "League", value: "LEAGUE" },
+                { label: "Pool", value: "POOL" },
               ]}
               value={tournamentFormat}
-              onChange={setTournamentFormat}
+              onChange={handleTournamentFormatChange}
             />
+
+            {tournamentFormat === "POOL" ? (
+              <>
+                <SectionLabel title="Number of Teams in Each Group" required />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {TEAMS_PER_GROUP_OPTIONS.map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={teamsPerGroup === n}
+                      onPress={() => handleTeamsPerGroupChange(n)}
+                    />
+                  ))}
+                </ScrollView>
+                <IconPoolPreview count={teamsPerGroup ?? 0} icon="shield" />
+
+                <SectionLabel title="Number of Groups" required />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {NUMBER_OF_GROUPS_OPTIONS.filter(isValidGroupCount).map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={numberOfGroups === n}
+                      onPress={() => handleNumberOfGroupsChange(n)}
+                    />
+                  ))}
+                </ScrollView>
+                <Text className="text-muted text-xs mt-1">Pool tournaments need an even number of groups.</Text>
+                <IconPoolPreview count={numberOfGroups ?? 0} icon="shield" />
+
+                {numberOfTeams != null && numberOfTeams > 0 && (
+                  <Text className="text-muted text-xs mt-1">
+                    {numberOfGroups} groups × {teamsPerGroup} teams each = {numberOfTeams} teams total.
+                  </Text>
+                )}
+
+                <SectionLabel title="Players per Team" required />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={playersPerTeam === n}
+                      onPress={() => setPlayersPerTeam(n)}
+                    />
+                  ))}
+                </ScrollView>
+                <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
+
+                {numberOfGroups != null && numberOfGroups > 0 && (
+                  <>
+                    <SectionLabel title="Group Names" required />
+                    <View style={{ gap: 8 }}>
+                      {groupNames.map((name, i) => (
+                        <FieldInput
+                          key={i}
+                          value={name}
+                          onChangeText={(t) => setGroupNames((prev) => prev.map((n, idx) => (idx === i ? t : n)))}
+                          placeholder={`Group ${i + 1} name`}
+                          maxLength={40}
+                        />
+                      ))}
+                    </View>
+                    <Text className="text-muted text-xs mt-1">
+                      You'll assign approved teams to a group from the tournament screen once they're in.
+                    </Text>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <SectionLabel title="Number of Teams" required />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {NUMBER_OF_TEAMS_OPTIONS.filter((n) => isValidTeamCount(tournamentFormat, n)).map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={numberOfTeams === n}
+                      onPress={() => handleNumberOfTeamsChange(n)}
+                    />
+                  ))}
+                </ScrollView>
+                {tournamentFormat === "KNOCKOUT" && (
+                  <Text className="text-muted text-xs mt-1">Knockout needs an even number of teams.</Text>
+                )}
+                {tournamentFormat === "LEAGUE" && (
+                  <Text className="text-muted text-xs mt-1">League tournaments can't have exactly 3 teams.</Text>
+                )}
+                <IconPoolPreview count={numberOfTeams ?? 0} icon="shield" />
+
+                <SectionLabel title="Players per Team" required />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={playersPerTeam === n}
+                      onPress={() => setPlayersPerTeam(n)}
+                    />
+                  ))}
+                </ScrollView>
+                <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
+              </>
+            )}
 
             {numberOfTeams != null && numberOfTeams > 0 && (
               <>
@@ -577,7 +776,7 @@ export default function CreateGameScreen() {
 
             <Text className="text-muted text-xs mt-3">
               Whoever joins an empty team slot first becomes its captain and can then
-              recruit teammates — full teams are submitted to you as host for approval.
+              recruit teammates — a team joins the tournament automatically once it's full.
             </Text>
           </>
         ) : (
