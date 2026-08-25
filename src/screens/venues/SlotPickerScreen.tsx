@@ -11,9 +11,18 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useBookedSlots } from "../../hooks/useBookings";
+import { useCourtPriceRules } from "../../hooks/useVenues";
 import { colors } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
-import { toLocalDateStr, getNext14Days, generateSlots, isSlotBooked, isSlotPast, type Slot } from "../../lib/slots";
+import {
+  toLocalDateStr,
+  getNext14Days,
+  generateSlots,
+  isSlotBooked,
+  isSlotPast,
+  resolveSlotPrice,
+  type Slot,
+} from "../../lib/slots";
 
 type SlotPickerRoute = RouteProp<VenuesStackParamList, "SlotPicker">;
 type SlotPickerNav = NativeStackNavigationProp<VenuesStackParamList, "SlotPicker">;
@@ -31,6 +40,13 @@ export default function SlotPickerScreen() {
 
   const slots = generateSlots(params.venueStartTime, params.venueEndTime);
   const { data: bookedSlots = [], isLoading } = useBookedSlots(params.courtId, selectedDate);
+  const { data: priceRules = [] } = useCourtPriceRules(params.courtId);
+
+  const slotPrice = (slot: Slot) => resolveSlotPrice(slot, params.pricePerHour, priceRules);
+  const allPrices = slots.map(slotPrice);
+  const minPrice = allPrices.length ? Math.min(...allPrices) : params.pricePerHour;
+  const maxPrice = allPrices.length ? Math.max(...allPrices) : params.pricePerHour;
+  const selectedPrice = selectedSlot ? slotPrice(selectedSlot) : null;
 
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
@@ -49,7 +65,7 @@ export default function SlotPickerScreen() {
           <Text className="text-muted text-sm" numberOfLines={1}>{params.venueName}</Text>
         </View>
         <Text className="text-primary font-semibold text-sm ml-2">
-          Rs {params.pricePerHour.toLocaleString()}/hr
+          {minPrice === maxPrice ? `Rs ${minPrice.toLocaleString()}/hr` : `From Rs ${minPrice.toLocaleString()}/hr`}
         </Text>
       </View>
 
@@ -106,6 +122,7 @@ export default function SlotPickerScreen() {
               const past = isSlotPast(slot, selectedDate);
               const unavailable = booked || past;
               const isSelected = selectedSlot?.start === slot.start;
+              const price = slotPrice(slot);
 
               return (
                 <Pressable
@@ -128,8 +145,16 @@ export default function SlotPickerScreen() {
                   >
                     {slot.label}
                   </Text>
-                  {booked && !past && (
+                  {booked && !past ? (
                     <Text className="text-xs text-muted mt-0.5">Booked</Text>
+                  ) : (
+                    <Text
+                      className={`text-xs mt-0.5 ${
+                        unavailable ? "text-muted" : isSelected ? "text-white" : "text-muted"
+                      }`}
+                    >
+                      Rs {price.toLocaleString()}
+                    </Text>
                   )}
                 </Pressable>
               );
@@ -140,18 +165,18 @@ export default function SlotPickerScreen() {
 
       {/* Bottom CTA */}
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-4 pb-8 pt-3">
-        {selectedSlot && (
+        {selectedSlot && selectedPrice !== null && (
           <Text className="text-center text-sm text-muted mb-2">
-            {selectedSlot.label} · Rs {params.pricePerHour.toLocaleString()}
+            {selectedSlot.label} · Rs {selectedPrice.toLocaleString()}
           </Text>
         )}
         <Pressable
           onPress={() => {
-            if (!selectedSlot) return;
+            if (!selectedSlot || selectedPrice === null) return;
             navigation.navigate("BookingCheckout", {
               courtId: params.courtId,
               courtName: params.courtName,
-              pricePerHour: params.pricePerHour,
+              pricePerHour: selectedPrice,
               venueName: params.venueName,
               date: selectedDate,
               startTime: selectedSlot.start,

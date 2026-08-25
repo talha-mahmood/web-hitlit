@@ -76,6 +76,20 @@ export async function fetchVenueDetail(venueId: string): Promise<VenueDetail | n
   return data as unknown as VenueDetail;
 }
 
+export type CourtPriceRule = { id: string; start_time: string; end_time: string; price_per_hour: number };
+
+// Public read of a court's time-window rate overrides, so the slot picker
+// can show the actual price per slot instead of one flat court-wide price.
+export async function fetchCourtPriceRules(courtId: string): Promise<CourtPriceRule[]> {
+  const { data, error } = await supabase
+    .from("court_price_rules")
+    .select("id, start_time, end_time, price_per_hour")
+    .eq("court_id", courtId)
+    .order("start_time", { ascending: true });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function fetchFavoriteVenueIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase
     .from("favorite_venues")

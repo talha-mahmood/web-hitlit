@@ -151,6 +151,40 @@ export async function deleteCourt(courtId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export type CourtPriceRule = {
+  id: string;
+  start_time: string;
+  end_time: string;
+  price_per_hour: number;
+};
+
+export type CourtPriceRuleInput = { startTime: string; endTime: string; pricePerHour: number };
+
+export async function fetchCourtPriceRules(courtId: string): Promise<CourtPriceRule[]> {
+  const { data, error } = await supabase
+    .from("court_price_rules")
+    .select("id, start_time, end_time, price_per_hour")
+    .eq("court_id", courtId)
+    .order("start_time", { ascending: true });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function addCourtPriceRule(courtId: string, input: CourtPriceRuleInput): Promise<void> {
+  const { error } = await supabase.from("court_price_rules").insert({
+    court_id: courtId,
+    start_time: input.startTime,
+    end_time: input.endTime,
+    price_per_hour: input.pricePerHour,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteCourtPriceRule(ruleId: string): Promise<void> {
+  const { error } = await supabase.from("court_price_rules").delete().eq("id", ruleId);
+  if (error) throw new Error(error.message);
+}
+
 export async function addFacility(venueId: string, input: FacilityInput): Promise<void> {
   const { error } = await supabase
     .from("venue_facilities")

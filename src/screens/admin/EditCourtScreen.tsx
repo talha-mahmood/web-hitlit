@@ -14,7 +14,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useAdminVenueDetail, useAddCourt, useUpdateCourt } from "../../hooks/useVenuesAdmin";
+import {
+  useAdminVenueDetail,
+  useAddCourt,
+  useUpdateCourt,
+  useCourtPriceRules,
+  useAddCourtPriceRule,
+  useDeleteCourtPriceRule,
+} from "../../hooks/useVenuesAdmin";
+import type { CourtPriceRule } from "../../lib/api/venuesAdmin";
 import { useSports } from "../../hooks/useSports";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
@@ -23,6 +31,142 @@ import FieldInput from "../../components/FieldInput";
 
 type Route = RouteProp<VenueEditingParamList, "EditCourt">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditCourt">;
+
+// Accepts a 1- or 2-digit hour ("4:00" or "04:00") so the user doesn't have
+// to remember to type a leading zero, and zero-pads it before use/storage.
+const TIME_RE = /^\d{1,2}:\d{2}$/;
+
+function normalizeTime(t: string): string {
+  const [h, m] = t.split(":");
+  return `${h.padStart(2, "0")}:${m}`;
+}
+
+function formatTime12h(timeStr: string): string {
+  const h = parseInt(timeStr.split(":")[0], 10);
+  if (h === 0) return "12:00 AM";
+  if (h < 12) return `${h}:00 AM`;
+  if (h === 12) return "12:00 PM";
+  return `${h - 12}:00 PM`;
+}
+
+function PriceRulesSection({ courtId }: { courtId: string }) {
+  const { data: rules, isLoading } = useCourtPriceRules(courtId);
+  const addRule = useAddCourtPriceRule(courtId);
+  const deleteRule = useDeleteCourtPriceRule(courtId);
+
+  const [ruleStart, setRuleStart] = useState("");
+  const [ruleEnd, setRuleEnd] = useState("");
+  const [rulePrice, setRulePrice] = useState("");
+
+  const handleAddRule = () => {
+    if (!TIME_RE.test(ruleStart) || !TIME_RE.test(ruleEnd)) {
+      Alert.alert("Invalid Time", "Start and end time must be in HH:MM format, e.g. 6:00 or 06:00.");
+      return;
+    }
+    const start = normalizeTime(ruleStart);
+    const end = normalizeTime(ruleEnd);
+    if (start >= end) {
+      Alert.alert("Invalid Range", "Start time must be before end time.");
+      return;
+    }
+    const price = parseFloat(rulePrice);
+    if (!price || price <= 0) {
+      Alert.alert("Missing Info", "Please enter a valid price per hour for this window.");
+      return;
+    }
+    const overlaps = (rules ?? []).some((r) => start < r.end_time.slice(0, 5) && end > r.start_time.slice(0, 5));
+    if (overlaps) {
+      Alert.alert("Overlapping Window", "This time window overlaps with a rate you've already set.");
+      return;
+    }
+
+    addRule.mutate(
+      { startTime: start, endTime: end, pricePerHour: price },
+      {
+        onSuccess: () => {
+          setRuleStart("");
+          setRuleEnd("");
+          setRulePrice("");
+        },
+        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not add this rate."),
+      }
+    );
+  };
+
+  const handleRemoveRule = (rule: CourtPriceRule) => {
+    Alert.alert(
+      "Remove Rate",
+      `Remove the Rs ${rule.price_per_hour.toLocaleString()}/hr rate for ${formatTime12h(rule.start_time)} – ${formatTime12h(rule.end_time)}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () =>
+            deleteRule.mutate(rule.id, {
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove this rate."),
+            }),
+        },
+      ]
+    );
+  };
+
+  return (
+    <View className="mt-2">
+      <Text className="text-muted text-xs font-semibold mb-1.5">Time-based Pricing (optional)</Text>
+      <Text className="text-muted text-xs mb-3">
+        Override the price above for specific time windows, e.g. 6:00 AM – 4:00 PM at Rs 100, 4:00 PM – 10:00 PM at
+        Rs 200. Any hour without a window below uses the default price.
+      </Text>
+
+      {isLoading ? (
+        <ActivityIndicator color={colors.primary} className="mb-3" />
+      ) : rules && rules.length > 0 ? (
+        <View className="mb-3">
+          {rules.map((rule) => (
+            <View
+              key={rule.id}
+              className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-2"
+            >
+              <Text className="text-ink text-sm font-medium">
+                {formatTime12h(rule.start_time)} – {formatTime12h(rule.end_time)}
+              </Text>
+              <View className="flex-row items-center" style={{ gap: 12 }}>
+                <Text className="text-primary font-semibold text-sm">Rs {rule.price_per_hour.toLocaleString()}</Text>
+                <Pressable onPress={() => handleRemoveRule(rule)} hitSlop={8}>
+                  <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      <View className="flex-row" style={{ gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <FieldInput value={ruleStart} onChangeText={setRuleStart} placeholder="06:00" maxLength={5} keyboardType="numbers-and-punctuation" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <FieldInput value={ruleEnd} onChangeText={setRuleEnd} placeholder="16:00" maxLength={5} keyboardType="numbers-and-punctuation" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <FieldInput value={rulePrice} onChangeText={setRulePrice} placeholder="Rs" keyboardType="numeric" />
+        </View>
+      </View>
+      <Pressable
+        onPress={handleAddRule}
+        disabled={addRule.isPending}
+        className="border border-primary rounded-xl py-3 items-center mt-2"
+      >
+        {addRule.isPending ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Text className="text-primary font-semibold text-sm">Add Rate Window</Text>
+        )}
+      </Pressable>
+    </View>
+  );
+}
 
 export default function EditCourtScreen() {
   const { params } = useRoute<Route>();
@@ -122,7 +266,7 @@ export default function EditCourtScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 20, paddingBottom: 260 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 20, paddingBottom: 480 }}
         keyboardShouldPersistTaps="handled"
       >
         <Text className="text-muted text-xs font-semibold mb-1.5">Court Name</Text>
@@ -197,6 +341,13 @@ export default function EditCourtScreen() {
           </View>
           <Switch value={isactive} onValueChange={setIsactive} trackColor={{ true: colors.primary, false: colors.border }} />
         </View>
+
+        {isEditing && params.courtId && (
+          <>
+            <View className="h-px bg-border my-5" />
+            <PriceRulesSection courtId={params.courtId} />
+          </>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

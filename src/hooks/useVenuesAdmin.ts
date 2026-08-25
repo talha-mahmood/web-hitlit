@@ -11,9 +11,13 @@ import {
   addFacility,
   deleteFacility,
   fetchVenueBookings,
+  fetchCourtPriceRules,
+  addCourtPriceRule,
+  deleteCourtPriceRule,
   type VenueUpdateInput,
   type CourtInput,
   type FacilityInput,
+  type CourtPriceRuleInput,
 } from "../lib/api/venuesAdmin";
 import { fetchVenueDetail } from "../lib/api/venues";
 
@@ -94,6 +98,30 @@ export function useDeleteCourt(venueId: string) {
   return useMutation({
     mutationFn: (courtId: string) => deleteCourt(courtId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["venue", venueId] }),
+  });
+}
+
+export function useCourtPriceRules(courtId: string | undefined) {
+  return useQuery({
+    queryKey: ["courtPriceRules", courtId],
+    queryFn: () => fetchCourtPriceRules(courtId as string),
+    enabled: !!courtId,
+  });
+}
+
+export function useAddCourtPriceRule(courtId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CourtPriceRuleInput) => addCourtPriceRule(courtId, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["courtPriceRules", courtId] }),
+  });
+}
+
+export function useDeleteCourtPriceRule(courtId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ruleId: string) => deleteCourtPriceRule(ruleId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["courtPriceRules", courtId] }),
   });
 }
 

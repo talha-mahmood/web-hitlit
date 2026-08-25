@@ -52,3 +52,14 @@ export function isSlotBooked(
 export function isSlotPast(slot: Slot, date: string): boolean {
   return new Date(`${date}T${slot.start}:00+05:00`) < new Date();
 }
+
+export type PriceRule = { start_time: string; end_time: string; price_per_hour: number };
+
+// A court's price_per_hour is the default/base rate; any hour covered by a
+// rule here overrides it for that window. Times are compared as "HH:MM"
+// strings (zero-padded, so lexicographic order matches time order) — rules
+// come from Postgres as "HH:MM:SS", hence the slice.
+export function resolveSlotPrice(slot: Slot, basePrice: number, rules: PriceRule[]): number {
+  const rule = rules.find((r) => slot.start >= r.start_time.slice(0, 5) && slot.start < r.end_time.slice(0, 5));
+  return rule ? rule.price_per_hour : basePrice;
+}

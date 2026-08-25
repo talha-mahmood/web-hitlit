@@ -211,6 +211,41 @@ export type Database = {
           },
         ]
       }
+      court_price_rules: {
+        Row: {
+          court_id: string
+          created_at: string
+          end_time: string
+          id: string
+          price_per_hour: number
+          start_time: string
+        }
+        Insert: {
+          court_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          price_per_hour: number
+          start_time: string
+        }
+        Update: {
+          court_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          price_per_hour?: number
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_price_rules_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "court"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_games: {
         Row: {
           created_at: string
@@ -1324,6 +1359,52 @@ export type Database = {
           },
         ]
       }
+      venue_admins: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_admins_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_admins_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_facilities: {
         Row: {
           created_at: string
@@ -1585,7 +1666,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      grant_venue_admin: {
+        Args: { target_user_id: string; target_venue_id: string }
+        Returns: undefined
+      }
       is_superadmin: { Args: never; Returns: boolean }
+      is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
+      is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
+      revoke_venue_admin: {
+        Args: { target_user_id: string; target_venue_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       booking_payment_status_type: "paid" | "unpaid"
