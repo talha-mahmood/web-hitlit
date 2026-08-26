@@ -14,12 +14,19 @@ import {
   useAcceptGameInvite,
   useDeclineGameInvite,
 } from "../../hooks/useInvites";
+import {
+  useSquadFillGameSlots,
+  useSendGameSquadInvite,
+  useGameSquadInvitesForGame,
+} from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
+import SquadFillModal from "../../components/SquadFillModal";
+import InviteSquadModal from "../../components/InviteSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import DetailSportBackdrop from "../../components/DetailSportBackdrop";
@@ -242,6 +249,12 @@ export default function GameDetailScreen() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showSquadFillModal, setShowSquadFillModal] = useState(false);
+  const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
+
+  const squadFillSlots = useSquadFillGameSlots(params.gameId);
+  const sendSquadInvite = useSendGameSquadInvite(params.gameId);
+  const { data: squadInvites } = useGameSquadInvitesForGame(params.gameId);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
   // Only meaningful once `game` has loaded and turned out to be a tournament —
@@ -534,6 +547,11 @@ export default function GameDetailScreen() {
           </Pressable>
         )}
         {isCreator && !isTournament && !isCancelled && !hasEnded && (
+          <Pressable onPress={() => setShowInviteSquadModal(true)} className="mr-2 p-1">
+            <Ionicons name="people-outline" size={22} color={colors.ink} />
+          </Pressable>
+        )}
+        {isCreator && !isTournament && !isCancelled && !hasEnded && (
           <Pressable
             onPress={() => navigation.navigate("EditGame", { gameId: game.id })}
             className="mr-2 p-1"
@@ -727,6 +745,14 @@ export default function GameDetailScreen() {
                   </View>
                 )}
               </View>
+              {emptySlots > 0 && !isCancelled && !hasEnded && (
+                <Pressable
+                  onPress={() => setShowSquadFillModal(true)}
+                  className="border border-primary rounded-lg py-2 items-center mb-3"
+                >
+                  <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Squad</Text>
+                </Pressable>
+              )}
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
                 {joinedPlayers.map((p) => (
                   <PlayerAvatar
@@ -880,6 +906,46 @@ export default function GameDetailScreen() {
           await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
         }}
       />
+
+      {!isTournament && (
+        <SquadFillModal
+          visible={showSquadFillModal}
+          onClose={() => setShowSquadFillModal(false)}
+          userId={userId}
+          requiredCount={emptySlots}
+          submitting={squadFillSlots.isPending}
+          title="Fill Open Spots With Your Squad"
+          onSubmit={(squadId, memberUserIds) => {
+            squadFillSlots.mutate(
+              { squadId, memberUserIds },
+              {
+                onSuccess: () => setShowSquadFillModal(false),
+                onError: (err) =>
+                  Alert.alert("Error", err instanceof Error ? err.message : "Could not join the game."),
+              }
+            );
+          }}
+        />
+      )}
+
+      {isCreator && !isTournament && (
+        <InviteSquadModal
+          visible={showInviteSquadModal}
+          onClose={() => setShowInviteSquadModal(false)}
+          submitting={sendSquadInvite.isPending}
+          alreadyInvitedSquadIds={(squadInvites ?? []).map((i) => i.squad_id)}
+          onInvite={(squadId, squadName) => {
+            if (!userId) return;
+            sendSquadInvite.mutate(
+              { squadId, invitedBy: userId },
+              {
+                onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
+                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
+              }
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

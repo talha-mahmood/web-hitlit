@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -565,6 +565,58 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_squad_invites: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          invited_by: string
+          squad_id: string
+          status: Database["public"]["Enums"]["game_invite_status_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          invited_by: string
+          squad_id: string
+          status?: Database["public"]["Enums"]["game_invite_status_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          invited_by?: string
+          squad_id?: string
+          status?: Database["public"]["Enums"]["game_invite_status_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_squad_invites_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_squad_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_squad_invites_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
             referencedColumns: ["id"]
           },
         ]
@@ -1429,6 +1481,7 @@ export type Database = {
           captain_id: string | null
           created_at: string
           deleted_at: string | null
+          filled_by_squad_id: string | null
           game_id: string
           id: string
           name: string
@@ -1441,6 +1494,7 @@ export type Database = {
           captain_id?: string | null
           created_at?: string
           deleted_at?: string | null
+          filled_by_squad_id?: string | null
           game_id: string
           id?: string
           name: string
@@ -1453,6 +1507,7 @@ export type Database = {
           captain_id?: string | null
           created_at?: string
           deleted_at?: string | null
+          filled_by_squad_id?: string | null
           game_id?: string
           id?: string
           name?: string
@@ -1467,6 +1522,13 @@ export type Database = {
             columns: ["captain_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_filled_by_squad_id_fkey"
+            columns: ["filled_by_squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
             referencedColumns: ["id"]
           },
           {
@@ -1801,6 +1863,22 @@ export type Database = {
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
       revoke_venue_admin: {
         Args: { target_user_id: string; target_venue_id: string }
+        Returns: undefined
+      }
+      squad_fill_game_slots: {
+        Args: {
+          p_game_id: string
+          p_member_user_ids: string[]
+          p_squad_id: string
+        }
+        Returns: undefined
+      }
+      squad_fill_tournament_team: {
+        Args: {
+          p_member_user_ids: string[]
+          p_squad_id: string
+          p_team_id: string
+        }
         Returns: undefined
       }
     }

@@ -15,6 +15,7 @@ import {
   useRemoveMember,
 } from "../../hooks/useSquads";
 import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
+import { usePendingSquadInvites, useRespondToSquadInvite } from "../../hooks/useSquadTeamFill";
 import {
   useMyPendingSquadInvite,
   useCreateSquadInvite,
@@ -212,6 +213,8 @@ export default function SquadDetailScreen() {
   const createInvite = useCreateSquadInvite(params.squadId);
   const acceptInvite = useAcceptSquadInvite(params.squadId);
   const declineInvite = useDeclineSquadInvite(params.squadId);
+  const { data: gameInvites } = usePendingSquadInvites(params.squadId);
+  const respondToGameInvite = useRespondToSquadInvite(params.squadId);
 
   if (isLoading) {
     return (
@@ -305,6 +308,16 @@ export default function SquadDetailScreen() {
         },
       },
     ]);
+  };
+
+  const handleRespondGameInvite = (inviteId: string, accept: boolean) => {
+    respondToGameInvite.mutate(
+      { inviteId, accept },
+      {
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not respond to invite."),
+      }
+    );
   };
 
   const handleApprove = (squadMemberId: string, name: string | null) => {
@@ -579,6 +592,49 @@ export default function SquadDetailScreen() {
             ))}
           </View>
         </View>
+
+        {/* Game/tournament invites — owner only, accept to open the fill-team flow on that game */}
+        {isOwner && (gameInvites?.length ?? 0) > 0 && (
+          <View className="px-5 mt-6">
+            <Text className="text-ink font-semibold text-sm mb-1">
+              Game Invites ({gameInvites!.length})
+            </Text>
+            <Text className="text-muted text-xs mb-2">
+              A host invited your squad to join their game or tournament.
+            </Text>
+            {gameInvites!.map((invite) => (
+              <View
+                key={invite.id}
+                className="flex-row items-center border border-border rounded-xl px-3 py-2.5 mb-2"
+                style={{ gap: 10 }}
+              >
+                <View className="flex-1">
+                  <Text className="text-ink text-sm font-medium" numberOfLines={1}>
+                    {invite.games?.title ?? "Game"}
+                  </Text>
+                  <Text className="text-muted text-xs mt-0.5">
+                    {invite.games?.game_type === "TOURNAMENT" ? "Tournament" : "Game"}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => handleRespondGameInvite(invite.id, false)}
+                  disabled={respondToGameInvite.isPending}
+                  className="rounded-lg px-3 py-2 bg-gray-100"
+                >
+                  <Text className="text-muted text-xs font-semibold">Decline</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleRespondGameInvite(invite.id, true)}
+                  disabled={respondToGameInvite.isPending}
+                  className="rounded-lg px-3 py-2 bg-primary"
+                  style={primaryButtonShadow}
+                >
+                  <Text className="text-white text-xs font-semibold">Accept</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Pending join requests — owner only, shows requester's skill + location */}
         {isOwner && pendingRequests.length > 0 && (

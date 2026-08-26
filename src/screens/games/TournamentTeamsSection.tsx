@@ -20,10 +20,17 @@ import {
   useResetMatchResult,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
+import {
+  useSquadFillTournamentTeam,
+  useSendGameSquadInvite,
+  useGameSquadInvitesForGame,
+} from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import SquadFillModal from "../../components/SquadFillModal";
+import InviteSquadModal from "../../components/InviteSquadModal";
 import type { Database } from "../../types/database.types";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -107,6 +114,7 @@ function TeamCard({
   onRejectMember,
   onRemoveMember,
   onRemoveTeam,
+  onFillWithSquad,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -123,6 +131,7 @@ function TeamCard({
   onRejectMember: (memberId: string, name: string | null) => void;
   onRemoveMember: (memberId: string, name: string | null) => void;
   onRemoveTeam: () => void;
+  onFillWithSquad?: () => void;
 }) {
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const pendingMembers = team.tournament_team_members.filter((m) => m.status === "PENDING");
@@ -276,6 +285,19 @@ function TeamCard({
               </Text>
             </Pressable>
           ) : null}
+          {/* A squad owner can register their whole squad for this slot in
+              one go — independent of the individual-join flow above, and
+              not gated on hasActiveTeamElsewhere since the squad owner
+              themselves need not be one of the registered players. */}
+          {isUnclaimed && onFillWithSquad && (
+            <Pressable
+              onPress={onFillWithSquad}
+              disabled={disabled}
+              className="border border-primary rounded-lg py-2 items-center mt-2"
+            >
+              <Text className="text-primary text-xs font-semibold">Fill With My Squad</Text>
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -884,6 +906,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const isHost = game.creator_id === userId;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinRequestTeamId, setJoinRequestTeamId] = useState<string | null>(null);
+  const [fillTeamId, setFillTeamId] = useState<string | null>(null);
+  const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
@@ -893,6 +917,9 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const removeTeamMember = useRemoveTeamMember(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const rejectTeam = useRejectTeam(game.id);
+  const squadFillTeam = useSquadFillTournamentTeam(game.id);
+  const sendSquadInvite = useSendGameSquadInvite(game.id);
+  const { data: squadInvites } = useGameSquadInvitesForGame(game.id);
   const { data: matches } = useTournamentMatches(game.id);
   const { data: pools } = useTournamentPools(game.id);
 
@@ -1080,16 +1107,28 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         <Text className="text-ink font-semibold text-sm">
           Teams ({activeTeams.length}/{requiredTeams || "—"})
         </Text>
-        {canCreateTeam && (
-          <Pressable
-            onPress={() => setShowCreateModal(true)}
-            className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
-            style={{ gap: 4 }}
-          >
-            <Ionicons name="add" size={14} color="white" />
-            <Text className="text-white text-xs font-semibold">Create Team</Text>
-          </Pressable>
-        )}
+        <View className="flex-row" style={{ gap: 8 }}>
+          {isHost && (
+            <Pressable
+              onPress={() => setShowInviteSquadModal(true)}
+              className="flex-row items-center border border-primary rounded-lg px-3 py-1.5"
+              style={{ gap: 4 }}
+            >
+              <Ionicons name="people-outline" size={14} color={colors.primary} />
+              <Text className="text-primary text-xs font-semibold">Invite a Squad</Text>
+            </Pressable>
+          )}
+          {canCreateTeam && (
+            <Pressable
+              onPress={() => setShowCreateModal(true)}
+              className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
+              style={{ gap: 4 }}
+            >
+              <Ionicons name="add" size={14} color="white" />
+              <Text className="text-white text-xs font-semibold">Create Team</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <View className="mx-4" style={{ gap: 12 }}>
@@ -1116,6 +1155,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onRejectMember={handleRejectMember}
               onRemoveMember={handleRemoveMember}
               onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
+              onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
             />
           ))
         )}
@@ -1151,6 +1191,44 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         }
         onSubmit={handleSubmitJoinRequest}
       />
+
+      <SquadFillModal
+        visible={!!fillTeamId}
+        onClose={() => setFillTeamId(null)}
+        userId={userId}
+        requiredCount={requiredSize}
+        submitting={squadFillTeam.isPending}
+        title="Fill Team With Your Squad"
+        onSubmit={(squadId, memberUserIds) => {
+          if (!fillTeamId) return;
+          squadFillTeam.mutate(
+            { teamId: fillTeamId, squadId, memberUserIds },
+            {
+              onSuccess: () => setFillTeamId(null),
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not register team."),
+            }
+          );
+        }}
+      />
+
+      {isHost && (
+        <InviteSquadModal
+          visible={showInviteSquadModal}
+          onClose={() => setShowInviteSquadModal(false)}
+          submitting={sendSquadInvite.isPending}
+          alreadyInvitedSquadIds={(squadInvites ?? []).map((i) => i.squad_id)}
+          onInvite={(squadId, squadName) => {
+            if (!userId) return;
+            sendSquadInvite.mutate(
+              { squadId, invitedBy: userId },
+              {
+                onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
+                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
+              }
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

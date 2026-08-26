@@ -86,6 +86,20 @@ export async function fetchSquads(
   return (data ?? []) as SquadListItem[];
 }
 
+// Squads the user owns, for pickers like "fill this empty team with my
+// squad" — needs squad_members embedded (already in LIST_SELECT) so the
+// caller can filter to ACTIVE members and check the squad is big enough.
+export async function fetchMyOwnedSquads(ownerId: string): Promise<SquadListItem[]> {
+  const { data, error } = await supabase
+    .from("squads")
+    .select(LIST_SELECT)
+    .eq("squad_owner_id", ownerId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SquadListItem[];
+}
+
 export async function fetchSquadDetail(squadId: string): Promise<SquadDetail> {
   const { data, error } = await supabase
     .from("squads")
