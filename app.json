@@ -14,7 +14,7 @@
     "android": {
       "package": "com.playoye.app",
       "adaptiveIcon": {
-        "backgroundColor": "#16A34A",
+        "backgroundColor": "#ADDC18",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
