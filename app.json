@@ -13,8 +13,9 @@
     },
     "android": {
       "package": "com.playoye.app",
+      "versionCode": 4,
       "adaptiveIcon": {
-        "backgroundColor": "#ADDC18",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

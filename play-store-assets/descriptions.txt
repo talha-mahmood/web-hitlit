@@ -1,0 +1,19 @@
+SHORT DESCRIPTION (71/80 chars):
+Find sports games, book venues, host tournaments, and build your squad.
+
+FULL DESCRIPTION (816/4000 chars):
+PlayOye is your all-in-one app for local sports — find games, book venues, run tournaments, and play with a squad of your own.
+
+WHAT YOU CAN DO
+- Discover and join sports games happening near you
+- Create your own games and invite players
+- Book sports venues and courts directly through the app
+- Organize and run tournaments with knockout, league, or pool formats
+- Build a squad with your regular teammates and register together for tournaments and games
+- Chat with your squad and coordinate matches
+- Track your game history and player stats
+
+WHO IT IS FOR
+Whether you play cricket, football, badminton, pickleball, or any other sport, PlayOye helps you find people to play with, venues to play at, and tournaments to compete in — all from one place.
+
+Join PlayOye today and never struggle to find a game again.
