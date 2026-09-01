@@ -94,7 +94,7 @@ export default function AssignAdminScreen() {
   const assignOwner = useAssignVenueAdmin(params.venueId);
   const removeOwner = useRemoveVenueAdmin(params.venueId);
 
-  const { data: extraAdmins, isLoading: extraAdminsLoading } = useVenueAdmins(params.venueId);
+  const { data: extraAdmins, isLoading: extraAdminsLoading, error: extraAdminsError } = useVenueAdmins(params.venueId);
   const extraAdminLookup = useLookupProfileByEmail();
   const grantAdmin = useGrantVenueAdmin(params.venueId);
   const revokeAdmin = useRevokeVenueAdminAccess(params.venueId);
@@ -250,6 +250,12 @@ export default function AssignAdminScreen() {
 
           {extraAdminsLoading ? (
             <ActivityIndicator color={colors.primary} className="mb-3" />
+          ) : extraAdminsError ? (
+            <View className="border border-red-200 bg-red-50 rounded-xl px-4 py-3 mb-4">
+              <Text className="text-red-700 text-sm">
+                Could not load additional admins: {extraAdminsError instanceof Error ? extraAdminsError.message : "Unknown error."}
+              </Text>
+            </View>
           ) : (extraAdmins ?? []).length === 0 ? (
             <View className="border border-dashed border-border rounded-xl px-4 py-3 mb-4">
               <Text className="text-muted text-sm">No additional admins yet.</Text>

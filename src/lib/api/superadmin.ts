@@ -72,7 +72,9 @@ export async function removeVenueAdmin(venueId: string): Promise<void> {
 export async function fetchVenueAdmins(venueId: string): Promise<VenueAdmin[]> {
   const { data, error } = await supabase
     .from("venue_admins")
-    .select("id, user_id, created_at, profiles(full_name, email, avatar)")
+    // venue_admins has two FKs into profiles (user_id, added_by) — the FK
+    // name must be specified or PostgREST throws an ambiguous-embed error.
+    .select("id, user_id, created_at, profiles!venue_admins_user_id_fkey(full_name, email, avatar)")
     .eq("venue_id", venueId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
