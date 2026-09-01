@@ -5,6 +5,9 @@ import {
   assignVenueAdmin,
   removeVenueAdmin,
   deleteVenue,
+  fetchVenueAdmins,
+  grantVenueAdmin,
+  revokeVenueAdminAccess,
 } from "../lib/api/superadmin";
 import { createVenue, type CreateVenueInput } from "../lib/api/venuesAdmin";
 
@@ -47,6 +50,36 @@ export function useRemoveVenueAdmin(venueId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["allVenues"] });
       qc.invalidateQueries({ queryKey: ["venue", venueId] });
+    },
+  });
+}
+
+export function useVenueAdmins(venueId: string) {
+  return useQuery({
+    queryKey: ["venueAdmins", venueId],
+    queryFn: () => fetchVenueAdmins(venueId),
+    enabled: !!venueId,
+  });
+}
+
+export function useGrantVenueAdmin(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => grantVenueAdmin(venueId, userId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["venueAdmins", venueId] });
+      qc.invalidateQueries({ queryKey: ["myVenues"] });
+    },
+  });
+}
+
+export function useRevokeVenueAdminAccess(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => revokeVenueAdminAccess(venueId, userId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["venueAdmins", venueId] });
+      qc.invalidateQueries({ queryKey: ["myVenues"] });
     },
   });
 }

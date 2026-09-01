@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMyVenues,
   updateVenue,
@@ -37,6 +37,22 @@ export function useAdminVenueDetail(venueId: string) {
     queryFn: () => fetchVenueDetail(venueId),
     enabled: !!venueId,
   });
+}
+
+// Fetches bookings for every venue an owner has, in parallel — used by the
+// dashboard's "Top Venues" ranking, which needs booking counts/revenue
+// across all of an owner's venues, not just the currently-selected one.
+export function useAllMyVenuesBookings(venueIds: string[]) {
+  const results = useQueries({
+    queries: venueIds.map((id) => ({
+      queryKey: ["venueBookings", id],
+      queryFn: () => fetchVenueBookings(id),
+    })),
+  });
+  return {
+    data: results.map((r) => r.data),
+    isLoading: results.some((r) => r.isLoading),
+  };
 }
 
 export function useUpdateVenue(venueId: string) {

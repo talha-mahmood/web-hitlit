@@ -1,42 +1,121 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
-import { useAdminVenueDetail, useVenueBookings } from "../../hooks/useVenuesAdmin";
-import { toLocalDateStr } from "../../lib/slots";
+import {
+  useAdminVenueDetail,
+  useVenueBookings,
+  useMyVenues,
+  useAllMyVenuesBookings,
+} from "../../hooks/useVenuesAdmin";
+import {
+  computeDashboardStats,
+  computeWeeklyRevenue,
+  computeUpcomingBookings,
+  computeRecentActivity,
+  computeTopVenues,
+} from "../../lib/adminDashboard";
+import { STATUS_BADGE } from "../../lib/bookingStatus";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import AdminMenuOverlay from "../../components/AdminMenuOverlay";
+import RevenueBarChart from "../../components/RevenueBarChart";
 
 type Route = RouteProp<VenueEditingParamList, "AdminDashboard">;
-type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminDashboard">;
+type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
 
-const CARD_BORDER = {
-  borderWidth: 1,
-  borderColor: "rgba(17, 24, 39, 0.06)",
-} as const;
+const CARD_BORDER = { borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" } as const;
 
-function QuickLinkCard({
+function formatTimeRange(startIso: string, endIso: string): string {
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${fmt(startIso)} - ${fmt(endIso)}`;
+}
+
+function DeltaLabel({ value, suffix = "" }: { value: number | null; suffix?: string }) {
+  if (value === null) return null;
+  const up = value >= 0;
+  return (
+    <View className="flex-row items-center mt-1" style={{ gap: 2 }}>
+      <Ionicons name={up ? "arrow-up" : "arrow-down"} size={11} color={up ? colors.primary : colors.danger} />
+      <Text className="text-[11px]" style={{ color: up ? colors.primary : colors.danger }}>
+        {Math.abs(value)}
+        {suffix} vs yesterday
+      </Text>
+    </View>
+  );
+}
+
+function StatCard({
   icon,
+  iconBg,
+  iconColor,
   label,
+  value,
+  delta,
+  footer,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  iconColor: string;
   label: string;
-  onPress: () => void;
+  value: string;
+  delta?: number | null;
+  footer?: string;
+  onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_BORDER }}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      className="bg-white rounded-2xl p-4"
+      style={{ width: "48%", ...CARD_BORDER }}
+    >
       <View
         className="items-center justify-center rounded-full mb-3"
-        style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+        style={{ width: 40, height: 40, backgroundColor: iconBg }}
       >
-        <Ionicons name={icon} size={20} color={colors.primaryDark} />
+        <Ionicons name={icon} size={20} color={iconColor} />
       </View>
-      <Text className="text-ink font-semibold text-sm">{label}</Text>
+      <Text className="text-muted text-xs">{label}</Text>
+      <Text className="text-ink font-extrabold text-xl mt-0.5">{value}</Text>
+      {delta !== undefined && <DeltaLabel value={delta} suffix="%" />}
+      {footer && <Text className="text-primary text-xs font-semibold mt-1">{footer}</Text>}
     </Pressable>
+  );
+}
+
+function SectionCard({
+  title,
+  action,
+  onAction,
+  children,
+}: {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View className="bg-white rounded-2xl p-4 mb-4" style={CARD_BORDER}>
+      <View className="flex-row items-center justify-between mb-3">
+        <Text className="text-ink font-bold text-base">{title}</Text>
+        {action && (
+          <Pressable onPress={onAction} className="flex-row items-center" style={{ gap: 2 }}>
+            <Text className="text-primary text-xs font-semibold">{action}</Text>
+            <Ionicons name="arrow-forward" size={12} color={colors.primary} />
+          </Pressable>
+        )}
+      </View>
+      {children}
+    </View>
   );
 }
 
@@ -44,14 +123,33 @@ export default function AdminDashboardScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((s) => s.session?.user.id);
+  const profile = useProfileStore((s) => s.profile);
   const { data: venue, isLoading } = useAdminVenueDetail(params.venueId);
   const { data: bookings } = useVenueBookings(params.venueId);
+  const { data: myVenues } = useMyVenues(userId);
 
-  const today = toLocalDateStr(new Date());
-  const todaysBookings = (bookings ?? []).filter((b) => toLocalDateStr(new Date(b.start_time)) === today);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+
+  const venueIds = useMemo(() => (myVenues ?? []).map((v) => v.id), [myVenues]);
+  const { data: allBookings } = useAllMyVenuesBookings(venueIds);
+
   const courtsCount = venue?.court.length ?? 0;
 
-  if (isLoading || !venue) {
+  const stats = useMemo(
+    () => (venue && bookings ? computeDashboardStats(bookings, venue, courtsCount) : null),
+    [venue, bookings, courtsCount]
+  );
+  const weekly = useMemo(() => (bookings ? computeWeeklyRevenue(bookings) : null), [bookings]);
+  const upcoming = useMemo(() => (bookings ? computeUpcomingBookings(bookings) : []), [bookings]);
+  const recent = useMemo(() => (bookings ? computeRecentActivity(bookings) : []), [bookings]);
+  const topVenues = useMemo(
+    () => ((myVenues?.length ?? 0) > 1 ? computeTopVenues(myVenues!, allBookings) : []),
+    [myVenues, allBookings]
+  );
+
+  if (isLoading || !venue || !stats || !weekly) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
@@ -59,75 +157,332 @@ export default function AdminDashboardScreen() {
     );
   }
 
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const firstName = profile?.full_name?.split(" ")[0] ?? "there";
+
+  const menuItems = [
+    { key: "dashboard", icon: "grid-outline" as const, label: "Dashboard", onPress: () => setMenuOpen(false) },
+    {
+      key: "bookings",
+      icon: "calendar-outline" as const,
+      label: "Bookings",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("VenueBookings", { venueId: params.venueId });
+      },
+    },
+    { key: "availability", icon: "time-outline" as const, label: "Availability & Calendar" },
+    {
+      key: "venues",
+      icon: "business-outline" as const,
+      label: "My Venues",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("AdminVenueList");
+      },
+    },
+    {
+      key: "courts",
+      icon: "grid-outline" as const,
+      label: "Sports & Courts",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("ManageCourts", { venueId: params.venueId });
+      },
+    },
+    {
+      key: "pricing",
+      icon: "pricetag-outline" as const,
+      label: "Pricing",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("ManageCourts", { venueId: params.venueId });
+      },
+    },
+    { key: "earnings", icon: "wallet-outline" as const, label: "Earnings & Payments" },
+    { key: "analytics", icon: "stats-chart-outline" as const, label: "Analytics" },
+    { key: "reviews", icon: "star-outline" as const, label: "Reviews" },
+    { key: "notifications", icon: "notifications-outline" as const, label: "Notifications" },
+    { key: "settings", icon: "settings-outline" as const, label: "Settings" },
+    {
+      key: "signout",
+      icon: "log-out-outline" as const,
+      label: "Sign Out",
+      onPress: () => {
+        setMenuOpen(false);
+        Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Sign Out",
+            style: "destructive",
+            onPress: async () => {
+              await signOutGoogle();
+              supabase.auth.signOut();
+            },
+          },
+        ]);
+      },
+    },
+  ];
+
   return (
-    <ScrollView className="flex-1 bg-gray-100" contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 32 }}>
-      <View className="px-6">
-        <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-2xl font-bold text-ink flex-1" numberOfLines={1}>
-            {venue.name}
+    <View className="flex-1 bg-gray-100">
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 32 }}>
+        <View className="px-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <Pressable onPress={() => setMenuOpen(true)} hitSlop={10}>
+              <Ionicons name="menu" size={26} color={colors.ink} />
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+              hitSlop={10}
+              className="relative"
+            >
+              <Ionicons name="notifications-outline" size={24} color={colors.ink} />
+              {stats.pendingCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-danger rounded-full w-4 h-4 items-center justify-center">
+                  <Text className="text-white text-[9px] font-bold">{stats.pendingCount}</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
+
+          <Text className="text-2xl font-bold text-ink">
+            {timeGreeting}, {firstName} 👋
           </Text>
-          {!venue.isactive && (
-            <View className="bg-gray-100 px-2.5 py-1 rounded-full ml-2">
-              <Text className="text-muted text-xs font-semibold">Closed</Text>
-            </View>
+          <Text className="text-muted text-sm mt-0.5 mb-3">Here's what's happening at your venue today.</Text>
+
+          {(myVenues?.length ?? 0) > 1 && (
+            <Pressable
+              onPress={() => setSwitcherOpen(true)}
+              className="flex-row items-center self-start bg-white rounded-full px-3 py-2 mb-4"
+              style={CARD_BORDER}
+            >
+              <Ionicons name="business" size={14} color={colors.primary} />
+              <Text className="text-ink text-sm font-semibold mx-2" numberOfLines={1}>
+                {venue.name}
+              </Text>
+              <Ionicons name="chevron-down" size={14} color={colors.muted} />
+            </Pressable>
           )}
-        </View>
-        <Text className="text-muted text-sm mb-6">{venue.city ?? "City not set"}</Text>
 
-        <View className="flex-row" style={{ gap: 12 }}>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
-            <Text className="text-ink font-extrabold text-2xl">{todaysBookings.length}</Text>
-            <Text className="text-muted text-xs mt-0.5">Today's Bookings</Text>
+          <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
+            <StatCard
+              icon="calendar"
+              iconBg={colors.primaryLight}
+              iconColor={colors.primaryDark}
+              label="Today's Bookings"
+              value={String(stats.todaysBookingsCount)}
+              delta={stats.bookingsDelta}
+            />
+            <StatCard
+              icon="wallet"
+              iconBg="#EDE9FE"
+              iconColor="#7C3AED"
+              label="Today's Revenue"
+              value={`Rs ${stats.todaysRevenue.toLocaleString()}`}
+              delta={stats.revenueDelta}
+            />
+            <StatCard
+              icon="pie-chart"
+              iconBg="#DBEAFE"
+              iconColor="#2563EB"
+              label="Occupancy Rate"
+              value={`${stats.occupancyRate}%`}
+              delta={stats.occupancyDelta}
+            />
+            <StatCard
+              icon="time"
+              iconBg="#FFEDD5"
+              iconColor="#EA580C"
+              label="Pending Bookings"
+              value={String(stats.pendingCount)}
+              footer={stats.pendingCount > 0 ? "View pending" : undefined}
+              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+            />
           </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
-            <Text className="text-ink font-extrabold text-2xl">{courtsCount}</Text>
-            <Text className="text-muted text-xs mt-0.5">Courts</Text>
-          </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 items-center" style={CARD_BORDER}>
-            <Text className="text-ink font-extrabold text-2xl">{venue.rating.toFixed(1)}</Text>
-            <Text className="text-muted text-xs mt-0.5">Rating</Text>
+
+          <View className="mt-4">
+            <SectionCard
+              title="Today's Schedule"
+              action="View Full Schedule"
+              onAction={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+            >
+              {stats.todaysSchedule.length === 0 ? (
+                <Text className="text-muted text-sm py-2">No bookings scheduled for today yet.</Text>
+              ) : (
+                stats.todaysSchedule.slice(0, 5).map((b) => {
+                  const badge = STATUS_BADGE[b.status];
+                  return (
+                    <View key={b.id} className="flex-row items-center justify-between py-2 border-b border-border">
+                      <View className="flex-1 pr-2">
+                        <Text className="text-ink text-sm font-medium">{formatTimeRange(b.start_time, b.end_time)}</Text>
+                        <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                          {b.court?.name ?? "Court"}
+                        </Text>
+                      </View>
+                      {badge && (
+                        <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
+                          <Text className={`text-xs font-medium ${badge.text}`}>{badge.label}</Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
+              )}
+            </SectionCard>
+
+            <SectionCard title="Revenue Overview">
+              <View className="flex-row items-baseline justify-between mb-3">
+                <View>
+                  <Text className="text-muted text-xs">Total Revenue (this week)</Text>
+                  <Text className="text-ink font-extrabold text-2xl mt-0.5">Rs {weekly.total.toLocaleString()}</Text>
+                </View>
+                <DeltaLabel value={weekly.weekDelta} suffix="% vs last week" />
+              </View>
+              <RevenueBarChart labels={weekly.labels} values={weekly.values} />
+            </SectionCard>
+
+            <SectionCard
+              title="Upcoming Bookings"
+              action="View All"
+              onAction={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+            >
+              {upcoming.length === 0 ? (
+                <Text className="text-muted text-sm py-2">No upcoming bookings yet.</Text>
+              ) : (
+                upcoming.map((b) => {
+                  const badge = STATUS_BADGE[b.status];
+                  return (
+                    <View key={b.id} className="flex-row items-center justify-between py-2 border-b border-border">
+                      <View className="flex-1 pr-2">
+                        <Text className="text-ink text-sm font-medium" numberOfLines={1}>
+                          {b.court?.name ?? "Court"} · {b.profiles?.full_name ?? "Customer"}
+                        </Text>
+                        <Text className="text-muted text-xs mt-0.5">{formatTimeRange(b.start_time, b.end_time)}</Text>
+                      </View>
+                      <View className="items-end">
+                        {badge && (
+                          <View className={`px-2.5 py-1 rounded-full mb-1 ${badge.bg}`}>
+                            <Text className={`text-xs font-medium ${badge.text}`}>{badge.label}</Text>
+                          </View>
+                        )}
+                        <Text className="text-ink text-xs font-semibold">Rs {b.total_amount.toLocaleString()}</Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </SectionCard>
+
+            {topVenues.length > 0 && (
+              <SectionCard
+                title="Top Venues"
+                action="View All"
+                onAction={() => navigation.navigate("AdminVenueList")}
+              >
+                {topVenues.map((v) => (
+                  <View key={v.venueId} className="flex-row items-center justify-between py-2 border-b border-border">
+                    <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
+                      {v.name}
+                    </Text>
+                    <Text className="text-muted text-xs mr-3">{v.bookingsCount} bookings</Text>
+                    <Text className="text-ink text-xs font-semibold">Rs {v.revenue.toLocaleString()}</Text>
+                  </View>
+                ))}
+              </SectionCard>
+            )}
+
+            <SectionCard title="Recent Notifications">
+              {recent.length === 0 ? (
+                <Text className="text-muted text-sm py-2">No recent activity yet.</Text>
+              ) : (
+                recent.map((b) => (
+                  <View key={b.id} className="flex-row items-start py-2 border-b border-border" style={{ gap: 10 }}>
+                    <View
+                      className="items-center justify-center rounded-full"
+                      style={{ width: 32, height: 32, backgroundColor: colors.primaryLight }}
+                    >
+                      <Ionicons name="calendar" size={15} color={colors.primaryDark} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-ink text-sm font-medium">
+                        {b.court?.name ?? "A court"} booked for {formatTimeRange(b.start_time, b.end_time)}
+                      </Text>
+                      <Text className="text-muted text-xs mt-0.5">{b.profiles?.full_name ?? "Customer"}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </SectionCard>
+
+            <Text className="text-ink font-bold text-base mb-3">Quick Actions</Text>
+            <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
+              <Pressable
+                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
+                className="bg-white rounded-2xl p-4 items-center"
+                style={{ width: "48%", ...CARD_BORDER }}
+              >
+                <Ionicons name="lock-closed-outline" size={20} color={colors.primaryDark} />
+                <Text className="text-ink text-sm font-semibold mt-2">Block a Slot</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
+                className="bg-white rounded-2xl p-4 items-center"
+                style={{ width: "48%", ...CARD_BORDER }}
+              >
+                <Ionicons name="grid-outline" size={20} color={colors.primaryDark} />
+                <Text className="text-ink text-sm font-semibold mt-2">Manage Courts</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
+                className="bg-white rounded-2xl p-4 items-center"
+                style={{ width: "48%", ...CARD_BORDER }}
+              >
+                <Ionicons name="pricetag-outline" size={20} color={colors.primaryDark} />
+                <Text className="text-ink text-sm font-semibold mt-2">Edit Pricing</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setMenuOpen(true)}
+                className="bg-white rounded-2xl p-4 items-center"
+                style={{ width: "48%", ...CARD_BORDER }}
+              >
+                <Ionicons name="stats-chart-outline" size={20} color={colors.primaryDark} />
+                <Text className="text-ink text-sm font-semibold mt-2">View Reports</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
+      </ScrollView>
 
-        <Text className="text-lg font-semibold text-ink mt-6 mb-3">Manage Venue</Text>
-        <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
-          <QuickLinkCard
-            icon="create-outline"
-            label="Venue Details"
-            onPress={() => navigation.navigate("EditVenueDetails", { venueId: params.venueId })}
-          />
-          <QuickLinkCard
-            icon="images-outline"
-            label="Photos"
-            onPress={() => navigation.navigate("ManageVenueImages", { venueId: params.venueId })}
-          />
-          <QuickLinkCard
-            icon="grid-outline"
-            label="Courts & Slots"
-            onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
-          />
-          <QuickLinkCard
-            icon="sparkles-outline"
-            label="Amenities"
-            onPress={() => navigation.navigate("ManageFacilities", { venueId: params.venueId })}
-          />
-          <QuickLinkCard
-            icon="calendar-outline"
-            label="Bookings"
-            onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
-          />
+      <AdminMenuOverlay visible={menuOpen} onClose={() => setMenuOpen(false)} activeKey="dashboard" items={menuItems} />
+
+      <Modal visible={switcherOpen} animationType="slide" transparent onRequestClose={() => setSwitcherOpen(false)}>
+        <View className="flex-1 bg-black/40 justify-end">
+          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold text-ink">Switch Venue</Text>
+              <Pressable onPress={() => setSwitcherOpen(false)} hitSlop={8}>
+                <Ionicons name="close" size={22} color={colors.muted} />
+              </Pressable>
+            </View>
+            {(myVenues ?? []).map((v) => (
+              <Pressable
+                key={v.id}
+                onPress={() => {
+                  setSwitcherOpen(false);
+                  navigation.setParams({ venueId: v.id });
+                }}
+                className="flex-row items-center justify-between py-3 border-b border-border"
+              >
+                <Text className="text-ink text-sm font-medium">{v.name}</Text>
+                {v.id === params.venueId && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+              </Pressable>
+            ))}
+          </View>
         </View>
-
-        <Pressable
-          onPress={async () => {
-            await signOutGoogle();
-            supabase.auth.signOut();
-          }}
-          className="border border-danger rounded-xl py-3 items-center mt-8"
-        >
-          <Text className="text-danger font-semibold">Sign out</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+      </Modal>
+    </View>
   );
 }

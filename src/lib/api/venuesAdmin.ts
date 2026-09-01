@@ -1,6 +1,7 @@
 import { supabase } from "../supabase";
 import type { Database } from "../../types/database.types";
 import type { Venue, Court } from "./venues";
+import { isExclusionViolation } from "../nameValidation";
 
 export type MyVenueListItem = Venue & {
   venue_images: { image_url: string }[];
@@ -41,15 +42,31 @@ export type VenueBooking = {
   end_time: string;
   status: Database["public"]["Enums"]["booking_status_type"];
   total_amount: number;
+  created_at: string;
   court: { id: string; name: string } | null;
   profiles: { full_name: string | null; avatar: string | null } | null;
 };
 
+// A venue shows up here if this user is either the primary owner OR one of
+// the venue's additional admins (venue_admins) — both have identical access
+// via is_venue_admin() at the RLS layer, so both should see it listed here.
 export async function fetchMyVenues(ownerId: string): Promise<MyVenueListItem[]> {
+  const { data: adminRows, error: adminError } = await supabase
+    .from("venue_admins")
+    .select("venue_id")
+    .eq("user_id", ownerId);
+  if (adminError) throw new Error(adminError.message);
+  const adminVenueIds = (adminRows ?? []).map((r) => r.venue_id);
+
+  const orFilter =
+    adminVenueIds.length > 0
+      ? `venue_owner_id.eq.${ownerId},id.in.(${adminVenueIds.join(",")})`
+      : `venue_owner_id.eq.${ownerId}`;
+
   const { data, error } = await supabase
     .from("venues")
     .select("*, venue_images(image_url)")
-    .eq("venue_owner_id", ownerId)
+    .or(orFilter)
     .is("deleted_at", null)
     .order("name", { ascending: true });
   if (error) throw new Error(error.message);
@@ -239,7 +256,12 @@ export async function blockSlot(
     total_amount: 0,
     payment_status: "unpaid",
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isExclusionViolation(error)) {
+      throw new Error("This slot was just booked by a customer, so it can no longer be blocked.");
+    }
+    throw new Error(error.message);
+  }
 }
 
 export async function unblockSlot(bookingId: string): Promise<void> {
@@ -254,7 +276,9 @@ export async function unblockSlot(bookingId: string): Promise<void> {
 export async function fetchVenueBookings(venueId: string): Promise<VenueBooking[]> {
   const { data, error } = await supabase
     .from("bookings")
-    .select("id, start_time, end_time, status, total_amount, court!inner(id, name), profiles(full_name, avatar)")
+    .select(
+      "id, start_time, end_time, status, total_amount, created_at, court!inner(id, name), profiles(full_name, avatar)"
+    )
     .eq("court.venue_id", venueId)
     .is("deleted_at", null)
     .neq("status", "CANCELLED")

@@ -7,31 +7,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useVenueBookings } from "../../hooks/useVenuesAdmin";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { generateSlots, toLocalDateStr } from "../../lib/slots";
+import { COUNTED_STATUSES, REVENUE_STATUSES, OCCUPIED_STATUSES, STATUS_BADGE } from "../../lib/bookingStatus";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
 type Route = RouteProp<VenueEditingParamList, "VenueBookings">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "VenueBookings">;
 
-const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING: { bg: "bg-orange-50", text: "text-orange-600", label: "Pending" },
-  CONFIRMED: { bg: "bg-green-50", text: "text-green-700", label: "Confirmed" },
-  COMPLETED: { bg: "bg-blue-50", text: "text-blue-600", label: "Completed" },
-  BLOCKED: { bg: "bg-red-50", text: "text-red-600", label: "Blocked by you" },
-};
-
 const CARD_BORDER = {
   borderWidth: 1,
   borderColor: "rgba(17, 24, 39, 0.06)",
 } as const;
-
-// Bookings that represent a real customer request; BLOCKED (admin-held slot) and
-// CANCELLED/EXPIRED (never went through) don't count toward booking-count stats.
-const COUNTED_STATUSES = new Set(["PENDING", "CONFIRMED", "COMPLETED"]);
-// Only bookings the venue actually collects money for count toward revenue.
-const REVENUE_STATUSES = new Set(["CONFIRMED", "COMPLETED"]);
-// Slot occupancy also includes admin-blocked slots, since those aren't available either.
-const OCCUPIED_STATUSES = new Set(["PENDING", "CONFIRMED", "COMPLETED", "BLOCKED"]);
 
 type PeriodKey = "today" | "week" | "month" | "year";
 const PERIODS: { key: PeriodKey; label: string }[] = [

@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { isExclusionViolation } from "../nameValidation";
 
 export type BookingWithCourt = {
   id: string;
@@ -61,7 +62,12 @@ export async function createBooking(params: CreateBookingParams) {
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isExclusionViolation(error)) {
+      throw new Error("This slot was just booked by someone else. Please choose another slot.");
+    }
+    throw new Error(error.message);
+  }
   return data;
 }
 

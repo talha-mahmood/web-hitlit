@@ -14,3 +14,9 @@ export const NAME_REQUIREMENT_HINT = "at least 3 letters long, starting with a c
 export function isUniqueViolation(error: { code?: string } | null | undefined): boolean {
   return error?.code === "23505";
 }
+
+// Postgres reports an exclusion-constraint violation (e.g. the overlapping-
+// bookings guard) as SQLSTATE 23P01.
+export function isExclusionViolation(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "23P01";
+}

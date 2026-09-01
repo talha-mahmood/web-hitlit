@@ -7,6 +7,13 @@ export type AllVenuesListItem = Venue & {
 
 export type AdminLookupResult = { id: string; full_name: string | null; email: string | null; avatar: string | null };
 
+export type VenueAdmin = {
+  id: string;
+  user_id: string;
+  created_at: string;
+  profiles: { full_name: string | null; email: string | null; avatar: string | null } | null;
+};
+
 export async function fetchAllVenues(search?: string): Promise<AllVenuesListItem[]> {
   let query = supabase
     .from("venues")
@@ -56,6 +63,39 @@ export async function assignVenueAdmin(venueId: string, profileId: string): Prom
 
 export async function removeVenueAdmin(venueId: string): Promise<void> {
   const { error } = await supabase.from("venues").update({ venue_owner_id: null }).eq("id", venueId);
+  if (error) throw new Error(error.message);
+}
+
+// Additional (non-primary) admins for a venue — a venue can have exactly one
+// owner (venue_owner_id above) plus any number of these secondary admins,
+// each with the same read/write access to the venue via is_venue_admin().
+export async function fetchVenueAdmins(venueId: string): Promise<VenueAdmin[]> {
+  const { data, error } = await supabase
+    .from("venue_admins")
+    .select("id, user_id, created_at, profiles(full_name, email, avatar)")
+    .eq("venue_id", venueId)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data as unknown as VenueAdmin[]) ?? [];
+}
+
+// RPC (not a raw insert) because granting also needs to flip the target
+// profile to 'owner' when it isn't already — a change profiles' own RLS
+// blocks for anyone but a superadmin, so the RPC does it under a controlled
+// SECURITY DEFINER exemption instead of widening that policy.
+export async function grantVenueAdmin(venueId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc("grant_venue_admin", {
+    target_venue_id: venueId,
+    target_user_id: userId,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function revokeVenueAdminAccess(venueId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc("revoke_venue_admin", {
+    target_venue_id: venueId,
+    target_user_id: userId,
+  });
   if (error) throw new Error(error.message);
 }
 
