@@ -19,13 +19,21 @@ export default function AdminVenueListScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: venues, isLoading } = useMyVenues(userId);
 
+  // Auto-advance when there's only one venue to manage — but this is purely
+  // a convenience. If this fires before the navigator has fully settled
+  // right after signing in (a real React Navigation race we hit: replace()
+  // called during the very first render of a freshly-mounted stack can be
+  // silently dropped), the user must never be left stranded on a bare
+  // spinner with no way forward. So the list below always renders — worst
+  // case, they just tap their one venue manually instead of it happening
+  // automatically.
   useEffect(() => {
     if (venues && venues.length === 1) {
       navigation.replace("AdminDashboard", { venueId: venues[0].id });
     }
   }, [venues, navigation]);
 
-  if (isLoading || (venues && venues.length === 1)) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator color={colors.primary} />
