@@ -53,30 +53,140 @@ export function computeDashboardStats(bookings: VenueBooking[], venue: Venue, co
   };
 }
 
-export function computeWeeklyRevenue(bookings: VenueBooking[]) {
-  const days = Array.from({ length: 7 }, (_, i) => dateOffset(i - 6));
-  const byDay = new Map(days.map((d) => [d, 0]));
-  for (const b of bookings) {
-    if (!REVENUE_STATUSES.has(b.status)) continue;
-    const day = toLocalDateStr(new Date(b.start_time));
-    if (byDay.has(day)) {
-      byDay.set(day, (byDay.get(day) ?? 0) + b.total_amount);
+export type RevenueScale = "days" | "weeks" | "months";
+
+export type RevenueBuckets = {
+  labels: string[];
+  // Longer, human-readable label per bar — shown when a bar is tapped.
+  detailLabels: string[];
+  values: number[];
+  total: number;
+  deltaPct: number | null;
+  periodLabel: string;
+};
+
+function startOfWeek(d: Date): Date {
+  const copy = new Date(d);
+  const daysSinceMonday = (copy.getDay() + 6) % 7;
+  copy.setHours(0, 0, 0, 0);
+  copy.setDate(copy.getDate() - daysSinceMonday);
+  return copy;
+}
+
+// Powers the dashboard's revenue bar chart at three zoom levels — same
+// underlying booking data, just bucketed differently, so switching scale
+// doesn't require a different query.
+export function computeRevenueByScale(bookings: VenueBooking[], scale: RevenueScale): RevenueBuckets {
+  const now = new Date();
+  const revenueBookings = bookings.filter((b) => REVENUE_STATUSES.has(b.status));
+
+  if (scale === "days") {
+    const count = 7;
+    const days = Array.from({ length: count }, (_, i) => dateOffset(i - (count - 1)));
+    const byDay = new Map(days.map((d) => [d, 0]));
+    for (const b of revenueBookings) {
+      const day = toLocalDateStr(new Date(b.start_time));
+      if (byDay.has(day)) byDay.set(day, (byDay.get(day) ?? 0) + b.total_amount);
     }
+    const values = days.map((d) => byDay.get(d) ?? 0);
+    const total = values.reduce((a, b) => a + b, 0);
+    const labels = days.map((d) => new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { weekday: "short" }));
+    const detailLabels = days.map((d) =>
+      new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+    );
+
+    const prevStart = dateOffset(-2 * count + 1);
+    const prevEnd = dateOffset(-count);
+    const prevTotal = revenueBookings
+      .filter((b) => {
+        const day = toLocalDateStr(new Date(b.start_time));
+        return day >= prevStart && day <= prevEnd;
+      })
+      .reduce((sum, b) => sum + b.total_amount, 0);
+
+    return { labels, detailLabels, values, total, deltaPct: pctChange(total, prevTotal), periodLabel: "last 7 days" };
   }
-  const values = days.map((d) => byDay.get(d) ?? 0);
-  const total = values.reduce((a, b) => a + b, 0);
 
-  const thisWeekStart = dateOffset(-6);
-  const lastWeekBookings = bookings.filter((b) => {
-    const day = toLocalDateStr(new Date(b.start_time));
-    return day < thisWeekStart && day >= dateOffset(-13) && REVENUE_STATUSES.has(b.status);
+  if (scale === "weeks") {
+    const count = 8;
+    const thisWeekStart = startOfWeek(now);
+    const weekStarts = Array.from({ length: count }, (_, i) => {
+      const d = new Date(thisWeekStart);
+      d.setDate(d.getDate() - (count - 1 - i) * 7);
+      return d;
+    });
+    const values = weekStarts.map((start) => {
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      return revenueBookings
+        .filter((b) => {
+          const t = new Date(b.start_time);
+          return t >= start && t < end;
+        })
+        .reduce((sum, b) => sum + b.total_amount, 0);
+    });
+    const total = values.reduce((a, b) => a + b, 0);
+    const labels = weekStarts.map((d) => `${d.getDate()}/${d.getMonth() + 1}`);
+    const fmtDay = (x: Date) => x.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const detailLabels = weekStarts.map((d) => {
+      const end = new Date(d);
+      end.setDate(end.getDate() + 6);
+      return `Week of ${fmtDay(d)} – ${fmtDay(end)}`;
+    });
+
+    const prevStart = new Date(weekStarts[0]);
+    prevStart.setDate(prevStart.getDate() - count * 7);
+    const prevEnd = weekStarts[0];
+    const prevTotal = revenueBookings
+      .filter((b) => {
+        const t = new Date(b.start_time);
+        return t >= prevStart && t < prevEnd;
+      })
+      .reduce((sum, b) => sum + b.total_amount, 0);
+
+    return {
+      labels,
+      detailLabels,
+      values,
+      total,
+      deltaPct: pctChange(total, prevTotal),
+      periodLabel: `last ${count} weeks`,
+    };
+  }
+
+  // months
+  const count = 6;
+  const monthStarts = Array.from({ length: count }, (_, i) => new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1));
+  const values = monthStarts.map((start) => {
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+    return revenueBookings
+      .filter((b) => {
+        const t = new Date(b.start_time);
+        return t >= start && t < end;
+      })
+      .reduce((sum, b) => sum + b.total_amount, 0);
   });
-  const lastWeekTotal = lastWeekBookings.reduce((sum, b) => sum + b.total_amount, 0);
-  const weekDelta = pctChange(total, lastWeekTotal);
+  const total = values.reduce((a, b) => a + b, 0);
+  const labels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "short" }));
+  const detailLabels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "long", year: "numeric" }));
 
-  const labels = days.map((d) => new Date(`${d}T00:00:00`).toLocaleDateString("en-US", { weekday: "short" }));
+  const prevStart = new Date(monthStarts[0].getFullYear(), monthStarts[0].getMonth() - count, 1);
+  const prevEnd = monthStarts[0];
+  const prevTotal = revenueBookings
+    .filter((b) => {
+      const t = new Date(b.start_time);
+      return t >= prevStart && t < prevEnd;
+    })
+    .reduce((sum, b) => sum + b.total_amount, 0);
 
-  return { days, labels, values, total, weekDelta };
+  return {
+    labels,
+    detailLabels,
+    values,
+    total,
+    deltaPct: pctChange(total, prevTotal),
+    periodLabel: `last ${count} months`,
+  };
 }
 
 export function computeUpcomingBookings(bookings: VenueBooking[], limit = 3) {

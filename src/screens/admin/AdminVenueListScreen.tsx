@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { View, Text, Pressable, FlatList, Image, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -19,20 +18,13 @@ export default function AdminVenueListScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: venues, isLoading } = useMyVenues(userId);
 
-  // Auto-advance when there's only one venue to manage — but this is purely
-  // a convenience. If this fires before the navigator has fully settled
-  // right after signing in (a real React Navigation race we hit: replace()
-  // called during the very first render of a freshly-mounted stack can be
-  // silently dropped), the user must never be left stranded on a bare
-  // spinner with no way forward. So the list below always renders — worst
-  // case, they just tap their one venue manually instead of it happening
-  // automatically.
-  useEffect(() => {
-    if (venues && venues.length === 1) {
-      navigation.replace("AdminDashboard", { venueId: venues[0].id });
-    }
-  }, [venues, navigation]);
-
+  // Deliberately no auto-advance to the dashboard when there's only one
+  // venue: this screen is also reached mid-session via the sidebar's "My
+  // Venues" item, and auto-replacing back to AdminDashboard made that menu
+  // item look like it did nothing (same screen every time) for single-venue
+  // admins — worse, since AdminDashboard was reached via replace(), this
+  // screen was regenerated as a *new* instance in the stack, so the
+  // auto-skip fired every visit, not just the first. Always show the list.
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-100">

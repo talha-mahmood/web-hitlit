@@ -73,6 +73,7 @@ export default function AdminAnalyticsScreen() {
   const { data: bookings, isLoading: bookingsLoading } = useVenueBookings(params.venueId);
   const { data: cancelledCount, isLoading: cancelledLoading } = useCancelledBookingsCount(params.venueId);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const isLoading = venueLoading || bookingsLoading || cancelledLoading;
@@ -82,15 +83,33 @@ export default function AdminAnalyticsScreen() {
     return Array.from(names).sort();
   }, [venue]);
 
+  // Only surfaced once a sport is picked, and only when that sport has more
+  // than one court — a venue with a single "Badminton" court has nothing to
+  // drill further into.
+  const courtOptions = useMemo(() => {
+    if (!selectedSport) return [];
+    return (venue?.court ?? []).filter((c) => c.sports?.name === selectedSport);
+  }, [venue, selectedSport]);
+
+  const selectedCourtName = courtOptions.find((c) => c.id === selectedCourtId)?.name ?? null;
+
+  const handleSelectSport = (sport: string | null) => {
+    setSelectedSport(sport);
+    setSelectedCourtId(null);
+  };
+
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
-    if (!selectedSport) return bookings;
-    return bookings.filter((b) => b.court?.sports?.name === selectedSport);
-  }, [bookings, selectedSport]);
+    let result = bookings;
+    if (selectedSport) result = result.filter((b) => b.court?.sports?.name === selectedSport);
+    if (selectedCourtId) result = result.filter((b) => b.court?.id === selectedCourtId);
+    return result;
+  }, [bookings, selectedSport, selectedCourtId]);
 
+  const isFiltered = !!selectedSport || !!selectedCourtId;
   const analytics = useMemo(
-    () => (bookings ? computeVenueAnalytics(filteredBookings, selectedSport ? 0 : cancelledCount ?? 0) : null),
-    [bookings, filteredBookings, selectedSport, cancelledCount]
+    () => (bookings ? computeVenueAnalytics(filteredBookings, isFiltered ? 0 : cancelledCount ?? 0) : null),
+    [bookings, filteredBookings, isFiltered, cancelledCount]
   );
   const sportBreakdown = useMemo(() => computeSportBreakdown(bookings ?? []), [bookings]);
   const heatmap = useMemo(() => computeDayTimeHeatmap(filteredBookings), [filteredBookings]);
@@ -155,9 +174,9 @@ export default function AdminAnalyticsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         {sportOptions.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }} style={{ marginBottom: 16 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }} style={{ marginBottom: courtOptions.length > 1 ? 8 : 16 }}>
             <Pressable
-              onPress={() => setSelectedSport(null)}
+              onPress={() => handleSelectSport(null)}
               className="px-3 py-2 rounded-xl"
               style={{
                 borderWidth: 1.5,
@@ -174,7 +193,7 @@ export default function AdminAnalyticsScreen() {
               return (
                 <Pressable
                   key={sport}
-                  onPress={() => setSelectedSport(sport)}
+                  onPress={() => handleSelectSport(sport)}
                   className="px-3 py-2 rounded-xl"
                   style={{
                     borderWidth: 1.5,
@@ -189,13 +208,44 @@ export default function AdminAnalyticsScreen() {
           </ScrollView>
         )}
 
+        {courtOptions.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 4 }} style={{ marginBottom: 16 }}>
+            <Pressable
+              onPress={() => setSelectedCourtId(null)}
+              className="px-2.5 py-1.5 rounded-lg"
+              style={{ backgroundColor: !selectedCourtId ? colors.primaryLight : "#F3F4F6" }}
+            >
+              <Text className="text-xs font-medium" style={{ color: !selectedCourtId ? colors.primaryDark : colors.muted }}>
+                All {selectedSport} Courts
+              </Text>
+            </Pressable>
+            {courtOptions.map((court) => {
+              const selected = selectedCourtId === court.id;
+              return (
+                <Pressable
+                  key={court.id}
+                  onPress={() => setSelectedCourtId(court.id)}
+                  className="px-2.5 py-1.5 rounded-lg"
+                  style={{ backgroundColor: selected ? colors.primaryLight : "#F3F4F6" }}
+                >
+                  <Text className="text-xs font-medium" style={{ color: selected ? colors.primaryDark : colors.muted }}>
+                    {court.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
         {analytics.totalBookings === 0 ? (
           <View className="border border-dashed border-border rounded-2xl p-8 items-center mb-4">
             <Ionicons name="stats-chart-outline" size={32} color={colors.border} />
             <Text className="text-muted text-sm text-center mt-2">
-              {selectedSport
-                ? `No ${selectedSport} bookings yet.`
-                : "Not enough booking history yet to show analytics."}
+              {selectedCourtName
+                ? `No bookings for ${selectedCourtName} yet.`
+                : selectedSport
+                  ? `No ${selectedSport} bookings yet.`
+                  : "Not enough booking history yet to show analytics."}
             </Text>
           </View>
         ) : (
@@ -211,7 +261,7 @@ export default function AdminAnalyticsScreen() {
               icon="wallet"
               iconBg="#EDE9FE"
               iconColor="#7C3AED"
-              label={selectedSport ? `${selectedSport} Revenue` : "Total Revenue"}
+              label={selectedCourtName ? `${selectedCourtName} Revenue` : selectedSport ? `${selectedSport} Revenue` : "Total Revenue"}
               value={`Rs ${analytics.totalRevenue.toLocaleString()}`}
             />
             <StatCard
@@ -226,7 +276,7 @@ export default function AdminAnalyticsScreen() {
               iconBg="#FEE2E2"
               iconColor="#DC2626"
               label="Cancellation Rate"
-              value={selectedSport ? "—" : `${analytics.cancellationRate}%`}
+              value={isFiltered ? "—" : `${analytics.cancellationRate}%`}
             />
             {!selectedSport && (
               <>
@@ -286,7 +336,8 @@ export default function AdminAnalyticsScreen() {
         {heatmap.max > 1 && (
           <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
             <Text className="text-ink font-bold text-base mb-1">
-              Revenue by Day &amp; Time{selectedSport ? ` · ${selectedSport}` : ""}
+              Revenue by Day &amp; Time
+              {selectedCourtName ? ` · ${selectedCourtName}` : selectedSport ? ` · ${selectedSport}` : ""}
             </Text>
             <Text className="text-muted text-xs mb-3">Spot the busiest day/time combinations at a glance.</Text>
             <DayTimeHeatmapChart data={heatmap} />

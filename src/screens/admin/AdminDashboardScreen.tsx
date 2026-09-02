@@ -16,10 +16,11 @@ import {
 } from "../../hooks/useVenuesAdmin";
 import {
   computeDashboardStats,
-  computeWeeklyRevenue,
+  computeRevenueByScale,
   computeUpcomingBookings,
   computeRecentActivity,
   computeTopVenues,
+  type RevenueScale,
 } from "../../lib/adminDashboard";
 import { STATUS_BADGE } from "../../lib/bookingStatus";
 import { colors } from "../../constants/theme";
@@ -136,6 +137,7 @@ export default function AdminDashboardScreen() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [hourlyModalOpen, setHourlyModalOpen] = useState(false);
   const [hourlyCourtId, setHourlyCourtId] = useState<string | null>(null);
+  const [revenueScale, setRevenueScale] = useState<RevenueScale>("days");
 
   const venueIds = useMemo(() => (myVenues ?? []).map((v) => v.id), [myVenues]);
   const { data: allBookings } = useAllMyVenuesBookings(venueIds);
@@ -146,7 +148,10 @@ export default function AdminDashboardScreen() {
     () => (venue && bookings ? computeDashboardStats(bookings, venue, courtsCount) : null),
     [venue, bookings, courtsCount]
   );
-  const weekly = useMemo(() => (bookings ? computeWeeklyRevenue(bookings) : null), [bookings]);
+  const weekly = useMemo(
+    () => (bookings ? computeRevenueByScale(bookings, revenueScale) : null),
+    [bookings, revenueScale]
+  );
   const upcoming = useMemo(() => (bookings ? computeUpcomingBookings(bookings) : []), [bookings]);
   const recent = useMemo(() => (bookings ? computeRecentActivity(bookings) : []), [bookings]);
   const topVenues = useMemo(
@@ -377,12 +382,37 @@ export default function AdminDashboardScreen() {
             <SectionCard title="Revenue Overview">
               <View className="flex-row items-baseline justify-between mb-3">
                 <View>
-                  <Text className="text-muted text-xs">Total Revenue (this week)</Text>
+                  <Text className="text-muted text-xs">Total Revenue ({weekly.periodLabel})</Text>
                   <Text className="text-ink font-extrabold text-2xl mt-0.5">Rs {weekly.total.toLocaleString()}</Text>
                 </View>
-                <DeltaLabel value={weekly.weekDelta} suffix="% vs last week" />
+                <DeltaLabel value={weekly.deltaPct} suffix={`% vs previous ${weekly.periodLabel.replace("last ", "")}`} />
               </View>
-              <RevenueBarChart labels={weekly.labels} values={weekly.values} />
+
+              <View className="flex-row bg-gray-100 rounded-xl p-1 mb-4" style={{ gap: 4 }}>
+                {(["days", "weeks", "months"] as RevenueScale[]).map((scale) => (
+                  <Pressable
+                    key={scale}
+                    onPress={() => setRevenueScale(scale)}
+                    className="flex-1 items-center py-1.5 rounded-lg"
+                    style={{ backgroundColor: revenueScale === scale ? "white" : "transparent" }}
+                  >
+                    <Text
+                      className="text-xs font-semibold capitalize"
+                      style={{ color: revenueScale === scale ? colors.primary : colors.muted }}
+                    >
+                      {scale}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <RevenueBarChart
+                labels={weekly.labels}
+                values={weekly.values}
+                onBarPress={(i) =>
+                  Alert.alert(weekly.detailLabels[i], `Rs ${weekly.values[i].toLocaleString()} in revenue`)
+                }
+              />
             </SectionCard>
 
             <SectionCard title="Upcoming Bookings">
