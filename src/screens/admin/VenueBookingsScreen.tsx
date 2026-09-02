@@ -154,17 +154,32 @@ export default function VenueBookingsScreen() {
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [dateSelection, setDateSelection] = useState<DateSelection | null>(null);
+  const [selectedSport, setSelectedSport] = useState<string | null>(null);
+
+  const sportOptions = useMemo(() => {
+    const names = new Set((venue?.court ?? []).map((c) => c.sports?.name).filter((n): n is string => !!n));
+    return Array.from(names).sort();
+  }, [venue]);
+
+  // No sport picked → every court's bookings; a sport picked → only that
+  // sport's courts, everywhere on this screen (today's revenue/calendar,
+  // upcoming, and the date-range/single-day results below).
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    if (!selectedSport) return bookings;
+    return bookings.filter((b) => b.court?.sports?.name === selectedSport);
+  }, [bookings, selectedSport]);
 
   const stats = useMemo(
-    () => (venue ? computeDashboardStats(bookings ?? [], venue, venue.court.length) : null),
-    [bookings, venue]
+    () => (venue ? computeDashboardStats(filteredBookings, venue, venue.court.length) : null),
+    [filteredBookings, venue]
   );
-  const upcoming = useMemo(() => computeUpcomingBookings(bookings ?? [], 20), [bookings]);
+  const upcoming = useMemo(() => computeUpcomingBookings(filteredBookings, 20), [filteredBookings]);
 
   const selectionResult = useMemo(() => {
-    if (!dateSelection || !bookings) return null;
+    if (!dateSelection) return null;
     const isSingleDay = dateSelection.start === dateSelection.end;
-    const inRange = bookings.filter((b) => {
+    const inRange = filteredBookings.filter((b) => {
       const day = toLocalDateStr(new Date(b.start_time));
       return day >= dateSelection.start && day <= dateSelection.end;
     });
@@ -174,7 +189,7 @@ export default function VenueBookingsScreen() {
       .reduce((sum, b) => sum + b.total_amount, 0);
     const dayBookings = isSingleDay ? counted.slice().sort((a, b) => a.start_time.localeCompare(b.start_time)) : [];
     return { isSingleDay, totalBookings: counted.length, totalRevenue: revenue, dayBookings };
-  }, [dateSelection, bookings]);
+  }, [dateSelection, filteredBookings]);
 
   const handleCancel = (id: string) =>
     cancelBooking.mutate(id, {
@@ -216,8 +231,50 @@ export default function VenueBookingsScreen() {
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          {sportOptions.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingBottom: 4 }}
+              style={{ marginBottom: 16 }}
+            >
+              <Pressable
+                onPress={() => setSelectedSport(null)}
+                className="px-3 py-2 rounded-xl"
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: !selectedSport ? colors.primary : colors.border,
+                  backgroundColor: !selectedSport ? colors.primary : "white",
+                }}
+              >
+                <Text className={`text-sm font-medium ${!selectedSport ? "text-white" : "text-ink"}`}>
+                  All Sports
+                </Text>
+              </Pressable>
+              {sportOptions.map((sport) => {
+                const selected = selectedSport === sport;
+                return (
+                  <Pressable
+                    key={sport}
+                    onPress={() => setSelectedSport(sport)}
+                    className="px-3 py-2 rounded-xl"
+                    style={{
+                      borderWidth: 1.5,
+                      borderColor: selected ? colors.primary : colors.border,
+                      backgroundColor: selected ? colors.primary : "white",
+                    }}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{sport}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+
           <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
-            <Text className="text-muted text-xs">Today's Revenue</Text>
+            <Text className="text-muted text-xs">
+              {selectedSport ? `Today's ${selectedSport} Revenue` : "Today's Revenue"}
+            </Text>
             <Text className="text-ink font-extrabold text-3xl mt-1">Rs {stats.todaysRevenue.toLocaleString()}</Text>
             <Text className="text-muted text-xs mt-1">{stats.todaysBookingsCount} bookings today</Text>
           </View>
@@ -267,9 +324,11 @@ export default function VenueBookingsScreen() {
             </View>
           )}
 
-          <SectionCard title="Today's Calendar">
+          <SectionCard title={selectedSport ? `Today's Calendar · ${selectedSport}` : "Today's Calendar"}>
             {stats.todaysSchedule.length === 0 ? (
-              <Text className="text-muted text-sm py-2">No bookings scheduled for today yet.</Text>
+              <Text className="text-muted text-sm py-2">
+                {selectedSport ? `No ${selectedSport} bookings scheduled for today yet.` : "No bookings scheduled for today yet."}
+              </Text>
             ) : (
               stats.todaysSchedule.map((b) => (
                 <BookingRow
@@ -283,9 +342,11 @@ export default function VenueBookingsScreen() {
             )}
           </SectionCard>
 
-          <SectionCard title="Upcoming Bookings">
+          <SectionCard title={selectedSport ? `Upcoming Bookings · ${selectedSport}` : "Upcoming Bookings"}>
             {upcoming.length === 0 ? (
-              <Text className="text-muted text-sm py-2">No upcoming bookings yet.</Text>
+              <Text className="text-muted text-sm py-2">
+                {selectedSport ? `No upcoming ${selectedSport} bookings yet.` : "No upcoming bookings yet."}
+              </Text>
             ) : (
               upcoming.map((b) => (
                 <BookingRow
