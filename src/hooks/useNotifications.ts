@@ -5,6 +5,7 @@ import {
   fetchUnreadNotificationCount,
   markAllNotificationsRead,
   markNotificationRead,
+  deleteNotification,
 } from "../lib/api/notifications";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -68,6 +69,17 @@ export function useMarkAllNotificationsRead(userId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => markAllNotificationsRead(userId as string),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications", userId] });
+      qc.invalidateQueries({ queryKey: ["notificationsUnreadCount", userId] });
+    },
+  });
+}
+
+export function useDeleteNotification(userId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteNotification,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications", userId] });
       qc.invalidateQueries({ queryKey: ["notificationsUnreadCount", userId] });

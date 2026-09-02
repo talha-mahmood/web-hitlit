@@ -56,7 +56,17 @@ export async function fetchVenues(filters: VenueFilters = {}): Promise<VenueList
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data as unknown as VenueListItem[]) ?? [];
+  const venues = (data as unknown as VenueListItem[]) ?? [];
+
+  // Boosted venues ("Boost Your Venue") surface first while boosted_until is
+  // in the future; sorted here (not via .order()) since a plain descending
+  // sort on the column would also rank an *expired* boost above an unboosted
+  // venue with a null value, which isn't the intent.
+  return [...venues].sort((a, b) => Number(isVenueBoosted(b)) - Number(isVenueBoosted(a)));
+}
+
+export function isVenueBoosted(venue: Pick<Venue, "boosted_until">): boolean {
+  return !!venue.boosted_until && new Date(venue.boosted_until).getTime() > Date.now();
 }
 
 export async function fetchVenueDetail(venueId: string): Promise<VenueDetail | null> {

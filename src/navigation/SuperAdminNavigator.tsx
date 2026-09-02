@@ -13,12 +13,12 @@ import VenueBookingsScreen from "../screens/admin/VenueBookingsScreen";
 import AdminReviewsScreen from "../screens/admin/AdminReviewsScreen";
 import AdminAnalyticsScreen from "../screens/admin/AdminAnalyticsScreen";
 import AdminNotificationsScreen from "../screens/admin/AdminNotificationsScreen";
+import BoostVenueScreen from "../screens/admin/BoostVenueScreen";
 import type { VenueEditingParamList } from "./adminTypes";
 
 export type SuperAdminStackParamList = VenueEditingParamList & {
   AllVenuesList: undefined;
   CreateVenue: undefined;
-  AssignAdmin: { venueId: string; venueName: string; currentAdminEmail: string | null };
 };
 
 const Stack = createNativeStackNavigator<SuperAdminStackParamList>();
@@ -42,6 +42,7 @@ export default function SuperAdminNavigator() {
       <Stack.Screen name="AdminReviews" component={AdminReviewsScreen} />
       <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} />
       <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} />
+      <Stack.Screen name="BoostVenue" component={BoostVenueScreen} />
     </Stack.Navigator>
   );
 }

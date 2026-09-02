@@ -3,7 +3,8 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { getSportIcon } from "../../lib/sportIcons";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
@@ -50,6 +51,18 @@ function DeltaLabel({ value, suffix = "" }: { value: number | null; suffix?: str
         {Math.abs(value)}
         {suffix} vs yesterday
       </Text>
+    </View>
+  );
+}
+
+function SportIconBadge({ sportName, size = 34 }: { sportName: string | undefined; size?: number }) {
+  const { icon, bg, fg } = getSportIcon(sportName ?? "");
+  return (
+    <View
+      className="items-center justify-center rounded-full"
+      style={{ width: size, height: size, backgroundColor: bg }}
+    >
+      <MaterialCommunityIcons name={icon} size={size * 0.55} color={fg} />
     </View>
   );
 }
@@ -165,6 +178,11 @@ export default function AdminDashboardScreen() {
   const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
 
+  // Only the primary owner can grant/revoke additional admins (matches the
+  // venue_admins RLS policies, which check is_venue_owner() specifically —
+  // a secondary admin tapping this would just hit a permission error).
+  const isPrimaryOwner = venue.venue_owner_id === userId;
+
   const menuItems = [
     { key: "dashboard", icon: "grid-outline" as const, label: "Dashboard", onPress: () => setMenuOpen(false) },
     {
@@ -221,6 +239,33 @@ export default function AdminDashboardScreen() {
         navigation.navigate("AdminNotifications");
       },
     },
+    {
+      key: "boost",
+      icon: "rocket-outline" as const,
+      label: "Boost Venue",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("BoostVenue", { venueId: params.venueId, venueName: venue.name });
+      },
+    },
+    ...(isPrimaryOwner
+      ? [
+          {
+            key: "manageAdmins",
+            icon: "people-outline" as const,
+            label: "Manage Admins",
+            onPress: () => {
+              setMenuOpen(false);
+              navigation.navigate("AssignAdmin", {
+                venueId: params.venueId,
+                venueName: venue.name,
+                currentAdminEmail: profile?.email ?? null,
+                hideOwnerTransfer: true,
+              });
+            },
+          },
+        ]
+      : []),
     {
       key: "signout",
       icon: "log-out-outline" as const,
@@ -321,11 +366,14 @@ export default function AdminDashboardScreen() {
                   const badge = STATUS_BADGE[b.status];
                   return (
                     <View key={b.id} className="flex-row items-center justify-between py-2 border-b border-border">
-                      <View className="flex-1 pr-2">
-                        <Text className="text-ink text-sm font-medium">{formatTimeRange(b.start_time, b.end_time)}</Text>
-                        <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-                          {b.court?.name ?? "Court"}
-                        </Text>
+                      <View className="flex-row items-center flex-1 pr-2" style={{ gap: 10 }}>
+                        <SportIconBadge sportName={b.court?.sports?.name} />
+                        <View className="flex-1">
+                          <Text className="text-ink text-sm font-medium">{formatTimeRange(b.start_time, b.end_time)}</Text>
+                          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                            {b.court?.name ?? "Court"}
+                          </Text>
+                        </View>
                       </View>
                       {badge && (
                         <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
@@ -357,11 +405,14 @@ export default function AdminDashboardScreen() {
                   const badge = STATUS_BADGE[b.status];
                   return (
                     <View key={b.id} className="flex-row items-center justify-between py-2 border-b border-border">
-                      <View className="flex-1 pr-2">
-                        <Text className="text-ink text-sm font-medium" numberOfLines={1}>
-                          {b.court?.name ?? "Court"} · {b.profiles?.full_name ?? "Customer"}
-                        </Text>
-                        <Text className="text-muted text-xs mt-0.5">{formatTimeRange(b.start_time, b.end_time)}</Text>
+                      <View className="flex-row items-center flex-1 pr-2" style={{ gap: 10 }}>
+                        <SportIconBadge sportName={b.court?.sports?.name} />
+                        <View className="flex-1">
+                          <Text className="text-ink text-sm font-medium" numberOfLines={1}>
+                            {b.court?.name ?? "Court"} · {b.profiles?.full_name ?? "Customer"}
+                          </Text>
+                          <Text className="text-muted text-xs mt-0.5">{formatTimeRange(b.start_time, b.end_time)}</Text>
+                        </View>
                       </View>
                       <View className="items-end">
                         {badge && (
@@ -397,12 +448,7 @@ export default function AdminDashboardScreen() {
               ) : (
                 recent.map((b) => (
                   <View key={b.id} className="flex-row items-start py-2 border-b border-border" style={{ gap: 10 }}>
-                    <View
-                      className="items-center justify-center rounded-full"
-                      style={{ width: 32, height: 32, backgroundColor: colors.primaryLight }}
-                    >
-                      <Ionicons name="calendar" size={15} color={colors.primaryDark} />
-                    </View>
+                    <SportIconBadge sportName={b.court?.sports?.name} size={32} />
                     <View className="flex-1">
                       <Text className="text-ink text-sm font-medium">
                         {b.court?.name ?? "A court"} booked for {formatTimeRange(b.start_time, b.end_time)}

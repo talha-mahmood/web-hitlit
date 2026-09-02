@@ -463,7 +463,7 @@ export default function CreateGameScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Bouncy>
         <Text className="text-base font-bold text-ink flex-1">
-          {isTournament ? "Create Tournament" : "Create Game"}
+          {isTournament ? "Create Tournament" : "Host a Game"}
         </Text>
         <Pressable
           onPress={handleCreate}

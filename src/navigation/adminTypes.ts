@@ -14,4 +14,10 @@ export type VenueEditingParamList = {
   AdminReviews: { venueId: string };
   AdminAnalytics: { venueId: string };
   AdminNotifications: undefined;
+  BoostVenue: { venueId: string; venueName: string };
+  // hideOwnerTransfer: true when a venue owner reaches this from their own
+  // dashboard (AdminNavigator) — they can grant/revoke additional admins,
+  // but reassigning or removing the primary owner (themselves) is a much
+  // bigger, riskier action reserved for the superadmin flow only.
+  AssignAdmin: { venueId: string; venueName: string; currentAdminEmail: string | null; hideOwnerTransfer?: boolean };
 };

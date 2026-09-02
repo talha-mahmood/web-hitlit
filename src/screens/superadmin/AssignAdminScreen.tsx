@@ -15,10 +15,10 @@ import {
 import type { AdminLookupResult } from "../../lib/api/superadmin";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";
-import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
+import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
-type Route = RouteProp<SuperAdminStackParamList, "AssignAdmin">;
-type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AssignAdmin">;
+type Route = RouteProp<VenueEditingParamList, "AssignAdmin">;
+type Nav = NativeStackNavigationProp<VenueEditingParamList, "AssignAdmin">;
 
 function EmailLookupRow({
   email,
@@ -188,61 +188,65 @@ export default function AssignAdminScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        {/* Primary owner — exactly one per venue, unchanged behavior */}
-        <Text className="text-ink font-bold text-base mb-1">Owner</Text>
-        <Text className="text-muted text-xs mb-3">
-          The primary owner. Only they (or you) can manage this venue's additional admins below.
-        </Text>
-
-        {params.currentAdminEmail ? (
-          <View className="border border-border rounded-xl px-4 py-3 mb-6 flex-row items-center justify-between">
-            <View className="flex-1 mr-3">
-              <Text className="text-muted text-xs">Current owner</Text>
-              <Text className="text-ink font-medium text-sm mt-0.5">{params.currentAdminEmail}</Text>
-            </View>
-            <Pressable onPress={handleRemoveOwner} disabled={removeOwner.isPending}>
-              <Text className="text-danger text-sm font-semibold">Remove</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View className="border border-dashed border-border rounded-xl px-4 py-3 mb-4">
-            <Text className="text-muted text-sm">No owner assigned yet.</Text>
-          </View>
-        )}
-
-        {!params.currentAdminEmail && (
+        {!params.hideOwnerTransfer && (
           <>
-            <Text className="text-muted text-xs font-semibold mb-1.5">Owner's Gmail</Text>
-            <EmailLookupRow
-              email={ownerEmail}
-              setEmail={(t) => {
-                setOwnerEmail(t);
-                setOwnerResult("not_searched");
-              }}
-              onLookup={handleOwnerLookup}
-              isLoading={ownerLookup.isPending}
-            />
-            {ownerResult && ownerResult !== "not_searched" && (
-              <LookupResultCard
-                result={ownerResult}
-                onConfirm={handleAssignOwner}
-                submitting={assignOwner.isPending}
-                confirmLabel="Assign"
-              />
-            )}
-            {ownerResult === null && (
-              <View className="border border-orange-200 bg-orange-50 rounded-xl px-4 py-3 mt-3">
-                <Text className="text-orange-700 text-sm">
-                  No account found for this email. Ask them to sign in with Google at least once, then try again.
-                </Text>
+            {/* Primary owner — exactly one per venue, unchanged behavior */}
+            <Text className="text-ink font-bold text-base mb-1">Owner</Text>
+            <Text className="text-muted text-xs mb-3">
+              The primary owner. Only they (or you) can manage this venue's additional admins below.
+            </Text>
+
+            {params.currentAdminEmail ? (
+              <View className="border border-border rounded-xl px-4 py-3 mb-6 flex-row items-center justify-between">
+                <View className="flex-1 mr-3">
+                  <Text className="text-muted text-xs">Current owner</Text>
+                  <Text className="text-ink font-medium text-sm mt-0.5">{params.currentAdminEmail}</Text>
+                </View>
+                <Pressable onPress={handleRemoveOwner} disabled={removeOwner.isPending}>
+                  <Text className="text-danger text-sm font-semibold">Remove</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="border border-dashed border-border rounded-xl px-4 py-3 mb-4">
+                <Text className="text-muted text-sm">No owner assigned yet.</Text>
               </View>
             )}
-            <View className="h-6" />
+
+            {!params.currentAdminEmail && (
+              <>
+                <Text className="text-muted text-xs font-semibold mb-1.5">Owner's Gmail</Text>
+                <EmailLookupRow
+                  email={ownerEmail}
+                  setEmail={(t) => {
+                    setOwnerEmail(t);
+                    setOwnerResult("not_searched");
+                  }}
+                  onLookup={handleOwnerLookup}
+                  isLoading={ownerLookup.isPending}
+                />
+                {ownerResult && ownerResult !== "not_searched" && (
+                  <LookupResultCard
+                    result={ownerResult}
+                    onConfirm={handleAssignOwner}
+                    submitting={assignOwner.isPending}
+                    confirmLabel="Assign"
+                  />
+                )}
+                {ownerResult === null && (
+                  <View className="border border-orange-200 bg-orange-50 rounded-xl px-4 py-3 mt-3">
+                    <Text className="text-orange-700 text-sm">
+                      No account found for this email. Ask them to sign in with Google at least once, then try again.
+                    </Text>
+                  </View>
+                )}
+                <View className="h-6" />
+              </>
+            )}
           </>
         )}
 
         {/* Additional admins — any number, all with identical access to the venue */}
-        <View className="border-t border-border pt-5 mt-2">
+        <View className={params.hideOwnerTransfer ? "" : "border-t border-border pt-5 mt-2"}>
           <Text className="text-ink font-bold text-base mb-1">Additional Admins</Text>
           <Text className="text-muted text-xs mb-3">
             Extra people who can manage this venue (bookings, courts, pricing) alongside the owner. No limit on how many.

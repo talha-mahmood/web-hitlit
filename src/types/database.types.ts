@@ -1742,6 +1742,7 @@ export type Database = {
       venues: {
         Row: {
           address: string | null
+          boosted_until: string | null
           city: string | null
           contact_phone: string | null
           created_at: string
@@ -1762,6 +1763,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          boosted_until?: string | null
           city?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1782,6 +1784,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          boosted_until?: string | null
           city?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1827,7 +1830,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      debug_check_uid: { Args: { p_user_id: string }; Returns: Json }
       decline_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
       decline_squad_invite: {
         Args: { p_invite_id: string }

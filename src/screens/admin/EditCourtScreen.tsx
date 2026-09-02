@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   useAdminVenueDetail,
   useAddCourt,
@@ -24,6 +24,7 @@ import {
 } from "../../hooks/useVenuesAdmin";
 import type { CourtPriceRule } from "../../lib/api/venuesAdmin";
 import { useSports } from "../../hooks/useSports";
+import { getSportIcon } from "../../lib/sportIcons";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
@@ -282,12 +283,14 @@ export default function EditCourtScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }} style={{ marginBottom: 16 }}>
           {(sports ?? []).map((s) => {
             const selected = sportsId === s.id;
+            const { icon, fg } = getSportIcon(s.name);
             return (
               <Pressable
                 key={s.id}
                 onPress={() => setSportsId(s.id)}
-                className="px-3 py-2 rounded-xl"
+                className="flex-row items-center px-3 py-2 rounded-xl"
                 style={{
+                  gap: 6,
                   borderWidth: 1.5,
                   borderColor: selected ? colors.primary : colors.border,
                   backgroundColor: selected ? colors.primary : "white",
@@ -302,6 +305,7 @@ export default function EditCourtScreen() {
                     : null),
                 }}
               >
+                <MaterialCommunityIcons name={icon} size={16} color={selected ? "white" : fg} />
                 <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{s.name}</Text>
               </Pressable>
             );

@@ -3,7 +3,7 @@ import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, Linking } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   useAdminVenueDetail,
   useVenueBookings,
@@ -13,6 +13,7 @@ import {
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { generateSlots, toLocalDateStr } from "../../lib/slots";
 import { COUNTED_STATUSES, REVENUE_STATUSES, OCCUPIED_STATUSES, STATUS_BADGE } from "../../lib/bookingStatus";
+import { getSportIcon } from "../../lib/sportIcons";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
@@ -113,12 +114,22 @@ function BookingRow({
   const canCancel = isRealCustomerBooking && (booking.status === "PENDING" || booking.status === "CONFIRMED");
   const canCheckIn = booking.status === "CONFIRMED" && !booking.checked_in_at;
 
+  const sportIcon = getSportIcon(booking.court?.sports?.name ?? "");
+
   return (
     <View className="border border-border rounded-xl px-4 py-3 mb-2">
       <View className="flex-row items-center justify-between mb-1">
-        <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>
-          {booking.court?.name ?? "Court"}
-        </Text>
+        <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 26, height: 26, backgroundColor: sportIcon.bg }}
+          >
+            <MaterialCommunityIcons name={sportIcon.icon} size={14} color={sportIcon.fg} />
+          </View>
+          <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>
+            {booking.court?.name ?? "Court"}
+          </Text>
+        </View>
         {badge && (
           <View className={`px-2 py-0.5 rounded-full ${badge.bg}`}>
             <Text className={`text-xs font-medium ${badge.text}`}>{badge.label}</Text>

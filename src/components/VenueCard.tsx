@@ -14,6 +14,8 @@ type VenueCardProps = {
   // Entrance-animation stagger index within the list this card sits in;
   // omit for a card rendered on its own (no staggered siblings).
   index?: number;
+  // Set only on distance-sorted lists (e.g. the "Venues near you" home tab).
+  distanceLabel?: string;
 };
 
 // A small rotating palette so the sport chips on a venue card read as
@@ -27,6 +29,7 @@ export default function VenueCard({
   onToggleFavorite,
   className = "",
   index,
+  distanceLabel,
 }: VenueCardProps) {
   const coverImage = [...venue.venue_images]
     .sort((a, b) => a.display_order - b.display_order)
@@ -59,6 +62,11 @@ export default function VenueCard({
               margin={9}
             />
           </Bouncy>
+          {distanceLabel ? (
+            <View className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1">
+              <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
+            </View>
+          ) : null}
         </View>
         <View className="p-3">
           <View className="flex-row items-center justify-between">

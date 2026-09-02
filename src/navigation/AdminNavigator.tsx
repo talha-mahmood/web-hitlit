@@ -11,6 +11,8 @@ import VenueBookingsScreen from "../screens/admin/VenueBookingsScreen";
 import AdminReviewsScreen from "../screens/admin/AdminReviewsScreen";
 import AdminAnalyticsScreen from "../screens/admin/AdminAnalyticsScreen";
 import AdminNotificationsScreen from "../screens/admin/AdminNotificationsScreen";
+import AssignAdminScreen from "../screens/superadmin/AssignAdminScreen";
+import BoostVenueScreen from "../screens/admin/BoostVenueScreen";
 import type { VenueEditingParamList } from "./adminTypes";
 
 export type AdminStackParamList = VenueEditingParamList & {
@@ -34,6 +36,8 @@ export default function AdminNavigator() {
       <Stack.Screen name="AdminReviews" component={AdminReviewsScreen} />
       <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} />
       <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} />
+      <Stack.Screen name="AssignAdmin" component={AssignAdminScreen} />
+      <Stack.Screen name="BoostVenue" component={BoostVenueScreen} />
     </Stack.Navigator>
   );
 }

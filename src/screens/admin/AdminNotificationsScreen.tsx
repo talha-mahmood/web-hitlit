@@ -1,10 +1,15 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
-import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "../../hooks/useNotifications";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+  useDeleteNotification,
+} from "../../hooks/useNotifications";
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
@@ -34,14 +39,22 @@ function resolveVenueId(n: NotificationRow): string | undefined {
   return typeof data.venue_id === "string" ? data.venue_id : undefined;
 }
 
-function NotificationCard({ notification, onPress }: { notification: NotificationRow; onPress: () => void }) {
+function NotificationCard({
+  notification,
+  onPress,
+  onDelete,
+}: {
+  notification: NotificationRow;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
   const meta = TYPE_META[notification.type ?? ""] ?? DEFAULT_META;
   const unread = !notification.is_read;
 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row rounded-2xl mb-3 px-4 py-3.5"
+      className="flex-row items-start rounded-2xl mb-3 px-4 py-3.5"
       style={{
         gap: 12,
         backgroundColor: unread ? colors.primaryLight : "white",
@@ -66,6 +79,9 @@ function NotificationCard({ notification, onPress }: { notification: Notificatio
         )}
         <Text className="text-muted text-xs mt-1.5">{timeAgo(notification.created_at)}</Text>
       </View>
+      <Pressable onPress={onDelete} hitSlop={10} className="p-1 -mt-1 -mr-1">
+        <Ionicons name="close" size={18} color={colors.muted} />
+      </Pressable>
     </Pressable>
   );
 }
@@ -78,6 +94,7 @@ export default function AdminNotificationsScreen() {
   const { data: notifications, isLoading, isRefetching, refetch } = useNotifications(userId);
   const markRead = useMarkNotificationRead(userId);
   const markAllRead = useMarkAllNotificationsRead(userId);
+  const deleteNotif = useDeleteNotification(userId);
 
   const hasUnread = (notifications ?? []).some((n) => !n.is_read);
 
@@ -87,6 +104,13 @@ export default function AdminNotificationsScreen() {
     if (venueId) {
       navigation.navigate("VenueBookings", { venueId });
     }
+  };
+
+  const handleDelete = (n: NotificationRow) => {
+    Alert.alert("Delete Notification", "Remove this notification?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => deleteNotif.mutate(n.id) },
+    ]);
   };
 
   return (
@@ -122,7 +146,13 @@ export default function AdminNotificationsScreen() {
               </Text>
             </View>
           }
-          renderItem={({ item }) => <NotificationCard notification={item} onPress={() => handlePress(item)} />}
+          renderItem={({ item }) => (
+            <NotificationCard
+              notification={item}
+              onPress={() => handlePress(item)}
+              onDelete={() => handleDelete(item)}
+            />
+          )}
         />
       )}
     </View>
