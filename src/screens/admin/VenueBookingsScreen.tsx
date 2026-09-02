@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -12,8 +12,10 @@ import {
 } from "../../hooks/useVenuesAdmin";
 import { computeDashboardStats, computeUpcomingBookings } from "../../lib/adminDashboard";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
-import { STATUS_BADGE } from "../../lib/bookingStatus";
+import { STATUS_BADGE, COUNTED_STATUSES, REVENUE_STATUSES } from "../../lib/bookingStatus";
+import { toLocalDateStr } from "../../lib/slots";
 import SportIconBadge from "../../components/SportIconBadge";
+import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
@@ -121,6 +123,14 @@ function BookingRow({
   );
 }
 
+function formatDateLabel(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View className="bg-white rounded-2xl p-5 mb-4" style={CARD_BORDER}>
@@ -142,11 +152,29 @@ export default function VenueBookingsScreen() {
   const isLoading = venueLoading || bookingsLoading;
   const actionsDisabled = cancelBooking.isPending || checkInBooking.isPending;
 
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [dateSelection, setDateSelection] = useState<DateSelection | null>(null);
+
   const stats = useMemo(
     () => (venue ? computeDashboardStats(bookings ?? [], venue, venue.court.length) : null),
     [bookings, venue]
   );
   const upcoming = useMemo(() => computeUpcomingBookings(bookings ?? [], 20), [bookings]);
+
+  const selectionResult = useMemo(() => {
+    if (!dateSelection || !bookings) return null;
+    const isSingleDay = dateSelection.start === dateSelection.end;
+    const inRange = bookings.filter((b) => {
+      const day = toLocalDateStr(new Date(b.start_time));
+      return day >= dateSelection.start && day <= dateSelection.end;
+    });
+    const counted = inRange.filter((b) => COUNTED_STATUSES.has(b.status));
+    const revenue = inRange
+      .filter((b) => REVENUE_STATUSES.has(b.status))
+      .reduce((sum, b) => sum + b.total_amount, 0);
+    const dayBookings = isSingleDay ? counted.slice().sort((a, b) => a.start_time.localeCompare(b.start_time)) : [];
+    return { isSingleDay, totalBookings: counted.length, totalRevenue: revenue, dayBookings };
+  }, [dateSelection, bookings]);
 
   const handleCancel = (id: string) =>
     cancelBooking.mutate(id, {
@@ -168,6 +196,13 @@ export default function VenueBookingsScreen() {
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Bookings</Text>
         <Pressable
+          onPress={() => setCalendarOpen(true)}
+          hitSlop={8}
+          className="mr-2 p-1"
+        >
+          <Ionicons name="calendar-outline" size={20} color={colors.ink} />
+        </Pressable>
+        <Pressable
           onPress={() => navigation.navigate("AdminAnalytics", { venueId: params.venueId })}
           className="flex-row items-center bg-primary-light rounded-lg px-3 py-1.5"
           style={{ gap: 4 }}
@@ -186,6 +221,51 @@ export default function VenueBookingsScreen() {
             <Text className="text-ink font-extrabold text-3xl mt-1">Rs {stats.todaysRevenue.toLocaleString()}</Text>
             <Text className="text-muted text-xs mt-1">{stats.todaysBookingsCount} bookings today</Text>
           </View>
+
+          {dateSelection && selectionResult && (
+            <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>
+                  {selectionResult.isSingleDay
+                    ? formatDateLabel(dateSelection.start)
+                    : `${formatDateLabel(dateSelection.start)} – ${formatDateLabel(dateSelection.end)}`}
+                </Text>
+                <Pressable onPress={() => setDateSelection(null)} hitSlop={8}>
+                  <Ionicons name="close-circle" size={20} color={colors.muted} />
+                </Pressable>
+              </View>
+              <View className="flex-row" style={{ gap: 12 }}>
+                <View className="flex-1 bg-gray-100 rounded-xl p-3">
+                  <Text className="text-muted text-xs">Total Bookings</Text>
+                  <Text className="text-ink font-extrabold text-lg mt-0.5">{selectionResult.totalBookings}</Text>
+                </View>
+                <View className="flex-1 bg-gray-100 rounded-xl p-3">
+                  <Text className="text-muted text-xs">Total Revenue</Text>
+                  <Text className="text-ink font-extrabold text-lg mt-0.5">
+                    Rs {selectionResult.totalRevenue.toLocaleString()}
+                  </Text>
+                </View>
+              </View>
+
+              {selectionResult.isSingleDay && (
+                <View className="mt-4">
+                  {selectionResult.dayBookings.length === 0 ? (
+                    <Text className="text-muted text-sm py-2">No bookings on this day.</Text>
+                  ) : (
+                    selectionResult.dayBookings.map((b) => (
+                      <BookingRow
+                        key={b.id}
+                        booking={b}
+                        actionsDisabled={actionsDisabled}
+                        onCancel={handleCancel}
+                        onCheckIn={handleCheckIn}
+                      />
+                    ))
+                  )}
+                </View>
+              )}
+            </View>
+          )}
 
           <SectionCard title="Today's Calendar">
             {stats.todaysSchedule.length === 0 ? (
@@ -224,6 +304,16 @@ export default function VenueBookingsScreen() {
           </Text>
         </ScrollView>
       )}
+
+      <BookingsDateRangeModal
+        visible={calendarOpen}
+        initialSelection={dateSelection}
+        onClose={() => setCalendarOpen(false)}
+        onSave={(selection) => {
+          setDateSelection(selection);
+          setCalendarOpen(false);
+        }}
+      />
     </View>
   );
 }
