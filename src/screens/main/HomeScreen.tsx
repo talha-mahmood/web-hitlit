@@ -306,38 +306,6 @@ export default function HomeScreen() {
         </View>
 
         <NearbySection
-          title="Games near you"
-          data={nearbyRegularGames}
-          isLoading={gamesLoading}
-          emptyIcon="tennisball-outline"
-          emptyLabel="No games near you yet"
-          keyExtractor={(g: GameListItem) => g.id}
-          renderItem={({ item, km }) => (
-            <NearbyGameCard
-              game={item}
-              distanceKm={km}
-              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
-            />
-          )}
-        />
-
-        <NearbySection
-          title="Tournaments near you"
-          data={nearbyTournaments}
-          isLoading={gamesLoading}
-          emptyIcon="trophy-outline"
-          emptyLabel="No tournaments near you yet"
-          keyExtractor={(g: GameListItem) => g.id}
-          renderItem={({ item, km }) => (
-            <NearbyGameCard
-              game={item}
-              distanceKm={km}
-              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
-            />
-          )}
-        />
-
-        <NearbySection
           title="Venues near you"
           data={nearbyVenues}
           isLoading={venuesLoading}
@@ -372,6 +340,38 @@ export default function HomeScreen() {
               squad={item}
               distanceKm={km}
               onPress={() => navigation.navigate("Squads", { screen: "SquadDetail", params: { squadId: item.id } })}
+            />
+          )}
+        />
+
+        <NearbySection
+          title="Games near you"
+          data={nearbyRegularGames}
+          isLoading={gamesLoading}
+          emptyIcon="tennisball-outline"
+          emptyLabel="No games near you yet"
+          keyExtractor={(g: GameListItem) => g.id}
+          renderItem={({ item, km }) => (
+            <NearbyGameCard
+              game={item}
+              distanceKm={km}
+              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
+            />
+          )}
+        />
+
+        <NearbySection
+          title="Tournaments near you"
+          data={nearbyTournaments}
+          isLoading={gamesLoading}
+          emptyIcon="trophy-outline"
+          emptyLabel="No tournaments near you yet"
+          keyExtractor={(g: GameListItem) => g.id}
+          renderItem={({ item, km }) => (
+            <NearbyGameCard
+              game={item}
+              distanceKm={km}
+              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
             />
           )}
         />
