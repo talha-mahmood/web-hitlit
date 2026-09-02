@@ -14,6 +14,9 @@ import {
   fetchCourtPriceRules,
   addCourtPriceRule,
   deleteCourtPriceRule,
+  cancelBookingAsAdmin,
+  checkInBooking,
+  fetchCancelledBookingsCount,
   type VenueUpdateInput,
   type CourtInput,
   type FacilityInput,
@@ -162,5 +165,29 @@ export function useVenueBookings(venueId: string) {
     queryKey: ["venueBookings", venueId],
     queryFn: () => fetchVenueBookings(venueId),
     enabled: !!venueId,
+  });
+}
+
+export function useCancelledBookingsCount(venueId: string) {
+  return useQuery({
+    queryKey: ["cancelledBookingsCount", venueId],
+    queryFn: () => fetchCancelledBookingsCount(venueId),
+    enabled: !!venueId,
+  });
+}
+
+export function useCancelBookingAsAdmin(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: string) => cancelBookingAsAdmin(bookingId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["venueBookings", venueId] }),
+  });
+}
+
+export function useCheckInBooking(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: string) => checkInBooking(bookingId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["venueBookings", venueId] }),
   });
 }

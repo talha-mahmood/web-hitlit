@@ -11,4 +11,7 @@ export type VenueEditingParamList = {
   ManageFacilities: { venueId: string };
   AdminSlots: { venueId: string; courtId: string; courtName: string };
   VenueBookings: { venueId: string };
+  AdminReviews: { venueId: string };
+  AdminAnalytics: { venueId: string };
+  AdminNotifications: undefined;
 };

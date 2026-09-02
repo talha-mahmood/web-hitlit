@@ -4,10 +4,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useAdminVenueDetail } from "../../hooks/useVenuesAdmin";
+import { useAdminVenueDetail, useCourtPriceRules } from "../../hooks/useVenuesAdmin";
 import { useCourtBookingsForDate, useBlockSlot, useUnblockSlot } from "../../hooks/useAdminSlots";
 import { useAuthStore } from "../../store/authStore";
-import { toLocalDateStr, getNext14Days, generateSlots, type Slot } from "../../lib/slots";
+import {
+  toLocalDateStr,
+  getNext14Days,
+  generateFullDaySlots,
+  isSlotPast,
+  slotBoundaryDateTime,
+  resolveSlotPrice,
+  type Slot,
+} from "../../lib/slots";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
@@ -19,8 +27,8 @@ function findBooking(
   date: string,
   bookings: Array<{ id: string; start_time: string; end_time: string; status: string; profiles: { full_name: string | null } | null }>
 ) {
-  const s = new Date(`${date}T${slot.start}:00+05:00`).getTime();
-  const e = new Date(`${date}T${slot.end}:00+05:00`).getTime();
+  const s = slotBoundaryDateTime(date, slot.start, false).getTime();
+  const e = slotBoundaryDateTime(date, slot.end, true).getTime();
   return bookings.find((b) => {
     const bs = new Date(b.start_time).getTime();
     const be = new Date(b.end_time).getTime();
@@ -40,10 +48,12 @@ export default function AdminSlotsScreen() {
   const [selectedDate, setSelectedDate] = useState(days[0]);
 
   const { data: bookings = [], isLoading } = useCourtBookingsForDate(params.courtId, selectedDate);
+  const { data: priceRules = [] } = useCourtPriceRules(params.courtId);
   const blockSlot = useBlockSlot(params.courtId, selectedDate);
   const unblockSlot = useUnblockSlot(params.courtId, selectedDate);
 
-  const slots = venue ? generateSlots(venue.start_time ?? "06:00", venue.end_time ?? "23:00") : [];
+  const court = venue?.court.find((c) => c.id === params.courtId);
+  const slots = generateFullDaySlots();
   const disabled = blockSlot.isPending || unblockSlot.isPending;
 
   const handleSlotPress = (slot: Slot) => {
@@ -148,33 +158,37 @@ export default function AdminSlotsScreen() {
           </View>
         ) : (
           <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-            {slots.map((slot) => {
-              const booking = findBooking(slot, selectedDate, bookings);
-              const isBlocked = booking?.status === "BLOCKED";
-              const isBooked = !!booking && !isBlocked;
+            {slots
+              .filter((slot) => !isSlotPast(slot, selectedDate))
+              .map((slot) => {
+                const booking = findBooking(slot, selectedDate, bookings);
+                const isBlocked = booking?.status === "BLOCKED";
+                const isBooked = !!booking && !isBlocked;
+                const price = court ? resolveSlotPrice(slot, court.price_per_hour, priceRules) : null;
 
-              return (
-                <Pressable
-                  key={slot.start}
-                  disabled={disabled}
-                  onPress={() => handleSlotPress(slot)}
-                  style={{ width: "47%" }}
-                  className={`items-center justify-center rounded-xl border px-3 py-3 ${
-                    isBooked
-                      ? "bg-blue-50 border-blue-100"
-                      : isBlocked
-                        ? "bg-red-50 border-red-100"
-                        : "bg-white border-border"
-                  }`}
-                >
-                  <Text className={`text-sm font-medium text-center ${isBooked || isBlocked ? "text-ink" : "text-ink"}`}>
-                    {slot.label}
-                  </Text>
-                  {isBooked && <Text className="text-xs text-blue-600 mt-0.5">Booked</Text>}
-                  {isBlocked && <Text className="text-xs text-red-500 mt-0.5">Blocked · Tap to unblock</Text>}
-                </Pressable>
-              );
-            })}
+                return (
+                  <Pressable
+                    key={slot.start}
+                    disabled={disabled}
+                    onPress={() => handleSlotPress(slot)}
+                    style={{ width: "47%" }}
+                    className={`items-center justify-center rounded-xl border px-3 py-3 ${
+                      isBooked
+                        ? "bg-blue-50 border-blue-100"
+                        : isBlocked
+                          ? "bg-red-50 border-red-100"
+                          : "bg-white border-border"
+                    }`}
+                  >
+                    <Text className="text-sm font-medium text-center text-ink">{slot.label}</Text>
+                    {isBooked && <Text className="text-xs text-blue-600 mt-0.5">Booked</Text>}
+                    {isBlocked && <Text className="text-xs text-red-500 mt-0.5">Blocked · Tap to unblock</Text>}
+                    {!isBooked && !isBlocked && price !== null && (
+                      <Text className="text-xs text-muted mt-0.5">Rs {price.toLocaleString()}</Text>
+                    )}
+                  </Pressable>
+                );
+              })}
           </View>
         )}
       </ScrollView>

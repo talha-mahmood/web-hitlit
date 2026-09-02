@@ -95,6 +95,77 @@ export function computeRecentActivity(bookings: VenueBooking[], limit = 4) {
     .slice(0, limit);
 }
 
+export function computeVenueAnalytics(bookings: VenueBooking[], cancelledCount: number) {
+  const counted = bookings.filter((b) => COUNTED_STATUSES.has(b.status));
+  const revenueBookings = bookings.filter((b) => REVENUE_STATUSES.has(b.status));
+
+  const totalBookings = counted.length;
+  const totalRevenue = revenueBookings.reduce((sum, b) => sum + b.total_amount, 0);
+  const avgBookingValue = revenueBookings.length > 0 ? Math.round(totalRevenue / revenueBookings.length) : 0;
+
+  const sportCounts = new Map<string, number>();
+  const courtCounts = new Map<string, number>();
+  const hourCounts = new Map<number, number>();
+  const userCounts = new Map<string, number>();
+
+  for (const b of counted) {
+    const sport = b.court?.sports?.name ?? "Unknown";
+    sportCounts.set(sport, (sportCounts.get(sport) ?? 0) + 1);
+
+    const court = b.court?.name ?? "Unknown";
+    courtCounts.set(court, (courtCounts.get(court) ?? 0) + 1);
+
+    const hour = new Date(b.start_time).getHours();
+    hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1);
+
+    userCounts.set(b.user_id, (userCounts.get(b.user_id) ?? 0) + 1);
+  }
+
+  const topEntry = (m: Map<string, number>): string | null => {
+    let best: string | null = null;
+    let bestCount = 0;
+    for (const [k, v] of m) {
+      if (v > bestCount) {
+        best = k;
+        bestCount = v;
+      }
+    }
+    return best;
+  };
+
+  let peakHour: number | null = null;
+  let peakHourCount = 0;
+  for (const [h, c] of hourCounts) {
+    if (c > peakHourCount) {
+      peakHour = h;
+      peakHourCount = c;
+    }
+  }
+  const formatHour = (h: number) => {
+    const period = h < 12 ? "AM" : "PM";
+    const display = h % 12 === 0 ? 12 : h % 12;
+    return `${display} ${period}`;
+  };
+
+  const repeatCustomers = Array.from(userCounts.values()).filter((c) => c > 1).length;
+  const totalCustomers = userCounts.size;
+
+  const totalOutcomes = totalBookings + cancelledCount;
+  const cancellationRate = totalOutcomes > 0 ? Math.round((cancelledCount / totalOutcomes) * 100) : 0;
+
+  return {
+    totalBookings,
+    totalRevenue,
+    avgBookingValue,
+    mostPopularSport: topEntry(sportCounts),
+    mostPopularCourt: topEntry(courtCounts),
+    peakHourLabel: peakHour !== null ? `${formatHour(peakHour)} – ${formatHour((peakHour + 1) % 24)}` : null,
+    cancellationRate,
+    repeatCustomers,
+    totalCustomers,
+  };
+}
+
 export type VenueAggregate = {
   venueId: string;
   name: string;

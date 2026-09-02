@@ -26,6 +26,8 @@ import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
+import { toLocalDateStr, generateFullDaySlots, isSlotPast, slotBoundaryDateTime, type Slot } from "../../lib/slots";
+import type { VenueBooking } from "../../lib/api/venuesAdmin";
 
 type Route = RouteProp<VenueEditingParamList, "AdminDashboard">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
@@ -131,6 +133,8 @@ export default function AdminDashboardScreen() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [hourlyModalOpen, setHourlyModalOpen] = useState(false);
+  const [hourlyCourtId, setHourlyCourtId] = useState<string | null>(null);
 
   const venueIds = useMemo(() => (myVenues ?? []).map((v) => v.id), [myVenues]);
   const { data: allBookings } = useAllMyVenuesBookings(venueIds);
@@ -172,7 +176,6 @@ export default function AdminDashboardScreen() {
         navigation.navigate("VenueBookings", { venueId: params.venueId });
       },
     },
-    { key: "availability", icon: "time-outline" as const, label: "Availability & Calendar" },
     {
       key: "venues",
       icon: "business-outline" as const,
@@ -192,19 +195,32 @@ export default function AdminDashboardScreen() {
       },
     },
     {
-      key: "pricing",
-      icon: "pricetag-outline" as const,
-      label: "Pricing",
+      key: "analytics",
+      icon: "stats-chart-outline" as const,
+      label: "Analytics",
       onPress: () => {
         setMenuOpen(false);
-        navigation.navigate("ManageCourts", { venueId: params.venueId });
+        navigation.navigate("AdminAnalytics", { venueId: params.venueId });
       },
     },
-    { key: "earnings", icon: "wallet-outline" as const, label: "Earnings & Payments" },
-    { key: "analytics", icon: "stats-chart-outline" as const, label: "Analytics" },
-    { key: "reviews", icon: "star-outline" as const, label: "Reviews" },
-    { key: "notifications", icon: "notifications-outline" as const, label: "Notifications" },
-    { key: "settings", icon: "settings-outline" as const, label: "Settings" },
+    {
+      key: "reviews",
+      icon: "star-outline" as const,
+      label: "Reviews",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("AdminReviews", { venueId: params.venueId });
+      },
+    },
+    {
+      key: "notifications",
+      icon: "notifications-outline" as const,
+      label: "Notifications",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("AdminNotifications");
+      },
+    },
     {
       key: "signout",
       icon: "log-out-outline" as const,
@@ -230,21 +246,9 @@ export default function AdminDashboardScreen() {
     <View className="flex-1 bg-gray-100">
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 32 }}>
         <View className="px-5">
-          <View className="flex-row items-center justify-between mb-4">
+          <View className="mb-4">
             <Pressable onPress={() => setMenuOpen(true)} hitSlop={10}>
               <Ionicons name="menu" size={26} color={colors.ink} />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
-              hitSlop={10}
-              className="relative"
-            >
-              <Ionicons name="notifications-outline" size={24} color={colors.ink} />
-              {stats.pendingCount > 0 && (
-                <View className="absolute -top-1 -right-1 bg-danger rounded-full w-4 h-4 items-center justify-center">
-                  <Text className="text-white text-[9px] font-bold">{stats.pendingCount}</Text>
-                </View>
-              )}
             </Pressable>
           </View>
 
@@ -298,16 +302,17 @@ export default function AdminDashboardScreen() {
               iconColor="#EA580C"
               label="Pending Bookings"
               value={String(stats.pendingCount)}
-              footer={stats.pendingCount > 0 ? "View pending" : undefined}
-              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
             />
           </View>
 
           <View className="mt-4">
             <SectionCard
               title="Today's Schedule"
-              action="View Full Schedule"
-              onAction={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+              action="View by Hour"
+              onAction={() => {
+                setHourlyCourtId(venue.court[0]?.id ?? null);
+                setHourlyModalOpen(true);
+              }}
             >
               {stats.todaysSchedule.length === 0 ? (
                 <Text className="text-muted text-sm py-2">No bookings scheduled for today yet.</Text>
@@ -344,11 +349,7 @@ export default function AdminDashboardScreen() {
               <RevenueBarChart labels={weekly.labels} values={weekly.values} />
             </SectionCard>
 
-            <SectionCard
-              title="Upcoming Bookings"
-              action="View All"
-              onAction={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
-            >
+            <SectionCard title="Upcoming Bookings">
               {upcoming.length === 0 ? (
                 <Text className="text-muted text-sm py-2">No upcoming bookings yet.</Text>
               ) : (
@@ -377,11 +378,7 @@ export default function AdminDashboardScreen() {
             </SectionCard>
 
             {topVenues.length > 0 && (
-              <SectionCard
-                title="Top Venues"
-                action="View All"
-                onAction={() => navigation.navigate("AdminVenueList")}
-              >
+              <SectionCard title="Top Venues">
                 {topVenues.map((v) => (
                   <View key={v.venueId} className="flex-row items-center justify-between py-2 border-b border-border">
                     <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
@@ -417,41 +414,6 @@ export default function AdminDashboardScreen() {
               )}
             </SectionCard>
 
-            <Text className="text-ink font-bold text-base mb-3">Quick Actions</Text>
-            <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
-              <Pressable
-                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
-                className="bg-white rounded-2xl p-4 items-center"
-                style={{ width: "48%", ...CARD_BORDER }}
-              >
-                <Ionicons name="lock-closed-outline" size={20} color={colors.primaryDark} />
-                <Text className="text-ink text-sm font-semibold mt-2">Block a Slot</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
-                className="bg-white rounded-2xl p-4 items-center"
-                style={{ width: "48%", ...CARD_BORDER }}
-              >
-                <Ionicons name="grid-outline" size={20} color={colors.primaryDark} />
-                <Text className="text-ink text-sm font-semibold mt-2">Manage Courts</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
-                className="bg-white rounded-2xl p-4 items-center"
-                style={{ width: "48%", ...CARD_BORDER }}
-              >
-                <Ionicons name="pricetag-outline" size={20} color={colors.primaryDark} />
-                <Text className="text-ink text-sm font-semibold mt-2">Edit Pricing</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setMenuOpen(true)}
-                className="bg-white rounded-2xl p-4 items-center"
-                style={{ width: "48%", ...CARD_BORDER }}
-              >
-                <Ionicons name="stats-chart-outline" size={20} color={colors.primaryDark} />
-                <Text className="text-ink text-sm font-semibold mt-2">View Reports</Text>
-              </Pressable>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -480,6 +442,72 @@ export default function AdminDashboardScreen() {
                 {v.id === params.venueId && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
               </Pressable>
             ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={hourlyModalOpen} animationType="slide" transparent onRequestClose={() => setHourlyModalOpen(false)}>
+        <View className="flex-1 bg-black/40 justify-end">
+          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ maxHeight: "85%", paddingBottom: insets.bottom + 16 }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold text-ink">Today, Hour by Hour</Text>
+              <Pressable onPress={() => setHourlyModalOpen(false)} hitSlop={8}>
+                <Ionicons name="close" size={22} color={colors.muted} />
+              </Pressable>
+            </View>
+
+            {venue.court.length > 1 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
+                {venue.court.map((c) => {
+                  const active = c.id === hourlyCourtId;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => setHourlyCourtId(c.id)}
+                      className="rounded-full px-3 py-2"
+                      style={{ backgroundColor: active ? colors.primary : "white", borderWidth: 1, borderColor: active ? colors.primary : colors.border }}
+                    >
+                      <Text className={`text-sm font-medium ${active ? "text-white" : "text-ink"}`}>{c.name}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+
+            <ScrollView contentContainerStyle={{ paddingBottom: 12 }}>
+              {generateFullDaySlots()
+                .filter((slot) => !isSlotPast(slot, toLocalDateStr(new Date())))
+                .map((slot: Slot) => {
+                  const today = toLocalDateStr(new Date());
+                  const s = slotBoundaryDateTime(today, slot.start, false).getTime();
+                  const e = slotBoundaryDateTime(today, slot.end, true).getTime();
+                  const match = (bookings ?? []).find((b: VenueBooking) => {
+                    if (b.court?.id !== hourlyCourtId) return false;
+                    const bs = new Date(b.start_time).getTime();
+                    const be = new Date(b.end_time).getTime();
+                    return s < be && e > bs;
+                  });
+                  const isBlocked = match?.status === "BLOCKED";
+                  const isBooked = !!match && !isBlocked;
+                  const badge = isBlocked
+                    ? { bg: "bg-red-50", text: "text-red-600", label: "Blocked" }
+                    : isBooked
+                      ? { bg: "bg-blue-50", text: "text-blue-600", label: "Booked" }
+                      : { bg: "bg-green-50", text: "text-green-700", label: "Available" };
+
+                  return (
+                    <View key={slot.start} className="flex-row items-center justify-between py-2 border-b border-border">
+                      <Text className="text-ink text-sm">{slot.label}</Text>
+                      <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
+                        <Text className={`text-xs font-medium ${badge.text}`}>
+                          {badge.label}
+                          {isBooked && match?.profiles?.full_name ? ` · ${match.profiles.full_name}` : ""}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>

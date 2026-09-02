@@ -1,10 +1,15 @@
 import { useMemo } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useAdminVenueDetail, useVenueBookings } from "../../hooks/useVenuesAdmin";
+import {
+  useAdminVenueDetail,
+  useVenueBookings,
+  useCancelBookingAsAdmin,
+  useCheckInBooking,
+} from "../../hooks/useVenuesAdmin";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { generateSlots, toLocalDateStr } from "../../lib/slots";
 import { COUNTED_STATUSES, REVENUE_STATUSES, OCCUPIED_STATUSES, STATUS_BADGE } from "../../lib/bookingStatus";
@@ -80,8 +85,34 @@ function formatDateTime(iso: string): string {
   });
 }
 
-function BookingRow({ booking }: { booking: VenueBooking }) {
+function handleContactCustomer(phone: string | null | undefined, name: string | null | undefined) {
+  if (!phone) {
+    Alert.alert("No Phone Number", `${name ?? "This customer"} hasn't added a phone number to their profile.`);
+    return;
+  }
+  Alert.alert(`Contact ${name ?? "Customer"}`, phone, [
+    { text: "Cancel", style: "cancel" },
+    { text: "Call", onPress: () => Linking.openURL(`tel:${phone}`) },
+    { text: "WhatsApp", onPress: () => Linking.openURL(`https://wa.me/${phone.replace(/[^0-9]/g, "")}`) },
+  ]);
+}
+
+function BookingRow({
+  booking,
+  onCancel,
+  onCheckIn,
+  actionsDisabled,
+}: {
+  booking: VenueBooking;
+  onCancel: (bookingId: string) => void;
+  onCheckIn: (bookingId: string) => void;
+  actionsDisabled: boolean;
+}) {
   const badge = STATUS_BADGE[booking.status];
+  const isRealCustomerBooking = booking.status !== "BLOCKED";
+  const canCancel = isRealCustomerBooking && (booking.status === "PENDING" || booking.status === "CONFIRMED");
+  const canCheckIn = booking.status === "CONFIRMED" && !booking.checked_in_at;
+
   return (
     <View className="border border-border rounded-xl px-4 py-3 mb-2">
       <View className="flex-row items-center justify-between mb-1">
@@ -95,10 +126,50 @@ function BookingRow({ booking }: { booking: VenueBooking }) {
         )}
       </View>
       <Text className="text-muted text-xs">{formatDateTime(booking.start_time)}</Text>
-      {booking.status !== "BLOCKED" && (
+      {isRealCustomerBooking && (
         <Text className="text-muted text-xs mt-0.5">
           {booking.profiles?.full_name ?? "Customer"} · Rs {booking.total_amount.toLocaleString()}
         </Text>
+      )}
+      {booking.checked_in_at && (
+        <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+          <Ionicons name="checkmark-circle" size={12} color={colors.primary} />
+          <Text className="text-primary text-xs font-medium">Checked in</Text>
+        </View>
+      )}
+
+      {isRealCustomerBooking && (
+        <View className="flex-row mt-3" style={{ gap: 8 }}>
+          {canCheckIn && (
+            <Pressable
+              onPress={() => onCheckIn(booking.id)}
+              disabled={actionsDisabled}
+              className="border border-primary rounded-lg px-3 py-1.5"
+            >
+              <Text className="text-primary text-xs font-semibold">Check In</Text>
+            </Pressable>
+          )}
+          <Pressable
+            onPress={() => handleContactCustomer(booking.profiles?.phone, booking.profiles?.full_name)}
+            className="border border-border rounded-lg px-3 py-1.5"
+          >
+            <Text className="text-ink text-xs font-semibold">Contact</Text>
+          </Pressable>
+          {canCancel && (
+            <Pressable
+              onPress={() =>
+                Alert.alert("Cancel Booking", `Cancel ${booking.profiles?.full_name ?? "this customer"}'s booking?`, [
+                  { text: "Keep Booking", style: "cancel" },
+                  { text: "Cancel Booking", style: "destructive", onPress: () => onCancel(booking.id) },
+                ])
+              }
+              disabled={actionsDisabled}
+              className="border border-danger rounded-lg px-3 py-1.5"
+            >
+              <Text className="text-danger text-xs font-semibold">Cancel</Text>
+            </Pressable>
+          )}
+        </View>
       )}
     </View>
   );
@@ -172,8 +243,11 @@ export default function VenueBookingsScreen() {
   const insets = useSafeAreaInsets();
   const { data: venue, isLoading: venueLoading } = useAdminVenueDetail(params.venueId);
   const { data: bookings, isLoading: bookingsLoading } = useVenueBookings(params.venueId);
+  const cancelBooking = useCancelBookingAsAdmin(params.venueId);
+  const checkInBooking = useCheckInBooking(params.venueId);
 
   const isLoading = venueLoading || bookingsLoading;
+  const actionsDisabled = cancelBooking.isPending || checkInBooking.isPending;
   const slotsPerCourtPerDay = venue
     ? generateSlots(venue.start_time ?? "06:00", venue.end_time ?? "23:00").length
     : 0;
@@ -211,7 +285,22 @@ export default function VenueBookingsScreen() {
               <Text className="text-muted text-sm text-center mt-2">No bookings yet.</Text>
             </View>
           }
-          renderItem={({ item }) => <BookingRow booking={item} />}
+          renderItem={({ item }) => (
+            <BookingRow
+              booking={item}
+              actionsDisabled={actionsDisabled}
+              onCancel={(id) =>
+                cancelBooking.mutate(id, {
+                  onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel booking."),
+                })
+              }
+              onCheckIn={(id) =>
+                checkInBooking.mutate(id, {
+                  onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not check in."),
+                })
+              }
+            />
+          )}
         />
       )}
     </View>

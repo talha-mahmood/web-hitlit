@@ -10,7 +10,17 @@ export type MyVenueListItem = Venue & {
 export type VenueUpdateInput = Partial<
   Pick<
     Venue,
-    "name" | "description" | "address" | "city" | "start_time" | "end_time" | "isactive" | "latitude" | "longitude"
+    | "name"
+    | "description"
+    | "address"
+    | "city"
+    | "start_time"
+    | "end_time"
+    | "isactive"
+    | "latitude"
+    | "longitude"
+    | "contact_phone"
+    | "rules_and_policies"
   >
 >;
 
@@ -38,13 +48,15 @@ export type FacilityInput = { name: string; type: string; description: string };
 
 export type VenueBooking = {
   id: string;
+  user_id: string;
   start_time: string;
   end_time: string;
   status: Database["public"]["Enums"]["booking_status_type"];
   total_amount: number;
   created_at: string;
-  court: { id: string; name: string } | null;
-  profiles: { full_name: string | null; avatar: string | null } | null;
+  checked_in_at: string | null;
+  court: { id: string; name: string; sports: { name: string } | null } | null;
+  profiles: { full_name: string | null; avatar: string | null; phone: string | null } | null;
 };
 
 // A venue shows up here if this user is either the primary owner OR one of
@@ -277,7 +289,7 @@ export async function fetchVenueBookings(venueId: string): Promise<VenueBooking[
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id, start_time, end_time, status, total_amount, created_at, court!inner(id, name), profiles(full_name, avatar)"
+      "id, user_id, start_time, end_time, status, total_amount, created_at, checked_in_at, court!inner(id, name, sports(name)), profiles(full_name, avatar, phone)"
     )
     .eq("court.venue_id", venueId)
     .is("deleted_at", null)
@@ -285,4 +297,37 @@ export async function fetchVenueBookings(venueId: string): Promise<VenueBooking[
     .order("start_time", { ascending: true });
   if (error) throw new Error(error.message);
   return (data as unknown as VenueBooking[]) ?? [];
+}
+
+// Reuses the same underlying update as the customer's own cancel action —
+// RLS (bookings_update_self_or_venue_owner) already permits a venue admin to
+// update any booking on their venue's courts, not just their own bookings.
+export async function cancelBookingAsAdmin(bookingId: string): Promise<void> {
+  const { error } = await supabase
+    .from("bookings")
+    .update({ status: "CANCELLED", updated_at: new Date().toISOString() })
+    .eq("id", bookingId);
+  if (error) throw new Error(error.message);
+}
+
+// fetchVenueBookings deliberately excludes CANCELLED bookings (every other
+// consumer — dashboard, booking list — only cares about active ones), so
+// cancellation-rate analytics needs its own lightweight count query instead.
+export async function fetchCancelledBookingsCount(venueId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("bookings")
+    .select("id, court!inner(venue_id)", { count: "exact", head: true })
+    .eq("court.venue_id", venueId)
+    .eq("status", "CANCELLED")
+    .is("deleted_at", null);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+export async function checkInBooking(bookingId: string): Promise<void> {
+  const { error } = await supabase
+    .from("bookings")
+    .update({ checked_in_at: new Date().toISOString() })
+    .eq("id", bookingId);
+  if (error) throw new Error(error.message);
 }

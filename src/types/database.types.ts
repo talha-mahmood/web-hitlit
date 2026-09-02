@@ -61,6 +61,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          checked_in_at: string | null
           court_id: string
           created_at: string
           deleted_at: string | null
@@ -74,6 +75,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          checked_in_at?: string | null
           court_id: string
           created_at?: string
           deleted_at?: string | null
@@ -87,6 +89,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          checked_in_at?: string | null
           court_id?: string
           created_at?: string
           deleted_at?: string | null
@@ -1678,6 +1681,8 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          owner_response: string | null
+          owner_response_at: string | null
           rating: number
           review: string | null
           updated_at: string
@@ -1689,6 +1694,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          owner_response?: string | null
+          owner_response_at?: string | null
           rating: number
           review?: string | null
           updated_at?: string
@@ -1700,6 +1707,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          owner_response?: string | null
+          owner_response_at?: string | null
           rating?: number
           review?: string | null
           updated_at?: string
@@ -1734,6 +1743,7 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          contact_phone: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -1745,6 +1755,7 @@ export type Database = {
           longitude: number | null
           name: string
           rating: number
+          rules_and_policies: string | null
           start_time: string | null
           updated_at: string
           venue_owner_id: string | null
@@ -1752,6 +1763,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          contact_phone?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1763,6 +1775,7 @@ export type Database = {
           longitude?: number | null
           name: string
           rating?: number
+          rules_and_policies?: string | null
           start_time?: string | null
           updated_at?: string
           venue_owner_id?: string | null
@@ -1770,6 +1783,7 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          contact_phone?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1781,6 +1795,7 @@ export type Database = {
           longitude?: number | null
           name?: string
           rating?: number
+          rules_and_policies?: string | null
           start_time?: string | null
           updated_at?: string
           venue_owner_id?: string | null
@@ -1812,6 +1827,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      debug_check_uid: { Args: { p_user_id: string }; Returns: Json }
       decline_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
       decline_squad_invite: {
         Args: { p_invite_id: string }
@@ -1861,6 +1877,10 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean }
       is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
+      respond_to_venue_review: {
+        Args: { response_text: string; target_review_id: string }
+        Returns: undefined
+      }
       revoke_venue_admin: {
         Args: { target_user_id: string; target_venue_id: string }
         Returns: undefined

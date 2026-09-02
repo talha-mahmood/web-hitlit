@@ -19,6 +19,10 @@ export function getNext14Days(): string[] {
 
 export type Slot = { start: string; end: string; label: string };
 
+function formatHourLabel(hr: number): string {
+  return hr === 0 ? "12:00 AM" : hr < 12 ? `${hr}:00 AM` : hr === 12 ? "12:00 PM" : `${hr - 12}:00 PM`;
+}
+
 // One slot per whole hour, capped at 23:00, between the venue's operating hours.
 export function generateSlots(venueStart: string, venueEnd: string): Slot[] {
   const startHour = parseInt(venueStart.split(":")[0], 10);
@@ -28,10 +32,34 @@ export function generateSlots(venueStart: string, venueEnd: string): Slot[] {
     const nh = h + 1;
     const startStr = `${String(h).padStart(2, "0")}:00`;
     const endStr = `${String(nh).padStart(2, "0")}:00`;
-    const fmt = (hr: number) =>
-      hr === 0 ? "12:00 AM" : hr < 12 ? `${hr}:00 AM` : hr === 12 ? "12:00 PM" : `${hr - 12}:00 PM`;
-    return { start: startStr, end: endStr, label: `${fmt(h)} – ${fmt(nh)}` };
+    return { start: startStr, end: endStr, label: `${formatHourLabel(h)} – ${formatHourLabel(nh)}` };
   });
+}
+
+// All 24 hours of the day, independent of the venue's configured operating
+// hours — used wherever the UI should show the full day rather than only
+// the open window (hours outside it are marked "closed", not hidden).
+// The last slot (23:00–00:00) wraps into the next calendar day, same as a
+// real overnight hour — isSlotBooked/isSlotPast below already account for that.
+export function generateFullDaySlots(): Slot[] {
+  return Array.from({ length: 24 }, (_, h) => {
+    const nh = (h + 1) % 24;
+    const startStr = `${String(h).padStart(2, "0")}:00`;
+    const endStr = `${String(nh).padStart(2, "0")}:00`;
+    return { start: startStr, end: endStr, label: `${formatHourLabel(h)} – ${formatHourLabel(nh)}` };
+  });
+}
+
+// slot.end "00:00" means midnight at the START of the next calendar day
+// (the 23:00–00:00 overnight slot) — everywhere else "00:00" means the
+// start of `date` itself, so that one case needs to roll the date forward.
+export function slotBoundaryDateTime(date: string, time: string, isEnd: boolean): Date {
+  if (isEnd && time === "00:00") {
+    const next = new Date(`${date}T00:00:00+05:00`);
+    next.setDate(next.getDate() + 1);
+    return next;
+  }
+  return new Date(`${date}T${time}:00+05:00`);
 }
 
 // The app is Pakistan-only, so a date + 'HH:MM' pair is always +05:00.
@@ -40,8 +68,8 @@ export function isSlotBooked(
   date: string,
   booked: Array<{ start_time: string; end_time: string }>
 ): boolean {
-  const s = new Date(`${date}T${slot.start}:00+05:00`).getTime();
-  const e = new Date(`${date}T${slot.end}:00+05:00`).getTime();
+  const s = slotBoundaryDateTime(date, slot.start, false).getTime();
+  const e = slotBoundaryDateTime(date, slot.end, true).getTime();
   return booked.some((b) => {
     const bs = new Date(b.start_time).getTime();
     const be = new Date(b.end_time).getTime();

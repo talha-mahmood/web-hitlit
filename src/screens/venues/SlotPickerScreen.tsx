@@ -17,7 +17,7 @@ import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator
 import {
   toLocalDateStr,
   getNext14Days,
-  generateSlots,
+  generateFullDaySlots,
   isSlotBooked,
   isSlotPast,
   resolveSlotPrice,
@@ -38,7 +38,7 @@ export default function SlotPickerScreen() {
   const [selectedDate, setSelectedDate] = useState(days[0]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
-  const slots = generateSlots(params.venueStartTime, params.venueEndTime);
+  const slots = generateFullDaySlots();
   const { data: bookedSlots = [], isLoading } = useBookedSlots(params.courtId, selectedDate);
   const { data: priceRules = [] } = useCourtPriceRules(params.courtId);
 
@@ -117,48 +117,48 @@ export default function SlotPickerScreen() {
           </View>
         ) : (
           <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-            {slots.map((slot) => {
-              const booked = isSlotBooked(slot, selectedDate, bookedSlots);
-              const past = isSlotPast(slot, selectedDate);
-              const unavailable = booked || past;
-              const isSelected = selectedSlot?.start === slot.start;
-              const price = slotPrice(slot);
+            {slots
+              .filter((slot) => !isSlotPast(slot, selectedDate))
+              .map((slot) => {
+                const booked = isSlotBooked(slot, selectedDate, bookedSlots);
+                const isSelected = selectedSlot?.start === slot.start;
+                const price = slotPrice(slot);
 
-              return (
-                <Pressable
-                  key={slot.start}
-                  disabled={unavailable}
-                  onPress={() => setSelectedSlot(isSelected ? null : slot)}
-                  style={{ width: "47%" }}
-                  className={`items-center justify-center rounded-xl border px-3 py-3 ${
-                    unavailable
-                      ? "bg-gray-50 border-border"
-                      : isSelected
-                      ? "bg-primary border-primary"
-                      : "bg-white border-border"
-                  }`}
-                >
-                  <Text
-                    className={`text-sm font-medium text-center ${
-                      unavailable ? "text-muted" : isSelected ? "text-white" : "text-ink"
-                    } ${past ? "line-through" : ""}`}
+                return (
+                  <Pressable
+                    key={slot.start}
+                    disabled={booked}
+                    onPress={() => setSelectedSlot(isSelected ? null : slot)}
+                    style={{ width: "47%" }}
+                    className={`items-center justify-center rounded-xl border px-3 py-3 ${
+                      booked
+                        ? "bg-gray-50 border-border"
+                        : isSelected
+                        ? "bg-primary border-primary"
+                        : "bg-white border-border"
+                    }`}
                   >
-                    {slot.label}
-                  </Text>
-                  {booked && !past ? (
-                    <Text className="text-xs text-muted mt-0.5">Booked</Text>
-                  ) : (
                     <Text
-                      className={`text-xs mt-0.5 ${
-                        unavailable ? "text-muted" : isSelected ? "text-white" : "text-muted"
+                      className={`text-sm font-medium text-center ${
+                        booked ? "text-muted" : isSelected ? "text-white" : "text-ink"
                       }`}
                     >
-                      Rs {price.toLocaleString()}
+                      {slot.label}
                     </Text>
-                  )}
-                </Pressable>
-              );
-            })}
+                    {booked ? (
+                      <Text className="text-xs text-muted mt-0.5">Booked</Text>
+                    ) : (
+                      <Text
+                        className={`text-xs mt-0.5 ${
+                          isSelected ? "text-white" : "text-muted"
+                        }`}
+                      >
+                        Rs {price.toLocaleString()}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
           </View>
         )}
       </ScrollView>

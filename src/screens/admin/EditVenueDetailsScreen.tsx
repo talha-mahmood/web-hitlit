@@ -36,6 +36,8 @@ export default function EditVenueDetailsScreen() {
   const [city, setCity] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [rulesAndPolicies, setRulesAndPolicies] = useState("");
   const [isactive, setIsactive] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
@@ -47,6 +49,8 @@ export default function EditVenueDetailsScreen() {
       setCity(venue.city ?? "");
       setStartTime(venue.start_time?.slice(0, 5) ?? "");
       setEndTime(venue.end_time?.slice(0, 5) ?? "");
+      setContactPhone(venue.contact_phone ?? "");
+      setRulesAndPolicies(venue.rules_and_policies ?? "");
       setIsactive(venue.isactive);
       setInitialized(true);
     }
@@ -74,6 +78,8 @@ export default function EditVenueDetailsScreen() {
         city: city.trim(),
         start_time: startTime || null,
         end_time: endTime || null,
+        contact_phone: contactPhone.trim() || null,
+        rules_and_policies: rulesAndPolicies.trim() || null,
         isactive,
       },
       {
@@ -182,6 +188,28 @@ export default function EditVenueDetailsScreen() {
             />
           </View>
         </View>
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Contact Phone</Text>
+        <FieldInput
+          value={contactPhone}
+          onChangeText={setContactPhone}
+          placeholder="e.g. 03001234567"
+          keyboardType="phone-pad"
+          containerStyle={{ marginBottom: 16 }}
+          maxLength={20}
+        />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Rules & Policies</Text>
+        <FieldInput
+          value={rulesAndPolicies}
+          onChangeText={setRulesAndPolicies}
+          placeholder="e.g. Cancellations must be made 2 hours in advance. Proper sports shoes required."
+          multiline
+          numberOfLines={4}
+          maxLength={1000}
+          style={{ height: 100, textAlignVertical: "top" }}
+          containerStyle={{ marginBottom: 16 }}
+        />
 
         <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
           <View className="flex-1 mr-3">

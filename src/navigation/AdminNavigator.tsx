@@ -8,6 +8,9 @@ import EditCourtScreen from "../screens/admin/EditCourtScreen";
 import ManageFacilitiesScreen from "../screens/admin/ManageFacilitiesScreen";
 import AdminSlotsScreen from "../screens/admin/AdminSlotsScreen";
 import VenueBookingsScreen from "../screens/admin/VenueBookingsScreen";
+import AdminReviewsScreen from "../screens/admin/AdminReviewsScreen";
+import AdminAnalyticsScreen from "../screens/admin/AdminAnalyticsScreen";
+import AdminNotificationsScreen from "../screens/admin/AdminNotificationsScreen";
 import type { VenueEditingParamList } from "./adminTypes";
 
 export type AdminStackParamList = VenueEditingParamList & {
@@ -28,6 +31,9 @@ export default function AdminNavigator() {
       <Stack.Screen name="ManageFacilities" component={ManageFacilitiesScreen} />
       <Stack.Screen name="AdminSlots" component={AdminSlotsScreen} />
       <Stack.Screen name="VenueBookings" component={VenueBookingsScreen} />
+      <Stack.Screen name="AdminReviews" component={AdminReviewsScreen} />
+      <Stack.Screen name="AdminAnalytics" component={AdminAnalyticsScreen} />
+      <Stack.Screen name="AdminNotifications" component={AdminNotificationsScreen} />
     </Stack.Navigator>
   );
 }
