@@ -3,8 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { getSportIcon } from "../../lib/sportIcons";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
@@ -27,6 +26,7 @@ import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
+import SportIconBadge from "../../components/SportIconBadge";
 import { toLocalDateStr, generateFullDaySlots, slotBoundaryDateTime, type Slot } from "../../lib/slots";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 
@@ -51,18 +51,6 @@ function DeltaLabel({ value, suffix = "" }: { value: number | null; suffix?: str
         {Math.abs(value)}
         {suffix} vs yesterday
       </Text>
-    </View>
-  );
-}
-
-function SportIconBadge({ sportName, size = 34 }: { sportName: string | undefined; size?: number }) {
-  const { icon, bg, fg } = getSportIcon(sportName ?? "");
-  return (
-    <View
-      className="items-center justify-center rounded-full"
-      style={{ width: size, height: size, backgroundColor: bg }}
-    >
-      <MaterialCommunityIcons name={icon} size={size * 0.55} color={fg} />
     </View>
   );
 }

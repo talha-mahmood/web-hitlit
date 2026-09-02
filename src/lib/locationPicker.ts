@@ -30,3 +30,34 @@ export async function detectCurrentLocationLabel(): Promise<string> {
 
   return formatAddress(address);
 }
+
+// Same GPS capture as detectCurrentLocationLabel, but returns raw
+// coordinates (for venues.latitude/longitude — used by "Venues near you"
+// distance sorting) plus a reverse-geocoded city, so a venue admin standing
+// at their venue can set its map location with one tap instead of typing
+// lat/lng manually.
+export async function detectCurrentCoordinates(): Promise<{
+  latitude: number;
+  longitude: number;
+  city: string | null;
+}> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== "granted") {
+    throw new Error("Location permission was denied. Enable it in your device settings to use this.");
+  }
+
+  const position = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Balanced,
+  });
+
+  const [address] = await Location.reverseGeocodeAsync({
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+  });
+
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    city: address?.city ?? null,
+  };
+}

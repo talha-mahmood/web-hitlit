@@ -29,6 +29,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
+import LocationPickerField from "../../components/LocationPickerField";
 
 type Route = RouteProp<VenueEditingParamList, "EditCourt">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditCourt">;
@@ -186,6 +187,8 @@ export default function EditCourtScreen() {
   const [pricePerHour, setPricePerHour] = useState("");
   const [capacity, setCapacity] = useState("");
   const [surfaceType, setSurfaceType] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
   const [isactive, setIsactive] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
@@ -197,6 +200,8 @@ export default function EditCourtScreen() {
         setPricePerHour(String(existingCourt.price_per_hour));
         setCapacity(existingCourt.capacity != null ? String(existingCourt.capacity) : "");
         setSurfaceType(existingCourt.surface_type ?? "");
+        setDescription(existingCourt.description ?? "");
+        setLocation(existingCourt.location ?? "");
         setIsactive(existingCourt.isactive);
       }
       setInitialized(true);
@@ -224,6 +229,8 @@ export default function EditCourtScreen() {
       pricePerHour: price,
       capacity: capacity ? parseInt(capacity, 10) : null,
       surfaceType: surfaceType.trim(),
+      description: description.trim(),
+      location: location.trim(),
       isactive,
     };
 
@@ -337,6 +344,23 @@ export default function EditCourtScreen() {
           placeholder="e.g. Artificial Turf"
           containerStyle={{ marginBottom: 16 }}
         />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Description (optional)</Text>
+        <FieldInput
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Describe this court..."
+          multiline
+          numberOfLines={3}
+          maxLength={500}
+          style={{ height: 80, textAlignVertical: "top" }}
+          containerStyle={{ marginBottom: 16 }}
+        />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Location (optional)</Text>
+        <View style={{ marginBottom: 16 }}>
+          <LocationPickerField value={location} onChange={setLocation} placeholder="e.g. Ground Floor, Block C" />
+        </View>
 
         <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
           <View className="flex-1 mr-3">

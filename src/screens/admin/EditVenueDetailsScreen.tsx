@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useUpdateVenue } from "../../hooks/useVenuesAdmin";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { detectCurrentCoordinates } from "../../lib/locationPicker";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
@@ -39,6 +40,9 @@ export default function EditVenueDetailsScreen() {
   const [contactPhone, setContactPhone] = useState("");
   const [rulesAndPolicies, setRulesAndPolicies] = useState("");
   const [isactive, setIsactive] = useState(true);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -52,9 +56,25 @@ export default function EditVenueDetailsScreen() {
       setContactPhone(venue.contact_phone ?? "");
       setRulesAndPolicies(venue.rules_and_policies ?? "");
       setIsactive(venue.isactive);
+      setLatitude(venue.latitude != null ? String(venue.latitude) : "");
+      setLongitude(venue.longitude != null ? String(venue.longitude) : "");
       setInitialized(true);
     }
   }, [venue, initialized]);
+
+  const handleDetectLocation = async () => {
+    setDetectingLocation(true);
+    try {
+      const coords = await detectCurrentCoordinates();
+      setLatitude(String(coords.latitude));
+      setLongitude(String(coords.longitude));
+      if (coords.city && !city.trim()) setCity(coords.city);
+    } catch (err) {
+      Alert.alert("Couldn't Detect Location", err instanceof Error ? err.message : "Please try again.");
+    } finally {
+      setDetectingLocation(false);
+    }
+  };
 
   const handleSave = () => {
     if (!isValidName(name)) {
@@ -69,6 +89,16 @@ export default function EditVenueDetailsScreen() {
       Alert.alert("Invalid Time", "End time must be in HH:MM format, e.g. 23:00.");
       return;
     }
+    const trimmedLat = latitude.trim();
+    const trimmedLng = longitude.trim();
+    if (trimmedLat && Number.isNaN(Number(trimmedLat))) {
+      Alert.alert("Invalid Location", "Latitude must be a number.");
+      return;
+    }
+    if (trimmedLng && Number.isNaN(Number(trimmedLng))) {
+      Alert.alert("Invalid Location", "Longitude must be a number.");
+      return;
+    }
 
     updateVenue.mutate(
       {
@@ -81,6 +111,8 @@ export default function EditVenueDetailsScreen() {
         contact_phone: contactPhone.trim() || null,
         rules_and_policies: rulesAndPolicies.trim() || null,
         isactive,
+        latitude: trimmedLat ? Number(trimmedLat) : null,
+        longitude: trimmedLng ? Number(trimmedLng) : null,
       },
       {
         onSuccess: () => navigation.goBack(),
@@ -163,6 +195,42 @@ export default function EditVenueDetailsScreen() {
           containerStyle={{ marginBottom: 16 }}
           maxLength={60}
         />
+
+        <View className="flex-row items-center justify-between mb-1.5">
+          <Text className="text-muted text-xs font-semibold">Map Location</Text>
+          <Pressable onPress={handleDetectLocation} disabled={detectingLocation} className="flex-row items-center" style={{ gap: 4 }}>
+            {detectingLocation ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Ionicons name="locate-outline" size={14} color={colors.primary} />
+            )}
+            <Text className="text-primary text-xs font-medium">
+              {detectingLocation ? "Detecting..." : "Use current location"}
+            </Text>
+          </Pressable>
+        </View>
+        <Text className="text-muted text-[11px] mb-2">
+          Sets where this venue shows up in "Venues near you" distance sorting. Stand at the venue and tap "Use
+          current location", or enter coordinates manually.
+        </Text>
+        <View className="flex-row mb-4" style={{ gap: 12 }}>
+          <View className="flex-1">
+            <FieldInput
+              value={latitude}
+              onChangeText={setLatitude}
+              placeholder="Latitude"
+              keyboardType="numbers-and-punctuation"
+            />
+          </View>
+          <View className="flex-1">
+            <FieldInput
+              value={longitude}
+              onChangeText={setLongitude}
+              placeholder="Longitude"
+              keyboardType="numbers-and-punctuation"
+            />
+          </View>
+        </View>
 
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">

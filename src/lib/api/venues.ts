@@ -5,6 +5,7 @@ export type Venue = Database["public"]["Tables"]["venues"]["Row"];
 export type VenueImage = Database["public"]["Tables"]["venue_images"]["Row"];
 export type VenueFacility = Database["public"]["Tables"]["venue_facilities"]["Row"];
 export type Court = Database["public"]["Tables"]["court"]["Row"];
+export type CourtImage = Database["public"]["Tables"]["court_images"]["Row"];
 
 export type VenueListItem = Venue & {
   venue_images: Pick<VenueImage, "image_url" | "display_order">[];
@@ -16,7 +17,10 @@ export type VenueListItem = Venue & {
 export type VenueDetail = Venue & {
   venue_images: Pick<VenueImage, "id" | "image_url" | "display_order">[];
   venue_facilities: Pick<VenueFacility, "id" | "name" | "type" | "description">[];
-  court: (Court & { sports: { name: string; icon: string | null } | null })[];
+  court: (Court & {
+    sports: { name: string; icon: string | null } | null;
+    court_images: Pick<CourtImage, "id" | "image_url" | "display_order">[];
+  })[];
 };
 
 export type VenueFilters = {
@@ -73,7 +77,7 @@ export async function fetchVenueDetail(venueId: string): Promise<VenueDetail | n
   const { data, error } = await supabase
     .from("venues")
     .select(
-      `*, venue_images(id, image_url, display_order), venue_facilities(id, name, type, description), court(*, sports(name, icon))`
+      `*, venue_images(id, image_url, display_order), venue_facilities(id, name, type, description), court(*, sports(name, icon), court_images(id, image_url, display_order))`
     )
     .eq("id", venueId)
     .is("deleted_at", null)

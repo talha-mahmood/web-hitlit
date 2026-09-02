@@ -42,7 +42,8 @@
           "locationWhenInUsePermission": "PlayOye needs your location to set your squad's location automatically."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

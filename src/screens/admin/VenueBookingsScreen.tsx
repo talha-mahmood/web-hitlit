@@ -1,89 +1,31 @@
-import { useMemo } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, Linking } from "react-native";
+import { useMemo, type ReactNode } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import {
   useAdminVenueDetail,
   useVenueBookings,
   useCancelBookingAsAdmin,
   useCheckInBooking,
 } from "../../hooks/useVenuesAdmin";
+import { computeDashboardStats, computeUpcomingBookings } from "../../lib/adminDashboard";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
-import { generateSlots, toLocalDateStr } from "../../lib/slots";
-import { COUNTED_STATUSES, REVENUE_STATUSES, OCCUPIED_STATUSES, STATUS_BADGE } from "../../lib/bookingStatus";
-import { getSportIcon } from "../../lib/sportIcons";
-import { colors } from "../../constants/theme";
+import { STATUS_BADGE } from "../../lib/bookingStatus";
+import SportIconBadge from "../../components/SportIconBadge";
+import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
 type Route = RouteProp<VenueEditingParamList, "VenueBookings">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "VenueBookings">;
 
-const CARD_BORDER = {
-  borderWidth: 1,
-  borderColor: "rgba(17, 24, 39, 0.06)",
-} as const;
+const CARD_BORDER = { borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" } as const;
 
-type PeriodKey = "today" | "week" | "month" | "year";
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "week", label: "This Week" },
-  { key: "month", label: "This Month" },
-  { key: "year", label: "This Year" },
-];
-
-function isWithinPeriod(date: Date, period: PeriodKey, now: Date): boolean {
-  if (period === "today") return toLocalDateStr(date) === toLocalDateStr(now);
-  if (period === "month") {
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-  }
-  if (period === "year") return date.getFullYear() === now.getFullYear();
-
-  // Calendar week, Monday–Sunday.
-  const startOfWeek = new Date(now);
-  const daysSinceMonday = (now.getDay() + 6) % 7;
-  startOfWeek.setHours(0, 0, 0, 0);
-  startOfWeek.setDate(now.getDate() - daysSinceMonday);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 7);
-  return date >= startOfWeek && date < endOfWeek;
-}
-
-function useBookingStats(bookings: VenueBooking[] | undefined) {
-  return useMemo(() => {
-    const now = new Date();
-    const counts: Record<PeriodKey, number> = { today: 0, week: 0, month: 0, year: 0 };
-    const revenue: Record<PeriodKey, number> = { today: 0, week: 0, month: 0, year: 0 };
-    let totalRevenue = 0;
-
-    for (const b of bookings ?? []) {
-      const isRevenue = REVENUE_STATUSES.has(b.status);
-      if (isRevenue) totalRevenue += b.total_amount;
-      if (!COUNTED_STATUSES.has(b.status)) continue;
-
-      const startDate = new Date(b.start_time);
-      for (const { key } of PERIODS) {
-        if (isWithinPeriod(startDate, key, now)) {
-          counts[key] += 1;
-          if (isRevenue) revenue[key] += b.total_amount;
-        }
-      }
-    }
-
-    return { counts, revenue, totalRevenue };
-  }, [bookings]);
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("en-PK", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+function formatTimeRange(startIso: string, endIso: string): string {
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${fmt(startIso)} - ${fmt(endIso)}`;
 }
 
 function handleContactCustomer(phone: string | null | undefined, name: string | null | undefined) {
@@ -114,43 +56,36 @@ function BookingRow({
   const canCancel = isRealCustomerBooking && (booking.status === "PENDING" || booking.status === "CONFIRMED");
   const canCheckIn = booking.status === "CONFIRMED" && !booking.checked_in_at;
 
-  const sportIcon = getSportIcon(booking.court?.sports?.name ?? "");
-
   return (
-    <View className="border border-border rounded-xl px-4 py-3 mb-2">
+    <View className="border-b border-border py-3">
       <View className="flex-row items-center justify-between mb-1">
-        <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
-          <View
-            className="items-center justify-center rounded-full"
-            style={{ width: 26, height: 26, backgroundColor: sportIcon.bg }}
-          >
-            <MaterialCommunityIcons name={sportIcon.icon} size={14} color={sportIcon.fg} />
+        <View className="flex-row items-center flex-1 pr-2" style={{ gap: 10 }}>
+          <SportIconBadge sportName={booking.court?.sports?.name} size={30} />
+          <View className="flex-1">
+            <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+              {formatTimeRange(booking.start_time, booking.end_time)} · {booking.court?.name ?? "Court"}
+            </Text>
+            {isRealCustomerBooking && (
+              <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                {booking.profiles?.full_name ?? "Customer"} · Rs {booking.total_amount.toLocaleString()}
+              </Text>
+            )}
           </View>
-          <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>
-            {booking.court?.name ?? "Court"}
-          </Text>
         </View>
         {badge && (
-          <View className={`px-2 py-0.5 rounded-full ${badge.bg}`}>
+          <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
             <Text className={`text-xs font-medium ${badge.text}`}>{badge.label}</Text>
           </View>
         )}
       </View>
-      <Text className="text-muted text-xs">{formatDateTime(booking.start_time)}</Text>
-      {isRealCustomerBooking && (
-        <Text className="text-muted text-xs mt-0.5">
-          {booking.profiles?.full_name ?? "Customer"} · Rs {booking.total_amount.toLocaleString()}
-        </Text>
-      )}
       {booking.checked_in_at && (
-        <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+        <View className="flex-row items-center ml-10 mb-1" style={{ gap: 4 }}>
           <Ionicons name="checkmark-circle" size={12} color={colors.primary} />
           <Text className="text-primary text-xs font-medium">Checked in</Text>
         </View>
       )}
-
       {isRealCustomerBooking && (
-        <View className="flex-row mt-3" style={{ gap: 8 }}>
+        <View className="flex-row ml-10" style={{ gap: 8 }}>
           {canCheckIn && (
             <Pressable
               onPress={() => onCheckIn(booking.id)}
@@ -186,64 +121,11 @@ function BookingRow({
   );
 }
 
-function StatsHeader({
-  bookings,
-  courtCount,
-  slotsPerCourtPerDay,
-  onViewSlots,
-}: {
-  bookings: VenueBooking[] | undefined;
-  courtCount: number;
-  slotsPerCourtPerDay: number;
-  onViewSlots: () => void;
-}) {
-  const { counts, revenue, totalRevenue } = useBookingStats(bookings);
-
-  const today = toLocalDateStr(new Date());
-  const bookedToday = (bookings ?? []).filter(
-    (b) => OCCUPIED_STATUSES.has(b.status) && toLocalDateStr(new Date(b.start_time)) === today
-  ).length;
-  const totalSlotsToday = slotsPerCourtPerDay * courtCount;
-  const freeToday = Math.max(totalSlotsToday - bookedToday, 0);
-
+function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View className="mb-5">
-      <View className="bg-white rounded-2xl p-5 mb-3" style={CARD_BORDER}>
-        <Text className="text-muted text-xs">Total Revenue</Text>
-        <Text className="text-ink font-extrabold text-3xl mt-1">Rs {totalRevenue.toLocaleString()}</Text>
-      </View>
-
-      <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
-        {PERIODS.map(({ key, label }) => (
-          <View key={key} className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_BORDER }}>
-            <Text className="text-muted text-xs mb-1">{label}</Text>
-            <Text className="text-ink font-extrabold text-xl">{counts[key]}</Text>
-            <Text className="text-muted text-xs mt-0.5">bookings · Rs {revenue[key].toLocaleString()}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Pressable
-        onPress={onViewSlots}
-        className="flex-row items-center bg-white rounded-2xl p-4 mt-3"
-        style={CARD_BORDER}
-      >
-        <View
-          className="items-center justify-center rounded-full mr-3"
-          style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="grid-outline" size={18} color={colors.primaryDark} />
-        </View>
-        <View className="flex-1">
-          <Text className="text-ink font-semibold text-sm">
-            {bookedToday} of {totalSlotsToday} slots booked today
-          </Text>
-          <Text className="text-muted text-xs mt-0.5">{freeToday} slots left · tap to view courts</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.border} />
-      </Pressable>
-
-      <Text className="text-lg font-semibold text-ink mt-6 mb-1">All Bookings</Text>
+    <View className="bg-white rounded-2xl p-5 mb-4" style={CARD_BORDER}>
+      <Text className="text-ink font-bold text-base mb-1">{title}</Text>
+      {children}
     </View>
   );
 }
@@ -259,9 +141,21 @@ export default function VenueBookingsScreen() {
 
   const isLoading = venueLoading || bookingsLoading;
   const actionsDisabled = cancelBooking.isPending || checkInBooking.isPending;
-  const slotsPerCourtPerDay = venue
-    ? generateSlots(venue.start_time ?? "06:00", venue.end_time ?? "23:00").length
-    : 0;
+
+  const stats = useMemo(
+    () => (venue ? computeDashboardStats(bookings ?? [], venue, venue.court.length) : null),
+    [bookings, venue]
+  );
+  const upcoming = useMemo(() => computeUpcomingBookings(bookings ?? [], 20), [bookings]);
+
+  const handleCancel = (id: string) =>
+    cancelBooking.mutate(id, {
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel booking."),
+    });
+  const handleCheckIn = (id: string) =>
+    checkInBooking.mutate(id, {
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not check in."),
+    });
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -273,46 +167,62 @@ export default function VenueBookingsScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Bookings</Text>
+        <Pressable
+          onPress={() => navigation.navigate("AdminAnalytics", { venueId: params.venueId })}
+          className="flex-row items-center bg-primary-light rounded-lg px-3 py-1.5"
+          style={{ gap: 4 }}
+        >
+          <Ionicons name="stats-chart-outline" size={14} color={colors.primaryDark} />
+          <Text className="text-primary text-xs font-semibold">Analytics</Text>
+        </Pressable>
       </View>
 
-      {isLoading ? (
+      {isLoading || !stats ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
-        <FlatList
-          data={bookings ?? []}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-          ListHeaderComponent={
-            <StatsHeader
-              bookings={bookings}
-              courtCount={venue?.court.length ?? 0}
-              slotsPerCourtPerDay={slotsPerCourtPerDay}
-              onViewSlots={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
-            />
-          }
-          ListEmptyComponent={
-            <View className="border border-dashed border-border rounded-2xl p-8 items-center">
-              <Ionicons name="calendar-outline" size={32} color={colors.border} />
-              <Text className="text-muted text-sm text-center mt-2">No bookings yet.</Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <BookingRow
-              booking={item}
-              actionsDisabled={actionsDisabled}
-              onCancel={(id) =>
-                cancelBooking.mutate(id, {
-                  onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel booking."),
-                })
-              }
-              onCheckIn={(id) =>
-                checkInBooking.mutate(id, {
-                  onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not check in."),
-                })
-              }
-            />
-          )}
-        />
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+            <Text className="text-muted text-xs">Today's Revenue</Text>
+            <Text className="text-ink font-extrabold text-3xl mt-1">Rs {stats.todaysRevenue.toLocaleString()}</Text>
+            <Text className="text-muted text-xs mt-1">{stats.todaysBookingsCount} bookings today</Text>
+          </View>
+
+          <SectionCard title="Today's Calendar">
+            {stats.todaysSchedule.length === 0 ? (
+              <Text className="text-muted text-sm py-2">No bookings scheduled for today yet.</Text>
+            ) : (
+              stats.todaysSchedule.map((b) => (
+                <BookingRow
+                  key={b.id}
+                  booking={b}
+                  actionsDisabled={actionsDisabled}
+                  onCancel={handleCancel}
+                  onCheckIn={handleCheckIn}
+                />
+              ))
+            )}
+          </SectionCard>
+
+          <SectionCard title="Upcoming Bookings">
+            {upcoming.length === 0 ? (
+              <Text className="text-muted text-sm py-2">No upcoming bookings yet.</Text>
+            ) : (
+              upcoming.map((b) => (
+                <BookingRow
+                  key={b.id}
+                  booking={b}
+                  actionsDisabled={actionsDisabled}
+                  onCancel={handleCancel}
+                  onCheckIn={handleCheckIn}
+                />
+              ))
+            )}
+          </SectionCard>
+
+          <Text className="text-muted text-xs text-center">
+            Looking for past bookings, revenue trends, or court performance? Check Analytics.
+          </Text>
+        </ScrollView>
       )}
     </View>
   );

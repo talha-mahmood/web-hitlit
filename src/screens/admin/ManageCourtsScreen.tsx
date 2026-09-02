@@ -2,29 +2,11 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useDeleteCourt } from "../../hooks/useVenuesAdmin";
 import { colors, primaryButtonShadow } from "../../constants/theme";
-import { getSportIcon } from "../../lib/sportIcons";
+import SportIconBadge from "../../components/SportIconBadge";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
-
-function SportIconBadge({ sportName, size = 36 }: { sportName: string | undefined; size?: number }) {
-  const { icon, bg, fg } = getSportIcon(sportName ?? "");
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: bg,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <MaterialCommunityIcons name={icon} size={size * 0.55} color={fg} />
-    </View>
-  );
-}
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourts">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourts">;
@@ -95,7 +77,7 @@ export default function ManageCourtsScreen() {
               onPress={() => navigation.navigate("EditCourt", { venueId: params.venueId, courtId: court.id })}
               className="border border-border rounded-2xl p-4 flex-row items-center justify-between"
             >
-              <SportIconBadge sportName={court.sports?.name} />
+              <SportIconBadge sportName={court.sports?.name} size={36} />
               <View className="flex-1 mx-3">
                 <View className="flex-row items-center" style={{ gap: 8 }}>
                   <Text className="text-ink font-bold text-sm">{court.name}</Text>
@@ -109,6 +91,15 @@ export default function ManageCourtsScreen() {
                   {court.sports?.name ?? "Sport not set"} · Rs {court.price_per_hour.toLocaleString()}/hr
                 </Text>
               </View>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("ManageCourtImages", { venueId: params.venueId, courtId: court.id, courtName: court.name })
+                }
+                hitSlop={8}
+                className="mr-3"
+              >
+                <Ionicons name="images-outline" size={18} color={colors.primary} />
+              </Pressable>
               <Pressable
                 onPress={() =>
                   navigation.navigate("AdminSlots", { venueId: params.venueId, courtId: court.id, courtName: court.name })

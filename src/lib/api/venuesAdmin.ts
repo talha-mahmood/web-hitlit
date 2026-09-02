@@ -42,6 +42,8 @@ export type CourtInput = {
   capacity: number | null;
   surfaceType: string;
   isactive: boolean;
+  description: string;
+  location: string;
 };
 
 export type FacilityInput = { name: string; type: string; description: string };
@@ -147,6 +149,8 @@ export async function addCourt(venueId: string, input: CourtInput): Promise<Cour
       capacity: input.capacity,
       surface_type: input.surfaceType || null,
       isactive: input.isactive,
+      description: input.description || null,
+      location: input.location || null,
     })
     .select()
     .single();
@@ -164,6 +168,8 @@ export async function updateCourt(courtId: string, input: CourtInput): Promise<C
       capacity: input.capacity,
       surface_type: input.surfaceType || null,
       isactive: input.isactive,
+      description: input.description || null,
+      location: input.location || null,
     })
     .eq("id", courtId)
     .select()
@@ -211,6 +217,23 @@ export async function addCourtPriceRule(courtId: string, input: CourtPriceRuleIn
 
 export async function deleteCourtPriceRule(ruleId: string): Promise<void> {
   const { error } = await supabase.from("court_price_rules").delete().eq("id", ruleId);
+  if (error) throw new Error(error.message);
+}
+
+export async function addCourtImage(courtId: string, imageUrl: string, displayOrder: number): Promise<void> {
+  const { error } = await supabase
+    .from("court_images")
+    .insert({ court_id: courtId, image_url: imageUrl, display_order: displayOrder });
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteCourtImage(imageId: string): Promise<void> {
+  const { error } = await supabase.from("court_images").delete().eq("id", imageId);
+  if (error) throw new Error(error.message);
+}
+
+export async function reorderCourtImage(imageId: string, displayOrder: number): Promise<void> {
+  const { error } = await supabase.from("court_images").update({ display_order: displayOrder }).eq("id", imageId);
   if (error) throw new Error(error.message);
 }
 

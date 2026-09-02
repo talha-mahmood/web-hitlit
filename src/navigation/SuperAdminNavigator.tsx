@@ -7,6 +7,7 @@ import EditVenueDetailsScreen from "../screens/admin/EditVenueDetailsScreen";
 import ManageVenueImagesScreen from "../screens/admin/ManageVenueImagesScreen";
 import ManageCourtsScreen from "../screens/admin/ManageCourtsScreen";
 import EditCourtScreen from "../screens/admin/EditCourtScreen";
+import ManageCourtImagesScreen from "../screens/admin/ManageCourtImagesScreen";
 import ManageFacilitiesScreen from "../screens/admin/ManageFacilitiesScreen";
 import AdminSlotsScreen from "../screens/admin/AdminSlotsScreen";
 import VenueBookingsScreen from "../screens/admin/VenueBookingsScreen";
@@ -36,6 +37,7 @@ export default function SuperAdminNavigator() {
       <Stack.Screen name="ManageVenueImages" component={ManageVenueImagesScreen} />
       <Stack.Screen name="ManageCourts" component={ManageCourtsScreen} />
       <Stack.Screen name="EditCourt" component={EditCourtScreen} />
+      <Stack.Screen name="ManageCourtImages" component={ManageCourtImagesScreen} />
       <Stack.Screen name="ManageFacilities" component={ManageFacilitiesScreen} />
       <Stack.Screen name="AdminSlots" component={AdminSlotsScreen} />
       <Stack.Screen name="VenueBookings" component={VenueBookingsScreen} />

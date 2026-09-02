@@ -8,6 +8,7 @@ export type VenueEditingParamList = {
   ManageVenueImages: { venueId: string };
   ManageCourts: { venueId: string };
   EditCourt: { venueId: string; courtId?: string };
+  ManageCourtImages: { venueId: string; courtId: string; courtName: string };
   ManageFacilities: { venueId: string };
   AdminSlots: { venueId: string; courtId: string; courtName: string };
   VenueBookings: { venueId: string };

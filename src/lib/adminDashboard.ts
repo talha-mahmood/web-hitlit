@@ -166,6 +166,63 @@ export function computeVenueAnalytics(bookings: VenueBooking[], cancelledCount: 
   };
 }
 
+export type SportPerformance = { sportName: string; bookings: number; revenue: number };
+
+// Per-sport bookings/revenue split — lets an admin see "Badminton earned
+// this much, Cricket earned that much" instead of only one blended total.
+export function computeSportBreakdown(bookings: VenueBooking[]): SportPerformance[] {
+  const map = new Map<string, { bookings: number; revenue: number }>();
+  for (const b of bookings) {
+    if (!COUNTED_STATUSES.has(b.status)) continue;
+    const sport = b.court?.sports?.name ?? "Unknown";
+    const entry = map.get(sport) ?? { bookings: 0, revenue: 0 };
+    entry.bookings += 1;
+    if (REVENUE_STATUSES.has(b.status)) entry.revenue += b.total_amount;
+    map.set(sport, entry);
+  }
+  return Array.from(map.entries())
+    .map(([sportName, v]) => ({ sportName, ...v }))
+    .sort((a, b) => b.revenue - a.revenue);
+}
+
+export type DayTimeHeatmap = {
+  dayLabels: string[];
+  bandLabels: string[];
+  // grid[dayIndex][bandIndex] = revenue
+  grid: number[][];
+  max: number;
+};
+
+const HEATMAP_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// Same 4 time-of-day bands as timeBadgeColor's morning/afternoon/evening/night
+// split, so "when is this venue busiest" reads consistently across the app.
+const HEATMAP_BANDS: { label: string; start: number; end: number }[] = [
+  { label: "Morning", start: 5, end: 12 },
+  { label: "Afternoon", start: 12, end: 17 },
+  { label: "Evening", start: 17, end: 21 },
+  { label: "Night", start: 21, end: 5 }, // wraps past midnight
+];
+
+// Revenue broken down by day-of-week × time-of-day, across a venue's full
+// booking history — reveals recurring demand patterns (e.g. "Saturday
+// evenings are the biggest driver") that a single week's chart can't show.
+export function computeDayTimeHeatmap(bookings: VenueBooking[]): DayTimeHeatmap {
+  const grid = HEATMAP_DAY_LABELS.map(() => HEATMAP_BANDS.map(() => 0));
+  for (const b of bookings) {
+    if (!REVENUE_STATUSES.has(b.status)) continue;
+    const d = new Date(b.start_time);
+    const dayIndex = (d.getDay() + 6) % 7; // Mon=0..Sun=6
+    const hour = d.getHours();
+    const bandIndex = HEATMAP_BANDS.findIndex((band) =>
+      band.start < band.end ? hour >= band.start && hour < band.end : hour >= band.start || hour < band.end
+    );
+    if (bandIndex === -1) continue;
+    grid[dayIndex][bandIndex] += b.total_amount;
+  }
+  const max = Math.max(1, ...grid.flat());
+  return { dayLabels: HEATMAP_DAY_LABELS, bandLabels: HEATMAP_BANDS.map((b) => b.label), grid, max };
+}
+
 export type VenueAggregate = {
   venueId: string;
   name: string;

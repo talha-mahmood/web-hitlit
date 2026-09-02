@@ -8,6 +8,9 @@ import {
   addCourt,
   updateCourt,
   deleteCourt,
+  addCourtImage,
+  deleteCourtImage,
+  reorderCourtImage,
   addFacility,
   deleteFacility,
   fetchVenueBookings,
@@ -141,6 +144,32 @@ export function useDeleteCourtPriceRule(courtId: string) {
   return useMutation({
     mutationFn: (ruleId: string) => deleteCourtPriceRule(ruleId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["courtPriceRules", courtId] }),
+  });
+}
+
+export function useAddCourtImage(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courtId, imageUrl, displayOrder }: { courtId: string; imageUrl: string; displayOrder: number }) =>
+      addCourtImage(courtId, imageUrl, displayOrder),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["venue", venueId] }),
+  });
+}
+
+export function useDeleteCourtImage(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (imageId: string) => deleteCourtImage(imageId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["venue", venueId] }),
+  });
+}
+
+export function useReorderCourtImage(venueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ imageId, displayOrder }: { imageId: string; displayOrder: number }) =>
+      reorderCourtImage(imageId, displayOrder),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["venue", venueId] }),
   });
 }
 
