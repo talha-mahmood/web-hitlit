@@ -9,6 +9,7 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -25,6 +26,7 @@ import {
 import type { CourtPriceRule } from "../../lib/api/venuesAdmin";
 import { useSports } from "../../hooks/useSports";
 import { getSportIcon } from "../../lib/sportIcons";
+import { getSportImage } from "../../lib/sportImages";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
@@ -287,33 +289,48 @@ export default function EditCourtScreen() {
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Sport</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }} style={{ marginBottom: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 20, paddingBottom: 4, paddingHorizontal: 2 }} style={{ marginBottom: 16 }}>
           {(sports ?? []).map((s) => {
             const selected = sportsId === s.id;
-            const { icon, fg } = getSportIcon(s.name);
+            const { icon, bg, fg } = getSportIcon(s.name);
+            const photo = getSportImage(s.name);
             return (
-              <Pressable
-                key={s.id}
-                onPress={() => setSportsId(s.id)}
-                className="flex-row items-center px-3 py-2 rounded-xl"
-                style={{
-                  gap: 6,
-                  borderWidth: 1.5,
-                  borderColor: selected ? colors.primary : colors.border,
-                  backgroundColor: selected ? colors.primary : "white",
-                  ...(selected
-                    ? {
-                        shadowColor: colors.primary,
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 6,
-                        elevation: 2,
-                      }
-                    : null),
-                }}
-              >
-                <MaterialCommunityIcons name={icon} size={16} color={selected ? "white" : fg} />
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{s.name}</Text>
+              <Pressable key={s.id} onPress={() => setSportsId(s.id)} className="items-center" style={{ width: 76 }}>
+                {photo ? (
+                  <Image
+                    source={photo}
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 16,
+                      borderWidth: selected ? 3 : 0,
+                      borderColor: colors.primary,
+                    }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 16,
+                      backgroundColor: bg,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: selected ? 3 : 0,
+                      borderColor: colors.primary,
+                    }}
+                  >
+                    <MaterialCommunityIcons name={icon} size={32} color={fg} />
+                  </View>
+                )}
+                <Text
+                  className="text-xs mt-2 text-center"
+                  style={{ color: selected ? colors.primary : colors.ink, fontWeight: selected ? "700" : "500" }}
+                  numberOfLines={1}
+                >
+                  {s.name}
+                </Text>
               </Pressable>
             );
           })}

@@ -30,6 +30,7 @@ import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
 import SportIconBadge from "../../components/SportIconBadge";
 import { getSportIcon } from "../../lib/sportIcons";
+import { getSportImage } from "../../lib/sportImages";
 import { toLocalDateStr, generateFullDaySlots, slotBoundaryDateTime, type Slot } from "../../lib/slots";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 
@@ -378,6 +379,7 @@ export default function AdminDashboardScreen() {
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 18 }}>
                 {venueSports.map((sport) => {
+                  const photo = getSportImage(sport);
                   const { icon, bg, fg } = getSportIcon(sport);
                   return (
                     <Pressable
@@ -386,18 +388,26 @@ export default function AdminDashboardScreen() {
                       className="items-center"
                       style={{ width: 64 }}
                     >
-                      <View
-                        style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 18,
-                          backgroundColor: bg,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <MaterialCommunityIcons name={icon} size={28} color={fg} />
-                      </View>
+                      {photo ? (
+                        <Image
+                          source={photo}
+                          style={{ width: 56, height: 56, borderRadius: 18 }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 18,
+                            backgroundColor: bg,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <MaterialCommunityIcons name={icon} size={28} color={fg} />
+                        </View>
+                      )}
                       <Text className="text-ink text-xs font-medium mt-1.5 text-center" numberOfLines={1}>
                         {sport}
                       </Text>
