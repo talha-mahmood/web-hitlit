@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { supabase } from "../../lib/supabase";
@@ -23,11 +24,12 @@ import {
   type RevenueScale,
 } from "../../lib/adminDashboard";
 import { STATUS_BADGE } from "../../lib/bookingStatus";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
 import SportIconBadge from "../../components/SportIconBadge";
+import { getSportIcon } from "../../lib/sportIcons";
 import { toLocalDateStr, generateFullDaySlots, slotBoundaryDateTime, type Slot } from "../../lib/slots";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 
@@ -143,6 +145,13 @@ export default function AdminDashboardScreen() {
   const { data: allBookings } = useAllMyVenuesBookings(venueIds);
 
   const courtsCount = venue?.court.length ?? 0;
+  const venueSports = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of venue?.court ?? []) {
+      if (c.sports?.name) seen.set(c.sports_id, c.sports.name);
+    }
+    return Array.from(seen.values());
+  }, [venue]);
 
   const stats = useMemo(
     () => (venue && bookings ? computeDashboardStats(bookings, venue, courtsCount) : null),
@@ -282,31 +291,121 @@ export default function AdminDashboardScreen() {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 32 }}>
-        <View className="px-5">
-          <View className="mb-4">
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#0B3B24", "#062A19"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            paddingTop: insets.top + 12,
+            paddingBottom: 44,
+            paddingHorizontal: 20,
+            borderBottomLeftRadius: 28,
+            borderBottomRightRadius: 28,
+          }}
+        >
+          <View className="flex-row items-center justify-between mb-5">
             <Pressable onPress={() => setMenuOpen(true)} hitSlop={10}>
-              <Ionicons name="menu" size={26} color={colors.ink} />
+              <Ionicons name="menu" size={26} color="white" />
+            </Pressable>
+            <Pressable onPress={() => setMenuOpen(true)} hitSlop={10}>
+              {profile?.avatar ? (
+                <Image source={{ uri: profile.avatar }} className="w-10 h-10 rounded-full" />
+              ) : (
+                <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                  <Text className="text-white font-bold">{firstName.charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
             </Pressable>
           </View>
 
-          <Text className="text-2xl font-bold text-ink">
-            {timeGreeting}, {firstName} 👋
+          <Text className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.65)", letterSpacing: 1 }}>
+            {timeGreeting.toUpperCase()}
           </Text>
-          <Text className="text-muted text-sm mt-0.5 mb-3">Here's what's happening at your venue today.</Text>
+          <Text className="text-white text-2xl font-bold mt-1">{firstName} 👋</Text>
 
           {(myVenues?.length ?? 0) > 1 && (
             <Pressable
               onPress={() => setSwitcherOpen(true)}
-              className="flex-row items-center self-start bg-white rounded-full px-3 py-2 mb-4"
-              style={CARD_BORDER}
+              className="flex-row items-center self-start rounded-full px-3 py-2 mt-3"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
             >
-              <Ionicons name="business" size={14} color={colors.primary} />
-              <Text className="text-ink text-sm font-semibold mx-2" numberOfLines={1}>
+              <Ionicons name="business" size={14} color="white" />
+              <Text className="text-white text-sm font-semibold mx-2" numberOfLines={1}>
                 {venue.name}
               </Text>
-              <Ionicons name="chevron-down" size={14} color={colors.muted} />
+              <Ionicons name="chevron-down" size={14} color="white" />
             </Pressable>
+          )}
+        </LinearGradient>
+
+        <View className="px-5" style={{ marginTop: -30 }}>
+          <View className="bg-white rounded-2xl p-5 flex-row items-center justify-between mb-6" style={cardShadow}>
+            <View className="flex-1 mr-3">
+              <Text className="text-muted text-xs">Today's Revenue</Text>
+              <Text className="text-ink font-extrabold text-2xl mt-1" numberOfLines={1}>
+                Rs {stats.todaysRevenue.toLocaleString()}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
+              className="flex-row items-center rounded-xl px-4 py-2.5"
+              style={{ backgroundColor: colors.primary, gap: 6 }}
+            >
+              <Ionicons name="calendar" size={14} color="white" />
+              <Text className="text-white font-semibold text-sm">Bookings</Text>
+            </Pressable>
+          </View>
+
+          <Pressable
+            onPress={() => navigation.navigate("BoostVenue", { venueId: params.venueId, venueName: venue.name })}
+            className="flex-row items-center justify-between mb-6"
+            style={{ backgroundColor: "#111827", borderRadius: 16, padding: 16 }}
+          >
+            <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+              <Ionicons name="rocket" size={18} color="#F59E0B" />
+              <Text className="text-white text-sm font-semibold flex-1" numberOfLines={2}>
+                Boost Your Venue — get more bookings in your area
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="white" />
+          </Pressable>
+
+          {venueSports.length > 0 && (
+            <View className="mb-6">
+              <Text className="text-ink font-bold text-xs mb-3" style={{ letterSpacing: 1 }}>
+                SPORTS &amp; COURTS
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 18 }}>
+                {venueSports.map((sport) => {
+                  const { icon, bg, fg } = getSportIcon(sport);
+                  return (
+                    <Pressable
+                      key={sport}
+                      onPress={() => navigation.navigate("ManageCourts", { venueId: params.venueId })}
+                      className="items-center"
+                      style={{ width: 64 }}
+                    >
+                      <View
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 18,
+                          backgroundColor: bg,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <MaterialCommunityIcons name={icon} size={28} color={fg} />
+                      </View>
+                      <Text className="text-ink text-xs font-medium mt-1.5 text-center" numberOfLines={1}>
+                        {sport}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
           )}
 
           <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
