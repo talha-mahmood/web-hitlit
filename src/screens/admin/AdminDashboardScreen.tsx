@@ -26,7 +26,7 @@ import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
-import { toLocalDateStr, generateFullDaySlots, isSlotPast, slotBoundaryDateTime, type Slot } from "../../lib/slots";
+import { toLocalDateStr, generateFullDaySlots, slotBoundaryDateTime, type Slot } from "../../lib/slots";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 
 type Route = RouteProp<VenueEditingParamList, "AdminDashboard">;
@@ -475,37 +475,35 @@ export default function AdminDashboardScreen() {
             )}
 
             <ScrollView contentContainerStyle={{ paddingBottom: 12 }}>
-              {generateFullDaySlots()
-                .filter((slot) => !isSlotPast(slot, toLocalDateStr(new Date())))
-                .map((slot: Slot) => {
-                  const today = toLocalDateStr(new Date());
-                  const s = slotBoundaryDateTime(today, slot.start, false).getTime();
-                  const e = slotBoundaryDateTime(today, slot.end, true).getTime();
-                  const match = (bookings ?? []).find((b: VenueBooking) => {
-                    if (b.court?.id !== hourlyCourtId) return false;
-                    const bs = new Date(b.start_time).getTime();
-                    const be = new Date(b.end_time).getTime();
-                    return s < be && e > bs;
-                  });
-                  const isBlocked = match?.status === "BLOCKED";
-                  const isBooked = !!match && !isBlocked;
-                  const badge = isBlocked
-                    ? { bg: "bg-red-50", text: "text-red-600", label: "Blocked" }
-                    : isBooked
-                      ? { bg: "bg-blue-50", text: "text-blue-600", label: "Booked" }
-                      : { bg: "bg-green-50", text: "text-green-700", label: "Available" };
+              {generateFullDaySlots().map((slot: Slot) => {
+                const today = toLocalDateStr(new Date());
+                const s = slotBoundaryDateTime(today, slot.start, false).getTime();
+                const e = slotBoundaryDateTime(today, slot.end, true).getTime();
+                const match = (bookings ?? []).find((b: VenueBooking) => {
+                  if (b.court?.id !== hourlyCourtId) return false;
+                  const bs = new Date(b.start_time).getTime();
+                  const be = new Date(b.end_time).getTime();
+                  return s < be && e > bs;
+                });
+                const isBlocked = match?.status === "BLOCKED";
+                const isBooked = !!match && !isBlocked;
+                const badge = isBlocked
+                  ? { bg: "bg-red-50", text: "text-red-600", label: "Blocked" }
+                  : isBooked
+                    ? { bg: "bg-blue-50", text: "text-blue-600", label: "Booked" }
+                    : { bg: "bg-green-50", text: "text-green-700", label: "Available" };
 
-                  return (
-                    <View key={slot.start} className="flex-row items-center justify-between py-2 border-b border-border">
-                      <Text className="text-ink text-sm">{slot.label}</Text>
-                      <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
-                        <Text className={`text-xs font-medium ${badge.text}`}>
-                          {badge.label}
-                          {isBooked && match?.profiles?.full_name ? ` · ${match.profiles.full_name}` : ""}
-                        </Text>
-                      </View>
+                return (
+                  <View key={slot.start} className="flex-row items-center justify-between py-2 border-b border-border">
+                    <Text className="text-ink text-sm">{slot.label}</Text>
+                    <View className={`px-2.5 py-1 rounded-full ${badge.bg}`}>
+                      <Text className={`text-xs font-medium ${badge.text}`}>
+                        {badge.label}
+                        {isBooked && match?.profiles?.full_name ? ` · ${match.profiles.full_name}` : ""}
+                      </Text>
                     </View>
-                  );
+                  </View>
+                );
               })}
             </ScrollView>
           </View>
