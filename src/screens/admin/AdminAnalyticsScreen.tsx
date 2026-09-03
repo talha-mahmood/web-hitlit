@@ -11,9 +11,10 @@ import {
   computeDayTimeHeatmap,
 } from "../../lib/adminDashboard";
 import { COUNTED_STATUSES } from "../../lib/bookingStatus";
-import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { exportCsv } from "../../lib/exportCsv";
+import { BOOKING_CSV_HEADER, formatBookingRowForCsv, toSafeFilenameSegment } from "../../lib/bookingCsv";
 import DayTimeHeatmapChart from "../../components/DayTimeHeatmap";
+import RevenueLineChart from "../../components/RevenueLineChart";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
@@ -49,20 +50,6 @@ function StatCard({
       </Text>
     </View>
   );
-}
-
-function formatBookingRowForCsv(b: VenueBooking): string[] {
-  const start = new Date(b.start_time);
-  return [
-    start.toLocaleDateString("en-PK"),
-    start.toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit", hour12: true }),
-    b.court?.name ?? "",
-    b.court?.sports?.name ?? "",
-    b.profiles?.full_name ?? "",
-    b.profiles?.phone ?? "",
-    b.status,
-    String(b.total_amount),
-  ];
 }
 
 export default function AdminAnalyticsScreen() {
@@ -113,24 +100,28 @@ export default function AdminAnalyticsScreen() {
   );
   const sportBreakdown = useMemo(() => computeSportBreakdown(bookings ?? []), [bookings]);
   const heatmap = useMemo(() => computeDayTimeHeatmap(filteredBookings), [filteredBookings]);
+  const dailyTotals = useMemo(
+    () => heatmap.grid.map((bands) => bands.reduce((sum, v) => sum + v, 0)),
+    [heatmap]
+  );
   const combinedRevenue = useMemo(
     () => (bookings ?? []).reduce((sum, b) => (COUNTED_STATUSES.has(b.status) ? sum + b.total_amount : sum), 0),
     [bookings]
   );
 
   const handleExport = async () => {
-    if (!bookings || bookings.length === 0) {
-      Alert.alert("Nothing to Export", "There are no bookings for this venue yet.");
+    if (filteredBookings.length === 0) {
+      Alert.alert("Nothing to Export", "There are no bookings for this selection yet.");
       return;
     }
     setExporting(true);
     try {
-      const rows = [
-        ["Date", "Time", "Court", "Sport", "Customer", "Phone", "Status", "Amount (Rs)"],
-        ...bookings.map(formatBookingRowForCsv),
-      ];
-      const safeVenueName = (venue?.name ?? "venue").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-      await exportCsv(`${safeVenueName}-bookings.csv`, rows);
+      const rows = [BOOKING_CSV_HEADER, ...filteredBookings.map(formatBookingRowForCsv)];
+      const nameParts = [venue?.name ?? "venue", selectedCourtName ?? selectedSport].filter(
+        (p): p is string => !!p
+      );
+      const filename = `${toSafeFilenameSegment(nameParts.join("-"))}-bookings.csv`;
+      await exportCsv(filename, rows);
     } catch (err) {
       Alert.alert("Export Failed", err instanceof Error ? err.message : "Could not export bookings.");
     } finally {
@@ -339,7 +330,9 @@ export default function AdminAnalyticsScreen() {
               Revenue by Day &amp; Time
               {selectedCourtName ? ` · ${selectedCourtName}` : selectedSport ? ` · ${selectedSport}` : ""}
             </Text>
-            <Text className="text-muted text-xs mb-3">Spot the busiest day/time combinations at a glance.</Text>
+            <Text className="text-muted text-xs mb-3">Daily revenue trend, then the busiest day/time combinations.</Text>
+            <RevenueLineChart labels={heatmap.dayLabels} values={dailyTotals} />
+            <View className="h-px bg-border my-4" />
             <DayTimeHeatmapChart data={heatmap} />
           </View>
         )}

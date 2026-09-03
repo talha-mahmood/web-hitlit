@@ -1,38 +1,34 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { colors } from "../constants/theme";
 
-// Plain-View bar chart (no react-native-svg dependency needed). Each bar is
-// tappable — the caller decides how to surface the exact value (e.g. an
-// Alert with a longer date/period label) via onBarPress.
-export default function RevenueBarChart({
-  labels,
-  values,
-  onBarPress,
-}: {
-  labels: string[];
-  values: number[];
-  onBarPress?: (index: number) => void;
-}) {
+const MAX_BAR_HEIGHT = 90;
+
+function formatCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
+}
+
+// Plain-View bar chart (no react-native-svg dependency needed). Each bar's
+// value is always shown as a small label directly above it — no tap needed.
+export default function RevenueBarChart({ labels, values }: { labels: string[]; values: number[] }) {
   const max = Math.max(1, ...values);
 
   return (
-    <View className="flex-row items-end justify-between" style={{ height: 120, gap: 6 }}>
+    <View className="flex-row items-end justify-between" style={{ height: 150, gap: 6 }}>
       {values.map((v, i) => {
-        const heightPct = Math.max(4, Math.round((v / max) * 100));
+        const barHeight = Math.max(4, Math.round((v / max) * MAX_BAR_HEIGHT));
         return (
-          <Pressable
-            key={i}
-            onPress={() => onBarPress?.(i)}
-            className="flex-1 items-center"
-            style={{ gap: 6, height: "100%", justifyContent: "flex-end" }}
-            hitSlop={{ top: 8 }}
-          >
+          <View key={i} className="flex-1 items-center" style={{ height: "100%", justifyContent: "flex-end" }}>
+            <Text className="text-ink text-[9px] font-semibold mb-1" numberOfLines={1}>
+              {v > 0 ? formatCompact(v) : ""}
+            </Text>
             <View
               className="w-full rounded-t-md"
-              style={{ height: `${heightPct}%`, backgroundColor: v > 0 ? colors.primary : colors.border }}
+              style={{ height: barHeight, backgroundColor: v > 0 ? colors.primary : colors.border }}
             />
-            <Text className="text-muted text-[10px]">{labels[i]}</Text>
-          </Pressable>
+            <Text className="text-muted text-[10px] mt-1.5">{labels[i]}</Text>
+          </View>
         );
       })}
     </View>

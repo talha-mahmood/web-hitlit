@@ -65,17 +65,6 @@ export default function AdminMenuOverlay({
         </ScrollView>
 
         <View className="px-5" style={{ paddingBottom: insets.bottom + 20 }}>
-          <View className="bg-white/10 rounded-2xl p-4 mb-3">
-            <Text className="text-white font-semibold text-sm mb-1">Upgrade to Pro</Text>
-            <Text className="text-gray-400 text-xs mb-3">Unlock more features and grow your business.</Text>
-            <Pressable
-              onPress={() => comingSoon("Upgrade to Pro")}
-              className="bg-primary rounded-lg py-2.5 items-center"
-            >
-              <Text className="text-white font-semibold text-sm">Upgrade Now</Text>
-            </Pressable>
-          </View>
-
           <Pressable
             onPress={() => Linking.openURL("mailto:mahmoodhamza1261@gmail.com?subject=PlayOye%20Support")}
             className="flex-row items-center"

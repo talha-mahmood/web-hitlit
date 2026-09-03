@@ -198,15 +198,6 @@ export default function AdminDashboardScreen() {
       },
     },
     {
-      key: "venues",
-      icon: "business-outline" as const,
-      label: "My Venues",
-      onPress: () => {
-        setMenuOpen(false);
-        navigation.navigate("AdminVenueList");
-      },
-    },
-    {
       key: "courts",
       icon: "grid-outline" as const,
       label: "Sports & Courts",
@@ -515,13 +506,7 @@ export default function AdminDashboardScreen() {
                 ))}
               </View>
 
-              <RevenueBarChart
-                labels={weekly.labels}
-                values={weekly.values}
-                onBarPress={(i) =>
-                  Alert.alert(weekly.detailLabels[i], `Rs ${weekly.values[i].toLocaleString()} in revenue`)
-                }
-              />
+              <RevenueBarChart labels={weekly.labels} values={weekly.values} />
             </SectionCard>
 
             <SectionCard title="Upcoming Bookings">

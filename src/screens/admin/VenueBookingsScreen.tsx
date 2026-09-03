@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -10,10 +10,12 @@ import {
   useCancelBookingAsAdmin,
   useCheckInBooking,
 } from "../../hooks/useVenuesAdmin";
-import { computeDashboardStats, computeUpcomingBookings } from "../../lib/adminDashboard";
+import { computeDashboardStats } from "../../lib/adminDashboard";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { STATUS_BADGE, COUNTED_STATUSES, REVENUE_STATUSES } from "../../lib/bookingStatus";
 import { toLocalDateStr } from "../../lib/slots";
+import { exportCsv } from "../../lib/exportCsv";
+import { BOOKING_CSV_HEADER, formatBookingRowForCsv, toSafeFilenameSegment } from "../../lib/bookingCsv";
 import SportIconBadge from "../../components/SportIconBadge";
 import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
 import { colors, cardShadow } from "../../constants/theme";
@@ -21,8 +23,6 @@ import type { VenueEditingParamList } from "../../navigation/adminTypes";
 
 type Route = RouteProp<VenueEditingParamList, "VenueBookings">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "VenueBookings">;
-
-const CARD_BORDER = { borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" } as const;
 
 function formatTimeRange(startIso: string, endIso: string): string {
   const fmt = (iso: string) =>
@@ -131,15 +131,6 @@ function formatDateLabel(dateStr: string): string {
   });
 }
 
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View className="bg-white rounded-2xl p-5 mb-4" style={CARD_BORDER}>
-      <Text className="text-ink font-bold text-base mb-1">{title}</Text>
-      {children}
-    </View>
-  );
-}
-
 export default function VenueBookingsScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
@@ -162,8 +153,8 @@ export default function VenueBookingsScreen() {
   }, [venue]);
 
   // No sport picked → every court's bookings; a sport picked → only that
-  // sport's courts, everywhere on this screen (today's revenue/calendar,
-  // upcoming, and the date-range/single-day results below).
+  // sport's courts, everywhere on this screen (today's revenue and the
+  // date-range/single-day results below).
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
     if (!selectedSport) return bookings;
@@ -174,7 +165,6 @@ export default function VenueBookingsScreen() {
     () => (venue ? computeDashboardStats(filteredBookings, venue, venue.court.length) : null),
     [filteredBookings, venue]
   );
-  const upcoming = useMemo(() => computeUpcomingBookings(filteredBookings, 20), [filteredBookings]);
 
   const selectionResult = useMemo(() => {
     if (!dateSelection) return null;
@@ -190,6 +180,44 @@ export default function VenueBookingsScreen() {
     const dayBookings = isSingleDay ? counted.slice().sort((a, b) => a.start_time.localeCompare(b.start_time)) : [];
     return { isSingleDay, totalBookings: counted.length, totalRevenue: revenue, dayBookings };
   }, [dateSelection, filteredBookings]);
+
+  // Same set the on-screen "Total Bookings/Revenue" figures are computed
+  // from — sport filter always applied, date range/single-day on top of it
+  // when one's selected. Exporting always matches what's currently shown.
+  const [exporting, setExporting] = useState(false);
+  const bookingsToExport = useMemo(() => {
+    if (!dateSelection) return filteredBookings;
+    return filteredBookings.filter((b) => {
+      const day = toLocalDateStr(new Date(b.start_time));
+      return day >= dateSelection.start && day <= dateSelection.end;
+    });
+  }, [filteredBookings, dateSelection]);
+
+  const handleExport = async () => {
+    if (bookingsToExport.length === 0) {
+      Alert.alert("Nothing to Export", "There are no bookings for this selection yet.");
+      return;
+    }
+    setExporting(true);
+    try {
+      const rows = [BOOKING_CSV_HEADER, ...bookingsToExport.map(formatBookingRowForCsv)];
+      const nameParts = [
+        venue?.name ?? "venue",
+        selectedSport,
+        dateSelection
+          ? dateSelection.start === dateSelection.end
+            ? dateSelection.start
+            : `${dateSelection.start}_to_${dateSelection.end}`
+          : null,
+      ].filter((p): p is string => !!p);
+      const filename = `${toSafeFilenameSegment(nameParts.join("-"))}-bookings.csv`;
+      await exportCsv(filename, rows);
+    } catch (err) {
+      Alert.alert("Export Failed", err instanceof Error ? err.message : "Could not export bookings.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleCancel = (id: string) =>
     cancelBooking.mutate(id, {
@@ -216,6 +244,13 @@ export default function VenueBookingsScreen() {
           className="mr-2 p-1"
         >
           <Ionicons name="calendar-outline" size={20} color={colors.ink} />
+        </Pressable>
+        <Pressable onPress={handleExport} disabled={exporting} hitSlop={8} className="mr-2 p-1">
+          {exporting ? (
+            <ActivityIndicator size="small" color={colors.ink} />
+          ) : (
+            <Ionicons name="download-outline" size={20} color={colors.ink} />
+          )}
         </Pressable>
         <Pressable
           onPress={() => navigation.navigate("AdminAnalytics", { venueId: params.venueId })}
@@ -323,42 +358,6 @@ export default function VenueBookingsScreen() {
               )}
             </View>
           )}
-
-          <SectionCard title={selectedSport ? `Today's Calendar · ${selectedSport}` : "Today's Calendar"}>
-            {stats.todaysSchedule.length === 0 ? (
-              <Text className="text-muted text-sm py-2">
-                {selectedSport ? `No ${selectedSport} bookings scheduled for today yet.` : "No bookings scheduled for today yet."}
-              </Text>
-            ) : (
-              stats.todaysSchedule.map((b) => (
-                <BookingRow
-                  key={b.id}
-                  booking={b}
-                  actionsDisabled={actionsDisabled}
-                  onCancel={handleCancel}
-                  onCheckIn={handleCheckIn}
-                />
-              ))
-            )}
-          </SectionCard>
-
-          <SectionCard title={selectedSport ? `Upcoming Bookings · ${selectedSport}` : "Upcoming Bookings"}>
-            {upcoming.length === 0 ? (
-              <Text className="text-muted text-sm py-2">
-                {selectedSport ? `No upcoming ${selectedSport} bookings yet.` : "No upcoming bookings yet."}
-              </Text>
-            ) : (
-              upcoming.map((b) => (
-                <BookingRow
-                  key={b.id}
-                  booking={b}
-                  actionsDisabled={actionsDisabled}
-                  onCancel={handleCancel}
-                  onCheckIn={handleCheckIn}
-                />
-              ))
-            )}
-          </SectionCard>
 
           <Text className="text-muted text-xs text-center">
             Looking for past bookings, revenue trends, or court performance? Check Analytics.
