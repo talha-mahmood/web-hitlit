@@ -1,15 +1,10 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Linking } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  useAdminVenueDetail,
-  useVenueBookings,
-  useCancelBookingAsAdmin,
-  useCheckInBooking,
-} from "../../hooks/useVenuesAdmin";
+import { useAdminVenueDetail, useVenueBookings } from "../../hooks/useVenuesAdmin";
 import { computeDashboardStats } from "../../lib/adminDashboard";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { STATUS_BADGE, COUNTED_STATUSES, REVENUE_STATUSES } from "../../lib/bookingStatus";
@@ -30,33 +25,9 @@ function formatTimeRange(startIso: string, endIso: string): string {
   return `${fmt(startIso)} - ${fmt(endIso)}`;
 }
 
-function handleContactCustomer(phone: string | null | undefined, name: string | null | undefined) {
-  if (!phone) {
-    Alert.alert("No Phone Number", `${name ?? "This customer"} hasn't added a phone number to their profile.`);
-    return;
-  }
-  Alert.alert(`Contact ${name ?? "Customer"}`, phone, [
-    { text: "Cancel", style: "cancel" },
-    { text: "Call", onPress: () => Linking.openURL(`tel:${phone}`) },
-    { text: "WhatsApp", onPress: () => Linking.openURL(`https://wa.me/${phone.replace(/[^0-9]/g, "")}`) },
-  ]);
-}
-
-function BookingRow({
-  booking,
-  onCancel,
-  onCheckIn,
-  actionsDisabled,
-}: {
-  booking: VenueBooking;
-  onCancel: (bookingId: string) => void;
-  onCheckIn: (bookingId: string) => void;
-  actionsDisabled: boolean;
-}) {
+function BookingRow({ booking }: { booking: VenueBooking }) {
   const badge = STATUS_BADGE[booking.status];
   const isRealCustomerBooking = booking.status !== "BLOCKED";
-  const canCancel = isRealCustomerBooking && (booking.status === "PENDING" || booking.status === "CONFIRMED");
-  const canCheckIn = booking.status === "CONFIRMED" && !booking.checked_in_at;
 
   return (
     <View className="border-b border-border py-3">
@@ -81,42 +52,9 @@ function BookingRow({
         )}
       </View>
       {booking.checked_in_at && (
-        <View className="flex-row items-center ml-10 mb-1" style={{ gap: 4 }}>
+        <View className="flex-row items-center ml-10" style={{ gap: 4 }}>
           <Ionicons name="checkmark-circle" size={12} color={colors.primary} />
           <Text className="text-primary text-xs font-medium">Checked in</Text>
-        </View>
-      )}
-      {isRealCustomerBooking && (
-        <View className="flex-row ml-10" style={{ gap: 8 }}>
-          {canCheckIn && (
-            <Pressable
-              onPress={() => onCheckIn(booking.id)}
-              disabled={actionsDisabled}
-              className="border border-primary rounded-lg px-3 py-1.5"
-            >
-              <Text className="text-primary text-xs font-semibold">Check In</Text>
-            </Pressable>
-          )}
-          <Pressable
-            onPress={() => handleContactCustomer(booking.profiles?.phone, booking.profiles?.full_name)}
-            className="border border-border rounded-lg px-3 py-1.5"
-          >
-            <Text className="text-ink text-xs font-semibold">Contact</Text>
-          </Pressable>
-          {canCancel && (
-            <Pressable
-              onPress={() =>
-                Alert.alert("Cancel Booking", `Cancel ${booking.profiles?.full_name ?? "this customer"}'s booking?`, [
-                  { text: "Keep Booking", style: "cancel" },
-                  { text: "Cancel Booking", style: "destructive", onPress: () => onCancel(booking.id) },
-                ])
-              }
-              disabled={actionsDisabled}
-              className="border border-danger rounded-lg px-3 py-1.5"
-            >
-              <Text className="text-danger text-xs font-semibold">Cancel</Text>
-            </Pressable>
-          )}
         </View>
       )}
     </View>
@@ -137,11 +75,8 @@ export default function VenueBookingsScreen() {
   const insets = useSafeAreaInsets();
   const { data: venue, isLoading: venueLoading } = useAdminVenueDetail(params.venueId);
   const { data: bookings, isLoading: bookingsLoading } = useVenueBookings(params.venueId);
-  const cancelBooking = useCancelBookingAsAdmin(params.venueId);
-  const checkInBooking = useCheckInBooking(params.venueId);
 
   const isLoading = venueLoading || bookingsLoading;
-  const actionsDisabled = cancelBooking.isPending || checkInBooking.isPending;
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [dateSelection, setDateSelection] = useState<DateSelection | null>(null);
@@ -218,15 +153,6 @@ export default function VenueBookingsScreen() {
       setExporting(false);
     }
   };
-
-  const handleCancel = (id: string) =>
-    cancelBooking.mutate(id, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel booking."),
-    });
-  const handleCheckIn = (id: string) =>
-    checkInBooking.mutate(id, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not check in."),
-    });
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -344,15 +270,7 @@ export default function VenueBookingsScreen() {
                   {selectionResult.dayBookings.length === 0 ? (
                     <Text className="text-muted text-sm py-2">No bookings on this day.</Text>
                   ) : (
-                    selectionResult.dayBookings.map((b) => (
-                      <BookingRow
-                        key={b.id}
-                        booking={b}
-                        actionsDisabled={actionsDisabled}
-                        onCancel={handleCancel}
-                        onCheckIn={handleCheckIn}
-                      />
-                    ))
+                    selectionResult.dayBookings.map((b) => <BookingRow key={b.id} booking={b} />)
                   )}
                 </View>
               )}
