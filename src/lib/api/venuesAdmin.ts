@@ -44,6 +44,7 @@ export type CourtInput = {
   isactive: boolean;
   description: string;
   location: string;
+  amenities: string[];
 };
 
 export type FacilityInput = { name: string; type: string; description: string };
@@ -151,6 +152,7 @@ export async function addCourt(venueId: string, input: CourtInput): Promise<Cour
       isactive: input.isactive,
       description: input.description || null,
       location: input.location || null,
+      amenities: input.amenities,
     })
     .select()
     .single();
@@ -170,6 +172,7 @@ export async function updateCourt(courtId: string, input: CourtInput): Promise<C
       isactive: input.isactive,
       description: input.description || null,
       location: input.location || null,
+      amenities: input.amenities,
     })
     .eq("id", courtId)
     .select()

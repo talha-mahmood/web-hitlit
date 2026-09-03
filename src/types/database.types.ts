@@ -121,6 +121,7 @@ export type Database = {
       }
       court: {
         Row: {
+          amenities: string[]
           capacity: number | null
           created_at: string
           deleted_at: string | null
@@ -136,6 +137,7 @@ export type Database = {
           venue_id: string
         }
         Insert: {
+          amenities?: string[]
           capacity?: number | null
           created_at?: string
           deleted_at?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           venue_id: string
         }
         Update: {
+          amenities?: string[]
           capacity?: number | null
           created_at?: string
           deleted_at?: string | null

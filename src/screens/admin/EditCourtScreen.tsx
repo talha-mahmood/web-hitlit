@@ -28,13 +28,17 @@ import { useSports } from "../../hooks/useSports";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getSportImage } from "../../lib/sportImages";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { AMENITY_OPTIONS } from "../../lib/amenities";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import LocationPickerField from "../../components/LocationPickerField";
+import SelectDropdownField from "../../components/SelectDropdownField";
 
 type Route = RouteProp<VenueEditingParamList, "EditCourt">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditCourt">;
+
+const SURFACE_TYPE_OPTIONS = ["Artificial Turf", "Natural Grass", "Cement Turf", "Hybrid Turf", "Clay"];
 
 // Accepts a 1- or 2-digit hour ("4:00" or "04:00") so the user doesn't have
 // to remember to type a leading zero, and zero-pads it before use/storage.
@@ -191,8 +195,13 @@ export default function EditCourtScreen() {
   const [surfaceType, setSurfaceType] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
   const [isactive, setIsactive] = useState(true);
   const [initialized, setInitialized] = useState(false);
+
+  const toggleAmenity = (label: string) => {
+    setAmenities((prev) => (prev.includes(label) ? prev.filter((a) => a !== label) : [...prev, label]));
+  };
 
   useEffect(() => {
     if (!initialized && (existingCourt || !isEditing)) {
@@ -204,6 +213,7 @@ export default function EditCourtScreen() {
         setSurfaceType(existingCourt.surface_type ?? "");
         setDescription(existingCourt.description ?? "");
         setLocation(existingCourt.location ?? "");
+        setAmenities(existingCourt.amenities ?? []);
         setIsactive(existingCourt.isactive);
       }
       setInitialized(true);
@@ -233,6 +243,7 @@ export default function EditCourtScreen() {
       surfaceType: surfaceType.trim(),
       description: description.trim(),
       location: location.trim(),
+      amenities,
       isactive,
     };
 
@@ -289,52 +300,87 @@ export default function EditCourtScreen() {
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Sport</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 20, paddingBottom: 4, paddingHorizontal: 2 }} style={{ marginBottom: 16 }}>
-          {(sports ?? []).map((s) => {
-            const selected = sportsId === s.id;
-            const { icon, bg, fg } = getSportIcon(s.name);
-            const photo = getSportImage(s.name);
+        {isEditing ? (
+          // Locked after creation — changing it would strand any existing
+          // bookings/players expecting this court's original sport (same
+          // reasoning as games' sport field being fixed post-creation).
+          (() => {
+            const currentSport = (sports ?? []).find((s) => s.id === sportsId);
+            const { icon, bg, fg } = getSportIcon(currentSport?.name ?? "");
+            const photo = getSportImage(currentSport?.name ?? "");
             return (
-              <Pressable key={s.id} onPress={() => setSportsId(s.id)} className="items-center" style={{ width: 76 }}>
+              <View className="flex-row items-center mb-4" style={{ gap: 12 }}>
                 {photo ? (
-                  <Image
-                    source={photo}
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: 16,
-                      borderWidth: selected ? 3 : 0,
-                      borderColor: colors.primary,
-                    }}
-                    resizeMode="cover"
-                  />
+                  <Image source={photo} style={{ width: 48, height: 48, borderRadius: 12 }} resizeMode="cover" />
                 ) : (
                   <View
                     style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: 16,
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
                       backgroundColor: bg,
                       alignItems: "center",
                       justifyContent: "center",
-                      borderWidth: selected ? 3 : 0,
-                      borderColor: colors.primary,
                     }}
                   >
-                    <MaterialCommunityIcons name={icon} size={32} color={fg} />
+                    <MaterialCommunityIcons name={icon} size={24} color={fg} />
                   </View>
                 )}
-                <Text
-                  className="text-xs mt-2 text-center"
-                  style={{ color: selected ? colors.primary : colors.ink, fontWeight: selected ? "700" : "500" }}
-                  numberOfLines={1}
-                >
-                  {s.name}
-                </Text>
-              </Pressable>
+                <View className="flex-1">
+                  <Text className="text-ink font-semibold text-sm">{currentSport?.name ?? "—"}</Text>
+                  <Text className="text-muted text-xs mt-0.5">Sport can't be changed after a court is created.</Text>
+                </View>
+              </View>
             );
-          })}
-        </ScrollView>
+          })()
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 20, paddingBottom: 4, paddingHorizontal: 2 }} style={{ marginBottom: 16 }}>
+            {(sports ?? []).map((s) => {
+              const selected = sportsId === s.id;
+              const { icon, bg, fg } = getSportIcon(s.name);
+              const photo = getSportImage(s.name);
+              return (
+                <Pressable key={s.id} onPress={() => setSportsId(s.id)} className="items-center" style={{ width: 76 }}>
+                  {photo ? (
+                    <Image
+                      source={photo}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 16,
+                        borderWidth: selected ? 3 : 0,
+                        borderColor: colors.primary,
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 16,
+                        backgroundColor: bg,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderWidth: selected ? 3 : 0,
+                        borderColor: colors.primary,
+                      }}
+                    >
+                      <MaterialCommunityIcons name={icon} size={32} color={fg} />
+                    </View>
+                  )}
+                  <Text
+                    className="text-xs mt-2 text-center"
+                    style={{ color: selected ? colors.primary : colors.ink, fontWeight: selected ? "700" : "500" }}
+                    numberOfLines={1}
+                  >
+                    {s.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Price per Hour (Rs)</Text>
         <FieldInput
@@ -355,12 +401,45 @@ export default function EditCourtScreen() {
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Surface Type (optional)</Text>
-        <FieldInput
-          value={surfaceType}
-          onChangeText={setSurfaceType}
-          placeholder="e.g. Artificial Turf"
-          containerStyle={{ marginBottom: 16 }}
-        />
+        <View style={{ marginBottom: 16 }}>
+          <SelectDropdownField
+            value={surfaceType}
+            options={SURFACE_TYPE_OPTIONS}
+            onChange={setSurfaceType}
+            placeholder="Select surface type"
+          />
+        </View>
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Amenities (optional)</Text>
+        <View className="flex-row flex-wrap mb-4" style={{ gap: 10 }}>
+          {AMENITY_OPTIONS.map(({ label, icon }) => {
+            const selected = amenities.includes(label);
+            return (
+              <Pressable
+                key={label}
+                onPress={() => toggleAmenity(label)}
+                className="flex-row items-center rounded-xl px-3 py-2.5"
+                style={{
+                  width: "47%",
+                  gap: 8,
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.primaryLight : "white",
+                }}
+              >
+                <MaterialCommunityIcons name={icon} size={20} color={selected ? colors.primary : colors.muted} />
+                <Text
+                  className="text-sm flex-1"
+                  style={{ color: selected ? colors.primary : colors.ink, fontWeight: selected ? "700" : "500" }}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+                {selected && <Ionicons name="checkmark-circle" size={16} color={colors.primary} />}
+              </Pressable>
+            );
+          })}
+        </View>
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Description (optional)</Text>
         <FieldInput

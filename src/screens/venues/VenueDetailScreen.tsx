@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVenueDetail } from "../../hooks/useVenueDetail";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
+import { getAmenityIcon } from "../../lib/amenities";
 import { colors } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -46,6 +47,11 @@ export default function VenueDetailScreen() {
   }
 
   const images = [...venue.venue_images].sort((a, b) => a.display_order - b.display_order);
+
+  // Amenities live per-court (set by the admin in Edit Court), so the venue
+  // page shows the union across all its courts — a player browsing a venue
+  // wants to know what's available there overall, not court-by-court.
+  const amenities = Array.from(new Set(venue.court.flatMap((c) => c.amenities ?? [])));
 
   return (
     <ScrollView className="flex-1 bg-gray-100" showsVerticalScrollIndicator={false}>
@@ -142,6 +148,22 @@ export default function VenueDetailScreen() {
                   className="bg-primary-light px-3 py-1.5 rounded-full"
                 >
                   <Text className="text-primary-dark text-sm">{facility.name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {amenities.length > 0 && (
+          <View className="mt-6">
+            <Text className="text-ink font-semibold text-base mb-3">Amenities</Text>
+            <View className="flex-row flex-wrap" style={{ rowGap: 14, columnGap: 12 }}>
+              {amenities.map((label) => (
+                <View key={label} className="flex-row items-center" style={{ width: "47%", gap: 10 }}>
+                  <MaterialCommunityIcons name={getAmenityIcon(label)} size={20} color={colors.ink} />
+                  <Text className="text-ink text-sm flex-1" numberOfLines={1}>
+                    {label}
+                  </Text>
                 </View>
               ))}
             </View>
