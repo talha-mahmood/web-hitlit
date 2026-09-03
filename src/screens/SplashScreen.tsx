@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View, Text } from "react-native";
+import { View, Text, ImageBackground } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,37 +9,42 @@ import Animated, {
 } from "react-native-reanimated";
 import { colors } from "../constants/theme";
 
-const ICON_SIZE = 108;
+const BAR_WIDTH = 160;
 
 export default function SplashScreen() {
-  const rotation = useSharedValue(0);
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 1400, easing: Easing.linear }),
-      -1,
-      false
-    );
-  }, [rotation]);
+    progress.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.ease) }), -1, false);
+  }, [progress]);
 
-  const spinStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
   }));
 
   return (
-    <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.primary }}>
-      <Animated.Image
-        source={require("../../assets/icon.png")}
-        style={[
-          {
-            width: ICON_SIZE,
-            height: ICON_SIZE,
-            borderRadius: ICON_SIZE / 2,
-          },
-          spinStyle,
-        ]}
-      />
-      <Text className="text-2xl font-extrabold text-white mt-6 tracking-wide">PlayOye</Text>
-    </View>
+    <ImageBackground
+      source={require("../../assets/splash-background.png")}
+      className="flex-1"
+      resizeMode="cover"
+    >
+      <View className="flex-1 items-center justify-end" style={{ paddingBottom: 72 }}>
+        <View
+          style={{
+            width: BAR_WIDTH,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: "rgba(17, 24, 39, 0.12)",
+            overflow: "hidden",
+          }}
+        >
+          <Animated.View style={[{ height: "100%", borderRadius: 2, backgroundColor: colors.primary }, barStyle]} />
+        </View>
+
+        <Text className="mt-4 font-medium" style={{ color: colors.muted, fontSize: 13 }}>
+          Loading
+        </Text>
+      </View>
+    </ImageBackground>
   );
 }
