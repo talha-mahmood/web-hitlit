@@ -209,7 +209,7 @@ export default function AdminDashboardScreen() {
     {
       key: "analytics",
       icon: "stats-chart-outline" as const,
-      label: "Analytics",
+      label: "AI Analytics",
       onPress: () => {
         setMenuOpen(false);
         navigation.navigate("AdminAnalytics", { venueId: params.venueId });

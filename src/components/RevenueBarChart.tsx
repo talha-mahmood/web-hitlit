@@ -1,13 +1,8 @@
 import { View, Text } from "react-native";
 import { colors } from "../constants/theme";
+import { formatCompactNumber } from "../lib/adminDashboard";
 
 const MAX_BAR_HEIGHT = 90;
-
-function formatCompact(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return String(Math.round(value));
-}
 
 // Plain-View bar chart (no react-native-svg dependency needed). Each bar's
 // value is always shown as a small label directly above it — no tap needed.
@@ -21,7 +16,7 @@ export default function RevenueBarChart({ labels, values }: { labels: string[]; 
         return (
           <View key={i} className="flex-1 items-center" style={{ height: "100%", justifyContent: "flex-end" }}>
             <Text className="text-ink text-[9px] font-semibold mb-1" numberOfLines={1}>
-              {v > 0 ? formatCompact(v) : ""}
+              {v > 0 ? formatCompactNumber(v) : ""}
             </Text>
             <View
               className="w-full rounded-t-md"

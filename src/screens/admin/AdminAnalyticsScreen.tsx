@@ -8,12 +8,12 @@ import { useAdminVenueDetail, useVenueBookings, useCancelledBookingsCount } from
 import {
   computeVenueAnalytics,
   computeSportBreakdown,
-  computeDayTimeHeatmap,
+  computeRevenueByScale,
+  type RevenueScale,
 } from "../../lib/adminDashboard";
 import { COUNTED_STATUSES } from "../../lib/bookingStatus";
 import { exportCsv } from "../../lib/exportCsv";
 import { BOOKING_CSV_HEADER, formatBookingRowForCsv, toSafeFilenameSegment } from "../../lib/bookingCsv";
-import DayTimeHeatmapChart from "../../components/DayTimeHeatmap";
 import RevenueLineChart from "../../components/RevenueLineChart";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
@@ -62,6 +62,7 @@ export default function AdminAnalyticsScreen() {
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [revenueScale, setRevenueScale] = useState<RevenueScale>("days");
 
   const isLoading = venueLoading || bookingsLoading || cancelledLoading;
 
@@ -99,10 +100,9 @@ export default function AdminAnalyticsScreen() {
     [bookings, filteredBookings, isFiltered, cancelledCount]
   );
   const sportBreakdown = useMemo(() => computeSportBreakdown(bookings ?? []), [bookings]);
-  const heatmap = useMemo(() => computeDayTimeHeatmap(filteredBookings), [filteredBookings]);
-  const dailyTotals = useMemo(
-    () => heatmap.grid.map((bands) => bands.reduce((sum, v) => sum + v, 0)),
-    [heatmap]
+  const revenueTrend = useMemo(
+    () => computeRevenueByScale(filteredBookings, revenueScale),
+    [filteredBookings, revenueScale]
   );
   const combinedRevenue = useMemo(
     () => (bookings ?? []).reduce((sum, b) => (COUNTED_STATUSES.has(b.status) ? sum + b.total_amount : sum), 0),
@@ -144,7 +144,7 @@ export default function AdminAnalyticsScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1" numberOfLines={1}>
-          Analytics · {venue?.name ?? ""}
+          AI Analytics · {venue?.name ?? ""}
         </Text>
         <Pressable
           onPress={handleExport}
@@ -324,16 +324,33 @@ export default function AdminAnalyticsScreen() {
           </View>
         )}
 
-        {heatmap.max > 1 && (
+        {revenueTrend.total > 0 && (
           <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
             <Text className="text-ink font-bold text-base mb-1">
-              Revenue by Day &amp; Time
+              Revenue Trend
               {selectedCourtName ? ` · ${selectedCourtName}` : selectedSport ? ` · ${selectedSport}` : ""}
             </Text>
-            <Text className="text-muted text-xs mb-3">Daily revenue trend, then the busiest day/time combinations.</Text>
-            <RevenueLineChart labels={heatmap.dayLabels} values={dailyTotals} />
-            <View className="h-px bg-border my-4" />
-            <DayTimeHeatmapChart data={heatmap} />
+            <Text className="text-muted text-xs mb-3">Rs {revenueTrend.total.toLocaleString()} ({revenueTrend.periodLabel})</Text>
+
+            <View className="flex-row bg-gray-100 rounded-xl p-1 mb-4" style={{ gap: 4 }}>
+              {(["days", "weeks", "months", "year"] as RevenueScale[]).map((scale) => (
+                <Pressable
+                  key={scale}
+                  onPress={() => setRevenueScale(scale)}
+                  className="flex-1 items-center py-1.5 rounded-lg"
+                  style={{ backgroundColor: revenueScale === scale ? "white" : "transparent" }}
+                >
+                  <Text
+                    className="text-xs font-semibold capitalize"
+                    style={{ color: revenueScale === scale ? colors.primary : colors.muted }}
+                  >
+                    {scale}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <RevenueLineChart labels={revenueTrend.labels} values={revenueTrend.values} />
           </View>
         )}
       </ScrollView>

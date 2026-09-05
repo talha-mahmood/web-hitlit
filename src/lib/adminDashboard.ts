@@ -53,7 +53,13 @@ export function computeDashboardStats(bookings: VenueBooking[], venue: Venue, co
   };
 }
 
-export type RevenueScale = "days" | "weeks" | "months";
+export type RevenueScale = "days" | "weeks" | "months" | "year";
+
+export function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
+}
 
 export type RevenueBuckets = {
   labels: string[];
@@ -154,11 +160,46 @@ export function computeRevenueByScale(bookings: VenueBooking[], scale: RevenueSc
     };
   }
 
-  // months
-  const count = 6;
-  const monthStarts = Array.from({ length: count }, (_, i) => new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1));
-  const values = monthStarts.map((start) => {
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+  if (scale === "months") {
+    const count = 6;
+    const monthStarts = Array.from({ length: count }, (_, i) => new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1));
+    const values = monthStarts.map((start) => {
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+      return revenueBookings
+        .filter((b) => {
+          const t = new Date(b.start_time);
+          return t >= start && t < end;
+        })
+        .reduce((sum, b) => sum + b.total_amount, 0);
+    });
+    const total = values.reduce((a, b) => a + b, 0);
+    const labels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "short" }));
+    const detailLabels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "long", year: "numeric" }));
+
+    const prevStart = new Date(monthStarts[0].getFullYear(), monthStarts[0].getMonth() - count, 1);
+    const prevEnd = monthStarts[0];
+    const prevTotal = revenueBookings
+      .filter((b) => {
+        const t = new Date(b.start_time);
+        return t >= prevStart && t < prevEnd;
+      })
+      .reduce((sum, b) => sum + b.total_amount, 0);
+
+    return {
+      labels,
+      detailLabels,
+      values,
+      total,
+      deltaPct: pctChange(total, prevTotal),
+      periodLabel: `last ${count} months`,
+    };
+  }
+
+  // year
+  const count = 5;
+  const yearStarts = Array.from({ length: count }, (_, i) => new Date(now.getFullYear() - (count - 1 - i), 0, 1));
+  const values = yearStarts.map((start) => {
+    const end = new Date(start.getFullYear() + 1, 0, 1);
     return revenueBookings
       .filter((b) => {
         const t = new Date(b.start_time);
@@ -167,11 +208,11 @@ export function computeRevenueByScale(bookings: VenueBooking[], scale: RevenueSc
       .reduce((sum, b) => sum + b.total_amount, 0);
   });
   const total = values.reduce((a, b) => a + b, 0);
-  const labels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "short" }));
-  const detailLabels = monthStarts.map((d) => d.toLocaleDateString("en-US", { month: "long", year: "numeric" }));
+  const labels = yearStarts.map((d) => String(d.getFullYear()));
+  const detailLabels = labels;
 
-  const prevStart = new Date(monthStarts[0].getFullYear(), monthStarts[0].getMonth() - count, 1);
-  const prevEnd = monthStarts[0];
+  const prevStart = new Date(yearStarts[0].getFullYear() - count, 0, 1);
+  const prevEnd = yearStarts[0];
   const prevTotal = revenueBookings
     .filter((b) => {
       const t = new Date(b.start_time);
@@ -185,7 +226,7 @@ export function computeRevenueByScale(bookings: VenueBooking[], scale: RevenueSc
     values,
     total,
     deltaPct: pctChange(total, prevTotal),
-    periodLabel: `last ${count} months`,
+    periodLabel: `last ${count} years`,
   };
 }
 
@@ -293,44 +334,6 @@ export function computeSportBreakdown(bookings: VenueBooking[]): SportPerformanc
   return Array.from(map.entries())
     .map(([sportName, v]) => ({ sportName, ...v }))
     .sort((a, b) => b.revenue - a.revenue);
-}
-
-export type DayTimeHeatmap = {
-  dayLabels: string[];
-  bandLabels: string[];
-  // grid[dayIndex][bandIndex] = revenue
-  grid: number[][];
-  max: number;
-};
-
-const HEATMAP_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-// Same 4 time-of-day bands as timeBadgeColor's morning/afternoon/evening/night
-// split, so "when is this venue busiest" reads consistently across the app.
-const HEATMAP_BANDS: { label: string; start: number; end: number }[] = [
-  { label: "Morning", start: 5, end: 12 },
-  { label: "Afternoon", start: 12, end: 17 },
-  { label: "Evening", start: 17, end: 21 },
-  { label: "Night", start: 21, end: 5 }, // wraps past midnight
-];
-
-// Revenue broken down by day-of-week × time-of-day, across a venue's full
-// booking history — reveals recurring demand patterns (e.g. "Saturday
-// evenings are the biggest driver") that a single week's chart can't show.
-export function computeDayTimeHeatmap(bookings: VenueBooking[]): DayTimeHeatmap {
-  const grid = HEATMAP_DAY_LABELS.map(() => HEATMAP_BANDS.map(() => 0));
-  for (const b of bookings) {
-    if (!REVENUE_STATUSES.has(b.status)) continue;
-    const d = new Date(b.start_time);
-    const dayIndex = (d.getDay() + 6) % 7; // Mon=0..Sun=6
-    const hour = d.getHours();
-    const bandIndex = HEATMAP_BANDS.findIndex((band) =>
-      band.start < band.end ? hour >= band.start && hour < band.end : hour >= band.start || hour < band.end
-    );
-    if (bandIndex === -1) continue;
-    grid[dayIndex][bandIndex] += b.total_amount;
-  }
-  const max = Math.max(1, ...grid.flat());
-  return { dayLabels: HEATMAP_DAY_LABELS, bandLabels: HEATMAP_BANDS.map((b) => b.label), grid, max };
 }
 
 export type VenueAggregate = {
