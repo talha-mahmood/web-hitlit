@@ -489,7 +489,7 @@ export default function AdminDashboardScreen() {
               </View>
 
               <View className="flex-row bg-gray-100 rounded-xl p-1 mb-4" style={{ gap: 4 }}>
-                {(["days", "weeks", "months"] as RevenueScale[]).map((scale) => (
+                {(["days", "weeks", "months", "year"] as RevenueScale[]).map((scale) => (
                   <Pressable
                     key={scale}
                     onPress={() => setRevenueScale(scale)}
