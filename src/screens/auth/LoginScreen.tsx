@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Image, Pressable, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Keyboard, Platform } from "react-native";
 import { signInWithGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
@@ -31,12 +31,12 @@ function isPhoneDigitsValid(dial: string, digits: string): boolean {
 
 export default function LoginScreen() {
   const updateProfile = useProfileStore((s) => s.updateProfile);
-  const scrollRef = useRef<ScrollView>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY_CODE.dial);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [gender, setGender] = useState<Gender | null>(null);
   const [age, setAge] = useState("");
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const isValid = isPhoneDigitsValid(phoneDial, phoneNumber) && !!gender;
 
@@ -48,18 +48,16 @@ export default function LoginScreen() {
     setPhoneNumber((prev) => prev.slice(0, maxDigitsFor(dial)));
   };
 
-  // Same fix as the description field on the create-game/create-squad
-  // screens: a focused field near the bottom of the form can end up hidden
-  // behind the keyboard, along with the submit button below it. Scrolling
-  // on focus fires too early (the keyboard hasn't finished animating in yet
-  // on Android, so its height isn't accounted for): listening for
-  // keyboardDidShow instead scrolls only once the keyboard's final size is
-  // known, so the button reliably ends up above it.
+  // Tracks whether the keyboard is open purely to trim the outer vertical
+  // padding a bit — the actual "don't hide the button" fix is letting the
+  // ScrollView scroll normally (see the render below), not this state.
   useEffect(() => {
-    const sub = Keyboard.addListener("keyboardDidShow", () => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    });
-    return () => sub.remove();
+    const showSub = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   const handleGoogleSignIn = async () => {
@@ -99,15 +97,10 @@ export default function LoginScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ backgroundColor: colors.primary }}>
-      <ScrollView
-        ref={scrollRef}
-        contentContainerStyle={{ flexGrow: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingVertical: 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View
-          className="w-full items-center rounded-3xl px-6 py-10"
+  const cardAndTerms = (
+    <>
+      <View
+        className="w-full items-center rounded-3xl px-6 py-8"
           style={{
             backgroundColor: "white",
             shadowColor: "#000",
@@ -117,18 +110,20 @@ export default function LoginScreen() {
             elevation: 8,
           }}
         >
-          <Image
-            source={require("../../../assets/icon.png")}
-            style={{ width: 84, height: 84, borderRadius: 42 }}
-          />
-          <Text className="text-2xl font-extrabold text-ink mt-5 text-center">
-            Welcome to PlayOye
-          </Text>
-          <Text className="text-muted text-center mt-2 text-sm px-2">
-            Find players, book courts, and get in the game.
-          </Text>
+          <>
+            <Image
+              source={require("../../../assets/icon.png")}
+              style={{ width: 68, height: 68, borderRadius: 34 }}
+            />
+            <Text className="text-xl font-extrabold text-ink mt-4 text-center">
+              Welcome to PlayOye
+            </Text>
+            <Text className="text-muted text-center mt-1.5 text-sm px-2">
+              Find players, book courts, and get in the game.
+            </Text>
+          </>
 
-          <View className="w-full mt-8">
+          <View className="w-full mt-6">
             <View className="flex-row items-center mb-2">
               <Text className="text-muted text-sm">Phone number</Text>
               <Text className="text-red-500 ml-1">*</Text>
@@ -142,7 +137,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View className="w-full mt-5">
+          <View className="w-full mt-4">
             <View className="flex-row items-center mb-2">
               <Text className="text-muted text-sm">Gender</Text>
               <Text className="text-red-500 ml-1">*</Text>
@@ -173,7 +168,7 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <View className="w-full mt-5">
+          <View className="w-full mt-4">
             <Text className="text-muted text-sm mb-2">Age (optional)</Text>
             <FieldInput
               value={age}
@@ -187,7 +182,7 @@ export default function LoginScreen() {
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={isSigningIn || !isValid}
-            className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-4 mt-8 active:opacity-90"
+            className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-6 active:opacity-90"
             style={{ backgroundColor: colors.primary, opacity: isValid ? 1 : 0.4 }}
           >
             {isSigningIn ? (
@@ -211,6 +206,36 @@ export default function LoginScreen() {
         <Text className="text-white text-xs text-center mt-6 px-4" style={{ opacity: 0.85 }}>
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </Text>
+    </>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      className="flex-1"
+      // On Android, let the ScrollView itself handle the keyboard (normal
+      // scrolling) instead of forcing the whole layout to change height —
+      // that's what was pushing the card underneath the keyboard.
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ backgroundColor: colors.primary }}
+    >
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+      >
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: keyboardVisible ? "flex-start" : "center",
+            paddingHorizontal: 24,
+            paddingTop: keyboardVisible ? 20 : 40,
+            paddingBottom: 40,
+          }}
+        >
+          {cardAndTerms}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
