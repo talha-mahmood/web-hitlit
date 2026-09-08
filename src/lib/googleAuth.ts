@@ -3,8 +3,11 @@ import { supabase } from "./supabase";
 
 // webClientId must be the Web Application OAuth client from Google Cloud Console.
 // Google uses it server-side to verify the ID token before Supabase trusts it.
+// iosClientId is the separate iOS OAuth client (Bundle ID: com.playoye.app) —
+// required for the native iOS Google Sign-In SDK to complete the flow.
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   scopes: ["openid", "profile", "email"],
 });
 

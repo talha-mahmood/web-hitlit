@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { View, Text, Image, Pressable, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Keyboard, Platform } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import type { Session } from "@supabase/supabase-js";
 import { signInWithGoogle } from "../../lib/googleAuth";
+import { signInWithApple } from "../../lib/appleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { colors } from "../../constants/theme";
 import { DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
@@ -60,13 +63,13 @@ export default function LoginScreen() {
     };
   }, []);
 
-  const handleGoogleSignIn = async () => {
+  const handleSignIn = async (signIn: () => Promise<Session | null>) => {
     if (!isValid) return;
     setIsSigningIn(true);
     try {
-      const session = await signInWithGoogle();
+      const session = await signIn();
       if (!session) {
-        // User dismissed the native account picker — nothing to do.
+        // User dismissed the native sign-in sheet — nothing to do.
         return;
       }
 
@@ -180,7 +183,7 @@ export default function LoginScreen() {
           </View>
 
           <Pressable
-            onPress={handleGoogleSignIn}
+            onPress={() => handleSignIn(signInWithGoogle)}
             disabled={isSigningIn || !isValid}
             className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-6 active:opacity-90"
             style={{ backgroundColor: colors.primary, opacity: isValid ? 1 : 0.4 }}
@@ -196,6 +199,18 @@ export default function LoginScreen() {
               </>
             )}
           </Pressable>
+
+          {Platform.OS === "ios" && (
+            <View pointerEvents={isSigningIn || !isValid ? "none" : "auto"} style={{ width: "100%", opacity: isValid ? 1 : 0.4 }}>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={16}
+                style={{ width: "100%", height: 50, marginTop: 12 }}
+                onPress={() => handleSignIn(signInWithApple)}
+              />
+            </View>
+          )}
           {!isValid && (
             <Text className="text-muted text-xs text-center mt-3">
               Enter your phone number and gender to continue.

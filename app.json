@@ -9,7 +9,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.playoye.app"
+      "bundleIdentifier": "com.playoye.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.playoye.app",
@@ -42,7 +43,13 @@
           "locationWhenInUsePermission": "PlayOye needs your location to set your squad's location automatically."
         }
       ],
-      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.349675210058-1irg7qi9l3vq2ctpt3jtuohsj4adeue5"
+        }
+      ],
       "expo-sharing"
     ],
     "extra": {
