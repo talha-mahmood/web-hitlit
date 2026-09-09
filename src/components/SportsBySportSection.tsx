@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, type LayoutChangeEvent } from "react-native";
+import { View, Text, Image, Pressable, ScrollView, type LayoutChangeEvent } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
+import { getSportImage } from "../lib/sportImages";
 
 type Sport = { id: string; name: string };
 
@@ -29,6 +30,7 @@ function SportTile({
   index: number;
   onPress: () => void;
 }) {
+  const photo = getSportImage(sport.name);
   const { icon, bg, fg } = getSportIcon(sport.name);
   const scale = useSharedValue(1);
 
@@ -63,11 +65,20 @@ function SportTile({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: bg,
+            overflow: "hidden",
           },
           animatedStyle,
         ]}
       >
-        <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={fg} />
+        {photo ? (
+          <Image
+            source={photo}
+            style={{ width: ICON_BADGE_SIZE, height: ICON_BADGE_SIZE }}
+            resizeMode="cover"
+          />
+        ) : (
+          <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={fg} />
+        )}
       </Animated.View>
       <Text
         className="text-ink font-semibold text-center mt-1.5"

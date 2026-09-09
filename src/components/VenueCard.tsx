@@ -3,6 +3,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import type { VenueListItem } from "../lib/api/venues";
+import { getSportImage } from "../lib/sportImages";
+import { getVenuePhoto } from "../lib/venuePhotos";
 import Bouncy from "./Bouncy";
 
 type VenueCardProps = {
@@ -37,6 +39,10 @@ export default function VenueCard({
   const sportNames = Array.from(
     new Set(venue.court.map((c) => c.sports?.name).filter(Boolean))
   ) as string[];
+  // No uploaded photo yet — prefer the curated demo photo for this specific
+  // venue, else fall back to a real photo of the venue's own sport (same
+  // bundled photos the admin dashboard uses) instead of a flat color block.
+  const sportFallbackImage = getVenuePhoto(venue.id) ?? getSportImage(sportNames[0] ?? "");
 
   const card = (
     // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
@@ -47,6 +53,8 @@ export default function VenueCard({
         <View className="relative">
           {coverImage ? (
             <Image source={{ uri: coverImage }} className="w-full h-36" resizeMode="cover" />
+          ) : sportFallbackImage ? (
+            <Image source={sportFallbackImage} className="w-full h-36" resizeMode="cover" />
           ) : (
             <View className="w-full h-36 bg-primary-light" />
           )}

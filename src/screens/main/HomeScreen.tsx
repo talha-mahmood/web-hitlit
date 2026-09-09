@@ -1,6 +1,7 @@
 import { useMemo, type ComponentProps, type ReactElement } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -103,6 +104,7 @@ function NearbySection<T>({
   emptyLabel,
   keyExtractor,
   renderItem,
+  onSeeAll,
 }: {
   title: string;
   data: { item: T; km: number | null }[];
@@ -111,10 +113,17 @@ function NearbySection<T>({
   emptyLabel: string;
   keyExtractor: (item: T) => string;
   renderItem: (entry: { item: T; km: number | null }) => ReactElement;
+  onSeeAll: () => void;
 }) {
   return (
     <View className="mb-7">
-      <Text className="text-lg font-semibold text-ink mb-3">{title}</Text>
+      <View className="flex-row items-center justify-between mb-3">
+        <Text className="text-lg font-semibold text-ink">{title}</Text>
+        <Pressable onPress={onSeeAll} className="flex-row items-center" hitSlop={8} style={{ gap: 2 }}>
+          <Text className="text-primary text-sm font-semibold">See all</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+        </Pressable>
+      </View>
       {isLoading ? (
         <ActivityIndicator color={colors.primary} />
       ) : data.length === 0 ? (
@@ -272,39 +281,6 @@ export default function HomeScreen() {
           }
         />
 
-        <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
-          <HomeActionCard
-            title="Games"
-            subtitle="Join games. Meet players"
-            emoji="🏸"
-            onPress={() => navigation.navigate("Games", { screen: "GamesList" })}
-          />
-          <HomeActionCard
-            title="Tournaments"
-            subtitle="Compete. Win big."
-            emoji="🏆"
-            onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
-          />
-          <HomeActionCard
-            title="Venues"
-            subtitle="Book turfs. Save big"
-            emoji="⚽"
-            onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
-          />
-          <HomeActionCard
-            title="Squads"
-            subtitle="Find your play tribe"
-            emoji="🤝"
-            onPress={() => navigation.navigate("Squads", { screen: "SquadsList" })}
-          />
-          <HomeActionCard
-            title="Players Dashboard"
-            subtitle="See who's top rated"
-            emoji="📊"
-            onPress={() => navigation.navigate("PlayersDashboard")}
-          />
-        </View>
-
         <NearbySection
           title="Venues near you"
           data={nearbyVenues}
@@ -326,6 +302,7 @@ export default function HomeScreen() {
               }
             />
           )}
+          onSeeAll={() => navigation.navigate("Venues", { screen: "VenuesList" })}
         />
 
         <NearbySection
@@ -342,6 +319,7 @@ export default function HomeScreen() {
               onPress={() => navigation.navigate("Squads", { screen: "SquadDetail", params: { squadId: item.id } })}
             />
           )}
+          onSeeAll={() => navigation.navigate("Squads", { screen: "SquadsList" })}
         />
 
         <NearbySection
@@ -358,6 +336,7 @@ export default function HomeScreen() {
               onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
             />
           )}
+          onSeeAll={() => navigation.navigate("Games", { screen: "GamesList" })}
         />
 
         <NearbySection
@@ -374,7 +353,23 @@ export default function HomeScreen() {
               onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
             />
           )}
+          onSeeAll={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
         />
+
+        <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
+          <HomeActionCard
+            title="Tournaments"
+            subtitle="Compete. Win big."
+            emoji="🏆"
+            onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
+          />
+          <HomeActionCard
+            title="Players Dashboard"
+            subtitle="See who's top rated"
+            emoji="📊"
+            onPress={() => navigation.navigate("PlayersDashboard")}
+          />
+        </View>
       </View>
     </ScrollView>
   );

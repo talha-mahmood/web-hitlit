@@ -16,6 +16,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVenueDetail } from "../../hooks/useVenueDetail";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { getAmenityIcon } from "../../lib/amenities";
+import { getSportImage } from "../../lib/sportImages";
+import { getVenuePhoto } from "../../lib/venuePhotos";
 import { colors } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -47,6 +49,10 @@ export default function VenueDetailScreen() {
   }
 
   const images = [...venue.venue_images].sort((a, b) => a.display_order - b.display_order);
+  // No uploaded photos yet — prefer the curated demo photo for this specific
+  // venue, else fall back to a real photo of the venue's own sport (same
+  // bundled photos the admin dashboard uses) instead of a flat color block.
+  const sportFallbackImage = getVenuePhoto(venue.id) ?? getSportImage(venue.court[0]?.sports?.name ?? "");
 
   // Amenities live per-court (set by the admin in Edit Court), so the venue
   // page shows the union across all its courts — a player browsing a venue
@@ -72,6 +78,8 @@ export default function VenueDetailScreen() {
               />
             ))}
           </ScrollView>
+        ) : sportFallbackImage ? (
+          <Image source={sportFallbackImage} style={{ width, height: 240 }} resizeMode="cover" />
         ) : (
           <View style={{ width, height: 240 }} className="bg-primary-light" />
         )}

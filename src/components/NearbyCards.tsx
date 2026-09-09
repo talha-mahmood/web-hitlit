@@ -3,32 +3,34 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import Bouncy from "./Bouncy";
 import { colors, cardShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
+import { getSportImage } from "../lib/sportImages";
+import { getVenuePhoto } from "../lib/venuePhotos";
 import { dayLabel, timeBadgeColor } from "../lib/badgeColors";
 import { formatDistanceKm } from "../lib/distance";
 import type { GameListItem } from "../lib/api/games";
 import type { SquadListItem } from "../lib/api/squads";
 import type { VenueListItem } from "../lib/api/venues";
 
-// Fixed width for every card in a horizontal "near you" row on the home
-// screen (games/tournaments/squads/venues) — sized so ~3 cards sit on
-// screen at once with a sliver of the next one peeking in, which reads as
-// "there's more, keep scrolling" rather than a single oversized card.
+// Every card in every "near you" row (games, tournaments, venues, squads) is
+// sized to exactly match the Games/Tournaments/Venues/Squads/Players
+// Dashboard action cards on the home screen (48% of the row width, 120 tall)
+// so the two card families read as one consistent size language.
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SECTION_HORIZONTAL_PADDING = 20; // matches the home screen's px-5 wrapper
 export const NEARBY_CARD_GAP = 10;
 export const NEARBY_CARD_WIDTH = Math.round(
-  (SCREEN_WIDTH - SECTION_HORIZONTAL_PADDING * 2 - NEARBY_CARD_GAP * 2) / 3.3
+  (SCREEN_WIDTH - SECTION_HORIZONTAL_PADDING * 2) * 0.48
 );
 // Every card in every "near you" row (games, tournaments, venues, squads)
 // uses this exact width + height — no card is ever taller/shorter or
 // wider/narrower than another, regardless of how much content it holds.
-export const NEARBY_CARD_HEIGHT = 152;
+export const NEARBY_CARD_HEIGHT = 120;
 // Fixed footer height on the venue card's text block — the photo above it
 // gets whatever's left of NEARBY_CARD_HEIGHT, so the two card styles still
 // line up to the same total height. Computed as plain numbers (not
 // flex/percentage) so the image always gets an exact, definite pixel size
 // instead of depending on nested flex resolution.
-const VENUE_TEXT_BLOCK_HEIGHT = 44;
+const VENUE_TEXT_BLOCK_HEIGHT = 40;
 const VENUE_IMAGE_HEIGHT = NEARBY_CARD_HEIGHT - VENUE_TEXT_BLOCK_HEIGHT;
 // Horizontal padding inside the icon-led cards (px-2 on each side) — text
 // gets an explicit maxWidth of the card minus this, so a long title/address
@@ -47,7 +49,19 @@ function formatTimeRange(startTime: string, endTime: string): string {
 }
 
 function SportBadge({ sportName, size = 32 }: { sportName: string; size?: number }) {
+  const photo = getSportImage(sportName);
   const { icon, bg, fg } = getSportIcon(sportName);
+
+  if (photo) {
+    return (
+      <Image
+        source={photo}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
+        resizeMode="cover"
+      />
+    );
+  }
+
   return (
     <View
       style={{
@@ -127,12 +141,12 @@ export function NearbyGameCard({
           overflow: "hidden",
           justifyContent: "space-between",
           paddingHorizontal: CARD_INNER_PADDING,
-          paddingTop: 12,
-          paddingBottom: 10,
+          paddingTop: 10,
+          paddingBottom: 8,
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={game.sports?.name ?? ""} />
+          <SportBadge sportName={game.sports?.name ?? ""} size={28} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}
@@ -199,12 +213,12 @@ export function NearbySquadCard({
           overflow: "hidden",
           justifyContent: "space-between",
           paddingHorizontal: CARD_INNER_PADDING,
-          paddingTop: 12,
-          paddingBottom: 10,
+          paddingTop: 10,
+          paddingBottom: 8,
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={squad.sports?.name ?? ""} />
+          <SportBadge sportName={squad.sports?.name ?? ""} size={28} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}
@@ -253,6 +267,10 @@ export function NearbyVenueCard({
   const coverImage = [...venue.venue_images]
     .sort((a, b) => a.display_order - b.display_order)
     .at(0)?.image_url;
+  // No uploaded photo yet — prefer the curated demo photo for this specific
+  // venue, else fall back to a real photo of the venue's own sport (same
+  // bundled photos the admin dashboard uses) instead of a flat color block.
+  const sportFallbackImage = getVenuePhoto(venue.id) ?? getSportImage(venue.court[0]?.sports?.name ?? "");
 
   return (
     <Bouncy
@@ -268,6 +286,12 @@ export function NearbyVenueCard({
           {coverImage ? (
             <Image
               source={{ uri: coverImage }}
+              style={{ width: NEARBY_CARD_WIDTH, height: VENUE_IMAGE_HEIGHT }}
+              resizeMode="cover"
+            />
+          ) : sportFallbackImage ? (
+            <Image
+              source={sportFallbackImage}
               style={{ width: NEARBY_CARD_WIDTH, height: VENUE_IMAGE_HEIGHT }}
               resizeMode="cover"
             />

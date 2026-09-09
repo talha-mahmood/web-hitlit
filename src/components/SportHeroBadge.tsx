@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Image } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
+import { getSportImage } from "../lib/sportImages";
 
 // Pops in with a bounce and then bobs gently in place — replays every time
 // `sportName` changes, so picking any sport (badminton, football, cricket…)
@@ -16,6 +18,7 @@ import { getSportIcon } from "../lib/sportIcons";
 export default function SportHeroBadge({ sportName }: { sportName: string }) {
   const scale = useSharedValue(0);
   const bob = useSharedValue(0);
+  const photo = getSportImage(sportName);
   const { icon, bg, fg } = getSportIcon(sportName);
 
   useEffect(() => {
@@ -50,11 +53,16 @@ export default function SportHeroBadge({ sportName }: { sportName: string }) {
           justifyContent: "center",
           borderWidth: 1.5,
           borderColor: fg,
+          overflow: "hidden",
         },
         style,
       ]}
     >
-      <MaterialCommunityIcons name={icon} size={28} color={fg} />
+      {photo ? (
+        <Image source={photo} style={{ width: 60, height: 60 }} resizeMode="cover" />
+      ) : (
+        <MaterialCommunityIcons name={icon} size={28} color={fg} />
+      )}
     </Animated.View>
   );
 }
