@@ -1846,6 +1846,7 @@ export type Database = {
       }
       delete_old_game_messages: { Args: never; Returns: undefined }
       delete_old_squad_messages: { Args: never; Returns: undefined }
+      delete_own_account: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
       generate_game_code: { Args: never; Returns: string }
       generate_squad_code: { Args: never; Returns: string }
