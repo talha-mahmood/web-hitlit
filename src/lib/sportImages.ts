@@ -1,9 +1,10 @@
 import type { ImageSourcePropType } from "react-native";
 
 // Real photos (bundled as local app assets — no network dependency at
-// runtime) for the admin dashboard's "Sports & Courts" row. Sports without
-// a photo yet fall back to the existing vector-icon badge (see
-// AdminDashboardScreen's SportBadge / getSportIcon).
+// runtime) for the admin dashboard's "Sports & Courts" row and every other
+// sport-photo badge in the app. Sports without a photo yet fall back to the
+// existing vector-icon badge (see AdminDashboardScreen's SportBadge /
+// getSportIcon).
 const SPORT_IMAGES: Record<string, ImageSourcePropType> = {
   badminton: require("../../assets/sport-icons/badminton.jpg"),
   football: require("../../assets/sport-icons/football.jpg"),
