@@ -11,6 +11,7 @@ import Animated, {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
 import { getSportImage } from "../lib/sportImages";
+import { cardShadow } from "../constants/theme";
 
 type Sport = { id: string; name: string };
 
@@ -111,22 +112,24 @@ export default function SportsBySportSection({
   if (sports.length === 0) return null;
 
   return (
-    <View className="mb-6" onLayout={handleLayout}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: GAP }}
-      >
-        {sports.map((sport, index) => (
-          <SportTile
-            key={sport.id}
-            sport={sport}
-            width={tileWidth}
-            index={index}
-            onPress={() => onSelectSport(sport.id)}
-          />
-        ))}
-      </ScrollView>
+    <View className="bg-white rounded-2xl p-5 mb-6" style={cardShadow}>
+      <View onLayout={handleLayout}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: GAP }}
+        >
+          {sports.map((sport, index) => (
+            <SportTile
+              key={sport.id}
+              sport={sport}
+              width={tileWidth}
+              index={index}
+              onPress={() => onSelectSport(sport.id)}
+            />
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 }
