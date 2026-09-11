@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, Text, Image, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -169,10 +169,19 @@ function GameCard({
               </Text>
             </View>
 
-            {/* Row 3: Title */}
-            <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
-              {game.title}
-            </Text>
+            {/* Row 3: Icon (if the host set a custom one) + Title */}
+            <View className="flex-row items-center mb-1" style={{ gap: 8 }}>
+              {game.icon_url && (
+                <Image
+                  source={{ uri: game.icon_url }}
+                  style={{ width: 28, height: 28, borderRadius: 8 }}
+                  resizeMode="cover"
+                />
+              )}
+              <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>
+                {game.title}
+              </Text>
+            </View>
 
             {/* Row 4: Location */}
             {(game.venues || game.custom_venue_name) && (

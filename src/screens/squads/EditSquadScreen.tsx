@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   ScrollView,
   Pressable,
   Alert,
@@ -23,6 +24,7 @@ import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
 import FieldInput from "../../components/FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { pickImages, uploadImage } from "../../lib/upload";
 
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
@@ -39,6 +41,22 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(squad.skill_level);
   const [location, setLocation] = useState(squad.location ?? "");
   const [description, setDescription] = useState(squad.description ?? "");
+  const [iconUrl, setIconUrl] = useState<string | null>(squad.icon_url);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+
+  const handlePickIcon = async () => {
+    const assets = await pickImages({});
+    if (assets.length === 0) return;
+    setUploadingIcon(true);
+    try {
+      const { publicUrl } = await uploadImage(assets[0], { bucket: "squad-icons", pathPrefix: squad.id });
+      setIconUrl(publicUrl);
+    } catch (err) {
+      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload icon.");
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!isValidName(name)) {
@@ -56,6 +74,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
     try {
       await updateSquad.mutateAsync({
         squadId: squad.id,
+        iconUrl,
         name: name.trim(),
         skillLevel,
         location: location.trim(),
@@ -94,6 +113,28 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Custom listing icon (optional) */}
+        <SectionLabel title="Icon" />
+        <Pressable
+          onPress={handlePickIcon}
+          disabled={uploadingIcon}
+          className="flex-row items-center mb-2"
+          style={{ gap: 12 }}
+        >
+          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
+            {uploadingIcon ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : iconUrl ? (
+              <Image source={{ uri: iconUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+            ) : (
+              <Ionicons name="image-outline" size={22} color={colors.muted} />
+            )}
+          </View>
+          <Text className="text-primary font-semibold text-sm">
+            {iconUrl ? "Change icon" : "Add a custom icon (optional)"}
+          </Text>
+        </Pressable>
+
         {/* Name */}
         <SectionLabel title="Squad Name" required />
         <FieldInput

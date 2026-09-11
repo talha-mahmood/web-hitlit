@@ -207,6 +207,15 @@ export default function AdminDashboardScreen() {
       },
     },
     {
+      key: "venuePhotos",
+      icon: "images-outline" as const,
+      label: "Venue Photos",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("ManageVenueImages", { venueId: params.venueId });
+      },
+    },
+    {
       key: "analytics",
       icon: "stats-chart-outline" as const,
       label: "AI Analytics",
@@ -351,7 +360,7 @@ export default function AdminDashboardScreen() {
 
           <Pressable
             onPress={() => navigation.navigate("BoostVenue", { venueId: params.venueId, venueName: venue.name })}
-            className="flex-row items-center justify-between mb-6"
+            className="flex-row items-center justify-between mb-3"
             style={{ backgroundColor: "#111827", borderRadius: 16, padding: 16 }}
           >
             <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
@@ -361,6 +370,20 @@ export default function AdminDashboardScreen() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color="white" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate("ManageVenueImages", { venueId: params.venueId })}
+            className="flex-row items-center justify-between mb-6 bg-white"
+            style={{ borderRadius: 16, padding: 16, ...cardShadow }}
+          >
+            <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+              <Ionicons name="images" size={18} color={colors.primary} />
+              <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={2}>
+                Venue Photos — the first one shows on your listing card
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
           </Pressable>
 
           {venueSports.length > 0 && (

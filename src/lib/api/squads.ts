@@ -52,6 +52,8 @@ export type CreateSquadParams = {
 // changing it post-creation would strand members who joined for a specific sport.
 export type UpdateSquadParams = {
   squadId: string;
+  // Undefined leaves the icon untouched; null clears it; a string sets it.
+  iconUrl?: string | null;
   name: string;
   skillLevel: Database["public"]["Enums"]["skill_level_type"] | null;
   location: string;
@@ -152,6 +154,7 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
   const { data, error } = await supabase
     .from("squads")
     .update({
+      icon_url: params.iconUrl,
       name: params.name,
       skill_level: params.skillLevel,
       location: params.location || null,

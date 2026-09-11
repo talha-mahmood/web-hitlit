@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   ScrollView,
   Pressable,
   Alert,
@@ -36,6 +37,7 @@ import {
   isTimeSlotPast,
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { pickImages, uploadImage } from "../../lib/upload";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -104,6 +106,22 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
   const [gender, setGender] = useState<Gender>(game.gender);
   const [description, setDescription] = useState(game.description ?? "");
   const [entryFee, setEntryFee] = useState(String(game.entry_fee));
+  const [iconUrl, setIconUrl] = useState<string | null>(game.icon_url);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+
+  const handlePickIcon = async () => {
+    const assets = await pickImages({});
+    if (assets.length === 0) return;
+    setUploadingIcon(true);
+    try {
+      const { publicUrl } = await uploadImage(assets[0], { bucket: "game-icons", pathPrefix: game.id });
+      setIconUrl(publicUrl);
+    } catch (err) {
+      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload icon.");
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!isValidName(title)) {
@@ -146,6 +164,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
     try {
       await updateGame.mutateAsync({
         gameId: game.id,
+        iconUrl,
         title: title.trim(),
         venueId,
         customVenueName,
@@ -203,6 +222,28 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Custom listing icon (optional) */}
+        <SectionLabel title="Icon" />
+        <Pressable
+          onPress={handlePickIcon}
+          disabled={uploadingIcon}
+          className="flex-row items-center mb-2"
+          style={{ gap: 12 }}
+        >
+          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
+            {uploadingIcon ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : iconUrl ? (
+              <Image source={{ uri: iconUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+            ) : (
+              <Ionicons name="image-outline" size={22} color={colors.muted} />
+            )}
+          </View>
+          <Text className="text-primary font-semibold text-sm">
+            {iconUrl ? "Change icon" : "Add a custom icon (optional)"}
+          </Text>
+        </Pressable>
+
         {/* Title */}
         <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
         <FieldInput value={title} onChangeText={setTitle} placeholder="e.g. Saturday morning football" maxLength={80} />

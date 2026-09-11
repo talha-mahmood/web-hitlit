@@ -735,6 +735,7 @@ export type Database = {
           game_date: string
           game_type: Database["public"]["Enums"]["game_type_type"]
           gender: Database["public"]["Enums"]["game_gender_type"]
+          icon_url: string | null
           id: string
           max_players: number
           maximum_age: number | null
@@ -775,6 +776,7 @@ export type Database = {
           game_date: string
           game_type?: Database["public"]["Enums"]["game_type_type"]
           gender?: Database["public"]["Enums"]["game_gender_type"]
+          icon_url?: string | null
           id?: string
           max_players: number
           maximum_age?: number | null
@@ -815,6 +817,7 @@ export type Database = {
           game_date?: string
           game_type?: Database["public"]["Enums"]["game_type_type"]
           gender?: Database["public"]["Enums"]["game_gender_type"]
+          icon_url?: string | null
           id?: string
           max_players?: number
           maximum_age?: number | null
@@ -1344,6 +1347,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           description: string | null
+          icon_url: string | null
           id: string
           location: string | null
           max_players: number | null
@@ -1359,6 +1363,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          icon_url?: string | null
           id?: string
           location?: string | null
           max_players?: number | null
@@ -1374,6 +1379,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          icon_url?: string | null
           id?: string
           location?: string | null
           max_players?: number | null

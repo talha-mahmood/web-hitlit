@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, Text, Image, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -106,9 +106,18 @@ function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
             )}
           </View>
 
-          <Text className="text-ink font-bold text-base mb-1" numberOfLines={1}>
-            {squad.name}
-          </Text>
+          <View className="flex-row items-center mb-1" style={{ gap: 8 }}>
+            {squad.icon_url && (
+              <Image
+                source={{ uri: squad.icon_url }}
+                style={{ width: 28, height: 28, borderRadius: 8 }}
+                resizeMode="cover"
+              />
+            )}
+            <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>
+              {squad.name}
+            </Text>
+          </View>
 
           <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
             <Ionicons name="location-outline" size={13} color={colors.muted} />

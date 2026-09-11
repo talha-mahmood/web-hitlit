@@ -48,8 +48,16 @@ function formatTimeRange(startTime: string, endTime: string): string {
   return `${fmt(startTime)} - ${fmt(endTime)}`;
 }
 
-function SportBadge({ sportName, size = 32 }: { sportName: string; size?: number }) {
-  const photo = getSportImage(sportName);
+function SportBadge({
+  sportName,
+  size = 32,
+  iconUrl,
+}: {
+  sportName: string;
+  size?: number;
+  iconUrl?: string | null;
+}) {
+  const photo = iconUrl ? { uri: iconUrl } : getSportImage(sportName);
   const { icon, bg, fg } = getSportIcon(sportName);
 
   if (photo) {
@@ -146,7 +154,7 @@ export function NearbyGameCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={game.sports?.name ?? ""} size={28} />
+          <SportBadge sportName={game.sports?.name ?? ""} size={28} iconUrl={game.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}
@@ -218,7 +226,7 @@ export function NearbySquadCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={squad.sports?.name ?? ""} size={28} />
+          <SportBadge sportName={squad.sports?.name ?? ""} size={28} iconUrl={squad.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}

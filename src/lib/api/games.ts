@@ -73,6 +73,10 @@ export type CreateGameParams = {
 // players who joined expecting a specific sport, so it's fixed after creation.
 export type UpdateGameParams = {
   gameId: string;
+  // Undefined leaves the icon untouched; null clears it; a string sets it.
+  // Kept optional/tri-state so callers that don't manage the icon (e.g. the
+  // rest of the edit form) don't need to pass anything.
+  iconUrl?: string | null;
   title: string;
   venueId: string | null;
   customVenueName: string | null;
@@ -216,6 +220,7 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
   const { data, error } = await supabase
     .from("games")
     .update({
+      icon_url: params.iconUrl,
       title: params.title,
       venue_id: params.venueId,
       custom_venue_name: params.customVenueName,

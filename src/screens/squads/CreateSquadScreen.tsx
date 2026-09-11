@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   Pressable,
   ScrollView,
   Alert,
@@ -9,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import type * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -26,6 +28,8 @@ import Bouncy from "../../components/Bouncy";
 import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
 import SportHeroBadge from "../../components/SportHeroBadge";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { pickImages, uploadImage } from "../../lib/upload";
+import { supabase } from "../../lib/supabase";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -38,6 +42,7 @@ export default function CreateSquadScreen() {
   const { data: sports } = useSports();
 
   const [name, setName] = useState("");
+  const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [sportId, setSportId] = useState<string | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
@@ -71,6 +76,13 @@ export default function CreateSquadScreen() {
         location: location.trim(),
         description: description.trim(),
       });
+      // The icon bucket's RLS requires the squad to already exist (it checks
+      // squad_owner_id via the squad row), so the upload can only happen
+      // after creation succeeds — a picked icon sits as a local asset until now.
+      if (iconAsset) {
+        const { publicUrl } = await uploadImage(iconAsset, { bucket: "squad-icons", pathPrefix: squad.id });
+        await supabase.from("squads").update({ icon_url: publicUrl }).eq("id", squad.id);
+      }
       navigation.replace("SquadDetail", { squadId: squad.id });
     } catch (err) {
       Alert.alert(
@@ -120,6 +132,28 @@ export default function CreateSquadScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Custom listing icon (optional) */}
+        <SectionLabel title="Icon" />
+        <Pressable
+          onPress={async () => {
+            const assets = await pickImages({});
+            if (assets[0]) setIconAsset(assets[0]);
+          }}
+          className="flex-row items-center mb-2"
+          style={{ gap: 12 }}
+        >
+          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
+            {iconAsset ? (
+              <Image source={{ uri: iconAsset.uri }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+            ) : (
+              <Ionicons name="image-outline" size={22} color={colors.muted} />
+            )}
+          </View>
+          <Text className="text-primary font-semibold text-sm">
+            {iconAsset ? "Change icon" : "Add a custom icon (optional)"}
+          </Text>
+        </Pressable>
+
         {/* Name */}
         <SectionLabel title="Squad Name" required />
         <FieldInput

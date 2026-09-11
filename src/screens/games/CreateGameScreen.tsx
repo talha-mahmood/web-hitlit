@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   View,
   Text,
+  Image,
   Pressable,
   ScrollView,
   Alert,
@@ -9,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import type * as ImagePicker from "expo-image-picker";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -46,6 +48,8 @@ import {
   isTimeSlotPast,
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import { pickImages, uploadImage } from "../../lib/upload";
+import { supabase } from "../../lib/supabase";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
 type CreateGameRoute = RouteProp<GamesStackParamList, "CreateGame">;
@@ -218,6 +222,7 @@ export default function CreateGameScreen() {
   const forcedTournament = route.params?.gameType === "TOURNAMENT";
 
   const [title, setTitle] = useState("");
+  const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [gameType, setGameType] = useState<GameType>(forcedTournament ? "TOURNAMENT" : "REGULAR");
   const [sportId, setSportId] = useState<string | null>(null);
   const [venueId, setVenueId] = useState<string | null>(null);
@@ -436,6 +441,13 @@ export default function CreateGameScreen() {
           await createPools(game.id, trimmedGroupNames);
         }
       }
+      // The icon bucket's RLS requires the game to already exist (it checks
+      // creator_id via the game row), so the upload can only happen after
+      // creation succeeds — a picked icon sits as a local asset until now.
+      if (iconAsset) {
+        const { publicUrl } = await uploadImage(iconAsset, { bucket: "game-icons", pathPrefix: game.id });
+        await supabase.from("games").update({ icon_url: publicUrl }).eq("id", game.id);
+      }
       navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
       Alert.alert(
@@ -493,6 +505,28 @@ export default function CreateGameScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Custom listing icon (optional) */}
+        <SectionLabel title="Icon" />
+        <Pressable
+          onPress={async () => {
+            const assets = await pickImages({});
+            if (assets[0]) setIconAsset(assets[0]);
+          }}
+          className="flex-row items-center mb-2"
+          style={{ gap: 12 }}
+        >
+          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
+            {iconAsset ? (
+              <Image source={{ uri: iconAsset.uri }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+            ) : (
+              <Ionicons name="image-outline" size={22} color={colors.muted} />
+            )}
+          </View>
+          <Text className="text-primary font-semibold text-sm">
+            {iconAsset ? "Change icon" : "Add a custom icon (optional)"}
+          </Text>
+        </Pressable>
+
         {/* Title */}
         <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
         <FieldInput

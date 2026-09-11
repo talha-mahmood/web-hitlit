@@ -13,6 +13,7 @@ import type { ProfileStats } from "../../lib/api/profileStats";
 import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
 import DonutChart from "../../components/DonutChart";
 import { getSportIcon } from "../../lib/sportIcons";
+import { pickImages, uploadImage } from "../../lib/upload";
 import { colors } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import type { Database } from "../../types/database.types";
@@ -162,6 +163,23 @@ export default function ProfileScreen() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  async function handleChangeAvatar() {
+    if (!userId) return;
+    const assets = await pickImages({ allowsEditing: true, aspect: [1, 1] });
+    if (assets.length === 0) return;
+
+    setUploadingAvatar(true);
+    try {
+      const { publicUrl } = await uploadImage(assets[0], { bucket: "avatars", pathPrefix: userId });
+      await updateProfile(userId, { avatar: publicUrl });
+    } catch (err) {
+      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload photo.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   const effectiveSkillLevel = profile?.skill_level ?? stats?.computedSkillLevel ?? null;
   const totalPlayed = stats?.gamesPlayedTotal ?? 0;
@@ -222,15 +240,29 @@ export default function ProfileScreen() {
       <View className="px-6">
         {/* Header */}
         <View className="flex-row items-center mb-6">
-          {profile?.avatar ? (
-            <Image source={{ uri: profile.avatar }} className="w-16 h-16 rounded-full bg-primary-light mr-4" />
-          ) : (
-            <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center mr-4">
-              <Text className="text-2xl font-bold text-primary">
-                {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
-              </Text>
-            </View>
-          )}
+          <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
+            {profile?.avatar ? (
+              <Image source={{ uri: profile.avatar }} className="w-16 h-16 rounded-full bg-primary-light" />
+            ) : (
+              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-2xl font-bold text-primary">
+                  {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
+                </Text>
+              </View>
+            )}
+            {uploadingAvatar ? (
+              <View className="absolute inset-0 items-center justify-center bg-black/30 rounded-full">
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : (
+              <View
+                className="absolute bottom-0 right-0 items-center justify-center rounded-full bg-primary"
+                style={{ width: 22, height: 22, borderWidth: 2, borderColor: "white" }}
+              >
+                <Ionicons name="camera" size={11} color="white" />
+              </View>
+            )}
+          </Pressable>
           <View className="flex-1">
             <Text className="text-2xl font-bold text-ink">{profile?.full_name ?? "Profile"}</Text>
             <Text className="text-muted text-sm">{profile?.email}</Text>
