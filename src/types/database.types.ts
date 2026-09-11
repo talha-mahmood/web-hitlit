@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_users_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_holds: {
         Row: {
           court_id: string
@@ -113,6 +146,57 @@ export type Database = {
           {
             foreignKeyName: "bookings_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_reports: {
+        Row: {
+          context_id: string
+          created_at: string
+          id: string
+          message_snapshot: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          source: string
+          source_id: string
+        }
+        Insert: {
+          context_id: string
+          created_at?: string
+          id?: string
+          message_snapshot: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          source: string
+          source_id: string
+        }
+        Update: {
+          context_id?: string
+          created_at?: string
+          id?: string
+          message_snapshot?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+          source?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

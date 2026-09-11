@@ -415,6 +415,16 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={16} color={colors.muted} />
         </Pressable>
         <Pressable
+          onPress={() => navigation.navigate("BlockedUsers")}
+          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-3"
+        >
+          <View className="flex-row items-center" style={{ gap: 12 }}>
+            <Ionicons name="hand-left-outline" size={20} color={colors.ink} />
+            <Text className="text-ink font-medium">Blocked Users</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+        </Pressable>
+        <Pressable
           onPress={async () => {
             await signOutGoogle();
             supabase.auth.signOut();

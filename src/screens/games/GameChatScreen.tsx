@@ -16,11 +16,51 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGameMessages, useSendGameMessage } from "../../hooks/useGameMessages";
+import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { markGameChatRead, type GameMessage } from "../../lib/api/gameMessages";
 import ChatIcon from "../../components/ChatIcon";
+
+const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
+
+// Long-press on someone else's message to report it or block them going
+// forward — required by App Store guideline 1.2 for apps with user-to-user
+// chat. Reporting flags the message for admin review without removing it for
+// anyone; blocking only hides that sender's messages from your own view.
+function showMessageActions(opts: {
+  message: GameMessage;
+  gameId: string;
+  userId: string;
+  onReport: (reason: string) => void;
+  onBlock: () => void;
+}) {
+  const name = opts.message.profiles?.full_name ?? "this player";
+  Alert.alert("Message options", undefined, [
+    {
+      text: "Report message",
+      onPress: () => {
+        Alert.alert(
+          "Report message",
+          "Why are you reporting this?",
+          REPORT_REASONS.map((reason) => ({ text: reason, onPress: () => opts.onReport(reason) }))
+        );
+      },
+    },
+    {
+      text: `Block ${name}`,
+      style: "destructive",
+      onPress: () => {
+        Alert.alert(`Block ${name}?`, "You won't see their messages in chat anymore.", [
+          { text: "Cancel", style: "cancel" },
+          { text: "Block", style: "destructive", onPress: opts.onBlock },
+        ]);
+      },
+    },
+    { text: "Cancel", style: "cancel" },
+  ]);
+}
 
 type ChatRoute = RouteProp<GamesStackParamList, "GameChat">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameChat">;
@@ -33,12 +73,21 @@ function formatMessageTime(iso: string): string {
   });
 }
 
-function MessageBubble({ message, isOwn }: { message: GameMessage; isOwn: boolean }) {
+function MessageBubble({
+  message,
+  isOwn,
+  onLongPress,
+}: {
+  message: GameMessage;
+  isOwn: boolean;
+  onLongPress: () => void;
+}) {
   const name = message.profiles?.full_name ?? "Player";
   const initials = name.charAt(0).toUpperCase();
 
   return (
-    <View
+    <Pressable
+      onLongPress={isOwn ? undefined : onLongPress}
       className={`flex-row px-4 py-1.5 ${isOwn ? "justify-end" : "justify-start"}`}
       style={{ gap: 8 }}
     >
@@ -61,7 +110,7 @@ function MessageBubble({ message, isOwn }: { message: GameMessage; isOwn: boolea
           {formatMessageTime(message.created_at)}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -73,9 +122,14 @@ export default function GameChatScreen() {
   const listRef = useRef<FlatList>(null);
   const [draft, setDraft] = useState("");
 
-  const { data: messages, isLoading, error } = useGameMessages(params.gameId);
+  const { data: allMessages, isLoading, error } = useGameMessages(params.gameId);
   const sendMessage = useSendGameMessage(params.gameId);
+  const { data: blockedIds } = useBlockedUserIds(userId);
+  const reportMessage = useReportMessage();
+  const blockUser = useBlockUser(userId);
   const qc = useQueryClient();
+
+  const messages = (allMessages ?? []).filter((m) => !blockedIds?.has(m.sender_id));
 
   // Marks the chat read on open, and again whenever a new message arrives
   // (via realtime) while this screen stays mounted — otherwise the unread
@@ -145,9 +199,46 @@ export default function GameChatScreen() {
         <FlatList
           ref={listRef}
           className="flex-1"
-          data={messages ?? []}
+          data={messages}
           keyExtractor={(m) => m.id}
-          renderItem={({ item }) => <MessageBubble message={item} isOwn={item.sender_id === userId} />}
+          renderItem={({ item }) => (
+            <MessageBubble
+              message={item}
+              isOwn={item.sender_id === userId}
+              onLongPress={() => {
+                if (!userId) return;
+                showMessageActions({
+                  message: item,
+                  gameId: params.gameId,
+                  userId,
+                  onReport: (reason) => {
+                    reportMessage.mutate(
+                      {
+                        reporterId: userId,
+                        reportedUserId: item.sender_id,
+                        source: "game_message",
+                        sourceId: item.id,
+                        contextId: params.gameId,
+                        messageSnapshot: item.message,
+                        reason,
+                      },
+                      {
+                        onSuccess: () => Alert.alert("Reported", "Thanks — we'll review this message."),
+                        onError: (err) =>
+                          Alert.alert("Error", err instanceof Error ? err.message : "Could not submit report."),
+                      }
+                    );
+                  },
+                  onBlock: () => {
+                    blockUser.mutate(item.sender_id, {
+                      onError: (err) =>
+                        Alert.alert("Error", err instanceof Error ? err.message : "Could not block user."),
+                    });
+                  },
+                });
+              }}
+            />
+          )}
           contentContainerStyle={{ paddingVertical: 12, flexGrow: 1 }}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
