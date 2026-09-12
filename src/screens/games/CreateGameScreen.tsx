@@ -31,6 +31,7 @@ import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
 import SportHeroBadge from "../../components/SportHeroBadge";
+import SportsBySportSection from "../../components/SportsBySportSection";
 import IconPoolPreview from "../../components/IconPoolPreview";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
@@ -101,27 +102,6 @@ function chipStyle(selected: boolean, extra?: object) {
 // press-scale) as Duration and every other PillRow field — only the
 // select-pulse "pop" (also used by PillRow) carries over as the animation,
 // so these fields look and behave exactly like the rest of the form.
-function SportChipItem({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const pulseStyle = useSelectPulse(selected);
-  return (
-    <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="px-4 py-2.5 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
 function DateChipItem({
   day,
   label,
@@ -544,16 +524,11 @@ export default function CreateGameScreen() {
             <Text className="text-ink font-semibold flex-1">{selectedSportName}</Text>
           </View>
         )}
-        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-          {(sports ?? []).map((s) => (
-            <SportChipItem
-              key={s.id}
-              label={s.name}
-              selected={sportId === s.id}
-              onPress={() => handleSportChange(s.id)}
-            />
-          ))}
-        </View>
+        <SportsBySportSection
+          sports={sports ?? []}
+          selectedSportId={sportId}
+          onSelectSport={handleSportChange}
+        />
 
         {/* Game Type */}
         <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />

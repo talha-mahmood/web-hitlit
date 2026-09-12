@@ -11,7 +11,7 @@ import Animated, {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { getSportIcon } from "../lib/sportIcons";
 import { getSportImage } from "../lib/sportImages";
-import { cardShadow } from "../constants/theme";
+import { cardShadow, colors } from "../constants/theme";
 
 type Sport = { id: string; name: string };
 
@@ -24,11 +24,13 @@ function SportTile({
   sport,
   width,
   index,
+  selected,
   onPress,
 }: {
   sport: Sport;
   width: number;
   index: number;
+  selected?: boolean;
   onPress: () => void;
 }) {
   const photo = getSportImage(sport.name);
@@ -67,6 +69,8 @@ function SportTile({
             justifyContent: "center",
             backgroundColor: bg,
             overflow: "hidden",
+            borderWidth: selected ? 3 : 0,
+            borderColor: colors.primary,
           },
           animatedStyle,
         ]}
@@ -82,7 +86,7 @@ function SportTile({
         )}
       </Animated.View>
       <Text
-        className="text-ink font-semibold text-center mt-1.5"
+        className={`text-center mt-1.5 ${selected ? "text-primary font-bold" : "text-ink font-semibold"}`}
         style={{ fontSize: 13 }}
         numberOfLines={1}
       >
@@ -94,9 +98,14 @@ function SportTile({
 
 export default function SportsBySportSection({
   sports,
+  selectedSportId,
   onSelectSport,
 }: {
   sports: Sport[];
+  // Highlights the matching tile — used by Create Game/Tournament's sport
+  // picker; the Home screen's own browse-by-sport row omits this since
+  // nothing is "selected" there, just navigated to.
+  selectedSportId?: string | null;
   onSelectSport: (sportId: string) => void;
 }) {
   // Tile width is derived from the measured container width so exactly
@@ -125,6 +134,7 @@ export default function SportsBySportSection({
               sport={sport}
               width={tileWidth}
               index={index}
+              selected={selectedSportId === sport.id}
               onPress={() => onSelectSport(sport.id)}
             />
           ))}

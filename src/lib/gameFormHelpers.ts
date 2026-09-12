@@ -15,18 +15,14 @@ export function getNext14Days(): { iso: string; label: string; day: string }[] {
   });
 }
 
-// Half-hour slots from 06:00 to 23:00
+// Hour slots from 06:00 to 23:00
 export function buildTimeSlots(): { label: string; value: string }[] {
   const slots: { label: string; value: string }[] = [];
   for (let h = 6; h <= 23; h++) {
-    for (const m of [0, 30]) {
-      if (h === 23 && m === 30) break;
-      const hh = String(h).padStart(2, "0");
-      const mm = String(m).padStart(2, "0");
-      const suffix = h < 12 ? "AM" : h === 12 ? "PM" : "PM";
-      const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      slots.push({ label: `${displayH}:${mm} ${suffix}`, value: `${hh}:${mm}` });
-    }
+    const hh = String(h).padStart(2, "0");
+    const suffix = h < 12 ? "AM" : h === 12 ? "PM" : "PM";
+    const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    slots.push({ label: `${displayH}:00 ${suffix}`, value: `${hh}:00` });
   }
   return slots;
 }
