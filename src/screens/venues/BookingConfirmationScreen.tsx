@@ -47,7 +47,8 @@ export default function BookingConfirmationScreen() {
   const { params } = useRoute<ConfirmRoute>();
   const navigation = useNavigation<ConfirmNav>();
 
-  const { bookingId, venueName, courtName, date, startTime, endTime, totalAmount } = params;
+  const { bookingIds, venueName, courtName, date, slots, totalAmount } = params;
+  const referenceCode = bookingIds[0]?.slice(0, 8).toUpperCase() ?? "";
 
   const goToMyBookings = () => {
     // Navigate to the Profile tab → MyBookings nested screen
@@ -80,7 +81,8 @@ export default function BookingConfirmationScreen() {
           <View className="bg-primary-light px-4 py-3 flex-row items-center justify-between">
             <Text className="text-primary-dark font-semibold text-sm">Booking Reference</Text>
             <Text className="text-primary font-bold text-xs tracking-widest">
-              {bookingId.slice(0, 8).toUpperCase()}
+              {referenceCode}
+              {bookingIds.length > 1 ? ` (+${bookingIds.length - 1} more)` : ""}
             </Text>
           </View>
           <View className="px-4 py-4" style={{ gap: 10 }}>
@@ -88,7 +90,16 @@ export default function BookingConfirmationScreen() {
             <InfoRow label="Court" value={courtName} />
             <View className="h-px bg-border" />
             <InfoRow label="Date" value={formatDateFull(date)} />
-            <InfoRow label="Time" value={`${formatTime(startTime)} – ${formatTime(endTime)}`} />
+            <View>
+              <Text className="text-muted text-sm mb-1">
+                {slots.length} time slot{slots.length !== 1 ? "s" : ""}
+              </Text>
+              {slots.map((s) => (
+                <Text key={s.startTime} className="text-ink text-sm font-medium mt-0.5">
+                  {formatTime(s.startTime)} – {formatTime(s.endTime)}
+                </Text>
+              ))}
+            </View>
             <View className="h-px bg-border" />
             <InfoRow
               label="Total"

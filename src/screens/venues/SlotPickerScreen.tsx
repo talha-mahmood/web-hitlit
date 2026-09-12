@@ -36,7 +36,7 @@ export default function SlotPickerScreen() {
   const todayStr = toLocalDateStr(new Date());
 
   const [selectedDate, setSelectedDate] = useState(days[0]);
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<Slot[]>([]);
 
   const slots = generateFullDaySlots();
   const { data: bookedSlots = [], isLoading } = useBookedSlots(params.courtId, selectedDate);
@@ -46,11 +46,22 @@ export default function SlotPickerScreen() {
   const allPrices = slots.map(slotPrice);
   const minPrice = allPrices.length ? Math.min(...allPrices) : params.pricePerHour;
   const maxPrice = allPrices.length ? Math.max(...allPrices) : params.pricePerHour;
-  const selectedPrice = selectedSlot ? slotPrice(selectedSlot) : null;
+  // Kept sorted by start time regardless of tap order, so the summary and
+  // the checkout screen always list slots chronologically.
+  const sortedSelectedSlots = [...selectedSlots].sort((a, b) => a.start.localeCompare(b.start));
+  const totalPrice = selectedSlots.reduce((sum, s) => sum + slotPrice(s), 0);
+
+  const toggleSlot = (slot: Slot) => {
+    setSelectedSlots((prev) =>
+      prev.some((s) => s.start === slot.start)
+        ? prev.filter((s) => s.start !== slot.start)
+        : [...prev, slot]
+    );
+  };
 
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
-    setSelectedSlot(null);
+    setSelectedSlots([]);
   };
 
   return (
@@ -121,14 +132,14 @@ export default function SlotPickerScreen() {
               .filter((slot) => !isSlotPast(slot, selectedDate))
               .map((slot) => {
                 const booked = isSlotBooked(slot, selectedDate, bookedSlots);
-                const isSelected = selectedSlot?.start === slot.start;
+                const isSelected = selectedSlots.some((s) => s.start === slot.start);
                 const price = slotPrice(slot);
 
                 return (
                   <Pressable
                     key={slot.start}
                     disabled={booked}
-                    onPress={() => setSelectedSlot(isSelected ? null : slot)}
+                    onPress={() => toggleSlot(slot)}
                     style={{ width: "47%" }}
                     className={`items-center justify-center rounded-xl border px-3 py-3 ${
                       booked
@@ -165,29 +176,33 @@ export default function SlotPickerScreen() {
 
       {/* Bottom CTA */}
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-4 pb-8 pt-3">
-        {selectedSlot && selectedPrice !== null && (
-          <Text className="text-center text-sm text-muted mb-2">
-            {selectedSlot.label} · Rs {selectedPrice.toLocaleString()}
+        {selectedSlots.length > 0 && (
+          <Text className="text-center text-sm text-muted mb-2" numberOfLines={2}>
+            {sortedSelectedSlots.length} slot{sortedSelectedSlots.length !== 1 ? "s" : ""} ·{" "}
+            {sortedSelectedSlots.map((s) => s.label.split(" – ")[0]).join(", ")} · Rs{" "}
+            {totalPrice.toLocaleString()}
           </Text>
         )}
         <Pressable
           onPress={() => {
-            if (!selectedSlot || selectedPrice === null) return;
+            if (selectedSlots.length === 0) return;
             navigation.navigate("BookingCheckout", {
               courtId: params.courtId,
               courtName: params.courtName,
-              pricePerHour: selectedPrice,
               venueName: params.venueName,
               date: selectedDate,
-              startTime: selectedSlot.start,
-              endTime: selectedSlot.end,
+              slots: sortedSelectedSlots.map((s) => ({
+                startTime: s.start,
+                endTime: s.end,
+                price: slotPrice(s),
+              })),
             });
           }}
-          disabled={!selectedSlot}
-          className={`rounded-xl py-4 items-center ${selectedSlot ? "bg-primary" : "bg-gray-200"}`}
+          disabled={selectedSlots.length === 0}
+          className={`rounded-xl py-4 items-center ${selectedSlots.length > 0 ? "bg-primary" : "bg-gray-200"}`}
         >
-          <Text className={`font-semibold text-base ${selectedSlot ? "text-white" : "text-muted"}`}>
-            {selectedSlot ? "Continue to Checkout" : "Select a time slot to continue"}
+          <Text className={`font-semibold text-base ${selectedSlots.length > 0 ? "text-white" : "text-muted"}`}>
+            {selectedSlots.length > 0 ? "Continue to Checkout" : "Select a time slot to continue"}
           </Text>
         </Pressable>
       </View>

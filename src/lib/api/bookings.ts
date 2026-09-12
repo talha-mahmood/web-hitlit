@@ -20,13 +20,14 @@ export type BookingWithCourt = {
   } | null;
 };
 
-export type CreateBookingParams = {
+export type CreateBookingsParams = {
   courtId: string;
   userId: string;
   date: string;
-  startTime: string; // HH:MM
-  endTime: string;   // HH:MM
-  pricePerHour: number;
+  // One row is inserted per slot — lets the user book several (contiguous
+  // or not) hours in one checkout, each still individually protected by the
+  // bookings_no_overlap exclusion constraint.
+  slots: { startTime: string; endTime: string; price: number }[];
 };
 
 /** Calls SECURITY DEFINER RPC — returns only start+end times, no personal data. */
@@ -39,32 +40,31 @@ export async function fetchBookedSlots(courtId: string, date: string) {
   return (data ?? []) as Array<{ start_time: string; end_time: string }>;
 }
 
-export async function createBooking(params: CreateBookingParams) {
-  const { courtId, userId, date, startTime, endTime, pricePerHour } = params;
+export async function createBookings(params: CreateBookingsParams) {
+  const { courtId, userId, date, slots } = params;
 
-  const [sh, sm] = startTime.split(":").map(Number);
-  const [eh, em] = endTime.split(":").map(Number);
-  const durationHours = (eh + em / 60) - (sh + sm / 60);
-  const totalAmount = Math.round(durationHours * pricePerHour);
-
-  // Explicit +05:00 (Pakistan Standard Time) so stored UTC is unambiguous
+  // A single insert with multiple rows either all succeed or all fail
+  // together — if any one slot was just taken by someone else, the whole
+  // checkout fails rather than leaving the user with a partial booking.
   const { data, error } = await supabase
     .from("bookings")
-    .insert({
-      court_id: courtId,
-      user_id: userId,
-      start_time: `${date}T${startTime}:00+05:00`,
-      end_time: `${date}T${endTime}:00+05:00`,
-      total_amount: totalAmount,
-      status: "CONFIRMED",
-      payment_status: "unpaid",
-    })
-    .select()
-    .single();
+    .insert(
+      slots.map((slot) => ({
+        court_id: courtId,
+        user_id: userId,
+        // Explicit +05:00 (Pakistan Standard Time) so stored UTC is unambiguous
+        start_time: `${date}T${slot.startTime}:00+05:00`,
+        end_time: `${date}T${slot.endTime}:00+05:00`,
+        total_amount: Math.round(slot.price),
+        status: "CONFIRMED" as const,
+        payment_status: "unpaid" as const,
+      }))
+    )
+    .select();
 
   if (error) {
     if (isExclusionViolation(error)) {
-      throw new Error("This slot was just booked by someone else. Please choose another slot.");
+      throw new Error("One of these slots was just booked by someone else. Please choose again.");
     }
     throw new Error(error.message);
   }

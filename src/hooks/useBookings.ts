@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchBookedSlots,
-  createBooking,
+  createBookings,
   cancelBooking,
   fetchMyBookings,
-  type CreateBookingParams,
+  type CreateBookingsParams,
 } from "../lib/api/bookings";
 import { useAuthStore } from "../store/authStore";
 
@@ -21,7 +21,7 @@ export function useBookedSlots(courtId: string, date: string) {
 export function useCreateBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: CreateBookingParams) => createBooking(params),
+    mutationFn: (params: CreateBookingsParams) => createBookings(params),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       queryClient.invalidateQueries({ queryKey: ["bookedSlots", variables.courtId] });

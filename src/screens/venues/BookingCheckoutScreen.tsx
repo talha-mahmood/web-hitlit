@@ -53,28 +53,26 @@ export default function BookingCheckoutScreen() {
   const createBooking = useCreateBooking();
   const insets = useSafeAreaInsets();
 
-  const { courtId, courtName, pricePerHour, venueName, date, startTime, endTime } = params;
-  const totalAmount = pricePerHour; // slots are always 1 hour
+  const { courtId, courtName, venueName, date, slots } = params;
+  const totalAmount = slots.reduce((sum, s) => sum + s.price, 0);
+  const sortedSlots = [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const handleConfirm = async () => {
     if (!session?.user.id) return;
     try {
-      const booking = await createBooking.mutateAsync({
+      const bookings = await createBooking.mutateAsync({
         courtId,
         userId: session.user.id,
         date,
-        startTime,
-        endTime,
-        pricePerHour,
+        slots,
       });
       navigation.replace("BookingConfirmation", {
-        bookingId: booking.id,
+        bookingIds: bookings.map((b) => b.id),
         venueName,
         courtName,
         date,
-        startTime,
-        endTime,
-        totalAmount: booking.total_amount,
+        slots: sortedSlots.map((s) => ({ startTime: s.startTime, endTime: s.endTime })),
+        totalAmount: bookings.reduce((sum, b) => sum + b.total_amount, 0),
       });
     } catch (err) {
       Alert.alert(
@@ -107,12 +105,22 @@ export default function BookingCheckoutScreen() {
               <SummaryRow icon="tennisball-outline" label="Court" value={courtName} />
               <View className="h-px bg-border" />
               <SummaryRow icon="calendar-outline" label="Date" value={formatDateFull(date)} />
-              <SummaryRow
-                icon="time-outline"
-                label="Time"
-                value={`${formatTime(startTime)} – ${formatTime(endTime)}`}
-              />
-              <SummaryRow icon="hourglass-outline" label="Duration" value="1 hour" />
+              <View className="flex-row items-start" style={{ gap: 12 }}>
+                <Ionicons name="time-outline" size={16} color={colors.muted} style={{ marginTop: 2 }} />
+                <View className="flex-1">
+                  <Text className="text-muted text-xs mb-1">
+                    {sortedSlots.length} time slot{sortedSlots.length !== 1 ? "s" : ""}
+                  </Text>
+                  {sortedSlots.map((s) => (
+                    <View key={s.startTime} className="flex-row items-center justify-between mt-0.5">
+                      <Text className="text-ink text-sm font-medium">
+                        {formatTime(s.startTime)} – {formatTime(s.endTime)}
+                      </Text>
+                      <Text className="text-muted text-sm">Rs {s.price.toLocaleString()}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
               <View className="h-px bg-border" />
               <View className="flex-row items-center justify-between">
                 <Text className="text-muted text-sm">Total Amount</Text>
