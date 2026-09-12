@@ -95,7 +95,7 @@ export default function BookingCheckoutScreen() {
         {/* Booking Summary — shadow lives on this outer, non-clipping
             wrapper since a shadow doesn't render on a view with
             overflow:hidden (needed to clip the header band's corners). */}
-        <View className="rounded-2xl mb-5" style={cardShadow}>
+        <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: "white" }}>
           <View className="border border-border rounded-2xl overflow-hidden">
             <View className="bg-primary-light px-4 py-3">
               <Text className="text-primary-dark font-semibold text-sm">Booking Summary</Text>

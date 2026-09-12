@@ -48,7 +48,12 @@ export default function VenueCard({
     // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
     // render on a view with overflow:hidden (needed below to clip the cover
     // image to the rounded corners), so it has to sit one level up.
-    <Bouncy onPress={onPress} className={`rounded-2xl ${className}`} style={cardShadow} scaleTo={0.98}>
+    <Bouncy
+      onPress={onPress}
+      className={`rounded-2xl ${className}`}
+      style={{ ...cardShadow, backgroundColor: "white" }}
+      scaleTo={0.98}
+    >
       <View className="bg-white rounded-2xl border border-border overflow-hidden">
         <View className="relative">
           {coverImage ? (

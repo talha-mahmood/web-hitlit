@@ -138,7 +138,13 @@ export function NearbyGameCard({
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, width: NEARBY_CARD_WIDTH, height: NEARBY_CARD_HEIGHT }}
+      style={{
+        ...cardShadow,
+        backgroundColor: "white",
+        borderRadius: 16,
+        width: NEARBY_CARD_WIDTH,
+        height: NEARBY_CARD_HEIGHT,
+      }}
       scaleTo={0.97}
     >
       <View
@@ -210,7 +216,13 @@ export function NearbySquadCard({
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, width: NEARBY_CARD_WIDTH, height: NEARBY_CARD_HEIGHT }}
+      style={{
+        ...cardShadow,
+        backgroundColor: "white",
+        borderRadius: 16,
+        width: NEARBY_CARD_WIDTH,
+        height: NEARBY_CARD_HEIGHT,
+      }}
       scaleTo={0.97}
     >
       <View
@@ -283,7 +295,13 @@ export function NearbyVenueCard({
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, width: NEARBY_CARD_WIDTH, height: NEARBY_CARD_HEIGHT }}
+      style={{
+        ...cardShadow,
+        backgroundColor: "white",
+        borderRadius: 16,
+        width: NEARBY_CARD_WIDTH,
+        height: NEARBY_CARD_HEIGHT,
+      }}
       scaleTo={0.97}
     >
       <View

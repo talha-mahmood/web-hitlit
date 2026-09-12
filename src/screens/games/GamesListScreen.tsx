@@ -110,7 +110,12 @@ function GameCard({
       {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
           render on a view with overflow:hidden (needed below to clip the top
           accent bar to the rounded corners), so it has to sit one level up. */}
-      <Bouncy onPress={onPress} className="mb-3" style={cardShadow} scaleTo={0.98}>
+      <Bouncy
+        onPress={onPress}
+        className="mb-3"
+        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
+        scaleTo={0.98}
+      >
         <View className="border border-border rounded-2xl overflow-hidden bg-white mb-3">
           {/* Top accent bar keyed to sport */}
           <View className="bg-primary h-1" />

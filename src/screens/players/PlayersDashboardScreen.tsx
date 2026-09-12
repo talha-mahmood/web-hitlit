@@ -31,7 +31,12 @@ function PlayerRow({
   const initials = (player.fullName ?? "?").charAt(0).toUpperCase();
 
   return (
-    <Bouncy onPress={onPress} scaleTo={0.98} style={cardShadow} className="mb-3">
+    <Bouncy
+      onPress={onPress}
+      scaleTo={0.98}
+      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
+      className="mb-3"
+    >
       <View className="flex-row items-center border border-border rounded-2xl bg-white px-4 py-3">
         <Text className="text-muted font-bold text-sm mr-3" style={{ width: 20 }}>
           {rank}

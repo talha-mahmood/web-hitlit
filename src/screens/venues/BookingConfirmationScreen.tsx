@@ -76,7 +76,7 @@ export default function BookingConfirmationScreen() {
         {/* Details Card — shadow lives on this outer, non-clipping wrapper
             since a shadow doesn't render on a view with overflow:hidden
             (needed to clip the header band's corners). */}
-        <View className="w-full rounded-2xl" style={heroShadow}>
+        <View className="w-full rounded-2xl" style={{ ...heroShadow, backgroundColor: "white" }}>
         <View className="w-full border border-border rounded-2xl overflow-hidden">
           <View className="bg-primary-light px-4 py-3 flex-row items-center justify-between">
             <Text className="text-primary-dark font-semibold text-sm">Booking Reference</Text>
