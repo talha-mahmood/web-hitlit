@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { View, Text, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
+import { signOutGoogle } from "../../lib/googleAuth";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors } from "../../constants/theme";
@@ -37,12 +40,31 @@ export default function CompleteDetailsScreen() {
   const updateProfile = useProfileStore((s) => s.updateProfile);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isGoingBack, setIsGoingBack] = useState(false);
   const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY_CODE.dial);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [gender, setGender] = useState<Gender | null>(null);
   const [age, setAge] = useState("");
 
   const isValid = isPhoneDigitsValid(phoneDial, phoneNumber) && !!gender;
+
+  // There's no previous screen to pop to — this is rendered directly by
+  // RootNavigator, not pushed onto a stack — so "back" means abandoning
+  // this sign-in and returning to the Login screen, which means signing
+  // back out of the session that got us here.
+  const handleBack = async () => {
+    setIsGoingBack(true);
+    try {
+      await signOutGoogle();
+      await supabase.auth.signOut();
+    } catch (err) {
+      Alert.alert(
+        "Couldn't go back",
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
+      setIsGoingBack(false);
+    }
+  };
 
   // Changing the country mid-entry can tighten the allowed length (e.g.
   // switching to Pakistan's fixed 10 digits) — trim any digits that no
@@ -116,6 +138,26 @@ export default function CompleteDetailsScreen() {
               elevation: 8,
             }}
           >
+            <Pressable
+              onPress={handleBack}
+              disabled={isGoingBack}
+              hitSlop={8}
+              className="self-start -mt-2 -ml-2 mb-1"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {isGoingBack ? (
+                <ActivityIndicator size="small" color={colors.ink} />
+              ) : (
+                <Ionicons name="arrow-back" size={20} color={colors.ink} />
+              )}
+            </Pressable>
+
             <Text className="text-xl font-extrabold text-ink text-center">
               Just one more step
             </Text>
