@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { SectionLabel } from "./GameFormControls";
@@ -17,6 +18,7 @@ export default function CreateTeamModal({
   onSubmit: (name: string) => void;
   submitting: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
 
   const handleCreate = () => {
@@ -39,7 +41,7 @@ export default function CreateTeamModal({
               the bottom of the screen. */}
           <View
             className="bg-white rounded-t-3xl px-5 pt-5"
-            style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+            style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">Create a Team</Text>

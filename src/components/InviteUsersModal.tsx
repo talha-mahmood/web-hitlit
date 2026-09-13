@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Alert, KeyboardAvoidingView, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
 import { useUserSearch } from "../hooks/useInvites";
@@ -31,6 +32,7 @@ export default function InviteUsersModal({
   onInvite: (user: UserSearchResult) => Promise<void>;
   title?: string;
 }) {
+  const insets = useSafeAreaInsets();
   const [searchInput, setSearchInput] = useState("");
   const [debounced, setDebounced] = useState("");
   const [invitingId, setInvitingId] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function InviteUsersModal({
         <KeyboardAvoidingView behavior="padding">
         <View
           className="bg-white rounded-t-3xl px-5 pt-5"
-          style={{ maxHeight: MODAL_MAX_HEIGHT, paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          style={{ maxHeight: MODAL_MAX_HEIGHT, paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-ink">{title}</Text>

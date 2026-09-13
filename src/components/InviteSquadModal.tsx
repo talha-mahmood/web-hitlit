@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Modal, View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { useSquads } from "../hooks/useSquads";
@@ -21,6 +22,7 @@ export default function InviteSquadModal({
   alreadyInvitedSquadIds: string[];
   onInvite: (squadId: string, squadName: string) => void;
 }) {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const { data: squads, isLoading } = useSquads({ search: search || undefined });
 
@@ -29,7 +31,7 @@ export default function InviteSquadModal({
       <View className="flex-1 bg-black/40 justify-end">
         <View
           className="bg-white rounded-t-3xl px-5 pt-5"
-          style={{ paddingBottom: 32, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          style={{ paddingBottom: 32 + insets.bottom, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-lg font-bold text-ink">Invite a Squad</Text>
