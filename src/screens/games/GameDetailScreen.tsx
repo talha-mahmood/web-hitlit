@@ -317,8 +317,8 @@ export default function GameDetailScreen() {
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
   const isTournament = game.game_type === "TOURNAMENT";
   // Tournament participation lives entirely in tournament_team_members, not
-  // game_players — a captain or regular team member never gets a game_players
-  // row, so hasJoined alone would miss them for copy-ID/chat access.
+  // game_players — a team member never gets a game_players row, so
+  // hasJoined alone would miss them for copy-ID/chat access.
   const isTournamentTeamMember =
     isTournament &&
     !!userId &&

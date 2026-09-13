@@ -5,9 +5,6 @@ import {
   createTeam,
   createTournamentTeamPlaceholders,
   requestToJoinTeam,
-  approveTeamMember,
-  rejectTeamMember,
-  removeTeamMember,
   leaveTeam,
   rejectTeam,
 } from "../lib/api/tournamentTeams";
@@ -30,7 +27,7 @@ export function useTournamentTeams(gameId: string) {
     if (!gameId) return;
     // tournament_team_members has no game_id column to filter by directly,
     // so any member change (across all tournaments) triggers a refetch here
-    // — a bit coarse, but cheap, and keeps captain/host approval state live.
+    // — a bit coarse, but cheap, and keeps team roster state live.
     const channel = supabase
       .channel(uniqueChannelName(`tournament_teams:${gameId}`))
       .on(
@@ -46,8 +43,8 @@ export function useTournamentTeams(gameId: string) {
       // The tournament itself being cancelled/edited by the host is a change
       // to `games`, not `tournament_teams` — TournamentTeamsSection only
       // renders game.status via the prop it was given by GameDetailScreen,
-      // so without this, a captain/member sitting on the teams section
-      // wouldn't see a cancellation until they left and reopened the screen.
+      // so without this, someone sitting on the teams section wouldn't see
+      // a cancellation until they left and reopened the screen.
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "games", filter: `id=eq.${gameId}` },
@@ -65,8 +62,8 @@ export function useTournamentTeams(gameId: string) {
 export function useCreateTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ captainId, name }: { captainId: string; name: string }) =>
-      createTeam(gameId, captainId, name),
+    mutationFn: ({ creatorId, name }: { creatorId: string; name: string }) =>
+      createTeam(gameId, creatorId, name),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },
@@ -81,46 +78,12 @@ export function useRequestToJoinTeam(gameId: string) {
       userId,
       skillLevel,
       location,
-      captainId,
-      isHost,
     }: {
       teamId: string;
       userId: string;
       skillLevel: SkillLevel;
       location: string;
-      captainId: string | null;
-      isHost: boolean;
-    }) => requestToJoinTeam(teamId, userId, skillLevel, location, captainId, isHost),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
-    },
-  });
-}
-
-export function useApproveTeamMember(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (memberId: string) => approveTeamMember(memberId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
-    },
-  });
-}
-
-export function useRejectTeamMember(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (memberId: string) => rejectTeamMember(memberId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
-    },
-  });
-}
-
-export function useRemoveTeamMember(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (memberId: string) => removeTeamMember(memberId),
+    }) => requestToJoinTeam(teamId, userId, skillLevel, location),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

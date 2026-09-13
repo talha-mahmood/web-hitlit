@@ -7,7 +7,6 @@ type TeamMemberRow = Database["public"]["Tables"]["tournament_team_members"]["Ro
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
 export type TournamentTeam = TeamRow & {
-  profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   tournament_team_members: (Pick<
     TeamMemberRow,
     "id" | "status" | "user_id" | "joined_at" | "skill_level" | "location"
@@ -17,7 +16,7 @@ export type TournamentTeam = TeamRow & {
 };
 
 const TEAM_SELECT =
-  "*, profiles!tournament_teams_captain_id_fkey(id, full_name, avatar), tournament_team_members(id, status, user_id, joined_at, skill_level, location, profiles(id, full_name, avatar))";
+  "*, tournament_team_members(id, status, user_id, joined_at, skill_level, location, profiles(id, full_name, avatar))";
 
 export async function fetchTeamsForTournament(gameId: string): Promise<TournamentTeam[]> {
   const { data, error } = await supabase
@@ -33,12 +32,12 @@ export async function fetchTeamsForTournament(gameId: string): Promise<Tournamen
 
 export async function createTeam(
   gameId: string,
-  captainId: string,
+  creatorId: string,
   name: string
 ): Promise<TeamRow> {
   const { data, error } = await supabase
     .from("tournament_teams")
-    .insert({ game_id: gameId, captain_id: captainId, name, status: "FORMING" })
+    .insert({ game_id: gameId, captain_id: creatorId, name, status: "FORMING" })
     .select()
     .single();
   if (error) {
@@ -48,10 +47,11 @@ export async function createTeam(
     throw new Error(error.message);
   }
 
-  // Captain automatically joins their own team
+  // The creator joins their own team as its first member, same as anyone
+  // else who joins after them — there's no special role attached to this.
   const { error: memberError } = await supabase.from("tournament_team_members").insert({
     team_id: data.id,
-    user_id: captainId,
+    user_id: creatorId,
     status: "JOINED",
     joined_at: new Date().toISOString(),
   });
@@ -60,11 +60,11 @@ export async function createTeam(
   return data;
 }
 
-// Host-only: pre-seed the tournament's team slots with names at creation time
-// — captain_id starts null on every row ("unclaimed"); whoever joins first
-// (see requestToJoinTeam) becomes that team's captain. sort_order preserves
-// the host's entry order for fixture pairing, since a single bulk insert can
-// give every row the same created_at.
+// Host-only: pre-seed the tournament's team slots with names at creation
+// time — these start with no members at all, and anyone can join one
+// (see requestToJoinTeam) the same way they'd join a team someone else
+// already created. sort_order preserves the host's entry order for fixture
+// pairing, since a single bulk insert can give every row the same created_at.
 export async function createTournamentTeamPlaceholders(
   gameId: string,
   teamNames: string[]
@@ -90,56 +90,24 @@ export async function createTournamentTeamPlaceholders(
   return data;
 }
 
-// Joining an unclaimed team (captain_id null) inserts straight as JOINED —
-// a DB trigger then assigns that user as the team's captain. Joining an
-// already-captained team instead sends a PENDING request for the captain to
-// approve, unless the joiner is the tournament host: the host can join any
-// team instantly too (RLS allows this specifically for games.creator_id;
-// the claim-on-first-join trigger only touches captain_id when it's still
-// null, so this never displaces an existing captain). `captainId` should be
-// the team's *current* captain_id (from the already-fetched team object) so
-// the caller doesn't need an extra round trip to know which path applies.
+// Joining a still-forming team always inserts straight as JOINED — there's
+// no captain to approve the request, no matter who else is already on the
+// roster. Who ends up leading the team on match day is sorted out in person
+// once everyone's at the venue, not gated in the app.
 export async function requestToJoinTeam(
   teamId: string,
   userId: string,
   skillLevel: SkillLevel,
-  location: string,
-  captainId: string | null,
-  isHost: boolean
+  location: string
 ): Promise<void> {
-  const isClaim = captainId === null || isHost;
   const { error } = await supabase.from("tournament_team_members").insert({
     team_id: teamId,
     user_id: userId,
-    status: isClaim ? "JOINED" : "PENDING",
+    status: "JOINED",
     skill_level: skillLevel,
     location: location || null,
-    joined_at: isClaim ? new Date().toISOString() : null,
+    joined_at: new Date().toISOString(),
   });
-  if (error) throw new Error(error.message);
-}
-
-export async function approveTeamMember(memberId: string): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_team_members")
-    .update({ status: "JOINED", joined_at: new Date().toISOString() })
-    .eq("id", memberId);
-  if (error) throw new Error(error.message);
-}
-
-export async function rejectTeamMember(memberId: string): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_team_members")
-    .update({ status: "DECLINED" })
-    .eq("id", memberId);
-  if (error) throw new Error(error.message);
-}
-
-export async function removeTeamMember(memberId: string): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_team_members")
-    .update({ status: "REMOVED" })
-    .eq("id", memberId);
   if (error) throw new Error(error.message);
 }
 

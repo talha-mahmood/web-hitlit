@@ -5,9 +5,6 @@ import {
   useTournamentTeams,
   useCreateTeam,
   useRequestToJoinTeam,
-  useApproveTeamMember,
-  useRejectTeamMember,
-  useRemoveTeamMember,
   useLeaveTeam,
   useRejectTeam,
 } from "../../hooks/useTournamentTeams";
@@ -46,11 +43,6 @@ import {
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
-function skillLevelLabel(skill: string | null): string {
-  if (!skill) return "Not specified";
-  return skill.charAt(0).toUpperCase() + skill.slice(1);
-}
-
 const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting" },
   APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Approved" },
@@ -60,38 +52,18 @@ const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: strin
 function MemberAvatar({
   name,
   avatar,
-  isCaptain,
-  onRemove,
 }: {
   name: string | null;
   avatar: string | null;
-  isCaptain: boolean;
-  onRemove?: () => void;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 56 }}>
-      <View>
-        {avatar ? (
-          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-        ) : (
-          <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-            <Text className="text-primary font-bold text-sm">{initials}</Text>
-          </View>
-        )}
-        {onRemove && (
-          <Pressable
-            onPress={onRemove}
-            hitSlop={8}
-            className="absolute -top-1 -right-1 bg-danger rounded-full w-4 h-4 items-center justify-center border-2 border-white"
-          >
-            <Ionicons name="close" size={9} color="white" />
-          </Pressable>
-        )}
-      </View>
-      {isCaptain && (
-        <View className="bg-primary rounded-full px-1 py-0.5 mt-0.5">
-          <Text className="text-white" style={{ fontSize: 9, fontWeight: "600" }}>Captain</Text>
+      {avatar ? (
+        <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+      ) : (
+        <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+          <Text className="text-primary font-bold text-sm">{initials}</Text>
         </View>
       )}
       <Text className="text-muted text-xs mt-0.5 text-center" numberOfLines={1}>
@@ -110,9 +82,6 @@ function TeamCard({
   hasActiveTeamElsewhere,
   onRequestJoin,
   onLeave,
-  onApproveMember,
-  onRejectMember,
-  onRemoveMember,
   onRemoveTeam,
   onFillWithSquad,
 }: {
@@ -121,21 +90,16 @@ function TeamCard({
   userId?: string;
   isHost: boolean;
   disabled: boolean;
-  // True when the user already has a PENDING request or a JOINED spot on a
-  // *different* (non-rejected) team in this same tournament — until the
-  // captain there rejects them or they leave, they can't request this team.
+  // True when the user already has a JOINED spot on a *different*
+  // (non-rejected) team in this same tournament — until they leave it,
+  // they can't join this team too.
   hasActiveTeamElsewhere: boolean;
   onRequestJoin: () => void;
   onLeave: () => void;
-  onApproveMember: (memberId: string, name: string | null) => void;
-  onRejectMember: (memberId: string, name: string | null) => void;
-  onRemoveMember: (memberId: string, name: string | null) => void;
   onRemoveTeam: () => void;
   onFillWithSquad?: () => void;
 }) {
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
-  const pendingMembers = team.tournament_team_members.filter((m) => m.status === "PENDING");
-  const isCaptain = team.captain_id === userId;
   const myMembership = userId
     ? team.tournament_team_members.find((m) => m.user_id === userId)
     : undefined;
@@ -147,9 +111,10 @@ function TeamCard({
   const isRosterEditable = team.status === "FORMING";
   const playersNeeded = Math.max(requiredSize - joinedMembers.length, 0);
   const badge = TEAM_STATUS_BADGE[team.status];
-  // Host pre-seeds team name slots with no captain — whoever joins first
-  // claims it (see requestToJoinTeam / claim_team_on_first_join trigger).
-  const isUnclaimed = team.captain_id === null;
+  // "Fill With My Squad" registers a whole squad into a team in one go — the
+  // server only allows this on a genuinely empty team, so that's the same
+  // gate used here rather than duplicating the check loosely.
+  const isEmpty = joinedMembers.length === 0;
 
   return (
     <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
@@ -162,8 +127,7 @@ function TeamCard({
         )}
       </View>
       <Text className="text-muted text-xs mb-3">
-        {joinedMembers.length}/{requiredSize || "—"} players · Captain:{" "}
-        {isUnclaimed ? "Open — first to join leads this team" : team.profiles?.full_name ?? "Unknown"}
+        {joinedMembers.length}/{requiredSize || "—"} players
       </Text>
 
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
@@ -172,50 +136,9 @@ function TeamCard({
             key={m.id}
             name={m.profiles?.full_name ?? null}
             avatar={m.profiles?.avatar ?? null}
-            isCaptain={m.user_id === team.captain_id}
-            onRemove={
-              isCaptain && m.user_id !== team.captain_id && !disabled && isRosterEditable
-                ? () => onRemoveMember(m.id, m.profiles?.full_name ?? null)
-                : undefined
-            }
           />
         ))}
       </View>
-
-      {/* Captain's own pending requests for this team */}
-      {isCaptain && isRosterEditable && pendingMembers.length > 0 && (
-        <View className="mt-3 pt-3 border-t border-border">
-          <Text className="text-ink font-medium text-xs mb-2">
-            Join Requests ({pendingMembers.length})
-          </Text>
-          {pendingMembers.map((m) => (
-            <View key={m.id} className="flex-row items-center py-1.5" style={{ gap: 8 }}>
-              <View className="flex-1">
-                <Text className="text-ink text-sm" numberOfLines={1}>
-                  {m.profiles?.full_name ?? "Player"}
-                </Text>
-                <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-                  {skillLevelLabel(m.skill_level)} · {m.location ?? "Location not specified"}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => onRejectMember(m.id, m.profiles?.full_name ?? null)}
-                disabled={disabled}
-                className="border border-border rounded-lg px-2.5 py-1"
-              >
-                <Text className="text-muted text-xs font-semibold">Reject</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => onApproveMember(m.id, m.profiles?.full_name ?? null)}
-                disabled={disabled || isTeamFull}
-                className="bg-primary rounded-lg px-2.5 py-1"
-              >
-                <Text className="text-white text-xs font-semibold">Approve</Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      )}
 
       {team.status === "APPROVED" && (
         <View className="mt-3" style={{ gap: 8 }}>
@@ -240,56 +163,49 @@ function TeamCard({
         <Text className="text-danger text-xs mt-2">Removed from the tournament by the host.</Text>
       )}
 
-      {/* This team's own CTA. The host also sees this on OTHER teams now (in
-          addition to the Remove Team button) so they can join any team
-          instantly — the myMembership/hasActiveTeamElsewhere checks below
-          already correctly gate that against teams the host has no
-          relationship with yet, same as for any regular player. A team
-          joins the tournament automatically the instant it's full (see the
-          auto_approve_full_team DB trigger), so there's nothing to press
-          here — just a progress readout while it's still recruiting. */}
+      {/* This team's own CTA. Joining always inserts the player straight in —
+          there's no approval step to wait on — so a JOINED member just gets
+          a progress readout alongside their Leave option, and anyone else
+          gets an instant Join button. A team joins the tournament
+          automatically the instant it's full (see the auto_approve_full_team
+          DB trigger). */}
       {isRosterEditable && (
         <View className="mt-3">
-          {isCaptain ? (
-            <View className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
-              <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
-                {isTeamFull
-                  ? "Team full — joining tournament…"
-                  : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
-              </Text>
-            </View>
-          ) : myMembership?.status === "JOINED" ? (
-            <Pressable
-              onPress={onLeave}
-              disabled={disabled}
-              className="border border-danger rounded-lg py-2 items-center"
-            >
-              <Text className="text-danger text-xs font-semibold">Leave Team</Text>
-            </Pressable>
-          ) : myMembership?.status === "PENDING" ? (
-            <Text className="text-orange-600 text-xs font-medium text-center">
-              Request sent — awaiting captain approval
-            </Text>
-          ) : !myMembership && hasActiveTeamElsewhere ? (
+          {myMembership?.status === "JOINED" ? (
+            <>
+              <View className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
+                <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
+                  {isTeamFull
+                    ? "Team full — joining tournament…"
+                    : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
+                </Text>
+              </View>
+              <Pressable
+                onPress={onLeave}
+                disabled={disabled}
+                className="border border-danger rounded-lg py-2 items-center mt-2"
+              >
+                <Text className="text-danger text-xs font-semibold">Leave Team</Text>
+              </Pressable>
+            </>
+          ) : hasActiveTeamElsewhere ? (
             <Text className="text-muted text-xs text-center">
-              You already have a request or spot on another team in this tournament.
+              You already have a spot on another team in this tournament.
             </Text>
-          ) : !myMembership && team.status === "FORMING" && !isTeamFull ? (
+          ) : team.status === "FORMING" && !isTeamFull ? (
             <Pressable
               onPress={onRequestJoin}
               disabled={disabled}
               className="bg-primary rounded-lg py-2 items-center"
             >
-              <Text className="text-white text-xs font-semibold">
-                {isUnclaimed ? "Join & Become Captain" : isHost ? "Join Team" : "Request to Join Team"}
-              </Text>
+              <Text className="text-white text-xs font-semibold">Join Team</Text>
             </Pressable>
           ) : null}
           {/* A squad owner can register their whole squad for this slot in
               one go — independent of the individual-join flow above, and
               not gated on hasActiveTeamElsewhere since the squad owner
               themselves need not be one of the registered players. */}
-          {isUnclaimed && onFillWithSquad && (
+          {isEmpty && onFillWithSquad && (
             <Pressable
               onPress={onFillWithSquad}
               disabled={disabled}
@@ -912,9 +828,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
   const requestToJoinTeam = useRequestToJoinTeam(game.id);
-  const approveTeamMember = useApproveTeamMember(game.id);
-  const rejectTeamMember = useRejectTeamMember(game.id);
-  const removeTeamMember = useRemoveTeamMember(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const rejectTeam = useRejectTeam(game.id);
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
@@ -932,18 +845,15 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const requiredTeams = game.number_of_teams ?? 0;
 
   // A rejected (host-removed) team doesn't count against the tournament's
-  // team slots, and its non-captain members are free to form/join a
-  // different team — but a captain always "owns" their team regardless of
-  // status, since there's no way back in for a removed team once it's gone.
+  // team slots, and its members are free to form/join a different team —
+  // there's no way back in for a removed team once it's gone.
   const activeTeams = teams.filter((t) => t.status !== "REJECTED");
   const myTeam = userId
-    ? teams.find((t) => {
-        if (t.captain_id === userId) return true;
-        if (t.status === "REJECTED") return false;
-        return t.tournament_team_members.some(
-          (m) => m.user_id === userId && (m.status === "JOINED" || m.status === "PENDING")
-        );
-      })
+    ? teams.find(
+        (t) =>
+          t.status !== "REJECTED" &&
+          t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
+      )
     : undefined;
   const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
   const approvedTeamsFull = teams.filter((t) => t.status === "APPROVED");
@@ -952,22 +862,12 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const isPoolFormat = game.tournament_format === "POOL";
 
   const disabled =
-    createTeam.isPending ||
-    requestToJoinTeam.isPending ||
-    approveTeamMember.isPending ||
-    rejectTeamMember.isPending ||
-    removeTeamMember.isPending ||
-    leaveTeam.isPending ||
-    rejectTeam.isPending;
-
-  const joinRequestTeam = joinRequestTeamId ? teams.find((t) => t.id === joinRequestTeamId) : undefined;
-  const isJoinRequestUnclaimed = joinRequestTeam?.captain_id === null;
-  const isJoinRequestClaim = isJoinRequestUnclaimed || isHost;
+    createTeam.isPending || requestToJoinTeam.isPending || leaveTeam.isPending || rejectTeam.isPending;
 
   const handleSubmitJoinRequest = (skillLevel: SkillLevel, location: string) => {
     if (!userId || !joinRequestTeamId) return;
     requestToJoinTeam.mutate(
-      { teamId: joinRequestTeamId, userId, skillLevel, location, captainId: joinRequestTeam?.captain_id ?? null, isHost },
+      { teamId: joinRequestTeamId, userId, skillLevel, location },
       {
         onSuccess: () => setJoinRequestTeamId(null),
         onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
@@ -987,41 +887,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             { teamId, userId },
             { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not leave.") }
           ),
-      },
-    ]);
-  };
-
-  const handleApproveMember = (memberId: string, name: string | null) => {
-    approveTeamMember.mutate(memberId, {
-      onError: (err) =>
-        Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "player"}.`),
-    });
-  };
-
-  const handleRejectMember = (memberId: string, name: string | null) => {
-    Alert.alert("Reject Request", `Reject ${name ?? "this player"}'s request to join your team?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Reject",
-        style: "destructive",
-        onPress: () =>
-          rejectTeamMember.mutate(memberId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
-          }),
-      },
-    ]);
-  };
-
-  const handleRemoveMember = (memberId: string, name: string | null) => {
-    Alert.alert("Remove Member", `Remove ${name ?? "this member"} from your team?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: () =>
-          removeTeamMember.mutate(memberId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove member."),
-          }),
       },
     ]);
   };
@@ -1151,9 +1016,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
               onRequestJoin={() => setJoinRequestTeamId(team.id)}
               onLeave={() => handleLeave(team.id)}
-              onApproveMember={handleApproveMember}
-              onRejectMember={handleRejectMember}
-              onRemoveMember={handleRemoveMember}
               onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
             />
@@ -1168,7 +1030,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         onSubmit={(name) => {
           if (!userId) return;
           createTeam.mutate(
-            { captainId: userId, name },
+            { creatorId: userId, name },
             {
               onSuccess: () => setShowCreateModal(false),
               onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not create team."),
@@ -1181,14 +1043,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         visible={!!joinRequestTeamId}
         onClose={() => setJoinRequestTeamId(null)}
         submitting={requestToJoinTeam.isPending}
-        title={isJoinRequestUnclaimed ? "Join & Become Captain" : isJoinRequestClaim ? "Join Team" : "Request to Join Team"}
-        subtitle={
-          isJoinRequestUnclaimed
-            ? "This team has no captain yet — you'll join instantly and lead it."
-            : isJoinRequestClaim
-              ? "As the tournament host, you'll join this team instantly — no approval needed."
-              : "The team captain will see this and can approve or reject your request."
-        }
+        title="Join Team"
+        subtitle="You'll join this team instantly — no approval needed."
         onSubmit={handleSubmitJoinRequest}
       />
 

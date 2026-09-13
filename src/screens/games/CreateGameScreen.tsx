@@ -784,8 +784,8 @@ export default function CreateGameScreen() {
             )}
 
             <Text className="text-muted text-xs mt-3">
-              Whoever joins an empty team slot first becomes its captain and can then
-              recruit teammates — a team joins the tournament automatically once it's full.
+              Anyone can join an open team slot — a team joins the tournament automatically
+              once it's full.
             </Text>
           </>
         ) : (

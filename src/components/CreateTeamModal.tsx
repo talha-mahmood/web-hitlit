@@ -48,8 +48,8 @@ export default function CreateTeamModal({
               </Pressable>
             </View>
             <Text className="text-muted text-sm mb-2">
-              You'll be the team captain — invite players to join, then submit your team for the
-              host's approval once it's full.
+              Give your team a name — invite players to join, and it's added to the tournament
+              automatically once your roster is full.
             </Text>
 
             <SectionLabel title="Team Name" required />
