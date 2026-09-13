@@ -1,4 +1,4 @@
-import { useMemo, type ComponentProps, type ReactElement } from "react";
+import { useMemo, useState, type ComponentProps, type ReactElement } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -148,15 +148,23 @@ export default function HomeScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const insets = useSafeAreaInsets();
 
+  const [selectedSportId, setSelectedSportId] = useState<string | null>(null);
+
   const { data: sports } = useSports();
-  const { data: venues, isLoading: venuesLoading } = useVenues({});
+  const { data: venues, isLoading: venuesLoading } = useVenues({
+    sportId: selectedSportId ?? undefined,
+  });
   const { data: favoriteIds } = useFavoriteVenueIds();
   const toggleFavorite = useToggleFavoriteVenue();
   const { data: unreadCount } = useUnreadNotificationCount(userId);
 
   const { coords } = useDeviceLocation();
-  const { data: games, isLoading: gamesLoading } = useGames({});
-  const { data: squads, isLoading: squadsLoading } = useSquads({});
+  const { data: games, isLoading: gamesLoading } = useGames({
+    sportId: selectedSportId ?? undefined,
+  });
+  const { data: squads, isLoading: squadsLoading } = useSquads({
+    sportId: selectedSportId ?? undefined,
+  });
 
   const nearbyRegularGames = useMemo(
     () =>
@@ -276,8 +284,9 @@ export default function HomeScreen() {
 
         <SportsBySportSection
           sports={sports ?? []}
+          selectedSportId={selectedSportId}
           onSelectSport={(sportId) =>
-            navigation.navigate("Venues", { screen: "VenuesList", params: { sportId } })
+            setSelectedSportId((prev) => (prev === sportId ? null : sportId))
           }
         />
 
