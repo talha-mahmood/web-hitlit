@@ -242,7 +242,7 @@ export default function HomeScreen() {
       icon: "flame",
       bgColor: "#7C2D12",
       accentColor: "#FDBA74",
-      onPress: () => navigation.navigate("Games", { screen: "GamesList" }),
+      onPress: () => navigation.navigate("GamesList", undefined),
     },
   ];
 
@@ -343,10 +343,10 @@ export default function HomeScreen() {
             <NearbyGameCard
               game={item}
               distanceKm={km}
-              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
+              onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
             />
           )}
-          onSeeAll={() => navigation.navigate("Games", { screen: "GamesList" })}
+          onSeeAll={() => navigation.navigate("GamesList", undefined)}
         />
 
         <NearbySection
@@ -360,7 +360,7 @@ export default function HomeScreen() {
             <NearbyGameCard
               game={item}
               distanceKm={km}
-              onPress={() => navigation.navigate("Games", { screen: "GameDetail", params: { gameId: item.id } })}
+              onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
             />
           )}
           onSeeAll={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
