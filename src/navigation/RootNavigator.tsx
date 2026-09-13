@@ -2,13 +2,14 @@ import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { useAuthStore } from "../store/authStore";
-import { useProfileStore, isProfileComplete } from "../store/profileStore";
+import { useProfileStore, hasProfileName, isProfileComplete } from "../store/profileStore";
 import SplashScreen from "../screens/SplashScreen";
 import AuthNavigator from "./AuthNavigator";
 import MainTabNavigator from "./MainTabNavigator";
 import AdminNavigator from "./AdminNavigator";
 import SuperAdminNavigator from "./SuperAdminNavigator";
 import ProfileSetupScreen from "../screens/onboarding/ProfileSetupScreen";
+import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
 
 export default function RootNavigator() {
   const session = useAuthStore((s) => s.session);
@@ -63,11 +64,16 @@ export default function RootNavigator() {
     content = <AuthNavigator />;
   } else if (isProfileLoading) {
     content = <SplashScreen />;
-  } else if (!isProfileComplete(profile)) {
+  } else if (!hasProfileName(profile)) {
     // Identity setup (name/avatar) is role-agnostic — owners and
     // superadmins go through the same onboarding as everyone else before
     // landing in their respective dashboard below.
     content = <ProfileSetupScreen />;
+  } else if (!isProfileComplete(profile)) {
+    // Google/Apple sign-in doesn't give us a phone number or gender — a
+    // brand-new account stops here to fill those in; a returning account
+    // that already has them skips straight past to its dashboard below.
+    content = <CompleteDetailsScreen />;
   } else if (profile?.type === "superadmin") {
     content = <SuperAdminNavigator />;
   } else if (profile?.type === "owner") {

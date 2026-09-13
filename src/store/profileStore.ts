@@ -21,9 +21,18 @@ type ProfileState = {
   clear: () => void;
 };
 
-// A profile counts as "onboarded" once the user has picked a display name.
-export function isProfileComplete(profile: Profile | null): boolean {
+// A profile has a display name once the user (or the Google/Apple identity
+// trigger) has set one — gates ProfileSetupScreen (name/avatar).
+export function hasProfileName(profile: Profile | null): boolean {
   return !!profile?.full_name && profile.full_name.trim().length > 0;
+}
+
+// A profile counts as fully onboarded once it also has the phone number and
+// gender we require post-auth — gates CompleteDetailsScreen. Google/Apple
+// don't hand us these, so a brand-new sign-in stops here until filled in;
+// a returning user who already filled them in skips straight past.
+export function isProfileComplete(profile: Profile | null): boolean {
+  return hasProfileName(profile) && !!profile?.phone && !!profile?.gender;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
