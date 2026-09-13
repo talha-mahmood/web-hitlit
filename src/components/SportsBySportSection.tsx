@@ -15,10 +15,13 @@ import { cardShadow, colors } from "../constants/theme";
 
 type Sport = { id: string; name: string };
 
-const ICON_BADGE_SIZE = 52;
-const ICON_SIZE = 26;
-const GAP = 26;
-const VISIBLE_TILES = 3;
+// Exported so cards elsewhere (game/squad/tournament list rows, nearby
+// cards) can size their own sport-icon badges to match this one exactly.
+export const SPORT_ICON_BADGE_SIZE = 44;
+const ICON_BADGE_SIZE = SPORT_ICON_BADGE_SIZE;
+const ICON_SIZE = 20;
+const GAP = 16;
+const VISIBLE_TILES = 4;
 
 function SportTile({
   sport,

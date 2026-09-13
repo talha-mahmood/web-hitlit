@@ -9,6 +9,7 @@ import { useGames, useJoinGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import SearchField from "../../components/SearchField";
 import SportFilterDropdown from "../../components/SportFilterDropdown";
+import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
@@ -179,7 +180,7 @@ function GameCard({
               {game.icon_url && (
                 <Image
                   source={{ uri: game.icon_url }}
-                  style={{ width: 28, height: 28, borderRadius: 8 }}
+                  style={{ width: SPORT_ICON_BADGE_SIZE, height: SPORT_ICON_BADGE_SIZE, borderRadius: 8 }}
                   resizeMode="cover"
                 />
               )}

@@ -9,13 +9,12 @@ import { useTopPlayers } from "../../hooks/usePlayers";
 import type { TopPlayer } from "../../lib/api/players";
 import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
 import { colors, cardShadow } from "../../constants/theme";
-import { SectionLabel, PillRow } from "../../components/GameFormControls";
+import { SectionLabel } from "../../components/GameFormControls";
+import SportsBySportSection from "../../components/SportsBySportSection";
 import Bouncy from "../../components/Bouncy";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayersDashboard">;
-
-const ALL_SPORTS = "all";
 
 function PlayerRow({
   player,
@@ -100,15 +99,12 @@ export default function PlayersDashboardScreen() {
         ListHeaderComponent={
           <View className="mb-1">
             <SectionLabel title="Filter by Sport" />
-            <PillRow
-              options={[
-                { label: "All Sports", value: ALL_SPORTS },
-                ...(sports ?? []).map((s) => ({ label: s.name, value: s.id })),
-              ]}
-              value={sportId ?? ALL_SPORTS}
-              onChange={(v) => setSportId(v === ALL_SPORTS ? null : v)}
+            <SportsBySportSection
+              sports={sports ?? []}
+              selectedSportId={sportId}
+              onSelectSport={(id) => setSportId((prev) => (prev === id ? null : id))}
             />
-            <Text className="text-muted text-xs mt-4 mb-1">
+            <Text className="text-muted text-xs mt-1 mb-1">
               Ranked by an activity-based rating — games, tournaments, and hosting all count.
             </Text>
           </View>

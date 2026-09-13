@@ -5,6 +5,7 @@ import { colors, cardShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
 import { getSportImage } from "../lib/sportImages";
 import { getVenuePhoto } from "../lib/venuePhotos";
+import { SPORT_ICON_BADGE_SIZE } from "./SportsBySportSection";
 import { dayLabel, timeBadgeColor } from "../lib/badgeColors";
 import { formatDistanceKm } from "../lib/distance";
 import type { GameListItem } from "../lib/api/games";
@@ -50,7 +51,7 @@ function formatTimeRange(startTime: string, endTime: string): string {
 
 function SportBadge({
   sportName,
-  size = 32,
+  size = SPORT_ICON_BADGE_SIZE,
   iconUrl,
 }: {
   sportName: string;
@@ -160,7 +161,7 @@ export function NearbyGameCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={game.sports?.name ?? ""} size={28} iconUrl={game.icon_url} />
+          <SportBadge sportName={game.sports?.name ?? ""} iconUrl={game.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}
@@ -238,7 +239,7 @@ export function NearbySquadCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={squad.sports?.name ?? ""} size={28} iconUrl={squad.icon_url} />
+          <SportBadge sportName={squad.sports?.name ?? ""} iconUrl={squad.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}

@@ -282,6 +282,7 @@ export default function HomeScreen() {
 
         <PromoCarousel slides={promoSlides} />
 
+        <Text className="text-lg font-semibold text-ink mb-3">Filter by Sport</Text>
         <SportsBySportSection
           sports={sports ?? []}
           selectedSportId={selectedSportId}
