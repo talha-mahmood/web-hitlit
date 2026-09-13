@@ -32,6 +32,15 @@ const ICONS: Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap> = {
 export default function MainTabNavigator() {
   return (
     <Tab.Navigator
+      // Default is "history": once you've switched tabs at least once,
+      // canGoBack() starts returning true even on a tab's own root screen
+      // (nothing left to pop in *that* tab's stack, but there's tab-switch
+      // history to unwind) — that's what was making the back arrow appear
+      // on screens like the Squads list and, when pressed, jump to whatever
+      // tab was open before instead of doing nothing. "none" makes
+      // canGoBack() only reflect the current tab's own stack, so a tab's
+      // root screen never shows a back arrow that jumps to a different tab.
+      backBehavior="none"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
