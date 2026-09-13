@@ -87,7 +87,7 @@ export default function SquadFillModal({
             <ActivityIndicator color={colors.primary} className="mt-6 mb-6" />
           ) : (
             <>
-              <Text className="text-muted text-xs font-semibold mt-2 mb-12">Choose a Squad</Text>
+              <Text className="text-muted text-xs font-semibold mt-2 mb-2">Choose a Squad</Text>
               {eligibleSquads.length === 0 ? (
                 <Text className="text-muted text-sm mb-2">
                   You don't own a squad with at least {requiredCount} active member{requiredCount === 1 ? "" : "s"}.
