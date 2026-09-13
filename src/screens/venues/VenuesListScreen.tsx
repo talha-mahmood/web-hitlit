@@ -58,7 +58,14 @@ export default function VenuesListScreen() {
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
-        <Text className="text-2xl font-bold text-ink mb-4">Venues</Text>
+        <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
+          {navigation.canGoBack() && (
+            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color={colors.ink} />
+            </Pressable>
+          )}
+          <Text className="text-2xl font-bold text-ink">Venues</Text>
+        </View>
         <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
           <View className="flex-1">
             <SearchField

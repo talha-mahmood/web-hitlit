@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Alert, KeyboardAvoidingView } from "react-native";
+import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Alert, KeyboardAvoidingView, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
 import { useUserSearch } from "../hooks/useInvites";
 import type { UserSearchResult } from "../lib/api/users";
 import FieldInput from "./FieldInput";
+
+// A percentage maxHeight ("80%") resolves against the KeyboardAvoidingView's
+// own auto-sized height (it isn't flex:1), which Yoga computes differently
+// depending on how much content is inside — with just one search result the
+// sheet's intrinsic height collapses almost to nothing instead of the
+// intended 80% of the screen. Using an explicit pixel value sidesteps that.
+const MODAL_MAX_HEIGHT = Dimensions.get("window").height * 0.8;
 
 // Reused by GameDetailScreen (host inviting to a game/tournament) and
 // SquadDetailScreen (owner inviting to a squad) — the only thing that
@@ -63,7 +70,7 @@ export default function InviteUsersModal({
         <KeyboardAvoidingView behavior="padding">
         <View
           className="bg-white rounded-t-3xl px-5 pt-5"
-          style={{ maxHeight: "80%", paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          style={{ maxHeight: MODAL_MAX_HEIGHT, paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-ink">{title}</Text>
