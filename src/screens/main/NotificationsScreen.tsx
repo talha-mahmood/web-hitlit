@@ -44,6 +44,7 @@ const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: s
   squad_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
   game_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   squad_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
+  community_reply: { icon: "chatbubble-ellipses", color: "#3B82F6", bg: "bg-blue-50" },
 };
 const DEFAULT_META = { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
 
@@ -62,11 +63,12 @@ function timeAgo(iso: string): string {
 // Every notification stores enough in `data` to know where it points —
 // gameId covers games, tournaments, and team events (all surfaced on the
 // game detail screen); squadId covers squad events.
-function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string } {
+function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string } {
   const data = (n.data ?? {}) as Record<string, unknown>;
   return {
     gameId: typeof data.gameId === "string" ? data.gameId : undefined,
     squadId: typeof data.squadId === "string" ? data.squadId : undefined,
+    commentId: typeof data.commentId === "string" ? data.commentId : undefined,
   };
 }
 
@@ -131,11 +133,13 @@ export default function NotificationsScreen() {
 
   const handlePress = (n: NotificationRow) => {
     if (!n.is_read) markRead.mutate(n.id);
-    const { gameId, squadId } = resolveTarget(n);
+    const { gameId, squadId, commentId } = resolveTarget(n);
     if (gameId) {
       navigation.navigate("GameDetail", { gameId });
     } else if (squadId) {
       navigation.navigate("Squads", { screen: "SquadDetail", params: { squadId } });
+    } else if (commentId) {
+      navigation.navigate("Community", { screen: "CommentThread", params: { rootId: commentId } });
     }
   };
 

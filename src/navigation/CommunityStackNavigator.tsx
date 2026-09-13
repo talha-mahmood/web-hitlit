@@ -1,5 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CommunityScreen from "../screens/community/CommunityScreen";
+import CommunityChatScreen from "../screens/community/CommunityChatScreen";
+import CommentThreadScreen from "../screens/community/CommentThreadScreen";
 import GamesListScreen from "../screens/games/GamesListScreen";
 import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
@@ -21,6 +23,8 @@ import type { Database } from "../types/database.types";
 // Tournaments.
 export type CommunityStackParamList = {
   CommunityHome: undefined;
+  CommunityChat: undefined;
+  CommentThread: { rootId: string };
   GamesList:
     | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
     | undefined;
@@ -43,6 +47,8 @@ export default function CommunityStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="CommunityHome" component={CommunityScreen} />
+      <Stack.Screen name="CommunityChat" component={CommunityChatScreen} />
+      <Stack.Screen name="CommentThread" component={CommentThreadScreen} />
       <Stack.Screen name="GamesList" component={GamesListScreen} />
       <Stack.Screen name="CreateGame" component={CreateGameScreen} />
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Dimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, Dimensions, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,42 +14,20 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_GAP = 12;
 const CARD_WIDTH = (SCREEN_WIDTH - 20 * 2 - GRID_GAP) / 2;
 
-function FeatureCard({
-  title,
-  subtitle,
-  icon,
-  iconColor,
-  iconBg,
-  onPress,
-}: {
-  title: string;
-  subtitle: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  iconColor: string;
-  iconBg: string;
-  onPress: () => void;
-}) {
+// Every card uses a provided illustration that already has its own title +
+// subtitle baked into the image itself — no extra text/icon overlay needed.
+function ImageCard({ source, onPress }: { source: number; onPress: () => void }) {
   return (
     <Bouncy
       onPress={onPress}
       scaleTo={0.97}
       style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, width: CARD_WIDTH }}
     >
-      <View
-        className="border border-border rounded-2xl bg-white items-center px-3 pt-4 pb-5"
-        style={{ width: CARD_WIDTH, minHeight: 190 }}
-      >
-        <Text className="text-ink font-bold text-base text-center">{title}</Text>
-        <Text className="text-muted text-xs text-center mt-1 mb-4" numberOfLines={2}>
-          {subtitle}
-        </Text>
-        <View
-          className="items-center justify-center"
-          style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: iconBg }}
-        >
-          <MaterialCommunityIcons name={icon} size={42} color={iconColor} />
-        </View>
-      </View>
+      <Image
+        source={source}
+        style={{ width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 16 }}
+        resizeMode="cover"
+      />
     </Bouncy>
   );
 }
@@ -74,6 +52,12 @@ export default function CommunityScreen() {
           className="flex-1 items-center py-2.5 rounded-xl"
         >
           <Text className="text-muted font-semibold text-sm">Top Players</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate("CommunityChat")}
+          className="flex-1 items-center py-2.5 rounded-xl"
+        >
+          <Text className="text-muted font-semibold text-sm">Community Chat</Text>
         </Pressable>
       </View>
 
@@ -101,36 +85,20 @@ export default function CommunityScreen() {
         </LinearGradient>
 
         <View className="flex-row flex-wrap justify-between" style={{ rowGap: GRID_GAP }}>
-          <FeatureCard
-            title="Host Game"
-            subtitle="Create game & play with players"
-            icon="whistle"
-            iconColor="#2563EB"
-            iconBg="#DBEAFE"
+          <ImageCard
+            source={require("../../../assets/community-icons/host-game.png")}
             onPress={() => navigation.navigate("CreateGame", undefined)}
           />
-          <FeatureCard
-            title="Explore Games"
-            subtitle="View & join games around you"
-            icon="soccer"
-            iconColor="#16A34A"
-            iconBg="#DCFCE7"
+          <ImageCard
+            source={require("../../../assets/community-icons/explore-games.png")}
             onPress={() => navigation.navigate("GamesList", undefined)}
           />
-          <FeatureCard
-            title="Create Squad"
-            subtitle="Create squad to chat with members"
-            icon="account-group"
-            iconColor="#EA580C"
-            iconBg="#FFEDD5"
+          <ImageCard
+            source={require("../../../assets/community-icons/create-squad.png")}
             onPress={() => navigation.navigate("CreateSquad")}
           />
-          <FeatureCard
-            title="Explore Squads"
-            subtitle="Explore & join squads around you"
-            icon="account-search"
-            iconColor="#7C3AED"
-            iconBg="#EDE9FE"
+          <ImageCard
+            source={require("../../../assets/community-icons/explore-games.png")}
             onPress={() => navigation.navigate("SquadsList")}
           />
         </View>

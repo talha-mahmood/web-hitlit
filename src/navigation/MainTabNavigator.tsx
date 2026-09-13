@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { NavigatorScreenParams } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
 import ProfileStackNavigator, { type ProfileStackParamList } from "./ProfileStackNavigator";
@@ -21,13 +21,16 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Solid (filled) glyphs, not the "-outline" variants — those have a hollow
 // center that reads as an empty icon instead of a solid grey/green shape.
-const ICONS: Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap> = {
+const ICONS: Partial<Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap>> = {
   Home: "home",
-  Community: "people-circle",
   Squads: "people",
   Venues: "location",
   Profile: "person",
 };
+// Ionicons only has a two-person "people" glyph (used for Squads above) —
+// MaterialCommunityIcons' "account-group" is the same idea with a third
+// figure, which is what Community's icon should look like.
+const COMMUNITY_ICON = "account-group" as const;
 
 export default function MainTabNavigator() {
   return (
@@ -56,11 +59,15 @@ export default function MainTabNavigator() {
                 backgroundColor: focused ? colors.primary : "transparent",
               }}
             />
-            <Ionicons
-              name={ICONS[route.name as keyof MainTabParamList]}
-              color={color}
-              size={size}
-            />
+            {route.name === "Community" ? (
+              <MaterialCommunityIcons name={COMMUNITY_ICON} color={color} size={size} />
+            ) : (
+              <Ionicons
+                name={ICONS[route.name as keyof MainTabParamList]!}
+                color={color}
+                size={size}
+              />
+            )}
           </View>
         ),
       })}
