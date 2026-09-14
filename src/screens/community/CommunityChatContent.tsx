@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { View, Text, FlatList, TextInput, Pressable, Alert, ActivityIndicator, Image } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
@@ -15,9 +12,6 @@ import {
 } from "../../hooks/useCommunityChat";
 import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
-import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
-
-type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommunityChat">;
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -56,10 +50,7 @@ function CommentCard({
   onToggleLike: () => void;
 }) {
   return (
-    <View
-      className="bg-white rounded-2xl border border-border p-4 mb-3"
-      style={cardShadow}
-    >
+    <View className="bg-white rounded-2xl border border-border p-4 mb-3" style={cardShadow}>
       <View className="flex-row items-start" style={{ gap: 10 }}>
         <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
         <View className="flex-1">
@@ -95,9 +86,10 @@ function CommentCard({
   );
 }
 
-export default function CommunityChatScreen() {
-  const navigation = useNavigation<Nav>();
-  const insets = useSafeAreaInsets();
+// Shared by the Community tab's in-place "Community Chat" segment — the
+// composer + feed list, with no header of its own since the caller already
+// provides one (the segmented pill row, for the in-place case).
+export default function CommunityChatContent({ onReply }: { onReply: (rootId: string) => void }) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
   const [draft, setDraft] = useState("");
@@ -147,31 +139,7 @@ export default function CommunityChatScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
-      <View
-        className="bg-primary px-5 pb-6"
-        style={{
-          paddingTop: insets.top + 16,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-        }}
-      >
-        <View className="flex-row items-center" style={{ gap: 12 }}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color="white" />
-          </Pressable>
-          <View className="bg-white/20 rounded-2xl items-center justify-center" style={{ width: 44, height: 44 }}>
-            <Ionicons name="people" size={22} color="white" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-white font-extrabold text-xl">Community Chat</Text>
-            <Text className="text-white text-xs mt-0.5" style={{ opacity: 0.85 }}>
-              Share your thoughts, ask questions, connect with the community!
-            </Text>
-          </View>
-        </View>
-      </View>
-
+    <View className="flex-1">
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-border" style={{ gap: 8 }}>
         <Avatar name={profile?.full_name ?? null} avatar={profile?.avatar ?? null} size={32} />
         <TextInput
@@ -218,7 +186,7 @@ export default function CommunityChatScreen() {
             <CommentCard
               comment={item}
               isOwn={item.user_id === userId}
-              onReply={() => navigation.navigate("CommentThread", { rootId: item.id })}
+              onReply={() => onReply(item.id)}
               onDelete={() => handleDelete(item)}
               onToggleLike={() => handleToggleLike(item)}
             />

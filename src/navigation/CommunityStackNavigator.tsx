@@ -1,6 +1,5 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CommunityScreen from "../screens/community/CommunityScreen";
-import CommunityChatScreen from "../screens/community/CommunityChatScreen";
 import CommentThreadScreen from "../screens/community/CommentThreadScreen";
 import GamesListScreen from "../screens/games/GamesListScreen";
 import CreateGameScreen from "../screens/games/CreateGameScreen";
@@ -12,7 +11,6 @@ import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
-import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import type { Database } from "../types/database.types";
 
@@ -21,9 +19,16 @@ import type { Database } from "../types/database.types";
 // use) so browsing from here never jumps the bottom tab bar's highlight over
 // to the Squads tab — same reasoning HomeStackNavigator already uses for
 // Tournaments.
+//
+// "My Community"/"Top Players"/"Community Chat" are all rendered in-place
+// inside CommunityScreen itself (a fixed segmented header, content swaps
+// below it) rather than as separate pushed screens — so there's no
+// standalone "CommunityChat" or "PlayersDashboard" route here; only
+// CommentThread (reached via "Reply") and PlayerProfile (reached via a
+// player row) are still real pushes, since those are drill-down detail
+// views, not one of the three segments.
 export type CommunityStackParamList = {
   CommunityHome: undefined;
-  CommunityChat: undefined;
   CommentThread: { rootId: string };
   GamesList:
     | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
@@ -37,7 +42,6 @@ export type CommunityStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
-  PlayersDashboard: undefined;
   PlayerProfile: { userId: string };
 };
 
@@ -47,7 +51,6 @@ export default function CommunityStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="CommunityHome" component={CommunityScreen} />
-      <Stack.Screen name="CommunityChat" component={CommunityChatScreen} />
       <Stack.Screen name="CommentThread" component={CommentThreadScreen} />
       <Stack.Screen name="GamesList" component={GamesListScreen} />
       <Stack.Screen name="CreateGame" component={CreateGameScreen} />
@@ -59,7 +62,6 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
-      <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
     </Stack.Navigator>
   );
