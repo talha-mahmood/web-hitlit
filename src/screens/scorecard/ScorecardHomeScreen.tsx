@@ -88,7 +88,6 @@ function MatchCard({
       onLongPress={onDelete}
       scaleTo={0.98}
       style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20 }}
-      className="mb-4"
     >
       <View
         className="rounded-[20px] bg-white overflow-hidden"
@@ -258,7 +257,7 @@ export default function ScorecardHomeScreen() {
         <FlatList
           data={filteredMatches}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, paddingTop: 0 }}
+          contentContainerStyle={{ padding: 20, paddingTop: 0, gap: 14 }}
           ListFooterComponent={
             <View className="items-center" style={{ gap: 4, marginTop: filteredMatches.length > 0 ? 24 : 64 }}>
               <View
