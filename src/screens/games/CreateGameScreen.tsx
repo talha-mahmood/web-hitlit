@@ -510,6 +510,10 @@ export default function CreateGameScreen() {
         Alert.alert("Missing Info", "Please enter a name for every team.");
         return;
       }
+      if (trimmedTeamNames.some((n) => /^\d+$/.test(n))) {
+        Alert.alert("Invalid Team Name", "Team names can't be numbers only — please include a letter.");
+        return;
+      }
       const uniqueNames = new Set(trimmedTeamNames.map((n) => n.toLowerCase()));
       if (uniqueNames.size !== trimmedTeamNames.length) {
         Alert.alert("Duplicate Team Names", "Team names must be unique.");
@@ -686,33 +690,6 @@ export default function CreateGameScreen() {
             color="white"
             style={{ position: "absolute", right: 90, top: 50, opacity: 0.5 }}
           />
-          <View style={{ position: "absolute", right: 14, top: 10, alignItems: "flex-end" }}>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 13,
-                fontWeight: "800",
-                fontStyle: "italic",
-                textAlign: "right",
-                lineHeight: 16,
-                opacity: 0.6,
-              }}
-            >
-              {"More Players\nMore Stories"}
-            </Text>
-            <View
-              style={{
-                width: 34,
-                height: 2,
-                borderRadius: 1,
-                backgroundColor: "white",
-                opacity: 0.6,
-                marginTop: 2,
-                alignSelf: "flex-end",
-                transform: [{ rotate: "-4deg" }],
-              }}
-            />
-          </View>
           <View className="flex-row items-center flex-1 px-4 py-4" style={{ gap: 12 }}>
             <View className="items-center justify-center" style={{ width: 52, height: 52 }}>
               <View
@@ -761,7 +738,6 @@ export default function CreateGameScreen() {
           onChangeText={setTitle}
           placeholder="e.g. Saturday morning football"
           maxLength={80}
-          left={<Ionicons name="pencil-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />}
           right={
             title.length > 0 ? (
               <Pressable onPress={() => setTitle("")} hitSlop={8}>
