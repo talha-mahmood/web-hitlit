@@ -649,8 +649,17 @@ export default function CreateGameScreen() {
       >
         <View onLayout={markSection("details")} />
 
-        {/* Motivational banner */}
-        <View className="rounded-2xl overflow-hidden mt-4 mb-4 px-4 py-4" style={{ backgroundColor: colors.primaryLight, ...cardShadow }}>
+        {/* Custom icon banner — combines the icon-picker with a festive
+            trophy/ribbon graphic, matching the reference design's single
+            merged banner rather than two separate blocks. */}
+        <Pressable
+          onPress={async () => {
+            const assets = await pickImages({});
+            if (assets[0]) setIconAsset(assets[0]);
+          }}
+          className="flex-row items-center rounded-2xl overflow-hidden mt-4 mb-4"
+          style={{ backgroundColor: colors.primaryLight, minHeight: 112, ...cardShadow }}
+        >
           <Ionicons
             name="ribbon"
             size={90}
@@ -661,52 +670,54 @@ export default function CreateGameScreen() {
             name="trophy"
             size={54}
             color="#F5B400"
-            style={{ position: "absolute", right: 22, top: 14, transform: [{ rotate: "-6deg" }] }}
+            style={{ position: "absolute", right: 34, top: 18, transform: [{ rotate: "-6deg" }] }}
           />
           <Ionicons
             name="sparkles"
             size={14}
             color={colors.primary}
-            style={{ position: "absolute", right: 96, top: 10, opacity: 0.7 }}
+            style={{ position: "absolute", right: 108, top: 14, opacity: 0.7 }}
           />
           <Ionicons
             name="sparkles"
             size={10}
             color={colors.primary}
-            style={{ position: "absolute", right: 78, top: 46, opacity: 0.6 }}
+            style={{ position: "absolute", right: 90, top: 50, opacity: 0.6 }}
           />
-          <Text className="font-extrabold text-lg" style={{ color: colors.ink, maxWidth: "70%" }}>
-            {isTournament ? "Create an Unforgettable Tournament" : "Host an Awesome Game"}
-          </Text>
-          <Text className="text-xs mt-1" style={{ color: colors.muted, maxWidth: "70%" }}>
-            {isTournament ? "Set the details and let the game begin!" : "Set the details and invite players!"}
-          </Text>
-        </View>
-
-        {/* Custom listing icon (optional) */}
-        <SectionLabel title={`${isTournament ? "Tournament" : "Game"} Icon`} icon="document-outline" />
-        <Pressable
-          onPress={async () => {
-            const assets = await pickImages({});
-            if (assets[0]) setIconAsset(assets[0]);
-          }}
-          className="flex-row items-center mb-2"
-          style={{ gap: 12 }}
-        >
-          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
-            {iconAsset ? (
-              <Image source={{ uri: iconAsset.uri }} style={{ width: 56, height: 56 }} resizeMode="cover" />
-            ) : (
-              <Ionicons name="image-outline" size={22} color={colors.muted} />
-            )}
-          </View>
-          <View className="flex-1">
-            <Text className="text-primary font-semibold text-sm">
-              {iconAsset ? "Change icon" : "Add a custom icon"}
-            </Text>
-            <Text className="text-muted text-xs mt-0.5">
-              Use a custom icon to make your {isTournament ? "tournament" : "game"} stand out.
-            </Text>
+          <View className="flex-row items-center flex-1 px-4 py-4" style={{ gap: 12 }}>
+            <View className="items-center justify-center" style={{ width: 52, height: 52 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 52, height: 52, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed" }}
+              >
+                {iconAsset ? (
+                  <Image
+                    source={{ uri: iconAsset.uri }}
+                    style={{ width: 44, height: 44, borderRadius: 22 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons name="camera-outline" size={20} color={colors.primaryDark} />
+                )}
+              </View>
+              <View
+                className="absolute items-center justify-center rounded-full bg-primary"
+                style={{ width: 18, height: 18, bottom: 0, right: 0, borderWidth: 2, borderColor: colors.primaryLight }}
+              >
+                <Ionicons name="add" size={11} color="white" />
+              </View>
+            </View>
+            <View style={{ maxWidth: "62%" }}>
+              <View className="flex-row items-center flex-wrap" style={{ gap: 4 }}>
+                <Text className="font-bold text-base" style={{ color: colors.primaryDark }}>
+                  {iconAsset ? "Change icon" : "Add a custom icon"}
+                </Text>
+                <Text className="text-muted text-xs">(optional)</Text>
+              </View>
+              <Text className="text-muted text-xs mt-1">
+                Make your {isTournament ? "tournament" : "game"} stand out with a custom icon.
+              </Text>
+            </View>
           </View>
         </Pressable>
 
