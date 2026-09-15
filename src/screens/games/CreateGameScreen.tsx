@@ -255,14 +255,12 @@ export default function CreateGameScreen() {
 
   // POOL: team count is derived (groups × teams-per-group), not picked
   // directly — recompute the total and resize both the group-name and
-  // team-name slots whenever either factor changes.
+  // team-name slots whenever either factor changes. Group names are always
+  // auto-generated ("Group 1", "Group 2", ...) rather than typed by the
+  // host, so they're just regenerated here to match the new count.
   const handleNumberOfGroupsChange = (n: number) => {
     setNumberOfGroups(n);
-    setGroupNames((prev) => {
-      const next = prev.slice(0, n);
-      while (next.length < n) next.push("");
-      return next;
-    });
+    setGroupNames(Array.from({ length: n }, (_, i) => `Group ${i + 1}`));
     const total = teamsPerGroup ? n * teamsPerGroup : null;
     setNumberOfTeams(total);
     resizeTeamNames(total);
@@ -702,20 +700,17 @@ export default function CreateGameScreen() {
 
                 {numberOfGroups != null && numberOfGroups > 0 && (
                   <>
-                    <SectionLabel title="Group Names" required />
-                    <View style={{ gap: 8 }}>
-                      {groupNames.map((name, i) => (
-                        <FieldInput
-                          key={i}
-                          value={name}
-                          onChangeText={(t) => setGroupNames((prev) => prev.map((n, idx) => (idx === i ? t : n)))}
-                          placeholder={`Group ${i + 1} name`}
-                          maxLength={40}
-                        />
+                    <SectionLabel title="Groups" />
+                    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                      {groupNames.map((name) => (
+                        <View key={name} className="bg-primary-light rounded-full px-3.5 py-2">
+                          <Text className="text-primary text-sm font-medium">{name}</Text>
+                        </View>
                       ))}
                     </View>
                     <Text className="text-muted text-xs mt-1">
-                      You'll assign approved teams to a group from the tournament screen once they're in.
+                      Groups are named automatically. You'll assign approved teams to a group from the tournament
+                      screen once they're in.
                     </Text>
                   </>
                 )}
