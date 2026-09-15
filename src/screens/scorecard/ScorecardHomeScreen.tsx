@@ -146,6 +146,15 @@ function MatchCard({
         <View className="flex-row items-center px-4 py-3" style={{ gap: 8 }}>
           <Ionicons name="calendar-outline" size={15} color={colors.muted} />
           <Text className="text-muted text-sm">{dateLabel}</Text>
+          {match.venue ? (
+            <>
+              <View style={{ width: 1, height: 14, backgroundColor: colors.border }} />
+              <Ionicons name="location-outline" size={15} color={colors.muted} />
+              <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+                {match.venue}
+              </Text>
+            </>
+          ) : null}
         </View>
       </View>
     </Bouncy>

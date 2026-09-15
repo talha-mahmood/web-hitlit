@@ -530,6 +530,7 @@ export type Database = {
           toss_decision: string
           toss_winner: string
           user_id: string
+          venue: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -545,6 +546,7 @@ export type Database = {
           toss_decision: string
           toss_winner: string
           user_id: string
+          venue?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -560,6 +562,7 @@ export type Database = {
           toss_decision?: string
           toss_winner?: string
           user_id?: string
+          venue?: string | null
         }
         Relationships: [
           {

@@ -391,14 +391,24 @@ export default function LiveScoringScreen() {
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
-          <View className="flex-1 flex-row items-center flex-wrap" style={{ gap: 8 }}>
-            <Text className="text-white font-bold text-lg" numberOfLines={1}>
-              {match.team_a_name} vs {match.team_b_name}
-            </Text>
-            {match.status === "IN_PROGRESS" ? (
-              <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
-                <Text className="text-white text-[10px] font-bold">LIVE</Text>
+          <View className="flex-1">
+            <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
+              <Text className="text-white font-bold text-lg" numberOfLines={1}>
+                {match.team_a_name} vs {match.team_b_name}
+              </Text>
+              {match.status === "IN_PROGRESS" ? (
+                <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
+                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
+                  <Text className="text-white text-[10px] font-bold">LIVE</Text>
+                </View>
+              ) : null}
+            </View>
+            {match.venue ? (
+              <View className="flex-row items-center mt-0.5" style={{ gap: 4 }}>
+                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.7)" />
+                <Text className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }} numberOfLines={1}>
+                  {match.venue}
+                </Text>
               </View>
             ) : null}
           </View>

@@ -86,6 +86,7 @@ export default function NewMatchScreen() {
   const [oversLimit, setOversLimit] = useState<string | null>(null);
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
+  const [venue, setVenue] = useState("");
 
   const isValid =
     teamAName.trim().length > 0 &&
@@ -109,6 +110,7 @@ export default function NewMatchScreen() {
         oversLimit: parseInt(oversLimit, 10),
         tossWinner,
         tossDecision,
+        venue: venue.trim() || undefined,
       },
       {
         onSuccess: ({ matchId }) => navigation.replace("LiveScoring", { matchId }),
@@ -144,6 +146,9 @@ export default function NewMatchScreen() {
         </View>
 
         <View className="mt-6 pt-6 border-t border-border">
+          <SectionLabel title="Venue" />
+          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Karachi Cricket Ground" maxLength={60} />
+
           <SectionLabel title="Overs per Innings" required />
           <FieldInput
             value={oversLimit ?? ""}

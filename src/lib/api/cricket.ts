@@ -58,6 +58,7 @@ export async function createCricketMatch(params: {
   oversLimit: number;
   tossWinner: "A" | "B";
   tossDecision: "BAT" | "BOWL";
+  venue?: string;
 }): Promise<{ matchId: string; inningsId: string; battingTeam: "A" | "B" }> {
   const { data: match, error } = await supabase
     .from("cricket_matches")
@@ -70,6 +71,7 @@ export async function createCricketMatch(params: {
       overs_limit: params.oversLimit,
       toss_winner: params.tossWinner,
       toss_decision: params.tossDecision,
+      venue: params.venue?.trim() || null,
     })
     .select()
     .single();
