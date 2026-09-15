@@ -10,6 +10,7 @@ export function SectionLabel({
   required,
   variant,
   icon,
+  compact,
 }: {
   title: string;
   required?: boolean;
@@ -17,9 +18,13 @@ export function SectionLabel({
   // default stays exactly as before everywhere else.
   variant?: "onGreen";
   icon?: keyof typeof Ionicons.glyphMap;
+  // Tighter top margin for screens with many stacked sections (e.g. Create
+  // Tournament) — opt-in so every other existing screen's spacing is
+  // untouched.
+  compact?: boolean;
 }) {
   return (
-    <View className="flex-row items-center mb-2 mt-5">
+    <View className={`flex-row items-center mb-2 ${compact ? "mt-3" : "mt-5"}`}>
       {icon && (
         <Ionicons
           name={icon}

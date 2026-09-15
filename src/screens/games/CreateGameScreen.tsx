@@ -663,7 +663,7 @@ export default function CreateGameScreen() {
             const assets = await pickImages({});
             if (assets[0]) setIconAsset(assets[0]);
           }}
-          className="flex-row items-center rounded-2xl overflow-hidden mt-4 mb-4"
+          className="flex-row items-center rounded-2xl overflow-hidden mt-3 mb-1"
           style={{ backgroundColor: "#0E4429", minHeight: 112, ...cardShadow }}
         >
           <Ionicons
@@ -732,7 +732,7 @@ export default function CreateGameScreen() {
         </Pressable>
 
         {/* Title */}
-        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required icon="pencil-outline" />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required icon="pencil-outline" compact />
         <FieldInput
           value={title}
           onChangeText={setTitle}
@@ -748,7 +748,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Sport */}
-        <SectionLabel title="Sport" required icon="trophy-outline" />
+        <SectionLabel title="Sport" required icon="trophy-outline" compact />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: sportTileGap }}>
           {(sports ?? []).map((s) => (
             <HomeSportTile
@@ -762,7 +762,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Game Type */}
-        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} icon="game-controller-outline" />
+        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} icon="game-controller-outline" compact />
         {forcedTournament ? (
           <View className="bg-purple-50 self-start px-4 py-2 rounded-2xl">
             <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
@@ -779,7 +779,7 @@ export default function CreateGameScreen() {
         )}
 
         {/* Venue */}
-        <SectionLabel title="Venue" required icon="location-outline" />
+        <SectionLabel title="Venue" required icon="location-outline" compact />
         <VenueSearchField
           venues={venues}
           loading={sportId != null && venuesLoading}
@@ -801,7 +801,7 @@ export default function CreateGameScreen() {
         )}
 
         {/* Date */}
-        <SectionLabel title="Date" required icon="calendar-outline" />
+        <SectionLabel title="Date" required icon="calendar-outline" compact />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -827,7 +827,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Start Time */}
-        <SectionLabel title="Start Time" required icon="time-outline" />
+        <SectionLabel title="Start Time" required icon="time-outline" compact />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -846,7 +846,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Duration */}
-        <SectionLabel title="Duration" icon="timer-outline" />
+        <SectionLabel title="Duration" icon="timer-outline" compact />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {isTournament
             ? TOURNAMENT_DURATIONS_DAYS.map((d) => {
@@ -886,7 +886,7 @@ export default function CreateGameScreen() {
         {isTournament ? (
           <>
             <View onLayout={markSection("format")} />
-            <SectionLabel title="Tournament Format" required icon="git-branch-outline" />
+            <SectionLabel title="Tournament Format" required icon="git-branch-outline" compact />
             <View className="flex-row" style={{ gap: 10 }}>
               {FORMAT_OPTIONS.map((f) => (
                 <FormatCard
@@ -902,7 +902,7 @@ export default function CreateGameScreen() {
 
             {tournamentFormat === "POOL" ? (
               <>
-                <SectionLabel title="Number of Teams in Each Group" required icon="people-outline" />
+                <SectionLabel title="Number of Teams in Each Group" required icon="people-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {TEAMS_PER_GROUP_OPTIONS.map((n) => (
                     <CountChipItem
@@ -914,7 +914,7 @@ export default function CreateGameScreen() {
                   ))}
                 </ScrollView>
 
-                <SectionLabel title="Number of Groups" required icon="layers-outline" />
+                <SectionLabel title="Number of Groups" required icon="layers-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {NUMBER_OF_GROUPS_OPTIONS.filter(isValidGroupCount).map((n) => (
                     <CountChipItem
@@ -933,7 +933,7 @@ export default function CreateGameScreen() {
                   }
                 />
 
-                <SectionLabel title="Players per Team" required icon="person-outline" />
+                <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
@@ -947,7 +947,7 @@ export default function CreateGameScreen() {
 
                 {numberOfGroups != null && numberOfGroups > 0 && (
                   <>
-                    <SectionLabel title="Groups" icon="layers-outline" />
+                    <SectionLabel title="Groups" icon="layers-outline" compact />
                     <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                       {groupNames.map((name) => (
                         <View key={name} className="bg-primary-light rounded-full px-3.5 py-2">
@@ -964,7 +964,7 @@ export default function CreateGameScreen() {
               </>
             ) : (
               <>
-                <SectionLabel title="Number of Teams" required icon="people-outline" />
+                <SectionLabel title="Number of Teams" required icon="people-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {NUMBER_OF_TEAMS_OPTIONS.filter((n) => isValidTeamCount(tournamentFormat, n)).map((n) => (
                     <CountChipItem
@@ -979,7 +979,7 @@ export default function CreateGameScreen() {
                 {tournamentFormat === "LEAGUE" && (
                   <InfoBox text="League tournaments can't have exactly 3 teams." />
                 )}
-                <SectionLabel title="Players per Team" required icon="person-outline" />
+                <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
@@ -996,7 +996,7 @@ export default function CreateGameScreen() {
             {numberOfTeams != null && numberOfTeams > 0 && (
               <>
                 <View onLayout={markSection("teams")} />
-                <SectionLabel title="Team Names" required icon="people-outline" />
+                <SectionLabel title="Team Names" required icon="people-outline" compact />
                 <View style={{ gap: 8 }}>
                   {teamNames.map((name, i) => (
                     <FieldInput
@@ -1017,7 +1017,7 @@ export default function CreateGameScreen() {
           </>
         ) : (
           <>
-            <SectionLabel title="Max Players" icon="people-outline" />
+            <SectionLabel title="Max Players" icon="people-outline" compact />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {MAX_PLAYERS_OPTIONS.map((n) => (
                 <MaxPlayersChipItem
@@ -1034,7 +1034,7 @@ export default function CreateGameScreen() {
         {isTournament && <View onLayout={markSection("review")} />}
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" required icon="bar-chart-outline" />
+        <SectionLabel title="Skill Level" required icon="bar-chart-outline" compact />
         <PillRow<SkillLevel>
           options={[
             { label: "Beginner", value: "BEGINNER" },
@@ -1047,7 +1047,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Gender */}
-        <SectionLabel title="Open To" icon="people-outline" />
+        <SectionLabel title="Open To" icon="people-outline" compact />
         <PillRow<Gender>
           options={[
             { label: "Everyone", value: "mixed" },
@@ -1059,7 +1059,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Entry Fee */}
-        <View className="flex-row items-center mb-2 mt-5">
+        <View className="flex-row items-center mb-2 mt-3">
           <MaterialCommunityIcons name="cash-multiple" size={16} color={colors.primary} style={{ marginRight: 6 }} />
           <Text className="font-semibold text-sm text-ink">
             {isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"}
@@ -1084,7 +1084,7 @@ export default function CreateGameScreen() {
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" icon="document-text-outline" />
+        <SectionLabel title="Description" icon="document-text-outline" compact />
         <View>
           <FieldInput
             value={description}
