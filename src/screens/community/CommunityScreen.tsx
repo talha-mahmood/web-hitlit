@@ -75,7 +75,7 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
           onPress={() => navigation.navigate("CreateSquad")}
         />
         <ImageCard
-          source={require("../../../assets/community-icons/explore-games.png")}
+          source={require("../../../assets/community-icons/explore-squad.png")}
           onPress={() => navigation.navigate("SquadsList")}
         />
       </View>
