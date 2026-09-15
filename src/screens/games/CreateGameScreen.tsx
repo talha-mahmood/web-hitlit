@@ -35,10 +35,8 @@ import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
-import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
 import { HomeSportTile } from "../../components/HomeWideCards";
 import { getSportImage } from "../../lib/sportImages";
-import IconPoolPreview from "../../components/IconPoolPreview";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
   TIME_SLOTS,
@@ -168,7 +166,7 @@ function MaxPlayersChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-10 py-2 rounded-xl items-center" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Pressable>
     </Animated.View>
@@ -189,7 +187,7 @@ function CountChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-10 py-2 rounded-xl items-center" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Pressable>
     </Animated.View>
@@ -602,8 +600,6 @@ export default function CreateGameScreen() {
       className="flex-1 bg-green-50"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SportsBackgroundDecor />
-
       {/* Header */}
       <View className="border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-4">
@@ -733,7 +729,7 @@ export default function CreateGameScreen() {
 
         {/* Sport */}
         <SectionLabel title="Sport" required icon="trophy-outline" />
-        <View className="flex-row flex-wrap" style={{ gap: sportTileGap }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: sportTileGap }}>
           {(sports ?? []).map((s) => (
             <HomeSportTile
               key={s.id}
@@ -743,7 +739,7 @@ export default function CreateGameScreen() {
               onPress={() => handleSportChange(s.id)}
             />
           ))}
-        </View>
+        </ScrollView>
 
         {/* Game Type */}
         <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} icon="game-controller-outline" />
@@ -831,25 +827,40 @@ export default function CreateGameScreen() {
 
         {/* Duration */}
         <SectionLabel title="Duration" icon="timer-outline" />
-        {isTournament ? (
-          <PillRow
-            options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
-              label: d === 1 ? "1 Day" : `${d} Days`,
-              value: String(d),
-            }))}
-            value={String(durationDays)}
-            onChange={(v) => setDurationDays(parseInt(v, 10))}
-          />
-        ) : (
-          <PillRow
-            options={DURATIONS.map((d) => ({
-              label: d === 1 ? "1 hr" : `${d} hrs`,
-              value: String(d) as string,
-            }))}
-            value={String(duration)}
-            onChange={(v) => setDuration(parseFloat(v))}
-          />
-        )}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {isTournament
+            ? TOURNAMENT_DURATIONS_DAYS.map((d) => {
+                const value = String(d);
+                const selected = durationDays === d;
+                return (
+                  <Pressable
+                    key={value}
+                    onPress={() => setDurationDays(d)}
+                    className="px-4 py-2.5 rounded-2xl"
+                    style={chipStyle(selected)}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      {d === 1 ? "1 Day" : `${d} Days`}
+                    </Text>
+                  </Pressable>
+                );
+              })
+            : DURATIONS.map((d) => {
+                const selected = duration === d;
+                return (
+                  <Pressable
+                    key={d}
+                    onPress={() => setDuration(d)}
+                    className="px-4 py-2.5 rounded-2xl"
+                    style={chipStyle(selected)}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      {d === 1 ? "1 hr" : `${d} hrs`}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+        </ScrollView>
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
@@ -872,7 +883,7 @@ export default function CreateGameScreen() {
             {tournamentFormat === "POOL" ? (
               <>
                 <SectionLabel title="Number of Teams in Each Group" required icon="people-outline" />
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {TEAMS_PER_GROUP_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -881,11 +892,10 @@ export default function CreateGameScreen() {
                       onPress={() => handleTeamsPerGroupChange(n)}
                     />
                   ))}
-                </View>
-                <IconPoolPreview count={teamsPerGroup ?? 0} icon="shield" />
+                </ScrollView>
 
                 <SectionLabel title="Number of Groups" required icon="layers-outline" />
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {NUMBER_OF_GROUPS_OPTIONS.filter(isValidGroupCount).map((n) => (
                     <CountChipItem
                       key={n}
@@ -894,7 +904,7 @@ export default function CreateGameScreen() {
                       onPress={() => handleNumberOfGroupsChange(n)}
                     />
                   ))}
-                </View>
+                </ScrollView>
                 <InfoBox
                   text={
                     numberOfTeams != null && numberOfTeams > 0
@@ -902,10 +912,9 @@ export default function CreateGameScreen() {
                       : "Pool tournaments need an even number of groups."
                   }
                 />
-                <IconPoolPreview count={numberOfGroups ?? 0} icon="shield" />
 
                 <SectionLabel title="Players per Team" required icon="person-outline" />
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -914,8 +923,7 @@ export default function CreateGameScreen() {
                       onPress={() => setPlayersPerTeam(n)}
                     />
                   ))}
-                </View>
-                <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
+                </ScrollView>
 
                 {numberOfGroups != null && numberOfGroups > 0 && (
                   <>
@@ -937,7 +945,7 @@ export default function CreateGameScreen() {
             ) : (
               <>
                 <SectionLabel title="Number of Teams" required icon="people-outline" />
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {NUMBER_OF_TEAMS_OPTIONS.filter((n) => isValidTeamCount(tournamentFormat, n)).map((n) => (
                     <CountChipItem
                       key={n}
@@ -946,15 +954,13 @@ export default function CreateGameScreen() {
                       onPress={() => handleNumberOfTeamsChange(n)}
                     />
                   ))}
-                </View>
+                </ScrollView>
                 {tournamentFormat === "KNOCKOUT" && <InfoBox text="Knockout needs an even number of teams." />}
                 {tournamentFormat === "LEAGUE" && (
                   <InfoBox text="League tournaments can't have exactly 3 teams." />
                 )}
-                <IconPoolPreview count={numberOfTeams ?? 0} icon="shield" />
-
                 <SectionLabel title="Players per Team" required icon="person-outline" />
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -963,8 +969,7 @@ export default function CreateGameScreen() {
                       onPress={() => setPlayersPerTeam(n)}
                     />
                   ))}
-                </View>
-                <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
+                </ScrollView>
               </>
             )}
 
@@ -993,7 +998,7 @@ export default function CreateGameScreen() {
         ) : (
           <>
             <SectionLabel title="Max Players" icon="people-outline" />
-            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {MAX_PLAYERS_OPTIONS.map((n) => (
                 <MaxPlayersChipItem
                   key={n}
@@ -1002,7 +1007,7 @@ export default function CreateGameScreen() {
                   onPress={() => setMaxPlayers(n)}
                 />
               ))}
-            </View>
+            </ScrollView>
           </>
         )}
 
