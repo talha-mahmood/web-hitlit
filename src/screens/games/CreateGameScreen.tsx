@@ -651,20 +651,22 @@ export default function CreateGameScreen() {
 
         {/* Custom icon banner — combines the icon-picker with a festive
             trophy/ribbon graphic, matching the reference design's single
-            merged banner rather than two separate blocks. */}
+            merged banner. Background is the exact same dark green as the
+            Live Scoring header ("#0E4429"), so text/icons switch to white
+            here instead of the dark-on-light treatment used elsewhere. */}
         <Pressable
           onPress={async () => {
             const assets = await pickImages({});
             if (assets[0]) setIconAsset(assets[0]);
           }}
           className="flex-row items-center rounded-2xl overflow-hidden mt-4 mb-4"
-          style={{ backgroundColor: colors.primaryLight, minHeight: 112, ...cardShadow }}
+          style={{ backgroundColor: "#0E4429", minHeight: 112, ...cardShadow }}
         >
           <Ionicons
             name="ribbon"
             size={90}
-            color={colors.primary}
-            style={{ position: "absolute", right: -6, top: 4, opacity: 0.55, transform: [{ rotate: "18deg" }] }}
+            color="white"
+            style={{ position: "absolute", right: -6, top: 4, opacity: 0.15, transform: [{ rotate: "18deg" }] }}
           />
           <Ionicons
             name="trophy"
@@ -675,20 +677,47 @@ export default function CreateGameScreen() {
           <Ionicons
             name="sparkles"
             size={14}
-            color={colors.primary}
-            style={{ position: "absolute", right: 108, top: 14, opacity: 0.7 }}
+            color="white"
+            style={{ position: "absolute", right: 108, top: 14, opacity: 0.6 }}
           />
           <Ionicons
             name="sparkles"
             size={10}
-            color={colors.primary}
-            style={{ position: "absolute", right: 90, top: 50, opacity: 0.6 }}
+            color="white"
+            style={{ position: "absolute", right: 90, top: 50, opacity: 0.5 }}
           />
+          <View style={{ position: "absolute", right: 14, top: 10, alignItems: "flex-end" }}>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 13,
+                fontWeight: "800",
+                fontStyle: "italic",
+                textAlign: "right",
+                lineHeight: 16,
+                opacity: 0.6,
+              }}
+            >
+              {"More Players\nMore Stories"}
+            </Text>
+            <View
+              style={{
+                width: 34,
+                height: 2,
+                borderRadius: 1,
+                backgroundColor: "white",
+                opacity: 0.6,
+                marginTop: 2,
+                alignSelf: "flex-end",
+                transform: [{ rotate: "-4deg" }],
+              }}
+            />
+          </View>
           <View className="flex-row items-center flex-1 px-4 py-4" style={{ gap: 12 }}>
             <View className="items-center justify-center" style={{ width: 52, height: 52 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 52, height: 52, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed" }}
+                style={{ width: 52, height: 52, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)", borderStyle: "dashed" }}
               >
                 {iconAsset ? (
                   <Image
@@ -697,24 +726,28 @@ export default function CreateGameScreen() {
                     resizeMode="cover"
                   />
                 ) : (
-                  <Ionicons name="camera-outline" size={20} color={colors.primaryDark} />
+                  <View className="items-center justify-center rounded-xl bg-white" style={{ width: 34, height: 34 }}>
+                    <Ionicons name="camera" size={17} color="#0E4429" />
+                  </View>
                 )}
               </View>
               <View
                 className="absolute items-center justify-center rounded-full bg-primary"
-                style={{ width: 18, height: 18, bottom: 0, right: 0, borderWidth: 2, borderColor: colors.primaryLight }}
+                style={{ width: 18, height: 18, bottom: 0, right: 0, borderWidth: 2, borderColor: "#0E4429" }}
               >
                 <Ionicons name="add" size={11} color="white" />
               </View>
             </View>
             <View style={{ maxWidth: "62%" }}>
               <View className="flex-row items-center flex-wrap" style={{ gap: 4 }}>
-                <Text className="font-bold text-base" style={{ color: colors.primaryDark }}>
+                <Text className="font-bold text-base text-white">
                   {iconAsset ? "Change icon" : "Add a custom icon"}
                 </Text>
-                <Text className="text-muted text-xs">(optional)</Text>
+                <Text className="text-xs text-white" style={{ opacity: 0.65 }}>
+                  (optional)
+                </Text>
               </View>
-              <Text className="text-muted text-xs mt-1">
+              <Text className="text-xs mt-1 text-white" style={{ opacity: 0.65 }}>
                 Make your {isTournament ? "tournament" : "game"} stand out with a custom icon.
               </Text>
             </View>
