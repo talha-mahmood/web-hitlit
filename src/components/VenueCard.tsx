@@ -18,6 +18,14 @@ type VenueCardProps = {
   index?: number;
   // Set only on distance-sorted lists (e.g. the "Venues near you" home tab).
   distanceLabel?: string;
+  // Caps how many sport chips render (extras are just dropped, no "+N")
+  // and — only when this prop is passed — reserves that row's height even
+  // when a venue has zero courts, so every card in a row of fixed-size
+  // cards (the home screen's "Venues near you") ends up the same size
+  // whether the venue has no courts or several. Omitted (the
+  // VenuesListScreen default) keeps today's behavior: every sport shown,
+  // row absent entirely when there are none.
+  maxSportChips?: number;
 };
 
 // A small rotating palette so the sport chips on a venue card read as
@@ -32,17 +40,20 @@ export default function VenueCard({
   className = "",
   index,
   distanceLabel,
+  maxSportChips,
 }: VenueCardProps) {
   const coverImage = [...venue.venue_images]
     .sort((a, b) => a.display_order - b.display_order)
     .at(0)?.image_url;
-  const sportNames = Array.from(
+  const allSportNames = Array.from(
     new Set(venue.court.map((c) => c.sports?.name).filter(Boolean))
   ) as string[];
+  const sportNames =
+    maxSportChips !== undefined ? allSportNames.slice(0, maxSportChips) : allSportNames;
   // No uploaded photo yet — prefer the curated demo photo for this specific
   // venue, else fall back to a real photo of the venue's own sport (same
   // bundled photos the admin dashboard uses) instead of a flat color block.
-  const sportFallbackImage = getVenuePhoto(venue.id) ?? getSportImage(sportNames[0] ?? "");
+  const sportFallbackImage = getVenuePhoto(venue.id) ?? getSportImage(allSportNames[0] ?? "");
 
   const card = (
     // Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
@@ -96,8 +107,11 @@ export default function VenueCard({
           <Text className="text-muted text-sm mt-0.5" numberOfLines={1}>
             {venue.city}
           </Text>
-          {sportNames.length > 0 && (
-            <View className="flex-row flex-wrap mt-1.5" style={{ gap: 6 }}>
+          {maxSportChips !== undefined || sportNames.length > 0 ? (
+            <View
+              className="flex-row flex-wrap mt-1.5"
+              style={{ gap: 6, minHeight: maxSportChips !== undefined ? 20 : undefined }}
+            >
               {sportNames.map((name, i) => {
                 const color = SPORT_CHIP_COLORS[i % SPORT_CHIP_COLORS.length];
                 return (
@@ -115,7 +129,7 @@ export default function VenueCard({
                 );
               })}
             </View>
-          )}
+          ) : null}
         </View>
       </View>
     </Bouncy>

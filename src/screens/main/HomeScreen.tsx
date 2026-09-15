@@ -1,5 +1,5 @@
 import { useMemo, useState, type ComponentProps, type ReactElement } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
@@ -15,23 +15,22 @@ import { useVenues } from "../../hooks/useVenues";
 import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { useUnreadNotificationCount } from "../../hooks/useNotifications";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
-import { distanceKm } from "../../lib/distance";
+import { distanceKm, formatDistanceKm } from "../../lib/distance";
 import { isVenueBoosted, type VenueListItem } from "../../lib/api/venues";
 import type { GameListItem } from "../../lib/api/games";
 import type { SquadListItem } from "../../lib/api/squads";
-import SportsBySportSection from "../../components/SportsBySportSection";
-import {
-  NearbyGameCard,
-  NearbySquadCard,
-  NearbyVenueCard,
-  NearbyEmptyRow,
-  NEARBY_CARD_GAP,
-} from "../../components/NearbyCards";
+import VenueCard from "../../components/VenueCard";
+import { HomeSportTile, HomeSquadCard, HomeGameRowCard } from "../../components/HomeWideCards";
+import { NearbyEmptyRow } from "../../components/NearbyCards";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
 import WavingHandIcon from "../../components/WavingHandIcon";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
+const SPORT_TILE_WIDTH = 74;
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "HomeFeed">,
@@ -62,6 +61,7 @@ function withDistance<T>(
 
 function NearbySection<T>({
   title,
+  titleIcon,
   data,
   isLoading,
   emptyIcon,
@@ -69,8 +69,15 @@ function NearbySection<T>({
   keyExtractor,
   renderItem,
   onSeeAll,
+  // Venues/Squads stay a horizontal scroll (unchanged interaction — just a
+  // restyled card). Games/Tournaments render as a short vertical preview
+  // instead, matching the wide row-card layout — capped at previewCount
+  // with the rest still reachable via "See all", same as before.
+  horizontal = true,
+  previewCount = 3,
 }: {
   title: string;
+  titleIcon: keyof typeof Ionicons.glyphMap;
   data: { item: T; km: number | null }[];
   isLoading: boolean;
   emptyIcon: ComponentProps<typeof NearbyEmptyRow>["icon"];
@@ -78,11 +85,16 @@ function NearbySection<T>({
   keyExtractor: (item: T) => string;
   renderItem: (entry: { item: T; km: number | null }) => ReactElement;
   onSeeAll: () => void;
+  horizontal?: boolean;
+  previewCount?: number;
 }) {
   return (
     <View className="mb-7">
       <View className="flex-row items-center justify-between mb-3">
-        <Text className="text-lg font-semibold text-ink">{title}</Text>
+        <View className="flex-row items-center" style={{ gap: 6 }}>
+          <Ionicons name={titleIcon} size={17} color={colors.primary} />
+          <Text className="text-lg font-semibold text-ink">{title}</Text>
+        </View>
         <Pressable onPress={onSeeAll} className="flex-row items-center" hitSlop={8} style={{ gap: 2 }}>
           <Text className="text-primary text-sm font-semibold">See all</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.primary} />
@@ -92,15 +104,21 @@ function NearbySection<T>({
         <ActivityIndicator color={colors.primary} />
       ) : data.length === 0 ? (
         <NearbyEmptyRow icon={emptyIcon} label={emptyLabel} />
-      ) : (
+      ) : horizontal ? (
         <FlatList
           data={data}
           keyExtractor={(entry) => keyExtractor(entry.item)}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: NEARBY_CARD_GAP }} />}
+          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
           renderItem={({ item }) => renderItem(item)}
         />
+      ) : (
+        <View>
+          {data.slice(0, previewCount).map((entry) => (
+            <View key={keyExtractor(entry.item)}>{renderItem(entry)}</View>
+          ))}
+        </View>
       )}
     </View>
   );
@@ -211,7 +229,7 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-100" contentContainerStyle={{ paddingBottom: 24 }}>
+    <ScrollView className="flex-1 bg-green-50" contentContainerStyle={{ paddingBottom: 24 }}>
       <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center mb-5" style={{ gap: 12 }}>
           <Pressable
@@ -238,73 +256,104 @@ export default function HomeScreen() {
               <Text className="text-muted mt-1">What are you playing today?</Text>
             </View>
           </Pressable>
-          <NotificationBell
-            unreadCount={unreadCount}
-            onPress={() => navigation.navigate("Notifications")}
-          />
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <Pressable
+              onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
+              hitSlop={8}
+              className="w-10 h-10 rounded-full bg-white items-center justify-center"
+              style={{ ...cardShadow }}
+            >
+              <Ionicons name="search" size={18} color={colors.ink} />
+            </Pressable>
+            <NotificationBell
+              unreadCount={unreadCount}
+              onPress={() => navigation.navigate("Notifications")}
+            />
+          </View>
         </View>
 
         <PromoCarousel slides={promoSlides} />
 
-        <Text className="text-lg font-semibold text-ink mb-3">Filter by Sport</Text>
-        <SportsBySportSection
-          sports={sports ?? []}
-          selectedSportId={selectedSportId}
-          onSelectSport={(sportId) =>
-            setSelectedSportId((prev) => (prev === sportId ? null : sportId))
-          }
+        <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+          <Ionicons name="filter" size={16} color={colors.primary} />
+          <Text className="text-lg font-semibold text-ink">Filter by Sport</Text>
+        </View>
+        <FlatList
+          data={sports ?? []}
+          keyExtractor={(s) => s.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 14, paddingBottom: 4 }}
+          className="mb-6"
+          renderItem={({ item }) => (
+            <HomeSportTile
+              name={item.name}
+              width={SPORT_TILE_WIDTH}
+              selected={selectedSportId === item.id}
+              onPress={() => setSelectedSportId((prev) => (prev === item.id ? null : item.id))}
+            />
+          )}
         />
 
         <NearbySection
           title="Venues near you"
+          titleIcon="location"
           data={nearbyVenues}
           isLoading={venuesLoading}
           emptyIcon="location-outline"
           emptyLabel="No venues near you yet"
           keyExtractor={(v: VenueListItem) => v.id}
           renderItem={({ item, km }) => (
-            <NearbyVenueCard
-              venue={item}
-              distanceKm={km}
-              isFavorite={favoriteIds?.has(item.id) ?? false}
-              onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
-              onToggleFavorite={() =>
-                toggleFavorite.mutate({
-                  venueId: item.id,
-                  isFavorite: !(favoriteIds?.has(item.id) ?? false),
-                })
-              }
-            />
+            <View style={{ width: VENUE_CARD_WIDTH }}>
+              <VenueCard
+                venue={item}
+                isFavorite={favoriteIds?.has(item.id) ?? false}
+                distanceLabel={km !== null ? formatDistanceKm(km) : undefined}
+                maxSportChips={2}
+                onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
+                onToggleFavorite={() =>
+                  toggleFavorite.mutate({
+                    venueId: item.id,
+                    isFavorite: !(favoriteIds?.has(item.id) ?? false),
+                  })
+                }
+              />
+            </View>
           )}
           onSeeAll={() => navigation.navigate("Venues", { screen: "VenuesList" })}
         />
 
         <NearbySection
           title="Squads near you"
+          titleIcon="people"
           data={nearbySquads}
           isLoading={squadsLoading}
           emptyIcon="people-outline"
           emptyLabel="No squads near you yet"
           keyExtractor={(s: SquadListItem) => s.id}
-          renderItem={({ item, km }) => (
-            <NearbySquadCard
-              squad={item}
-              distanceKm={km}
-              onPress={() => navigation.navigate("Community", { screen: "SquadDetail", params: { squadId: item.id } })}
-            />
+          renderItem={({ item }) => (
+            <View style={{ width: VENUE_CARD_WIDTH }}>
+              <HomeSquadCard
+                squad={item}
+                currentUserId={userId}
+                onPress={() => navigation.navigate("Community", { screen: "SquadDetail", params: { squadId: item.id } })}
+              />
+            </View>
           )}
           onSeeAll={() => navigation.navigate("Community", { screen: "SquadsList" })}
         />
 
         <NearbySection
           title="Games near you"
+          titleIcon="calendar"
+          horizontal={false}
           data={nearbyRegularGames}
           isLoading={gamesLoading}
           emptyIcon="tennisball-outline"
           emptyLabel="No games near you yet"
           keyExtractor={(g: GameListItem) => g.id}
           renderItem={({ item, km }) => (
-            <NearbyGameCard
+            <HomeGameRowCard
               game={item}
               distanceKm={km}
               onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
@@ -315,13 +364,15 @@ export default function HomeScreen() {
 
         <NearbySection
           title="Tournaments near you"
+          titleIcon="trophy"
+          horizontal={false}
           data={nearbyTournaments}
           isLoading={gamesLoading}
           emptyIcon="trophy-outline"
           emptyLabel="No tournaments near you yet"
           keyExtractor={(g: GameListItem) => g.id}
           renderItem={({ item, km }) => (
-            <NearbyGameCard
+            <HomeGameRowCard
               game={item}
               distanceKm={km}
               onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
