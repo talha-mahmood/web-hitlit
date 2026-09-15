@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import type { NavigatorScreenParams } from "@react-navigation/native";
+import { StackActions, type NavigatorScreenParams } from "@react-navigation/native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
@@ -18,6 +18,26 @@ export type MainTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Each tab is its own stack navigator that, by default, keeps whatever
+// screen you drilled into even after you switch away and back — the user
+// wants every tab to instead reset to its own root screen once you've left
+// it, no matter how deep you'd navigated. `blur` fires when a tab loses
+// focus (i.e. the moment you switch to a different tab); popping that
+// tab's own nested stack back to its top there means it's already reset by
+// the time you return to it. The action carries an explicit `target` (the
+// nested stack's own state key) so it's routed straight to that stack
+// instead of bubbling to a navigator that doesn't understand it.
+function resetTabOnBlur({ navigation, route }: { navigation: any; route: { key: string } }) {
+  return {
+    blur: () => {
+      const tabRoute = navigation.getState().routes.find((r: { key: string }) => r.key === route.key);
+      if (tabRoute?.state && tabRoute.state.index > 0) {
+        navigation.dispatch({ ...StackActions.popToTop(), target: tabRoute.state.key });
+      }
+    },
+  };
+}
 
 // Solid (filled) glyphs, not the "-outline" variants — those have a hollow
 // center that reads as an empty icon instead of a solid grey/green shape.
@@ -75,11 +95,11 @@ export default function MainTabNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Home" component={HomeStackNavigator} />
-      <Tab.Screen name="Community" component={CommunityStackNavigator} />
-      <Tab.Screen name="Scorecard" component={ScorecardStackNavigator} />
-      <Tab.Screen name="Venues" component={VenuesStackNavigator} />
-      <Tab.Screen name="Profile" component={ProfileStackNavigator} />
+      <Tab.Screen name="Home" component={HomeStackNavigator} listeners={resetTabOnBlur} />
+      <Tab.Screen name="Community" component={CommunityStackNavigator} listeners={resetTabOnBlur} />
+      <Tab.Screen name="Scorecard" component={ScorecardStackNavigator} listeners={resetTabOnBlur} />
+      <Tab.Screen name="Venues" component={VenuesStackNavigator} listeners={resetTabOnBlur} />
+      <Tab.Screen name="Profile" component={ProfileStackNavigator} listeners={resetTabOnBlur} />
     </Tab.Navigator>
   );
 }
