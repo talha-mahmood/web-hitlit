@@ -14,8 +14,6 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
 
-const OVERS_OPTIONS = ["5", "6", "8", "10", "15", "20", "25", "30", "50"];
-
 function PlayerListEditor({
   teamLabel,
   players,
@@ -95,6 +93,7 @@ export default function NewMatchScreen() {
     teamAPlayers.length >= 2 &&
     teamBPlayers.length >= 2 &&
     !!oversLimit &&
+    parseInt(oversLimit, 10) > 0 &&
     !!tossWinner &&
     !!tossDecision;
 
@@ -146,7 +145,13 @@ export default function NewMatchScreen() {
 
         <View className="mt-6 pt-6 border-t border-border">
           <SectionLabel title="Overs per Innings" required />
-          <PillRow options={OVERS_OPTIONS.map((o) => ({ label: o, value: o }))} value={oversLimit} onChange={setOversLimit} />
+          <FieldInput
+            value={oversLimit ?? ""}
+            onChangeText={(t) => setOversLimit(t.replace(/[^0-9]/g, "").slice(0, 3))}
+            placeholder="e.g. 20"
+            keyboardType="number-pad"
+            maxLength={3}
+          />
 
           <SectionLabel title="Toss Winner" required />
           <PillRow

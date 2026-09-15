@@ -7,7 +7,7 @@ export type Sport = Database["public"]["Tables"]["sports"]["Row"];
 // alphabetical, this is a deliberate, requested sequence. Any sport not
 // listed here (e.g. one added later) falls back to alphabetical, after
 // all the named ones.
-const SPORT_ORDER = ["Box Cricket", "Football", "Padel", "Outdoor Cricket", "Badminton", "Pickleball", "Tennis"];
+const SPORT_ORDER = ["Cricket", "Padel", "Football", "Badminton", "Pickleball", "Tennis"];
 
 export async function fetchSports(): Promise<Sport[]> {
   const { data, error } = await supabase

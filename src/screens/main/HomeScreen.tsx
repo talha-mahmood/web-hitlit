@@ -38,42 +38,6 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>
 >;
 
-function HomeActionCard({
-  title,
-  subtitle,
-  emoji,
-  onPress,
-}: {
-  title: string;
-  subtitle: string;
-  emoji: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white rounded-2xl p-4 justify-between"
-      style={{
-        width: "48%",
-        height: 120,
-        borderWidth: 1,
-        borderColor: "rgba(17, 24, 39, 0.06)",
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 18,
-        elevation: 6,
-      }}
-    >
-      <View>
-        <Text className="text-ink font-extrabold text-base">{title}</Text>
-        <Text className="text-muted text-xs mt-1">{subtitle}</Text>
-      </View>
-      <Text style={{ fontSize: 32, textAlign: "right" }}>{emoji}</Text>
-    </Pressable>
-  );
-}
-
 // A distance (km) is attached to each item from the device's current
 // coordinates, then the list is sorted nearest-first — items whose own
 // location is unknown (no coords on the venue/game-venue/squad-owner's
@@ -365,21 +329,6 @@ export default function HomeScreen() {
           )}
           onSeeAll={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
         />
-
-        <View className="flex-row flex-wrap justify-between" style={{ rowGap: 12 }}>
-          <HomeActionCard
-            title="Tournaments"
-            subtitle="Compete. Win big."
-            emoji="🏆"
-            onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
-          />
-          <HomeActionCard
-            title="Players Dashboard"
-            subtitle="See who's top rated"
-            emoji="📊"
-            onPress={() => navigation.navigate("PlayersDashboard")}
-          />
-        </View>
       </View>
     </ScrollView>
   );
