@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreateCricketMatch } from "../../hooks/useCricket";
+import { friendlyCricketError } from "../../lib/api/cricket";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -112,7 +113,7 @@ export default function NewMatchScreen() {
       },
       {
         onSuccess: ({ matchId }) => navigation.replace("LiveScoring", { matchId }),
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not create match."),
+        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not create match.")),
       }
     );
   };

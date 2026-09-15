@@ -6,7 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useMyCricketMatches, useDeleteCricketMatch } from "../../hooks/useCricket";
-import type { CricketMatch } from "../../lib/api/cricket";
+import { friendlyCricketError, type CricketMatch } from "../../lib/api/cricket";
 import Bouncy from "../../components/Bouncy";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
@@ -71,7 +71,7 @@ export default function ScorecardHomeScreen() {
           style: "destructive",
           onPress: () =>
             deleteMatch.mutate(match.id, {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete match."),
+              onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not delete match.")),
             }),
         },
       ]

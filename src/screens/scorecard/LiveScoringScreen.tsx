@@ -13,7 +13,7 @@ import {
   useMarkInningsComplete,
   useCompleteCricketMatch,
 } from "../../hooks/useCricket";
-import { ballRowToEvent } from "../../lib/api/cricket";
+import { ballRowToEvent, friendlyCricketError } from "../../lib/api/cricket";
 import {
   replayInnings,
   formatOvers,
@@ -91,7 +91,17 @@ function NamePickerModal({
   );
 }
 
-function RunPad({ options, onPress, label }: { options: number[]; onPress: (n: number) => void; label?: string }) {
+function RunPad({
+  options,
+  onPress,
+  label,
+  disabled,
+}: {
+  options: number[];
+  onPress: (n: number) => void;
+  label?: string;
+  disabled?: boolean;
+}) {
   return (
     <View>
       {label && <Text className="text-muted text-xs font-semibold mb-2">{label}</Text>}
@@ -100,8 +110,9 @@ function RunPad({ options, onPress, label }: { options: number[]; onPress: (n: n
           <Pressable
             key={n}
             onPress={() => onPress(n)}
+            disabled={disabled}
             className="items-center justify-center rounded-xl bg-gray-100"
-            style={{ width: 52, height: 52 }}
+            style={{ width: 52, height: 52, opacity: disabled ? 0.5 : 1 }}
           >
             <Text className="text-ink font-bold text-base">{n}</Text>
           </Pressable>
@@ -216,7 +227,7 @@ export default function LiveScoringScreen() {
           setWicketEnd(null);
           setFielderName("");
         },
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not record ball."),
+        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not record ball.")),
       }
     );
   };
@@ -268,7 +279,7 @@ export default function LiveScoringScreen() {
           deleteLastBall.mutate(
             { inningsId: currentInnings.id, seq: last.seq },
             {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not undo."),
+              onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not undo.")),
             }
           ),
       },
@@ -280,7 +291,7 @@ export default function LiveScoringScreen() {
     markInningsComplete.mutate(currentInnings.id, {
       onSuccess: () => {
         startSecondInnings.mutate(battingTeam === "A" ? "B" : "A", {
-          onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not start 2nd innings."),
+          onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start 2nd innings.")),
         });
       },
     });
@@ -295,7 +306,7 @@ export default function LiveScoringScreen() {
           { matchId: match.id, resultSummary: summary },
           {
             onSuccess: () => navigation.replace("FullScorecard", { matchId: match.id }),
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not complete match."),
+            onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not complete match.")),
           }
         );
       },
@@ -455,7 +466,11 @@ export default function LiveScoringScreen() {
               </View>
             )}
 
-            {/* Scoring pad */}
+            {/* Scoring pad — locked while a ball is being saved so a slow
+                network or a fast double-tap can never fire two deliveries
+                for the same ball (that used to surface a raw "duplicate key"
+                database error instead of just... not doing anything twice). */}
+            <View pointerEvents={addBall.isPending ? "none" : "auto"} style={{ opacity: addBall.isPending ? 0.5 : 1 }}>
             {readyToScore && extraMode === null && (
               <View className="mt-5">
                 <RunPad options={RUN_OPTIONS} onPress={handleRuns} />
@@ -597,6 +612,7 @@ export default function LiveScoringScreen() {
                 </Pressable>
               </View>
             )}
+            </View>
           </>
         )}
       </ScrollView>

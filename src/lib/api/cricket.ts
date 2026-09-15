@@ -6,6 +6,23 @@ export type CricketMatch = Database["public"]["Tables"]["cricket_matches"]["Row"
 export type CricketInnings = Database["public"]["Tables"]["cricket_innings"]["Row"];
 export type CricketBallRow = Database["public"]["Tables"]["cricket_balls"]["Row"];
 
+// Postgres/PostgREST error text ("duplicate key value violates unique
+// constraint ...") is never something a player should see — this maps the
+// telltale raw-database phrasing to a plain-language message, and falls
+// back to the caller's own fallback text for anything else unrecognized.
+// Errors we throw ourselves elsewhere (e.g. "Team names must be unique...")
+// already read fine and pass through untouched.
+export function friendlyCricketError(err: unknown, fallback: string): string {
+  const message = err instanceof Error ? err.message : "";
+  if (/duplicate key value|violates unique constraint/i.test(message)) {
+    return "That ball may have already been recorded — pull to refresh and check the score before scoring the next one.";
+  }
+  if (!message || /violates|constraint|relation .* does not exist|column .* does not exist|syntax error/i.test(message)) {
+    return fallback;
+  }
+  return message;
+}
+
 export type CricketMatchDetail = CricketMatch & {
   cricket_innings: (CricketInnings & { cricket_balls: CricketBallRow[] })[];
 };
