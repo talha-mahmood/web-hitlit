@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import { useSelectPulse } from "../lib/useSelectPulse";
 
@@ -8,15 +9,25 @@ export function SectionLabel({
   title,
   required,
   variant,
+  icon,
 }: {
   title: string;
   required?: boolean;
   // "onGreen" is used on screens with a colored (not white) background —
   // default stays exactly as before everywhere else.
   variant?: "onGreen";
+  icon?: keyof typeof Ionicons.glyphMap;
 }) {
   return (
     <View className="flex-row items-center mb-2 mt-5">
+      {icon && (
+        <Ionicons
+          name={icon}
+          size={15}
+          color={variant === "onGreen" ? "white" : colors.primary}
+          style={{ marginRight: 6 }}
+        />
+      )}
       <Text className={`font-semibold text-sm ${variant === "onGreen" ? "text-white" : "text-ink"}`}>
         {title}
       </Text>

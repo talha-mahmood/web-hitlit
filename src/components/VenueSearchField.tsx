@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, Image, Pressable, ActivityIndicator, ScrollView, type ImageSourcePropType } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 
@@ -15,6 +15,7 @@ export default function VenueSearchField({
   onSelect,
   onSelectCustom,
   disabledReason,
+  thumbnailSource,
 }: {
   venues: VenueOption[] | undefined;
   loading: boolean;
@@ -29,6 +30,10 @@ export default function VenueSearchField({
   // Shown instead of the search field when venue selection isn't available
   // yet (e.g. "Select a sport to see venues that offer it.").
   disabledReason?: string;
+  // Optional small preview image shown in place of the search icon once a
+  // venue/custom name is picked and the field isn't focused — purely
+  // decorative, doesn't change the search/select behavior below.
+  thumbnailSource?: ImageSourcePropType | null;
 }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -92,7 +97,11 @@ export default function VenueSearchField({
           elevation: 1,
         }}
       >
-        <Ionicons name="search-outline" size={18} color={colors.muted} />
+        {thumbnailSource && !focused && (selectedVenueId || customVenueName) ? (
+          <Image source={thumbnailSource} style={{ width: 24, height: 24, borderRadius: 6 }} resizeMode="cover" />
+        ) : (
+          <Ionicons name={focused ? "search-outline" : "location-outline"} size={18} color={colors.muted} />
+        )}
         <TextInput
           value={query}
           onChangeText={(t) => {

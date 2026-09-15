@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,29 +9,35 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
+  type LayoutChangeEvent,
 } from "react-native";
 import type * as ImagePicker from "expo-image-picker";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
 import { createPools } from "../../lib/api/tournamentPools";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
+import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
-import SportHeroBadge from "../../components/SportHeroBadge";
-import SportsBySportSection from "../../components/SportsBySportSection";
+import { HomeSportTile } from "../../components/HomeWideCards";
+import { getSportImage } from "../../lib/sportImages";
 import IconPoolPreview from "../../components/IconPoolPreview";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
@@ -52,7 +58,10 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 
-type Nav = NativeStackNavigationProp<GamesStackParamList, "CreateGame">;
+type Nav = CompositeNavigationProp<
+  NativeStackNavigationProp<GamesStackParamList, "CreateGame">,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 type CreateGameRoute = RouteProp<GamesStackParamList, "CreateGame">;
 type SkillLevel = Database["public"]["Enums"]["game_skill_level_type"];
 type Visibility = Database["public"]["Enums"]["game_visibility_type"];
@@ -159,7 +168,7 @@ function MaxPlayersChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="w-10 py-2 rounded-xl items-center" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Pressable>
     </Animated.View>
@@ -180,10 +189,127 @@ function CountChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
+      <Pressable onPress={onPress} className="w-10 py-2 rounded-xl items-center" style={chipStyle(selected)}>
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Pressable>
     </Animated.View>
+  );
+}
+
+// A light-green callout used for helper/explanatory text (format
+// descriptions, the derived group-count math, etc.) — same visual language
+// as the rest of the app's "info" callouts.
+function InfoBox({ text }: { text: string }) {
+  return (
+    <View
+      className="flex-row items-start rounded-2xl px-3.5 py-3 mt-2"
+      style={{ backgroundColor: colors.primaryLight, gap: 8 }}
+    >
+      <Ionicons name="information-circle" size={16} color={colors.primaryDark} style={{ marginTop: 1 }} />
+      <Text className="flex-1 text-xs" style={{ color: colors.primaryDark }}>
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+const FORMAT_OPTIONS: { value: TournamentFormat; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: "KNOCKOUT", label: "Knockout", icon: "trophy" },
+  { value: "LEAGUE", label: "League", icon: "grid-outline" },
+  { value: "POOL", label: "Pool", icon: "people" },
+];
+
+const FORMAT_INFO: Record<TournamentFormat, string> = {
+  KNOCKOUT: "In a knockout format, teams are eliminated after a single loss until only one champion remains.",
+  LEAGUE: "In a league format, every team plays every other team, and the team with the best record wins.",
+  POOL: "In a pool format, teams are divided into groups and play within their group. The top teams may advance to the next round (optional).",
+};
+
+function FormatCard({
+  icon,
+  label,
+  selected,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 items-center rounded-2xl py-4"
+      style={{ borderWidth: 1.5, borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : "white" }}
+    >
+      <Ionicons name={icon} size={22} color={selected ? colors.primaryDark : colors.muted} />
+      <Text
+        className="text-sm font-semibold mt-2"
+        style={{ color: selected ? colors.primaryDark : colors.ink }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+type StepKey = "details" | "format" | "teams" | "review";
+const STEPS: { key: StepKey; n: number; label: string }[] = [
+  { key: "details", n: 1, label: "Details" },
+  { key: "format", n: 2, label: "Format" },
+  { key: "teams", n: 3, label: "Teams" },
+  { key: "review", n: 4, label: "Review" },
+];
+
+// A tap-to-jump progress tracker for the tournament form — the form itself
+// stays one long scroll (not a paginated wizard), this just highlights
+// whichever section is currently in view and lets a tap scroll straight to
+// a section, same idea as an in-page anchor nav.
+function StepTracker({
+  activeStep,
+  onPressStep,
+}: {
+  activeStep: number;
+  onPressStep: (step: StepKey) => void;
+}) {
+  return (
+    <View className="flex-row px-4 pb-3" style={{ gap: 4 }}>
+      {STEPS.map((s) => {
+        const done = activeStep > s.n;
+        const current = activeStep === s.n;
+        return (
+          <Pressable key={s.key} onPress={() => onPressStep(s.key)} className="flex-1 items-center">
+            <View className="flex-row items-center" style={{ gap: 5 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 20, height: 20, backgroundColor: done || current ? colors.primary : "#E5E7EB" }}
+              >
+                {done ? (
+                  <Ionicons name="checkmark" size={12} color="white" />
+                ) : (
+                  <Text className={`text-[11px] font-bold ${current ? "text-white" : "text-muted"}`}>{s.n}</Text>
+                )}
+              </View>
+              <Text
+                className={`text-xs ${current ? "font-bold text-ink" : done ? "text-ink" : "text-muted"}`}
+                numberOfLines={1}
+              >
+                {s.label}
+              </Text>
+            </View>
+            <View
+              style={{
+                height: 3,
+                borderRadius: 2,
+                marginTop: 6,
+                width: "100%",
+                backgroundColor: current ? colors.primary : "transparent",
+              }}
+            />
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -193,9 +319,11 @@ export default function CreateGameScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<CreateGameRoute>();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createGame = useCreateGame();
   const { data: sports } = useSports();
+  const scrollRef = useRef<ScrollView>(null);
 
   // Reached via the Tournaments section (Home card / Tournaments list "Create"
   // button) — game type is fixed, not a Regular/Tournament toggle.
@@ -228,6 +356,35 @@ export default function CreateGameScreen() {
   const [gender, setGender] = useState<Gender>("mixed");
   const [description, setDescription] = useState("");
   const [entryFee, setEntryFee] = useState("0");
+
+  // Scroll-linked progress tracker state — each section reports its own Y
+  // offset once it mounts/lays out, and the active step is whichever
+  // section's marker the scroll position has reached.
+  const [sectionY, setSectionY] = useState<Record<StepKey, number>>({
+    details: 0,
+    format: Infinity,
+    teams: Infinity,
+    review: Infinity,
+  });
+  const [scrollY, setScrollY] = useState(0);
+  const markSection = (key: StepKey) => (e: LayoutChangeEvent) => {
+    const y = e.nativeEvent.layout.y;
+    setSectionY((prev) => (prev[key] === y ? prev : { ...prev, [key]: y }));
+  };
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setScrollY(e.nativeEvent.contentOffset.y);
+  };
+  const activeStep = useMemo(() => {
+    const y = scrollY + 140;
+    if (y >= sectionY.review) return 4;
+    if (y >= sectionY.teams) return 3;
+    if (y >= sectionY.format) return 2;
+    return 1;
+  }, [scrollY, sectionY]);
+  const scrollToStep = (key: StepKey) => {
+    const y = sectionY[key];
+    if (Number.isFinite(y)) scrollRef.current?.scrollTo({ y: Math.max(0, y - 90), animated: true });
+  };
 
   const handleSportChange = (id: string) => {
     setSportId(id);
@@ -437,54 +594,101 @@ export default function CreateGameScreen() {
     }
   };
 
+  const sportTileGap = 12;
+  const sportTileWidth = (windowWidth - 40 - sportTileGap * 3) / 4;
+
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-100"
+      className="flex-1 bg-green-50"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SportsBackgroundDecor />
 
       {/* Header */}
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
-      >
-        <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Bouncy>
-        <Text className="text-base font-bold text-ink flex-1">
-          {isTournament ? "Create Tournament" : "Host a Game"}
-        </Text>
-        <Pressable
-          onPress={handleCreate}
-          disabled={createGame.isPending}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            shadowColor: colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            elevation: 3,
-          }}
-        >
-          {createGame.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-sm">Post</Text>
-          )}
-        </Pressable>
+      <View className="border-b border-border" style={{ paddingTop: insets.top + 16 }}>
+        <View className="flex-row items-center px-4 pb-4">
+          <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
+          </Bouncy>
+          <View className="flex-1">
+            <Text className="text-xl font-bold text-ink">
+              {isTournament ? "Create Tournament" : "Host a Game"}
+            </Text>
+            <Text className="text-muted text-xs mt-0.5">
+              {isTournament ? "Bring players together. Create. Compete. Enjoy!" : "Set up your game and invite players."}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleCreate}
+            disabled={createGame.isPending}
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            {createGame.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-sm">Post</Text>
+            )}
+          </Pressable>
+        </View>
+        {isTournament && <StepTracker activeStep={activeStep} onPressStep={scrollToStep} />}
       </View>
 
       <ScrollView
+        ref={scrollRef}
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
+        scrollEventThrottle={64}
       >
+        <View onLayout={markSection("details")} />
+
+        {/* Motivational banner */}
+        <View className="rounded-2xl overflow-hidden mt-4 mb-4 px-4 py-4" style={{ backgroundColor: colors.primaryLight, ...cardShadow }}>
+          <Ionicons
+            name="ribbon"
+            size={90}
+            color={colors.primary}
+            style={{ position: "absolute", right: -6, top: 4, opacity: 0.55, transform: [{ rotate: "18deg" }] }}
+          />
+          <Ionicons
+            name="trophy"
+            size={54}
+            color="#F5B400"
+            style={{ position: "absolute", right: 22, top: 14, transform: [{ rotate: "-6deg" }] }}
+          />
+          <Ionicons
+            name="sparkles"
+            size={14}
+            color={colors.primary}
+            style={{ position: "absolute", right: 96, top: 10, opacity: 0.7 }}
+          />
+          <Ionicons
+            name="sparkles"
+            size={10}
+            color={colors.primary}
+            style={{ position: "absolute", right: 78, top: 46, opacity: 0.6 }}
+          />
+          <Text className="font-extrabold text-lg" style={{ color: colors.ink, maxWidth: "70%" }}>
+            {isTournament ? "Create an Unforgettable Tournament" : "Host an Awesome Game"}
+          </Text>
+          <Text className="text-xs mt-1" style={{ color: colors.muted, maxWidth: "70%" }}>
+            {isTournament ? "Set the details and let the game begin!" : "Set the details and invite players!"}
+          </Text>
+        </View>
+
         {/* Custom listing icon (optional) */}
-        <SectionLabel title="Icon" />
+        <SectionLabel title={`${isTournament ? "Tournament" : "Game"} Icon`} icon="document-outline" />
         <Pressable
           onPress={async () => {
             const assets = await pickImages({});
@@ -500,36 +704,49 @@ export default function CreateGameScreen() {
               <Ionicons name="image-outline" size={22} color={colors.muted} />
             )}
           </View>
-          <Text className="text-primary font-semibold text-sm">
-            {iconAsset ? "Change icon" : "Add a custom icon (optional)"}
-          </Text>
+          <View className="flex-1">
+            <Text className="text-primary font-semibold text-sm">
+              {iconAsset ? "Change icon" : "Add a custom icon"}
+            </Text>
+            <Text className="text-muted text-xs mt-0.5">
+              Use a custom icon to make your {isTournament ? "tournament" : "game"} stand out.
+            </Text>
+          </View>
         </Pressable>
 
         {/* Title */}
-        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required />
+        <SectionLabel title={isTournament ? "Tournament Title" : "Game Title"} required icon="pencil-outline" />
         <FieldInput
           value={title}
           onChangeText={setTitle}
           placeholder="e.g. Saturday morning football"
           maxLength={80}
+          left={<Ionicons name="pencil-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />}
+          right={
+            title.length > 0 ? (
+              <Pressable onPress={() => setTitle("")} hitSlop={8}>
+                <Ionicons name="close" size={18} color={colors.muted} />
+              </Pressable>
+            ) : undefined
+          }
         />
 
         {/* Sport */}
-        <SectionLabel title="Sport" required />
-        {selectedSportName && (
-          <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
-            <SportHeroBadge sportName={selectedSportName} />
-            <Text className="text-ink font-semibold flex-1">{selectedSportName}</Text>
-          </View>
-        )}
-        <SportsBySportSection
-          sports={sports ?? []}
-          selectedSportId={sportId}
-          onSelectSport={handleSportChange}
-        />
+        <SectionLabel title="Sport" required icon="trophy-outline" />
+        <View className="flex-row flex-wrap" style={{ gap: sportTileGap }}>
+          {(sports ?? []).map((s) => (
+            <HomeSportTile
+              key={s.id}
+              name={s.name}
+              width={sportTileWidth}
+              selected={sportId === s.id}
+              onPress={() => handleSportChange(s.id)}
+            />
+          ))}
+        </View>
 
         {/* Game Type */}
-        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} />
+        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} icon="game-controller-outline" />
         {forcedTournament ? (
           <View className="bg-purple-50 self-start px-4 py-2 rounded-2xl">
             <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
@@ -546,7 +763,7 @@ export default function CreateGameScreen() {
         )}
 
         {/* Venue */}
-        <SectionLabel title="Venue" required />
+        <SectionLabel title="Venue" required icon="location-outline" />
         <VenueSearchField
           venues={venues}
           loading={sportId != null && venuesLoading}
@@ -555,10 +772,20 @@ export default function CreateGameScreen() {
           onSelect={(id) => setVenueId(id || null)}
           onSelectCustom={(name) => setCustomVenueName(name || null)}
           disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
+          thumbnailSource={selectedSportName ? getSportImage(selectedSportName) : null}
         />
+        {venueId && (
+          <Pressable
+            onPress={() => navigation.navigate("Venues", { screen: "VenueDetail", params: { venueId } })}
+            className="flex-row items-center justify-between mt-2 px-1 py-1"
+          >
+            <Text className="text-primary text-sm font-medium">View venue details</Text>
+            <Ionicons name="chevron-forward" size={15} color={colors.primary} />
+          </Pressable>
+        )}
 
         {/* Date */}
-        <SectionLabel title="Date" required />
+        <SectionLabel title="Date" required icon="calendar-outline" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -584,7 +811,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Start Time */}
-        <SectionLabel title="Start Time" required />
+        <SectionLabel title="Start Time" required icon="time-outline" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -603,7 +830,7 @@ export default function CreateGameScreen() {
         </ScrollView>
 
         {/* Duration */}
-        <SectionLabel title="Duration" />
+        <SectionLabel title="Duration" icon="timer-outline" />
         {isTournament ? (
           <PillRow
             options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
@@ -627,25 +854,25 @@ export default function CreateGameScreen() {
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
           <>
-            <SectionLabel title="Tournament Format" required />
-            <PillRow<TournamentFormat>
-              options={[
-                { label: "Knockout", value: "KNOCKOUT" },
-                { label: "League", value: "LEAGUE" },
-                { label: "Pool", value: "POOL" },
-              ]}
-              value={tournamentFormat}
-              onChange={handleTournamentFormatChange}
-            />
+            <View onLayout={markSection("format")} />
+            <SectionLabel title="Tournament Format" required icon="git-branch-outline" />
+            <View className="flex-row" style={{ gap: 10 }}>
+              {FORMAT_OPTIONS.map((f) => (
+                <FormatCard
+                  key={f.value}
+                  icon={f.icon}
+                  label={f.label}
+                  selected={tournamentFormat === f.value}
+                  onPress={() => handleTournamentFormatChange(f.value)}
+                />
+              ))}
+            </View>
+            {tournamentFormat && <InfoBox text={FORMAT_INFO[tournamentFormat]} />}
 
             {tournamentFormat === "POOL" ? (
               <>
-                <SectionLabel title="Number of Teams in Each Group" required />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
+                <SectionLabel title="Number of Teams in Each Group" required icon="people-outline" />
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {TEAMS_PER_GROUP_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -654,15 +881,11 @@ export default function CreateGameScreen() {
                       onPress={() => handleTeamsPerGroupChange(n)}
                     />
                   ))}
-                </ScrollView>
+                </View>
                 <IconPoolPreview count={teamsPerGroup ?? 0} icon="shield" />
 
-                <SectionLabel title="Number of Groups" required />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
+                <SectionLabel title="Number of Groups" required icon="layers-outline" />
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {NUMBER_OF_GROUPS_OPTIONS.filter(isValidGroupCount).map((n) => (
                     <CountChipItem
                       key={n}
@@ -671,22 +894,18 @@ export default function CreateGameScreen() {
                       onPress={() => handleNumberOfGroupsChange(n)}
                     />
                   ))}
-                </ScrollView>
-                <Text className="text-muted text-xs mt-1">Pool tournaments need an even number of groups.</Text>
+                </View>
+                <InfoBox
+                  text={
+                    numberOfTeams != null && numberOfTeams > 0
+                      ? `Pool tournaments need an even number of groups. ${numberOfGroups} groups × ${teamsPerGroup} teams each = ${numberOfTeams} teams total.`
+                      : "Pool tournaments need an even number of groups."
+                  }
+                />
                 <IconPoolPreview count={numberOfGroups ?? 0} icon="shield" />
 
-                {numberOfTeams != null && numberOfTeams > 0 && (
-                  <Text className="text-muted text-xs mt-1">
-                    {numberOfGroups} groups × {teamsPerGroup} teams each = {numberOfTeams} teams total.
-                  </Text>
-                )}
-
-                <SectionLabel title="Players per Team" required />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
+                <SectionLabel title="Players per Team" required icon="person-outline" />
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -695,12 +914,12 @@ export default function CreateGameScreen() {
                       onPress={() => setPlayersPerTeam(n)}
                     />
                   ))}
-                </ScrollView>
+                </View>
                 <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
 
                 {numberOfGroups != null && numberOfGroups > 0 && (
                   <>
-                    <SectionLabel title="Groups" />
+                    <SectionLabel title="Groups" icon="layers-outline" />
                     <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                       {groupNames.map((name) => (
                         <View key={name} className="bg-primary-light rounded-full px-3.5 py-2">
@@ -717,12 +936,8 @@ export default function CreateGameScreen() {
               </>
             ) : (
               <>
-                <SectionLabel title="Number of Teams" required />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
+                <SectionLabel title="Number of Teams" required icon="people-outline" />
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {NUMBER_OF_TEAMS_OPTIONS.filter((n) => isValidTeamCount(tournamentFormat, n)).map((n) => (
                     <CountChipItem
                       key={n}
@@ -731,21 +946,15 @@ export default function CreateGameScreen() {
                       onPress={() => handleNumberOfTeamsChange(n)}
                     />
                   ))}
-                </ScrollView>
-                {tournamentFormat === "KNOCKOUT" && (
-                  <Text className="text-muted text-xs mt-1">Knockout needs an even number of teams.</Text>
-                )}
+                </View>
+                {tournamentFormat === "KNOCKOUT" && <InfoBox text="Knockout needs an even number of teams." />}
                 {tournamentFormat === "LEAGUE" && (
-                  <Text className="text-muted text-xs mt-1">League tournaments can't have exactly 3 teams.</Text>
+                  <InfoBox text="League tournaments can't have exactly 3 teams." />
                 )}
                 <IconPoolPreview count={numberOfTeams ?? 0} icon="shield" />
 
-                <SectionLabel title="Players per Team" required />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                >
+                <SectionLabel title="Players per Team" required icon="person-outline" />
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                   {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
                     <CountChipItem
                       key={n}
@@ -754,14 +963,15 @@ export default function CreateGameScreen() {
                       onPress={() => setPlayersPerTeam(n)}
                     />
                   ))}
-                </ScrollView>
+                </View>
                 <IconPoolPreview count={playersPerTeam ?? 0} icon="account" />
               </>
             )}
 
             {numberOfTeams != null && numberOfTeams > 0 && (
               <>
-                <SectionLabel title="Team Names" required />
+                <View onLayout={markSection("teams")} />
+                <SectionLabel title="Team Names" required icon="people-outline" />
                 <View style={{ gap: 8 }}>
                   {teamNames.map((name, i) => (
                     <FieldInput
@@ -778,19 +988,12 @@ export default function CreateGameScreen() {
               </>
             )}
 
-            <Text className="text-muted text-xs mt-3">
-              Anyone can join an open team slot — a team joins the tournament automatically
-              once it's full.
-            </Text>
+            <InfoBox text="Anyone can join an open team slot — a team joins the tournament automatically once it's full." />
           </>
         ) : (
           <>
-            <SectionLabel title="Max Players" />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
+            <SectionLabel title="Max Players" icon="people-outline" />
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
               {MAX_PLAYERS_OPTIONS.map((n) => (
                 <MaxPlayersChipItem
                   key={n}
@@ -799,12 +1002,14 @@ export default function CreateGameScreen() {
                   onPress={() => setMaxPlayers(n)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </>
         )}
 
+        {isTournament && <View onLayout={markSection("review")} />}
+
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" required />
+        <SectionLabel title="Skill Level" required icon="bar-chart-outline" />
         <PillRow<SkillLevel>
           options={[
             { label: "Beginner", value: "BEGINNER" },
@@ -817,7 +1022,7 @@ export default function CreateGameScreen() {
         />
 
         {/* Gender */}
-        <SectionLabel title="Open To" />
+        <SectionLabel title="Open To" icon="people-outline" />
         <PillRow<Gender>
           options={[
             { label: "Everyone", value: "mixed" },
@@ -829,29 +1034,75 @@ export default function CreateGameScreen() {
         />
 
         {/* Entry Fee */}
-        <SectionLabel title={isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"} />
+        <View className="flex-row items-center mb-2 mt-5">
+          <MaterialCommunityIcons name="cash-multiple" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+          <Text className="font-semibold text-sm text-ink">
+            {isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"}
+          </Text>
+        </View>
         <FieldInput
           value={entryFee}
           onChangeText={(t) => setEntryFee(t.replace(/[^0-9]/g, ""))}
           keyboardType="numeric"
           placeholder="0"
           left={<Text className="text-muted mr-2">Rs</Text>}
+          right={
+            entryFee !== "0" && entryFee.length > 0 ? (
+              <Pressable onPress={() => setEntryFee("0")} hitSlop={8}>
+                <Ionicons name="close" size={18} color={colors.muted} />
+              </Pressable>
+            ) : undefined
+          }
         />
         <Text className="text-muted text-xs mt-1">
           {isTournament ? "Enter 0 for a free tournament" : "Enter 0 for a free game"}
         </Text>
 
         {/* Description */}
-        <SectionLabel title="Description" />
-        <FieldInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Notes for players (meeting point, equipment, etc.)"
-          multiline
-          numberOfLines={3}
-          maxLength={300}
-          style={{ height: 88, textAlignVertical: "top" }}
-        />
+        <SectionLabel title="Description" icon="document-text-outline" />
+        <View>
+          <FieldInput
+            value={description}
+            onChangeText={(t) => setDescription(t.slice(0, 500))}
+            placeholder="Add any additional details (meeting point, rules, prizes, etc.)"
+            multiline
+            numberOfLines={3}
+            maxLength={500}
+            style={{ height: 88, textAlignVertical: "top", paddingBottom: 20 }}
+          />
+          <Text className="text-muted text-xs" style={{ position: "absolute", right: 12, bottom: 8 }}>
+            {description.length}/500
+          </Text>
+        </View>
+        <Text className="text-muted text-xs mt-1">
+          Add any additional details (meeting point, rules, prizes, etc.).
+        </Text>
+
+        <Pressable
+          onPress={handleCreate}
+          disabled={createGame.isPending}
+          className="flex-row items-center justify-center rounded-2xl py-4 mt-6"
+          style={{
+            gap: 8,
+            backgroundColor: colors.primary,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 10,
+            elevation: 3,
+          }}
+        >
+          {createGame.isPending ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <Ionicons name="trophy" size={18} color="white" />
+              <Text className="text-white font-bold text-base">
+                {isTournament ? "Post Tournament" : "Post Game"}
+              </Text>
+            </>
+          )}
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
