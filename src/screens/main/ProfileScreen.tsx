@@ -321,7 +321,7 @@ export default function ProfileScreen() {
           >
             <Ionicons name="pencil-outline" size={14} color={colors.primaryDark} />
             <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-              Edit Profile
+              Edit
             </Text>
           </Pressable>
         </View>
