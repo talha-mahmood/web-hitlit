@@ -137,7 +137,7 @@ export default function NotificationsScreen() {
     if (gameId) {
       navigation.navigate("GameDetail", { gameId });
     } else if (squadId) {
-      navigation.navigate("Squads", { screen: "SquadDetail", params: { squadId } });
+      navigation.navigate("Community", { screen: "SquadDetail", params: { squadId } });
     } else if (commentId) {
       navigation.navigate("Community", { screen: "CommentThread", params: { rootId: commentId } });
     }

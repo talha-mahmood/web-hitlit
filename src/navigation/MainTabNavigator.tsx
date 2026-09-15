@@ -6,13 +6,13 @@ import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigato
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
 import ProfileStackNavigator, { type ProfileStackParamList } from "./ProfileStackNavigator";
 import CommunityStackNavigator, { type CommunityStackParamList } from "./CommunityStackNavigator";
-import SquadsStackNavigator, { type SquadsStackParamList } from "./SquadsStackNavigator";
+import ScorecardStackNavigator, { type ScorecardStackParamList } from "./ScorecardStackNavigator";
 import { colors } from "../constants/theme";
 
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Community: NavigatorScreenParams<CommunityStackParamList> | undefined;
-  Squads: NavigatorScreenParams<SquadsStackParamList> | undefined;
+  Scorecard: NavigatorScreenParams<ScorecardStackParamList> | undefined;
   Venues: NavigatorScreenParams<VenuesStackParamList> | undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
@@ -23,14 +23,15 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 // center that reads as an empty icon instead of a solid grey/green shape.
 const ICONS: Partial<Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap>> = {
   Home: "home",
-  Squads: "people",
   Venues: "location",
   Profile: "person",
 };
-// Ionicons only has a two-person "people" glyph (used for Squads above) —
-// MaterialCommunityIcons' "account-group" is the same idea with a third
-// figure, which is what Community's icon should look like.
+// Ionicons only has a two-person "people" glyph — MaterialCommunityIcons'
+// "account-group" is the same idea with a third figure, which is what
+// Community's icon should look like. "cricket" for Scorecard is also
+// MaterialCommunityIcons-only (Ionicons has no cricket glyph at all).
 const COMMUNITY_ICON = "account-group" as const;
+const SCORECARD_ICON = "cricket" as const;
 
 export default function MainTabNavigator() {
   return (
@@ -61,6 +62,8 @@ export default function MainTabNavigator() {
             />
             {route.name === "Community" ? (
               <MaterialCommunityIcons name={COMMUNITY_ICON} color={color} size={size} />
+            ) : route.name === "Scorecard" ? (
+              <MaterialCommunityIcons name={SCORECARD_ICON} color={color} size={size} />
             ) : (
               <Ionicons
                 name={ICONS[route.name as keyof MainTabParamList]!}
@@ -74,7 +77,7 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeStackNavigator} />
       <Tab.Screen name="Community" component={CommunityStackNavigator} />
-      <Tab.Screen name="Squads" component={SquadsStackNavigator} />
+      <Tab.Screen name="Scorecard" component={ScorecardStackNavigator} />
       <Tab.Screen name="Venues" component={VenuesStackNavigator} />
       <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>

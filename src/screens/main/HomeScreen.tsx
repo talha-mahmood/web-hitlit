@@ -232,7 +232,7 @@ export default function HomeScreen() {
       icon: "people",
       bgColor: "#1E3A5F",
       accentColor: "#7DD3FC",
-      onPress: () => navigation.navigate("Squads", { screen: "SquadsList" }),
+      onPress: () => navigation.navigate("Community", { screen: "SquadsList" }),
     },
     {
       key: "games",
@@ -326,10 +326,10 @@ export default function HomeScreen() {
             <NearbySquadCard
               squad={item}
               distanceKm={km}
-              onPress={() => navigation.navigate("Squads", { screen: "SquadDetail", params: { squadId: item.id } })}
+              onPress={() => navigation.navigate("Community", { screen: "SquadDetail", params: { squadId: item.id } })}
             />
           )}
-          onSeeAll={() => navigation.navigate("Squads", { screen: "SquadsList" })}
+          onSeeAll={() => navigation.navigate("Community", { screen: "SquadsList" })}
         />
 
         <NearbySection

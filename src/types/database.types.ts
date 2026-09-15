@@ -424,6 +424,153 @@ export type Database = {
           },
         ]
       }
+      cricket_balls: {
+        Row: {
+          bowler_name: string
+          created_at: string
+          dismissed_name: string | null
+          extra_runs: number
+          extra_type: string | null
+          fielder_name: string | null
+          id: string
+          innings_id: string
+          is_wicket: boolean
+          non_striker_name: string
+          runs_batted: number
+          seq: number
+          striker_name: string
+          wicket_type: string | null
+        }
+        Insert: {
+          bowler_name: string
+          created_at?: string
+          dismissed_name?: string | null
+          extra_runs?: number
+          extra_type?: string | null
+          fielder_name?: string | null
+          id?: string
+          innings_id: string
+          is_wicket?: boolean
+          non_striker_name: string
+          runs_batted?: number
+          seq: number
+          striker_name: string
+          wicket_type?: string | null
+        }
+        Update: {
+          bowler_name?: string
+          created_at?: string
+          dismissed_name?: string | null
+          extra_runs?: number
+          extra_type?: string | null
+          fielder_name?: string | null
+          id?: string
+          innings_id?: string
+          is_wicket?: boolean
+          non_striker_name?: string
+          runs_batted?: number
+          seq?: number
+          striker_name?: string
+          wicket_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cricket_balls_innings_id_fkey"
+            columns: ["innings_id"]
+            isOneToOne: false
+            referencedRelation: "cricket_innings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cricket_innings: {
+        Row: {
+          batting_team: string
+          id: string
+          innings_number: number
+          is_completed: boolean
+          match_id: string
+        }
+        Insert: {
+          batting_team: string
+          id?: string
+          innings_number: number
+          is_completed?: boolean
+          match_id: string
+        }
+        Update: {
+          batting_team?: string
+          id?: string
+          innings_number?: number
+          is_completed?: boolean
+          match_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cricket_innings_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "cricket_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cricket_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          overs_limit: number
+          result_summary: string | null
+          status: string
+          team_a_name: string
+          team_a_players: string[]
+          team_b_name: string
+          team_b_players: string[]
+          toss_decision: string
+          toss_winner: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          overs_limit: number
+          result_summary?: string | null
+          status?: string
+          team_a_name: string
+          team_a_players?: string[]
+          team_b_name: string
+          team_b_players?: string[]
+          toss_decision: string
+          toss_winner: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          overs_limit?: number
+          result_summary?: string | null
+          status?: string
+          team_a_name?: string
+          team_a_players?: string[]
+          team_b_name?: string
+          team_b_players?: string[]
+          toss_decision?: string
+          toss_winner?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cricket_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_games: {
         Row: {
           created_at: string
