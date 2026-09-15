@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAv
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreateCricketMatch } from "../../hooks/useCricket";
@@ -216,32 +216,75 @@ export default function NewMatchScreen() {
             height: 220,
             borderRadius: 110,
             backgroundColor: colors.primaryLight,
-            opacity: 0.6,
+            opacity: 0.5,
             top: -110,
             right: -60,
           }}
         />
-        <View pointerEvents="none" style={{ position: "absolute", right: 24, top: 44, opacity: 0.9 }}>
-          <MaterialCommunityIcons
-            name="gate"
-            size={64}
-            color={colors.primaryDark}
-            style={{ transform: [{ scaleY: 1.15 }] }}
-          />
+
+        {/* Grass mound — a big circle peeking up from the bottom-right
+            corner, cheaper than a real grass silhouette but reads the same
+            at this size. */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: 280,
+            height: 280,
+            borderRadius: 140,
+            backgroundColor: "#4ADE80",
+            bottom: -230,
+            right: -70,
+          }}
+        />
+
+        {/* Stumps: three tan bars with two bails resting on top. */}
+        <View pointerEvents="none" style={{ position: "absolute", right: 74, bottom: 8, flexDirection: "row" }}>
+          <View style={{ position: "absolute", top: -5, left: 1, width: 15, height: 4, borderRadius: 2, backgroundColor: "#C9A46B" }} />
+          <View style={{ position: "absolute", top: -5, left: 15, width: 15, height: 4, borderRadius: 2, backgroundColor: "#C9A46B" }} />
+          {[0, 1, 2].map((i) => (
+            <View
+              key={i}
+              style={{
+                width: 7,
+                height: 62,
+                marginLeft: i === 0 ? 0 : 7,
+                borderRadius: 3,
+                backgroundColor: "#C9A46B",
+              }}
+            />
+          ))}
+        </View>
+
+        {/* Ball, overlapping the stumps at their base. */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            right: 34,
+            bottom: 14,
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: "#DC2626",
+            borderWidth: 1,
+            borderColor: "#991B1B",
+            overflow: "hidden",
+          }}
+        >
           <View
             style={{
               position: "absolute",
-              bottom: -6,
-              left: -14,
-              width: 18,
-              height: 18,
-              borderRadius: 9,
-              backgroundColor: "#DC2626",
-              borderWidth: 1.5,
-              borderColor: "white",
+              top: 15,
+              left: -4,
+              width: 42,
+              height: 1.5,
+              backgroundColor: "rgba(255,255,255,0.75)",
+              transform: [{ rotate: "-18deg" }],
             }}
           />
         </View>
+
         <View className="flex-row items-center px-4" style={{ gap: 6 }}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
