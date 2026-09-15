@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, TextInput, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
@@ -72,15 +74,17 @@ function StatCard({
   label: string;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_SHADOW }}>
+    <View className="bg-white rounded-2xl p-3" style={{ width: "31%", ...CARD_SHADOW }}>
       <View
-        className="items-center justify-center rounded-full mb-3"
-        style={{ width: 40, height: 40, backgroundColor: bg }}
+        className="items-center justify-center rounded-full mb-2"
+        style={{ width: 34, height: 34, backgroundColor: bg }}
       >
-        <Ionicons name={icon} size={20} color={fg} />
+        <Ionicons name={icon} size={17} color={fg} />
       </View>
-      <Text className="text-ink font-extrabold text-2xl">{value}</Text>
-      <Text className="text-muted text-xs mt-0.5">{label}</Text>
+      <Text className="text-ink font-extrabold text-xl">{value}</Text>
+      <Text className="text-muted text-[11px] mt-0.5" numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -127,6 +131,32 @@ function ActivityBarRow({ label, value, max, color }: { label: string; value: nu
   );
 }
 
+function SquadChip({ name, onPress }: { name: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center rounded-xl px-3 py-2.5 mr-2"
+      style={{ backgroundColor: "white", ...CARD_SHADOW, gap: 8, width: 160 }}
+    >
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 34, height: 34, backgroundColor: colors.primaryLight }}
+      >
+        <Ionicons name="people" size={16} color={colors.primaryDark} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-ink font-semibold text-xs" numberOfLines={1}>
+          {name}
+        </Text>
+        <Text className="text-muted text-[10px] mt-0.5" numberOfLines={1}>
+          Active member
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={14} color={colors.muted} />
+    </Pressable>
+  );
+}
+
 function AchievementBadge({ achievement }: { achievement: Achievement }) {
   return (
     <View style={{ width: "31%", alignItems: "center", marginBottom: 16 }}>
@@ -151,11 +181,16 @@ function AchievementBadge({ achievement }: { achievement: Achievement }) {
   );
 }
 
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ProfileStackParamList>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
+
 export default function ProfileScreen() {
   const profile = useProfileStore((s) => s.profile);
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const userId = useAuthStore((s) => s.session?.user.id);
-  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const { data: stats, isLoading } = useProfileStats(userId);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
@@ -164,6 +199,7 @@ export default function ProfileScreen() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
 
   async function handleChangeAvatar() {
     if (!userId) return;
@@ -233,7 +269,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-100"
+      className="flex-1 bg-green-50"
       contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
@@ -242,10 +278,10 @@ export default function ProfileScreen() {
         <View className="flex-row items-center mb-6">
           <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
             {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} className="w-16 h-16 rounded-full bg-primary-light" />
+              <Image source={{ uri: profile.avatar }} className="w-20 h-20 rounded-full bg-primary-light" />
             ) : (
-              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center">
-                <Text className="text-2xl font-bold text-primary">
+              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-3xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
               </View>
@@ -257,48 +293,91 @@ export default function ProfileScreen() {
             ) : (
               <View
                 className="absolute bottom-0 right-0 items-center justify-center rounded-full bg-primary"
-                style={{ width: 22, height: 22, borderWidth: 2, borderColor: "white" }}
+                style={{ width: 24, height: 24, borderWidth: 2, borderColor: "white" }}
               >
-                <Ionicons name="camera" size={11} color="white" />
+                <Ionicons name="camera" size={12} color="white" />
               </View>
             )}
           </Pressable>
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-ink">{profile?.full_name ?? "Profile"}</Text>
-            <Text className="text-muted text-sm">{profile?.email}</Text>
+          <View className="flex-1 mr-2">
+            <Text className="text-2xl font-bold text-ink" numberOfLines={1}>
+              {profile?.full_name ?? "Profile"}
+            </Text>
+            <Text className="text-muted text-sm" numberOfLines={1}>
+              {profile?.email}
+            </Text>
             {profile?.created_at ? (
-              <Text className="text-muted text-xs mt-0.5">Member since {formatMonthYear(profile.created_at)}</Text>
+              <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+                <Ionicons name="calendar-outline" size={12} color={colors.muted} />
+                <Text className="text-muted text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
+              </View>
             ) : null}
           </View>
+          <Pressable
+            onPress={handleChangeAvatar}
+            disabled={uploadingAvatar}
+            className="flex-row items-center bg-white rounded-full px-3.5 py-2"
+            style={{ gap: 6, ...CARD_SHADOW }}
+          >
+            <Ionicons name="pencil-outline" size={14} color={colors.primaryDark} />
+            <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+              Edit Profile
+            </Text>
+          </Pressable>
         </View>
 
-        {/* Rating & skill card */}
-        <View className="bg-white rounded-2xl p-4 mb-6" style={CARD_SHADOW}>
-          <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
-            RATING
+        {/* Rating card */}
+        <View className="rounded-2xl p-4 mb-4 overflow-hidden" style={{ backgroundColor: "#0E4429" }}>
+          <Ionicons
+            name="stats-chart"
+            size={90}
+            color="white"
+            style={{ position: "absolute", right: -10, bottom: -16, opacity: 0.1 }}
+          />
+          <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
+            <Text
+              numberOfLines={2}
+              style={{
+                color: "white",
+                fontSize: 11,
+                fontWeight: "700",
+                fontStyle: "italic",
+                textAlign: "right",
+                opacity: 0.55,
+              }}
+            >
+              {"Play More\nGet Better"}
+            </Text>
+            <Ionicons name="trending-up" size={14} color="white" style={{ marginTop: 4, opacity: 0.55 }} />
+          </View>
+          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: "rgba(255,255,255,0.75)" }}>
+            Your Rating
           </Text>
-          <View className="flex-row items-center justify-between mb-2">
+          <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
             <View className="flex-row items-center" style={{ gap: 10 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 40, height: 40, backgroundColor: ratingTier.bg }}
+                style={{ width: 44, height: 44, backgroundColor: ratingTier.bg }}
               >
-                <Ionicons name="flame" size={20} color={ratingTier.color} />
+                <Ionicons name="flame" size={22} color={ratingTier.color} />
               </View>
-              <Text className="text-ink font-extrabold" style={{ fontSize: 30, lineHeight: 34 }}>
+              <Text className="text-white font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
                 {rating}
               </Text>
             </View>
-            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: ratingTier.bg }}>
+          </View>
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
+              {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
+            </Text>
+            <View className="flex-row items-center rounded-full pl-2.5 pr-1.5 py-1" style={{ backgroundColor: ratingTier.bg, gap: 2 }}>
               <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
                 {ratingTier.label}
               </Text>
+              <Ionicons name="chevron-forward" size={12} color={ratingTier.color} />
             </View>
           </View>
-          <Text className="text-muted text-xs mb-2">
-            {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
-          </Text>
-          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+          <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
             <View
               style={{
                 height: 8,
@@ -308,26 +387,35 @@ export default function ProfileScreen() {
               }}
             />
           </View>
+        </View>
 
-          <View className="h-px bg-border my-4" />
-
-          <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>
-            SKILL LEVEL
-          </Text>
-          <Pressable
-            onPress={() => setSkillPickerOpen(true)}
-            className="flex-row items-center justify-between rounded-xl px-3.5 py-3"
-            style={{ backgroundColor: colors.primaryLight }}
-          >
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Ionicons name="medal-outline" size={18} color={colors.primaryDark} />
-              <Text style={{ color: colors.primaryDark }} className="font-semibold">
-                {effectiveSkillLevel ? capitalize(effectiveSkillLevel) : "Tap to set your skill level"}
+        {/* Skill level card */}
+        <Pressable
+          onPress={() => setSkillPickerOpen(true)}
+          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-6"
+          style={{ backgroundColor: colors.primaryLight }}
+        >
+          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
+            <View
+              className="items-center justify-center rounded-2xl"
+              style={{ width: 44, height: 44, backgroundColor: colors.primaryDark }}
+            >
+              <Ionicons name="medal-outline" size={22} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.75 }}>
+                Skill Level
+              </Text>
+              <Text className="font-extrabold text-lg" style={{ color: colors.primaryDark }}>
+                {effectiveSkillLevel ? capitalize(effectiveSkillLevel) : "Not set"}
+              </Text>
+              <Text className="text-xs" style={{ color: colors.primaryDark, opacity: 0.6 }}>
+                Tap to update
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.primaryDark} />
-          </Pressable>
-        </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+        </Pressable>
 
         {isLoading ? (
           <ActivityIndicator color={colors.primary} className="my-8" />
@@ -337,50 +425,90 @@ export default function ProfileScreen() {
             <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
               <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.gamesPlayedTotal ?? 0} label="Games Played" />
               <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={stats?.tournamentsPlayedTotal ?? 0} label="Tournaments Played" />
-              <StatCard icon="star-outline" bg="#FDF4FF" fg="#A21CAF" value={stats?.gamesHostedTotal ?? 0} label="Games Hosted" />
+              <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={stats?.gamesHostedTotal ?? 0} label="Games Hosted" />
               <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={stats?.activeSquads.length ?? 0} label="Active Squads" />
-              <StatCard icon="time-outline" bg="#ECFEFF" fg="#0891B2" value={stats?.hoursPlayedTotal ?? 0} label="Hours Played" />
+              <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.hoursPlayedTotal ?? 0} label="Hours Played" />
               <StatCard icon="heart-outline" bg="#FFF1F2" fg="#E11D48" value={stats?.favoriteVenuesCount ?? 0} label="Favorite Venues" />
             </View>
 
-            {/* Sport breakdown donut */}
-            <Text className="text-lg font-semibold text-ink mb-3">Sports You Play</Text>
-            {sportSegments.length === 0 ? (
-              <View className="bg-white rounded-2xl p-6 items-center mb-6" style={CARD_SHADOW}>
-                <Ionicons name="bar-chart-outline" size={28} color={colors.muted} />
-                <Text className="text-muted text-sm mt-2 text-center">
-                  Play your first game to see your sport breakdown here.
-                </Text>
-              </View>
-            ) : (
-              <View className="flex-row items-center mb-6" style={{ gap: 20 }}>
-                <DonutChart segments={sportSegments} centerLabel={String(totalPlayed)} centerSubLabel="Games" />
-                <View className="flex-1" style={{ gap: 8 }}>
-                  {sportSegments.map((s) => (
-                    <View key={s.label} className="flex-row items-center" style={{ gap: 8 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: s.color }} />
-                      <Text className="text-ink text-sm flex-1" numberOfLines={1}>
-                        {s.label}
-                      </Text>
-                      <Text className="text-muted text-xs">{Math.round((s.value / totalPlayed) * 100)}%</Text>
-                    </View>
-                  ))}
+            {/* Sport breakdown + activity, side by side */}
+            <View className="flex-row mb-6" style={{ gap: 12 }}>
+              <View className="bg-white rounded-2xl p-3.5 flex-1" style={CARD_SHADOW}>
+                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                  <Ionicons name="star" size={15} color={colors.primaryDark} />
+                  <Text className="text-ink font-semibold" numberOfLines={1}>
+                    Sports You Play
+                  </Text>
                 </View>
+                {sportSegments.length === 0 ? (
+                  <View className="items-center py-4">
+                    <Ionicons name="bar-chart-outline" size={24} color={colors.muted} />
+                    <Text className="text-muted text-xs mt-2 text-center">
+                      Play your first game to see this here.
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="items-center">
+                    <DonutChart
+                      segments={sportSegments}
+                      size={100}
+                      thickness={16}
+                      centerLabel={String(totalPlayed)}
+                      centerSubLabel="Games"
+                    />
+                    <View className="w-full mt-3" style={{ gap: 6 }}>
+                      {sportSegments.map((s) => (
+                        <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
+                          <Text className="text-ink text-xs flex-1" numberOfLines={1}>
+                            {s.label}
+                          </Text>
+                          <Text className="text-muted text-[11px]">{Math.round((s.value / totalPlayed) * 100)}%</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
               </View>
-            )}
 
-            {/* Activity breakdown */}
-            <Text className="text-lg font-semibold text-ink mb-3">Your Activity</Text>
-            <View className="bg-white rounded-2xl p-4 mb-6" style={CARD_SHADOW}>
-              <ActivityBarRow label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#2563EB" />
-              <ActivityBarRow label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#D97706" />
-              <ActivityBarRow label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#A21CAF" />
+              <View className="bg-white rounded-2xl p-3.5 flex-1" style={CARD_SHADOW}>
+                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                  <Ionicons name="bar-chart" size={15} color={colors.primaryDark} />
+                  <Text className="text-ink font-semibold" numberOfLines={1}>
+                    Your Activity
+                  </Text>
+                </View>
+                <ActivityBarRow label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#2563EB" />
+                <ActivityBarRow label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#D97706" />
+                <ActivityBarRow label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#A21CAF" />
+              </View>
             </View>
 
             {/* Achievements */}
-            <Text className="text-lg font-semibold text-ink mb-3">Achievements</Text>
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <Ionicons name="trophy" size={16} color={colors.primaryDark} />
+                <Text className="text-lg font-semibold text-ink">Achievements</Text>
+              </View>
+              {achievements.length > 6 ? (
+                <Pressable
+                  onPress={() => setShowAllAchievements((v) => !v)}
+                  className="flex-row items-center"
+                  style={{ gap: 2 }}
+                >
+                  <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+                    {showAllAchievements ? "Show less" : "See all"}
+                  </Text>
+                  <Ionicons
+                    name={showAllAchievements ? "chevron-up" : "chevron-forward"}
+                    size={14}
+                    color={colors.primaryDark}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
             <View className="flex-row flex-wrap justify-between mb-3">
-              {achievements.map((a) => (
+              {(showAllAchievements ? achievements : achievements.slice(0, 6)).map((a) => (
                 <AchievementBadge key={a.key} achievement={a} />
               ))}
             </View>
@@ -388,16 +516,26 @@ export default function ProfileScreen() {
             {/* Active squads */}
             {stats && stats.activeSquads.length > 0 ? (
               <>
-                <Text className="text-lg font-semibold text-ink mb-3">Active Squads</Text>
-                {stats.activeSquads.map((s) => (
-                  <EnrolledRow
-                    key={s.id}
-                    title={s.name}
-                    subtitle="You're an active member"
-                    onPress={() => navigation.navigate("SquadDetail", { squadId: s.id })}
-                  />
-                ))}
-                <View className="h-3" />
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Ionicons name="people" size={16} color={colors.primaryDark} />
+                    <Text className="text-lg font-semibold text-ink">Active Squads</Text>
+                  </View>
+                  <Pressable onPress={() => navigation.navigate("Community", { screen: "SquadsList" })}>
+                    <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+                      See all
+                    </Text>
+                  </Pressable>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
+                  {stats.activeSquads.map((s) => (
+                    <SquadChip
+                      key={s.id}
+                      name={s.name}
+                      onPress={() => navigation.navigate("SquadDetail", { squadId: s.id })}
+                    />
+                  ))}
+                </ScrollView>
               </>
             ) : null}
 
