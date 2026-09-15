@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -6,48 +7,146 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useMyCricketMatches, useDeleteCricketMatch } from "../../hooks/useCricket";
-import { friendlyCricketError, type CricketMatch } from "../../lib/api/cricket";
+import { friendlyCricketError, ballRowToEvent, type CricketMatchDetail } from "../../lib/api/cricket";
+import { replayInnings, formatOvers } from "../../lib/cricketScoring";
 import Bouncy from "../../components/Bouncy";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
+type TabKey = "all" | "live" | "upcoming" | "completed";
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "all", label: "All Matches" },
+  { key: "live", label: "Live" },
+  { key: "upcoming", label: "Upcoming" },
+  { key: "completed", label: "Completed" },
+];
+
+// Overs limit doesn't map to a single "official" format name in general, so
+// this only labels the counts that actually correspond to a recognized
+// format and otherwise just states the real overs count — never guesses.
+function formatTag(oversLimit: number): string {
+  if (oversLimit === 20) return "T20";
+  if (oversLimit === 10) return "T10";
+  if (oversLimit === 50) return "ODI";
+  return `${oversLimit} OV`;
+}
+
+// Score of whichever innings is currently (or was last) batting — derived
+// from the same pure ball-by-ball engine the live scorer uses, replayed off
+// the real recorded balls, so this is never approximated or faked.
+function computeInningsScore(match: CricketMatchDetail) {
+  if (match.cricket_innings.length === 0) return null;
+  const innings = [...match.cricket_innings].sort((a, b) => a.innings_number - b.innings_number).at(-1)!;
+  const balls = [...innings.cricket_balls].sort((a, b) => a.seq - b.seq).map(ballRowToEvent);
+  const battingTeam = innings.batting_team as "A" | "B";
+  const totalPlayers = (battingTeam === "A" ? match.team_a_players.length : match.team_b_players.length) || 11;
+  const state = replayInnings(
+    balls,
+    battingTeam,
+    match.overs_limit,
+    totalPlayers,
+    balls[0]?.strikerName ?? "",
+    balls[0]?.nonStrikerName ?? ""
+  );
+  return { runs: state.runs, wickets: state.wickets, oversLabel: formatOvers(state.legalBalls) };
+}
+
+function TeamAvatar({ initial }: { initial: string }) {
+  return (
+    <View
+      className="items-center justify-center rounded-full"
+      style={{ width: 56, height: 56, backgroundColor: colors.primaryLight }}
+    >
+      <Text className="font-extrabold text-xl" style={{ color: colors.primaryDark }}>
+        {initial}
+      </Text>
+    </View>
+  );
+}
 
 function MatchCard({
   match,
   onPress,
   onDelete,
 }: {
-  match: CricketMatch;
+  match: CricketMatchDetail;
   onPress: () => void;
   onDelete: () => void;
 }) {
   const isLive = match.status === "IN_PROGRESS";
+  const score = computeInningsScore(match);
+  const dateLabel = new Date(match.created_at).toLocaleDateString("en-PK", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <Bouncy
       onPress={onPress}
       onLongPress={onDelete}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
-      className="mb-3"
+      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20 }}
+      className="mb-4"
     >
-      <View className="border border-border rounded-2xl bg-white p-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <View className={`px-2 py-0.5 rounded-full ${isLive ? "bg-red-50" : "bg-green-50"}`}>
-            <Text className={`text-xs font-bold ${isLive ? "text-red-600" : "text-green-700"}`}>
-              {isLive ? "● LIVE" : "COMPLETED"}
+      <View
+        className="rounded-[20px] bg-white overflow-hidden"
+        style={isLive ? { borderLeftWidth: 3, borderLeftColor: "#EF4444" } : undefined}
+      >
+        <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
+          <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
+            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} /> : null}
+            <Text className={`text-xs font-bold ${isLive ? "text-white" : "text-green-700"}`}>
+              {isLive ? "LIVE" : "COMPLETED"}
             </Text>
           </View>
-          <Text className="text-muted text-xs">{match.overs_limit} overs</Text>
+          <View className="flex-row items-center" style={{ gap: 4 }}>
+            <Text className="text-muted text-sm">{match.overs_limit} overs</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </View>
         </View>
-        <Text className="text-ink font-bold text-base">
-          {match.team_a_name} <Text className="text-muted font-normal">vs</Text> {match.team_b_name}
-        </Text>
-        {match.result_summary && (
-          <Text className="text-primary text-sm font-semibold mt-1">{match.result_summary}</Text>
-        )}
-        <Text className="text-muted text-xs mt-2">
-          {new Date(match.created_at).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
-        </Text>
+
+        <View className="flex-row items-center justify-between px-6 pb-3">
+          <View className="items-center" style={{ width: 72 }}>
+            <TeamAvatar initial={match.team_a_name.charAt(0).toUpperCase() || "A"} />
+            <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
+              {match.team_a_name}
+            </Text>
+          </View>
+
+          <View className="items-center flex-1">
+            <Text className="text-ink font-extrabold" style={{ fontSize: 30 }}>
+              {score ? `${score.runs} - ${score.wickets}` : "0 - 0"}
+            </Text>
+            <Text className="text-muted text-xs mt-0.5">{score ? `${score.oversLabel} overs` : "0.0 overs"}</Text>
+            <View className="rounded-full px-2.5 py-0.5 mt-1.5" style={{ backgroundColor: colors.primaryLight }}>
+              <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
+                {formatTag(match.overs_limit)}
+              </Text>
+            </View>
+          </View>
+
+          <View className="items-center" style={{ width: 72 }}>
+            <TeamAvatar initial={match.team_b_name.charAt(0).toUpperCase() || "B"} />
+            <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
+              {match.team_b_name}
+            </Text>
+          </View>
+        </View>
+
+        {!isLive && match.result_summary ? (
+          <Text className="text-primary text-xs font-semibold text-center pb-2" numberOfLines={1}>
+            {match.result_summary}
+          </Text>
+        ) : null}
+
+        <View className="h-px bg-border" />
+
+        <View className="flex-row items-center px-4 py-3" style={{ gap: 8 }}>
+          <Ionicons name="calendar-outline" size={15} color={colors.muted} />
+          <Text className="text-muted text-sm">{dateLabel}</Text>
+        </View>
       </View>
     </Bouncy>
   );
@@ -59,8 +158,9 @@ export default function ScorecardHomeScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: matches, isLoading } = useMyCricketMatches(userId);
   const deleteMatch = useDeleteCricketMatch();
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
 
-  const handleDelete = (match: CricketMatch) => {
+  const handleDelete = (match: CricketMatchDetail) => {
     Alert.alert(
       "Delete Match",
       `Delete the scorecard for ${match.team_a_name} vs ${match.team_b_name}? This can't be undone.`,
@@ -78,34 +178,99 @@ export default function ScorecardHomeScreen() {
     );
   };
 
+  const allMatches = matches ?? [];
+  const filteredMatches = allMatches.filter((m) => {
+    if (activeTab === "live") return m.status === "IN_PROGRESS";
+    if (activeTab === "completed") return m.status === "COMPLETED";
+    // No scheduled-but-not-yet-started status exists in this app today —
+    // every match starts live at creation — so this tab is honestly empty
+    // rather than showing anything made up.
+    if (activeTab === "upcoming") return false;
+    return true;
+  });
+
   return (
-    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
-      <View className="flex-row items-center justify-between px-5 mb-4">
-        <Text className="text-2xl font-bold text-ink">Scorecard</Text>
+    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-row items-start justify-between px-5 mb-4">
+        <View>
+          <Text className="text-2xl font-bold text-ink">Scorecard</Text>
+          <Text className="text-muted text-sm mt-0.5">Track and manage all your matches</Text>
+        </View>
         <Pressable
           onPress={() => navigation.navigate("NewMatch")}
-          className="flex-row items-center bg-primary rounded-xl px-3 py-2"
-          style={{ gap: 4, ...primaryButtonShadow }}
+          className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
+          style={{ gap: 6, ...primaryButtonShadow }}
         >
           <Ionicons name="add" size={18} color="white" />
-          <Text className="text-white font-semibold text-sm">New Match</Text>
+          <Text className="text-white font-bold text-sm">New Match</Text>
         </Pressable>
+      </View>
+
+      <View className="px-5 mb-4">
+        <View className="flex-row items-center bg-white rounded-2xl p-1.5" style={cardShadow}>
+          {TABS.map((tab) => {
+            const selected = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
+                className="flex-1 flex-row items-center justify-center rounded-xl py-2"
+                style={{ gap: 5, backgroundColor: selected ? colors.primaryLight : "transparent" }}
+              >
+                {tab.key === "live" ? (
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#EF4444" }} />
+                ) : null}
+                <Text
+                  className={`text-xs ${selected ? "font-bold" : "font-medium"}`}
+                  style={{ color: selected ? colors.primaryDark : colors.muted }}
+                  numberOfLines={1}
+                >
+                  {tab.label}
+                </Text>
+                {tab.key === "all" && allMatches.length > 0 ? (
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ minWidth: 16, height: 16, paddingHorizontal: 3, backgroundColor: colors.primaryDark }}
+                  >
+                    <Text className="text-white font-bold" style={{ fontSize: 10 }}>
+                      {allMatches.length}
+                    </Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
         <FlatList
-          data={matches ?? []}
+          data={filteredMatches}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20, paddingTop: 0 }}
           ListEmptyComponent={
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <MaterialCommunityIcons name="cricket" size={48} color={colors.border} />
-              <Text className="text-ink font-semibold text-base">No matches yet</Text>
-              <Text className="text-muted text-sm text-center px-8">
-                Start a new match and score it ball-by-ball, live.
+              <Text className="text-ink font-semibold text-base">
+                {activeTab === "all" ? "No matches yet" : `No ${activeTab} matches`}
               </Text>
+              <Text className="text-muted text-sm text-center px-8">
+                {activeTab === "all"
+                  ? "Start a new match and score it ball-by-ball, live."
+                  : "Create a new match to start keeping score and track your games here."}
+              </Text>
+              {activeTab !== "live" && activeTab !== "upcoming" ? (
+                <Pressable
+                  onPress={() => navigation.navigate("NewMatch")}
+                  className="flex-row items-center bg-primary rounded-full px-5 py-3 mt-2"
+                  style={{ gap: 6, ...primaryButtonShadow }}
+                >
+                  <Ionicons name="add" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">New Match</Text>
+                </Pressable>
+              ) : null}
             </View>
           }
           renderItem={({ item }) => (

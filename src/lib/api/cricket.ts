@@ -29,14 +29,14 @@ export type CricketMatchDetail = CricketMatch & {
 
 const MATCH_DETAIL_SELECT = "*, cricket_innings(*, cricket_balls(*))";
 
-export async function fetchMyCricketMatches(userId: string): Promise<CricketMatch[]> {
+export async function fetchMyCricketMatches(userId: string): Promise<CricketMatchDetail[]> {
   const { data, error } = await supabase
     .from("cricket_matches")
-    .select("*")
+    .select(MATCH_DETAIL_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as unknown as CricketMatchDetail[];
 }
 
 export async function fetchCricketMatch(matchId: string): Promise<CricketMatchDetail> {
