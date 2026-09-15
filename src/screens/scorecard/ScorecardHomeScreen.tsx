@@ -250,27 +250,43 @@ export default function ScorecardHomeScreen() {
           data={filteredMatches}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20, paddingTop: 0 }}
-          ListEmptyComponent={
-            <View className="items-center mt-16" style={{ gap: 12 }}>
-              <MaterialCommunityIcons name="cricket" size={48} color={colors.border} />
-              <Text className="text-ink font-semibold text-base">
-                {activeTab === "all" ? "No matches yet" : `No ${activeTab} matches`}
+          ListFooterComponent={
+            <View className="items-center" style={{ gap: 4, marginTop: filteredMatches.length > 0 ? 24 : 64 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 200, height: 200, backgroundColor: colors.primaryLight, opacity: 0.5 }}
+              >
+                <Ionicons
+                  name="sparkles"
+                  size={16}
+                  color={colors.primaryDark}
+                  style={{ position: "absolute", top: 34, left: 46, opacity: 0.7 }}
+                />
+                <Ionicons
+                  name="sparkles"
+                  size={12}
+                  color={colors.primaryDark}
+                  style={{ position: "absolute", bottom: 46, right: 40, opacity: 0.6 }}
+                />
+                <MaterialCommunityIcons
+                  name="cricket"
+                  size={110}
+                  color={colors.primaryDark}
+                  style={{ opacity: 0.85, transform: [{ rotate: "-12deg" }] }}
+                />
+              </View>
+              <Text className="text-ink font-bold text-lg mt-2">No more matches yet</Text>
+              <Text className="text-muted text-sm text-center px-10">
+                Create a new match to start keeping score{"\n"}and track your games here.
               </Text>
-              <Text className="text-muted text-sm text-center px-8">
-                {activeTab === "all"
-                  ? "Start a new match and score it ball-by-ball, live."
-                  : "Create a new match to start keeping score and track your games here."}
-              </Text>
-              {activeTab !== "live" && activeTab !== "upcoming" ? (
-                <Pressable
-                  onPress={() => navigation.navigate("NewMatch")}
-                  className="flex-row items-center bg-primary rounded-full px-5 py-3 mt-2"
-                  style={{ gap: 6, ...primaryButtonShadow }}
-                >
-                  <Ionicons name="add" size={18} color="white" />
-                  <Text className="text-white font-bold text-sm">New Match</Text>
-                </Pressable>
-              ) : null}
+              <Pressable
+                onPress={() => navigation.navigate("NewMatch")}
+                className="flex-row items-center bg-primary rounded-full px-6 py-3.5 mt-3"
+                style={{ gap: 8, ...primaryButtonShadow }}
+              >
+                <Ionicons name="add" size={18} color="white" />
+                <Text className="text-white font-bold text-sm">New Match</Text>
+              </Pressable>
             </View>
           }
           renderItem={({ item }) => (
