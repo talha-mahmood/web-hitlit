@@ -323,7 +323,22 @@ export default function LiveScoringScreen() {
   const requiredRunRate =
     target && inningsState ? computeRequiredRunRate(target, inningsState.runs, inningsState.legalBalls, match.overs_limit) : null;
 
-  const lastBalls = ballEvents.slice(-6);
+  // Only this over's deliveries — resets to empty right as a new over
+  // starts, rather than a rolling last-6 window that used to keep the
+  // previous over's balls on screen after the first ball of the next one.
+  const thisOverBalls: BallEvent[] = [];
+  {
+    let legalCount = 0;
+    for (const b of ballEvents) {
+      thisOverBalls.push(b);
+      const isLegal = b.extraType !== "WIDE" && b.extraType !== "NOBALL";
+      if (isLegal) legalCount += 1;
+      if (legalCount === 6) {
+        thisOverBalls.length = 0;
+        legalCount = 0;
+      }
+    }
+  }
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -440,9 +455,9 @@ export default function LiveScoringScreen() {
             </View>
 
             {/* This over */}
-            {lastBalls.length > 0 && (
+            {thisOverBalls.length > 0 && (
               <View className="flex-row items-center flex-wrap mt-4" style={{ gap: 6 }}>
-                {lastBalls.map((b, i) => (
+                {thisOverBalls.map((b, i) => (
                   <View
                     key={i}
                     className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
