@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, Tex
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import {
   useCricketMatch,
@@ -33,6 +33,12 @@ const RUN_OPTIONS = [0, 1, 2, 3, 4, 6];
 const WIDE_OPTIONS = [1, 2, 3, 4, 5];
 const NOBALL_BAT_OPTIONS = [0, 1, 2, 3, 4, 6];
 const BYE_OPTIONS = [1, 2, 3, 4];
+const EXTRA_TYPES: { label: string; value: ExtraType; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { label: "Wide", value: "WIDE", icon: "swap-horizontal-outline" },
+  { label: "No Ball", value: "NOBALL", icon: "ban-outline" },
+  { label: "Bye", value: "BYE", icon: "walk-outline" },
+  { label: "Leg Bye", value: "LEGBYE", icon: "hand-left-outline" },
+];
 const WICKET_TYPES: { label: string; value: WicketType }[] = [
   { label: "Bowled", value: "BOWLED" },
   { label: "Caught", value: "CAUGHT" },
@@ -96,27 +102,47 @@ function RunPad({
   onPress,
   label,
   disabled,
+  highlightBoundaries,
 }: {
   options: number[];
   onPress: (n: number) => void;
   label?: string;
   disabled?: boolean;
+  // Only meaningful for panels where the numbers really are runs scored off
+  // the bat (the main run pad, and the no-ball "runs off the bat" pad) — a
+  // 4 there is a genuine boundary. Wide/bye totals reuse the same component
+  // but the numbers mean something else, so they never pass this.
+  highlightBoundaries?: boolean;
 }) {
   return (
     <View>
       {label && <Text className="text-muted text-xs font-semibold mb-2">{label}</Text>}
       <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-        {options.map((n) => (
-          <Pressable
-            key={n}
-            onPress={() => onPress(n)}
-            disabled={disabled}
-            className="items-center justify-center rounded-xl bg-gray-100"
-            style={{ width: 52, height: 52, opacity: disabled ? 0.5 : 1 }}
-          >
-            <Text className="text-ink font-bold text-base">{n}</Text>
-          </Pressable>
-        ))}
+        {options.map((n) => {
+          const isFour = highlightBoundaries && n === 4;
+          const isSix = highlightBoundaries && n === 6;
+          return (
+            <Pressable
+              key={n}
+              onPress={() => onPress(n)}
+              disabled={disabled}
+              className="items-center justify-center rounded-xl"
+              style={{
+                width: 52,
+                height: 52,
+                opacity: disabled ? 0.5 : 1,
+                backgroundColor: isSix ? colors.primary : isFour ? colors.primaryLight : "#F3F4F6",
+              }}
+            >
+              <Text
+                className="font-bold text-base"
+                style={{ color: isSix ? "white" : isFour ? colors.primaryDark : colors.ink }}
+              >
+                {n}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -340,49 +366,101 @@ export default function LiveScoringScreen() {
     }
   }
 
+  const runsNeeded = target && inningsState ? Math.max(target - inningsState.runs, 0) : null;
+  const ballsLeft = target && inningsState ? Math.max(match.overs_limit * 6 - inningsState.legalBalls, 0) : null;
+
   return (
-    <View className="flex-1 bg-gray-100">
-      <View className="flex-row items-center bg-primary px-4 pb-4" style={{ paddingTop: insets.top + 16, gap: 10 }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color="white" />
-        </Pressable>
-        <Text className="text-white font-bold text-base flex-1" numberOfLines={1}>
-          {match.team_a_name} vs {match.team_b_name}
-        </Text>
-        <Pressable onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })} hitSlop={8}>
-          <Ionicons name="stats-chart" size={20} color="white" />
-        </Pressable>
+    <View className="flex-1 bg-green-50">
+      <View
+        className="overflow-hidden"
+        style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 16, paddingBottom: 16 }}
+      >
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            width: 200,
+            height: 200,
+            borderRadius: 100,
+            backgroundColor: "rgba(255,255,255,0.06)",
+            top: -80,
+            right: -50,
+          }}
+        />
+        <View className="flex-row items-center px-4" style={{ gap: 10 }}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
+          <View className="flex-1 flex-row items-center flex-wrap" style={{ gap: 8 }}>
+            <Text className="text-white font-bold text-lg" numberOfLines={1}>
+              {match.team_a_name} vs {match.team_b_name}
+            </Text>
+            {match.status === "IN_PROGRESS" ? (
+              <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
+                <Text className="text-white text-[10px] font-bold">LIVE</Text>
+              </View>
+            ) : null}
+          </View>
+          <Pressable
+            onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })}
+            hitSlop={8}
+            className="items-center justify-center rounded-full"
+            style={{ width: 38, height: 38, borderWidth: 1, borderColor: "rgba(255,255,255,0.35)" }}
+          >
+            <Ionicons name="stats-chart" size={17} color="white" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {/* Score header */}
         <View className="bg-white rounded-2xl border border-border p-4 mb-4" style={cardShadow}>
-          <Text className="text-muted text-xs font-semibold">
+          <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
             {battingTeamName} batting {currentInnings?.innings_number === 2 ? "(2nd innings)" : "(1st innings)"}
           </Text>
-          <View className="flex-row items-end mt-1" style={{ gap: 8 }}>
-            <Text className="text-ink font-extrabold text-3xl">
-              {inningsState?.runs ?? 0}/{inningsState?.wickets ?? 0}
-            </Text>
-            <Text className="text-muted text-base mb-1">
-              ({formatOvers(inningsState?.legalBalls ?? 0)} ov)
-            </Text>
+          <View className="flex-row items-center justify-between mt-1.5">
+            <View className="flex-row items-end" style={{ gap: 8 }}>
+              <Text className="text-ink font-extrabold text-3xl">
+                {inningsState?.runs ?? 0}/{inningsState?.wickets ?? 0}
+              </Text>
+              <Text className="text-muted text-base mb-1">
+                ({formatOvers(inningsState?.legalBalls ?? 0)} ov)
+              </Text>
+            </View>
+            {runsNeeded !== null && ballsLeft !== null ? (
+              <View className="rounded-2xl px-3 py-2" style={{ backgroundColor: colors.primaryLight, maxWidth: 150 }}>
+                <Text className="text-xs font-bold text-center" style={{ color: colors.primaryDark }}>
+                  {runsNeeded} runs needed from {ballsLeft} balls
+                </Text>
+              </View>
+            ) : null}
           </View>
-          <View className="flex-row items-center mt-1" style={{ gap: 16 }}>
-            <Text className="text-muted text-xs">CRR: {runRate.toFixed(2)}</Text>
-            {target && (
+
+          <View className="h-px bg-border mt-3 mb-2.5" />
+
+          <View className="flex-row items-center">
+            <View className="flex-1 items-center">
+              <Text className="text-muted text-xs">CRR</Text>
+              <Text className="text-ink font-bold text-base mt-0.5">{runRate.toFixed(2)}</Text>
+            </View>
+            {target ? (
               <>
-                <Text className="text-muted text-xs">Target: {target}</Text>
-                {requiredRunRate !== null && <Text className="text-muted text-xs">RRR: {requiredRunRate.toFixed(2)}</Text>}
+                <View style={{ width: 1, height: 30, backgroundColor: colors.border }} />
+                <View className="flex-1 items-center">
+                  <Text className="text-muted text-xs">Target</Text>
+                  <Text className="text-ink font-bold text-base mt-0.5">{target}</Text>
+                </View>
+                <View style={{ width: 1, height: 30, backgroundColor: colors.border }} />
+                <View className="flex-1 items-center">
+                  <Text className="text-muted text-xs">RRR</Text>
+                  <Text className="text-ink font-bold text-base mt-0.5">
+                    {requiredRunRate !== null ? requiredRunRate.toFixed(2) : "—"}
+                  </Text>
+                </View>
               </>
-            )}
+            ) : null}
           </View>
-          {target && inningsState && (
-            <Text className="text-primary text-xs font-semibold mt-1">
-              {Math.max(target - inningsState.runs, 0)} runs needed from{" "}
-              {Math.max(match.overs_limit * 6 - inningsState.legalBalls, 0)} balls
-            </Text>
-          )}
         </View>
 
         {inningsOver ? (
@@ -416,20 +494,26 @@ export default function LiveScoringScreen() {
             {/* Batsmen & bowler */}
             <View className="flex-row" style={{ gap: 10 }}>
               <View className="flex-1 bg-white rounded-2xl border border-border p-3" style={cardShadow}>
-                <Text className="text-muted text-xs font-semibold mb-1">Batting</Text>
+                <View className="flex-row items-center mb-1.5" style={{ gap: 5 }}>
+                  <MaterialCommunityIcons name="cricket" size={13} color={colors.primaryDark} />
+                  <Text className="text-muted text-xs font-semibold">Batting</Text>
+                </View>
                 {effectiveStriker && (
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-ink text-sm font-bold" numberOfLines={1}>
+                    <Text className="text-ink text-sm font-bold flex-1" numberOfLines={1}>
                       {effectiveStriker}*
                     </Text>
-                    <Text className="text-ink text-sm">
-                      {strikerStat?.runs ?? 0} ({strikerStat?.balls ?? 0})
-                    </Text>
+                    <View className="flex-row items-center" style={{ gap: 3 }}>
+                      <Text className="text-ink text-sm font-semibold">
+                        {strikerStat?.runs ?? 0} ({strikerStat?.balls ?? 0})
+                      </Text>
+                      <Ionicons name="play" size={9} color={colors.primary} />
+                    </View>
                   </View>
                 )}
                 {effectiveNonStriker && (
                   <View className="flex-row items-center justify-between mt-1">
-                    <Text className="text-muted text-sm" numberOfLines={1}>
+                    <Text className="text-muted text-sm flex-1" numberOfLines={1}>
                       {effectiveNonStriker}
                     </Text>
                     <Text className="text-muted text-sm">
@@ -439,47 +523,71 @@ export default function LiveScoringScreen() {
                 )}
               </View>
               <View className="flex-1 bg-white rounded-2xl border border-border p-3" style={cardShadow}>
-                <Text className="text-muted text-xs font-semibold mb-1">Bowling</Text>
+                <View className="flex-row items-center mb-1.5" style={{ gap: 5 }}>
+                  <Ionicons name="ellipse" size={11} color={colors.primaryDark} />
+                  <Text className="text-muted text-xs font-semibold">Bowling</Text>
+                </View>
                 {effectiveBowler && (
                   <>
                     <Text className="text-ink text-sm font-bold" numberOfLines={1}>
                       {effectiveBowler}
                     </Text>
                     <Text className="text-muted text-sm mt-1">
-                      {formatOvers(bowlerStat?.legalBalls ?? 0)}-{bowlerStat?.maidens ?? 0}-
-                      {bowlerStat?.runsConceded ?? 0}-{bowlerStat?.wickets ?? 0}
+                      {formatOvers(bowlerStat?.legalBalls ?? 0)} - {bowlerStat?.maidens ?? 0} -{" "}
+                      {bowlerStat?.runsConceded ?? 0} - {bowlerStat?.wickets ?? 0}
                     </Text>
                   </>
                 )}
               </View>
             </View>
 
-            {/* This over */}
-            {thisOverBalls.length > 0 && (
-              <View className="flex-row items-center flex-wrap mt-4" style={{ gap: 6 }}>
-                {thisOverBalls.map((b, i) => (
-                  <View
-                    key={i}
-                    className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
-                    style={{ width: 30, height: 30 }}
-                  >
-                    <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
-                      {b.isWicket
-                        ? "W"
-                        : b.extraType === "WIDE"
-                          ? `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`
-                          : b.extraType === "NOBALL"
-                            ? `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`
-                            : b.extraType === "BYE"
-                              ? `B${b.extraRuns}`
-                              : b.extraType === "LEGBYE"
-                                ? `Lb${b.extraRuns}`
-                                : b.runsBatted}
-                    </Text>
-                  </View>
-                ))}
+            {/* Recent balls (this over) */}
+            <View className="bg-white rounded-2xl border border-border p-3.5 mt-4" style={cardShadow}>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-ink font-bold text-base">Recent Balls</Text>
+                <View className="flex-row items-center" style={{ gap: 3 }}>
+                  <Text className="text-muted text-sm font-medium">This Over</Text>
+                  <Ionicons name="chevron-down" size={14} color={colors.muted} />
+                </View>
               </View>
-            )}
+              <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
+                {Array.from({ length: Math.max(6, thisOverBalls.length) }).map((_, i) => {
+                  const b = thisOverBalls[i];
+                  if (!b) {
+                    return (
+                      <View
+                        key={i}
+                        className="items-center justify-center rounded-full"
+                        style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+                      >
+                        <Text className="text-muted text-xs font-bold">-</Text>
+                      </View>
+                    );
+                  }
+                  return (
+                    <View
+                      key={i}
+                      className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
+                      style={{ width: 34, height: 34 }}
+                    >
+                      <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
+                        {b.isWicket
+                          ? "W"
+                          : b.extraType === "WIDE"
+                            ? `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`
+                            : b.extraType === "NOBALL"
+                              ? `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`
+                              : b.extraType === "BYE"
+                                ? `B${b.extraRuns}`
+                                : b.extraType === "LEGBYE"
+                                  ? `Lb${b.extraRuns}`
+                                  : b.runsBatted}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
 
             {/* Scoring pad — locked while a ball is being saved so a slow
                 network or a fast double-tap can never fire two deliveries
@@ -488,35 +596,52 @@ export default function LiveScoringScreen() {
             <View pointerEvents={addBall.isPending ? "none" : "auto"} style={{ opacity: addBall.isPending ? 0.5 : 1 }}>
             {readyToScore && extraMode === null && (
               <View className="mt-5">
-                <RunPad options={RUN_OPTIONS} onPress={handleRuns} />
-                <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
-                  {(["WIDE", "NOBALL", "BYE", "LEGBYE"] as const).map((type) => (
+                <Text className="text-ink font-bold text-base mb-3">Add Runs</Text>
+                <RunPad options={RUN_OPTIONS} onPress={handleRuns} highlightBoundaries />
+
+                <Text className="text-ink font-bold text-base mt-5 mb-3">Extras</Text>
+                <View className="flex-row" style={{ gap: 8 }}>
+                  {EXTRA_TYPES.map((type) => (
                     <Pressable
-                      key={type}
-                      onPress={() => setExtraMode(type)}
-                      className="rounded-xl px-4 py-3 border border-border bg-white"
+                      key={type.value}
+                      onPress={() => setExtraMode(type.value)}
+                      className="flex-1 items-center justify-center rounded-2xl border border-border bg-white py-3.5"
+                      style={{ gap: 6 }}
                     >
-                      <Text className="text-ink font-semibold text-sm">
-                        {type === "WIDE" ? "Wide" : type === "NOBALL" ? "No Ball" : type === "BYE" ? "Bye" : "Leg Bye"}
-                      </Text>
+                      <Ionicons name={type.icon} size={18} color={colors.ink} />
+                      <Text className="text-ink font-semibold text-xs">{type.label}</Text>
                     </Pressable>
                   ))}
-                  <Pressable
-                    onPress={() => setExtraMode("WICKET")}
-                    className="rounded-xl px-4 py-3 bg-red-500"
-                  >
-                    <Text className="text-white font-bold text-sm">WICKET</Text>
-                  </Pressable>
                 </View>
+
+                <Pressable
+                  onPress={() => setExtraMode("WICKET")}
+                  className="flex-row items-center justify-center bg-red-500 rounded-2xl py-3.5 mt-3"
+                  style={{ gap: 8 }}
+                >
+                  <MaterialCommunityIcons name="gate" size={18} color="white" />
+                  <Text className="text-white font-bold text-base">WICKET</Text>
+                </Pressable>
+
                 <Pressable
                   onPress={handleUndo}
                   disabled={ballEvents.length === 0 || deleteLastBall.isPending}
-                  className="flex-row items-center justify-center mt-4 py-2"
-                  style={{ gap: 6 }}
+                  className="flex-row items-center justify-center border border-border bg-white rounded-2xl py-3 mt-3"
+                  style={{ gap: 6, opacity: ballEvents.length === 0 ? 0.5 : 1 }}
                 >
                   <Ionicons name="arrow-undo" size={16} color={colors.muted} />
-                  <Text className="text-muted text-sm font-medium">Undo Last Ball</Text>
+                  <Text className="text-muted text-sm font-semibold">Undo Last Ball</Text>
                 </Pressable>
+
+                <View
+                  className="flex-row items-center rounded-2xl px-4 py-3 mt-3"
+                  style={{ backgroundColor: colors.primaryLight, gap: 8 }}
+                >
+                  <Ionicons name="bulb" size={16} color={colors.primaryDark} />
+                  <Text className="text-xs font-medium flex-1" style={{ color: colors.primaryDark }}>
+                    Tap a run or extra to add to the score
+                  </Text>
+                </View>
               </View>
             )}
 
@@ -531,7 +656,7 @@ export default function LiveScoringScreen() {
 
             {readyToScore && extraMode === "NOBALL" && (
               <View className="mt-5">
-                <RunPad options={NOBALL_BAT_OPTIONS} onPress={handleNoBall} label="Runs off the bat" />
+                <RunPad options={NOBALL_BAT_OPTIONS} onPress={handleNoBall} label="Runs off the bat" highlightBoundaries />
                 <Pressable onPress={() => setExtraMode(null)} className="mt-3 py-2">
                   <Text className="text-muted text-center text-sm">Cancel</Text>
                 </Pressable>
