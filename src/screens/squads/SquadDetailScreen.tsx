@@ -514,12 +514,15 @@ export default function SquadDetailScreen() {
             <Text className="text-ink font-bold text-base">Squad Details</Text>
             <BlinkingEyeIcon size={16} />
           </View>
-          <InfoRow
-            icon="pricetag-outline"
-            label="Squad ID"
-            value={squad.squad_code}
-            action={
-              (isOwner || hasJoined) && (
+          {/* The ID/code is only meaningful (and only shown) to people
+              already in the squad — a non-member has nothing to do with it
+              and shouldn't see it at all. */}
+          {(isOwner || hasJoined) && (
+            <InfoRow
+              icon="pricetag-outline"
+              label="Squad ID"
+              value={squad.squad_code}
+              action={
                 <Pressable
                   onPress={handleCopySquadCode}
                   hitSlop={8}
@@ -535,9 +538,9 @@ export default function SquadDetailScreen() {
                     {codeCopied ? "Copied" : "Copy"}
                   </Text>
                 </Pressable>
-              )
-            }
-          />
+              }
+            />
+          )}
           {squad.sports && <InfoRow icon="football-outline" label="Sport" value={squad.sports.name} />}
           <InfoRow
             icon="speedometer-outline"

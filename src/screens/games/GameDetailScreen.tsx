@@ -560,19 +560,22 @@ export default function GameDetailScreen() {
           </Pressable>
           {detailsExpanded && (
             <View className="mt-1">
-              <InfoRow
-                icon="pricetag-outline"
-                label={isTournament ? "Tournament ID" : "Game ID"}
-                value={game.game_code}
-                action={
-                  (isCreator || hasJoined || isTournamentTeamMember) && (
+              {/* The ID/code is only meaningful (and only shown) to people
+                  already in the game/tournament — an unjoined visitor has
+                  nothing to do with it and shouldn't see it at all. */}
+              {(isCreator || hasJoined || isTournamentTeamMember) && (
+                <InfoRow
+                  icon="pricetag-outline"
+                  label={isTournament ? "Tournament ID" : "Game ID"}
+                  value={game.game_code}
+                  action={
                     <Pressable onPress={handleCopyGameCode} hitSlop={8} className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50" style={{ gap: 4 }}>
                       <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={14} color={codeCopied ? colors.primary : colors.muted} />
                       <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>{codeCopied ? "Copied" : "Copy"}</Text>
                     </Pressable>
-                  )
-                }
-              />
+                  }
+                />
+              )}
               {isTournament && game.end_date && game.end_date !== game.game_date ? (
                 <>
                   <InfoRow icon="calendar-outline" label="Dates" value={formatDateRangeFull(game.game_date, game.end_date)} />
