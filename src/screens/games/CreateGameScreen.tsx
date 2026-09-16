@@ -381,6 +381,18 @@ export default function CreateGameScreen() {
     });
   };
 
+  // Regular games always have exactly 2 teams (not a user-picked count), so
+  // their two name fields just write straight into teamNames[0]/[1] instead
+  // of going through the tournament team-count resize flow above.
+  const setRegularTeamName = (index: 0 | 1, value: string) => {
+    setTeamNames((prev) => {
+      const next = [...prev];
+      while (next.length <= index) next.push("");
+      next[index] = value;
+      return next;
+    });
+  };
+
   // KNOCKOUT/LEAGUE: team count is picked directly.
   const handleNumberOfTeamsChange = (n: number) => {
     setNumberOfTeams(n);
@@ -504,6 +516,25 @@ export default function CreateGameScreen() {
       }
     }
 
+    // Regular games' two team names are optional (default to "Team A" /
+    // "Team B"), but whatever's actually typed still has to be a real name.
+    let regularTeamAName = "Team A";
+    let regularTeamBName = "Team B";
+    if (!isTournament) {
+      const rawA = (teamNames[0] ?? "").trim();
+      const rawB = (teamNames[1] ?? "").trim();
+      if ((rawA && /^\d+$/.test(rawA)) || (rawB && /^\d+$/.test(rawB))) {
+        Alert.alert("Invalid Team Name", "Team names can't be numbers only — please include a letter.");
+        return;
+      }
+      regularTeamAName = rawA || "Team A";
+      regularTeamBName = rawB || "Team B";
+      if (regularTeamAName.toLowerCase() === regularTeamBName.toLowerCase()) {
+        Alert.alert("Duplicate Team Names", "The two team names must be different.");
+        return;
+      }
+    }
+
     const trimmedGroupNames = groupNames.map((n) => n.trim());
     if (tournamentFormat === "POOL") {
       const groups = numberOfGroups ?? 0;
@@ -564,10 +595,10 @@ export default function CreateGameScreen() {
           await createPools(game.id, trimmedGroupNames);
         }
       } else {
-        // Regular games skip the "create a team" step entirely — "Team A"
-        // and "Team B" already exist the moment the game is created, ready
-        // to be joined (individually or filled with a squad) right away.
-        await createTournamentTeamPlaceholders(game.id, ["Team A", "Team B"]);
+        // Regular games skip the "create a team" step entirely — both teams
+        // already exist the moment the game is created, ready to be joined
+        // (individually or filled with a squad) right away.
+        await createTournamentTeamPlaceholders(game.id, [regularTeamAName, regularTeamBName]);
       }
       // The icon bucket's RLS requires the game to already exist (it checks
       // creator_id via the game row), so the upload can only happen after
@@ -1020,6 +1051,25 @@ export default function CreateGameScreen() {
               ))}
             </ScrollView>
             <InfoBox text="Regular games default to 2 teams — this sets how many players join each side." />
+
+            <SectionLabel title="Team Names" icon="people-outline" compact />
+            <View style={{ gap: 8 }}>
+              <FieldInput
+                value={teamNames[0] ?? ""}
+                onChangeText={(t) => setRegularTeamName(0, t)}
+                placeholder="Team A"
+                maxLength={40}
+              />
+              <FieldInput
+                value={teamNames[1] ?? ""}
+                onChangeText={(t) => setRegularTeamName(1, t)}
+                placeholder="Team B"
+                maxLength={40}
+              />
+            </View>
+            <Text className="text-muted text-xs mt-1">
+              Optional — leave blank to keep the default names "Team A" and "Team B".
+            </Text>
           </>
         )}
 
