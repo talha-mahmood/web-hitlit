@@ -84,6 +84,18 @@ function isValidGroupCount(n: number): boolean {
   return n >= 2 && n % 2 === 0;
 }
 
+// 0-indexed spreadsheet-column-style letters: A, B, ... Z, AA, AB, ... — used
+// for auto-generated team names so it still reads sensibly past 26 teams.
+function indexToLetters(i: number): string {
+  let n = i;
+  let out = "";
+  do {
+    out = String.fromCharCode(65 + (n % 26)) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+
 // Shared "chip" look for the inline pickers below (sport, date, time, max
 // players) — same rounded + shadow-when-selected treatment as PillRow.
 function chipStyle(selected: boolean, extra?: object) {
@@ -369,28 +381,11 @@ export default function CreateGameScreen() {
     setCustomVenueName(null);
   };
 
-  // Keep `teamNames` sized to match the current total team count,
-  // preserving whatever the host already typed for the slots that still
-  // exist.
+  // Team names are always auto-generated ("Team A", "Team B", ...) rather
+  // than typed by the host — this just resizes `teamNames` to match the
+  // current total team count whenever it changes.
   const resizeTeamNames = (total: number | null) => {
-    setTeamNames((prev) => {
-      if (!total) return [];
-      const next = prev.slice(0, total);
-      while (next.length < total) next.push("");
-      return next;
-    });
-  };
-
-  // Regular games always have exactly 2 teams (not a user-picked count), so
-  // their two name fields just write straight into teamNames[0]/[1] instead
-  // of going through the tournament team-count resize flow above.
-  const setRegularTeamName = (index: 0 | 1, value: string) => {
-    setTeamNames((prev) => {
-      const next = [...prev];
-      while (next.length <= index) next.push("");
-      next[index] = value;
-      return next;
-    });
+    setTeamNames(total ? Array.from({ length: total }, (_, i) => `Team ${indexToLetters(i)}`) : []);
   };
 
   // KNOCKOUT/LEAGUE: team count is picked directly.
@@ -490,49 +485,16 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select players per team.");
       return;
     }
-    const trimmedTeamNames = teamNames.map((n) => n.trim());
-    if (isTournament) {
-      if (tournamentFormat !== "POOL" && !isValidTeamCount(tournamentFormat, teams)) {
-        Alert.alert(
-          "Invalid Team Count",
-          tournamentFormat === "KNOCKOUT"
-            ? "Knockout tournaments need an even number of teams."
-            : "League tournaments can't have exactly 3 teams. Please choose a different number."
-        );
-        return;
-      }
-      if (trimmedTeamNames.some((n) => !n)) {
-        Alert.alert("Missing Info", "Please enter a name for every team.");
-        return;
-      }
-      if (trimmedTeamNames.some((n) => /^\d+$/.test(n))) {
-        Alert.alert("Invalid Team Name", "Team names can't be numbers only — please include a letter.");
-        return;
-      }
-      const uniqueNames = new Set(trimmedTeamNames.map((n) => n.toLowerCase()));
-      if (uniqueNames.size !== trimmedTeamNames.length) {
-        Alert.alert("Duplicate Team Names", "Team names must be unique.");
-        return;
-      }
-    }
-
-    // Regular games' two team names are optional (default to "Team A" /
-    // "Team B"), but whatever's actually typed still has to be a real name.
-    let regularTeamAName = "Team A";
-    let regularTeamBName = "Team B";
-    if (!isTournament) {
-      const rawA = (teamNames[0] ?? "").trim();
-      const rawB = (teamNames[1] ?? "").trim();
-      if ((rawA && /^\d+$/.test(rawA)) || (rawB && /^\d+$/.test(rawB))) {
-        Alert.alert("Invalid Team Name", "Team names can't be numbers only — please include a letter.");
-        return;
-      }
-      regularTeamAName = rawA || "Team A";
-      regularTeamBName = rawB || "Team B";
-      if (regularTeamAName.toLowerCase() === regularTeamBName.toLowerCase()) {
-        Alert.alert("Duplicate Team Names", "The two team names must be different.");
-        return;
-      }
+    // Team names are always auto-generated ("Team A", "Team B", ...), so
+    // there's nothing to validate about them — just the team count itself.
+    if (isTournament && tournamentFormat !== "POOL" && !isValidTeamCount(tournamentFormat, teams)) {
+      Alert.alert(
+        "Invalid Team Count",
+        tournamentFormat === "KNOCKOUT"
+          ? "Knockout tournaments need an even number of teams."
+          : "League tournaments can't have exactly 3 teams. Please choose a different number."
+      );
+      return;
     }
 
     const trimmedGroupNames = groupNames.map((n) => n.trim());
@@ -590,7 +552,7 @@ export default function CreateGameScreen() {
         tournamentFormat: isTournament ? tournamentFormat : null,
       });
       if (isTournament) {
-        await createTournamentTeamPlaceholders(game.id, trimmedTeamNames);
+        await createTournamentTeamPlaceholders(game.id, teamNames);
         if (tournamentFormat === "POOL") {
           await createPools(game.id, trimmedGroupNames);
         }
@@ -598,7 +560,7 @@ export default function CreateGameScreen() {
         // Regular games skip the "create a team" step entirely — both teams
         // already exist the moment the game is created, ready to be joined
         // (individually or filled with a squad) right away.
-        await createTournamentTeamPlaceholders(game.id, [regularTeamAName, regularTeamBName]);
+        await createTournamentTeamPlaceholders(game.id, ["Team A", "Team B"]);
       }
       // The icon bucket's RLS requires the game to already exist (it checks
       // creator_id via the game row), so the upload can only happen after
@@ -967,22 +929,6 @@ export default function CreateGameScreen() {
                   ))}
                 </ScrollView>
 
-                {numberOfGroups != null && numberOfGroups > 0 && (
-                  <>
-                    <SectionLabel title="Groups" icon="layers-outline" compact />
-                    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                      {groupNames.map((name) => (
-                        <View key={name} className="bg-primary-light rounded-full px-3.5 py-2">
-                          <Text className="text-primary text-sm font-medium">{name}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    <Text className="text-muted text-xs mt-1">
-                      Groups are named automatically. You'll assign approved teams to a group from the tournament
-                      screen once they're in.
-                    </Text>
-                  </>
-                )}
               </>
             ) : (
               <>
@@ -1015,25 +961,7 @@ export default function CreateGameScreen() {
               </>
             )}
 
-            {numberOfTeams != null && numberOfTeams > 0 && (
-              <>
-                <View onLayout={markSection("teams")} />
-                <SectionLabel title="Team Names" required icon="people-outline" compact />
-                <View style={{ gap: 8 }}>
-                  {teamNames.map((name, i) => (
-                    <FieldInput
-                      key={i}
-                      value={name}
-                      onChangeText={(t) =>
-                        setTeamNames((prev) => prev.map((n, idx) => (idx === i ? t : n)))
-                      }
-                      placeholder={`Team ${i + 1} name`}
-                      maxLength={40}
-                    />
-                  ))}
-                </View>
-              </>
-            )}
+            <View onLayout={markSection("teams")} />
 
             <InfoBox text="Anyone can join an open team slot — a team joins the tournament automatically once it's full." />
           </>
@@ -1050,26 +978,7 @@ export default function CreateGameScreen() {
                 />
               ))}
             </ScrollView>
-            <InfoBox text="Regular games default to 2 teams — this sets how many players join each side." />
-
-            <SectionLabel title="Team Names" icon="people-outline" compact />
-            <View style={{ gap: 8 }}>
-              <FieldInput
-                value={teamNames[0] ?? ""}
-                onChangeText={(t) => setRegularTeamName(0, t)}
-                placeholder="Team A"
-                maxLength={40}
-              />
-              <FieldInput
-                value={teamNames[1] ?? ""}
-                onChangeText={(t) => setRegularTeamName(1, t)}
-                placeholder="Team B"
-                maxLength={40}
-              />
-            </View>
-            <Text className="text-muted text-xs mt-1">
-              Optional — leave blank to keep the default names "Team A" and "Team B".
-            </Text>
+            <InfoBox text="Regular games default to 2 teams (Team A and Team B) — this sets how many players join each side." />
           </>
         )}
 
