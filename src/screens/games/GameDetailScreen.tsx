@@ -721,9 +721,11 @@ export default function GameDetailScreen() {
                   </Text>
                 </Pressable>
               )}
-              <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
-                <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
-              </Pressable>
+              {!(showBookVenue && isVenueBooked) && (
+                <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
+                  <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
+                </Pressable>
+              )}
             </>
           ) : hasJoined ? (
             <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
