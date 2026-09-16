@@ -217,6 +217,13 @@ function GameCard({
               </View>
             )}
 
+            {/* Row 4b: Entry fee — "Per Team Entry" for tournaments, "Per
+                Person Entry" for regular games. */}
+            <Text className="text-ink font-bold text-sm mb-2">
+              {isTournament ? "Entry Per Team" : "Entry Per Person"} :{" "}
+              {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
+            </Text>
+
             {/* Row 5: Sport + tournament + my-game + spots badges */}
             <View className="flex-row items-center flex-wrap" style={{ gap: 6 }}>
               <View className="bg-primary-light px-2 py-0.5 rounded-full">
@@ -270,8 +277,9 @@ function GameCard({
               </View>
             )}
 
-            {/* Row 5c: per-team "N players left" (team-based games only) */}
-            {teamPlayerCounts.length > 0 && (
+            {/* Row 5c: per-team "N players left" — regular team-based games
+                only, not tournaments (tournament cards don't show this). */}
+            {teamPlayerCounts.length > 0 && !isTournament && (
               <View className="flex-row items-center flex-wrap mt-2" style={{ gap: 6 }}>
                 {teamPlayerCounts.slice(0, TEAM_COUNTS_PREVIEW_LIMIT).map((t) => (
                   <View
@@ -296,21 +304,24 @@ function GameCard({
               </View>
             )}
 
-            {/* Row 6: skill pill + creator + entry fee */}
-            <View className="flex-row items-center justify-between mt-2.5">
-              <View className="flex-row items-center flex-1 mr-2" style={{ gap: 6 }}>
-                {skillColor && skillLabel && (
-                  <View style={{ backgroundColor: skillColor, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
-                    <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>{skillLabel}</Text>
-                  </View>
-                )}
-                <Ionicons name="person-circle-outline" size={14} color={colors.muted} />
-                <Text className="text-muted text-sm flex-1" numberOfLines={1}>
-                  {game.profiles?.full_name ?? "Unknown"}
-                </Text>
-              </View>
-              <Text className="text-ink font-semibold text-sm">
-                {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
+            {/* Row 6: skill pill + creator */}
+            <View className="flex-row items-center mt-2.5">
+              {skillColor && skillLabel && (
+                <View
+                  style={{
+                    backgroundColor: skillColor,
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 999,
+                    marginRight: 6,
+                  }}
+                >
+                  <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>{skillLabel}</Text>
+                </View>
+              )}
+              <Ionicons name="person-circle-outline" size={14} color={colors.muted} style={{ marginRight: 6 }} />
+              <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+                {game.profiles?.full_name ?? "Unknown"}
               </Text>
             </View>
           </View>
