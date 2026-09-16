@@ -616,7 +616,7 @@ export default function GameDetailScreen() {
               <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
               <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
               {!isTeamBased && <InfoRow icon="person-outline" label="Team Size" value={`${Math.floor(game.max_players / 2)} players per team (2 teams)`} />}
-              <InfoRow icon="cash-outline" label="Entry Fee" value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"} pillColor={game.entry_fee > 0 ? undefined : colors.primary} />
+              <InfoRow icon="cash-outline" label={isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"} value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"} pillColor={game.entry_fee > 0 ? undefined : colors.primary} />
             </View>
           )}
         </View>
