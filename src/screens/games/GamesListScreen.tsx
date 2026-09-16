@@ -105,6 +105,19 @@ function GameCard({
     .filter((t) => t.status !== "REJECTED")
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((t) => t.name);
+  // Per-team "N players left" readout — same JOINED-member count each
+  // TeamCard on the detail screen uses, just capped for card space.
+  const teamPlayerCounts = isTeamBased
+    ? [...game.tournament_teams]
+        .filter((t) => t.status !== "REJECTED")
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        .map((t) => {
+          const joinedCount = t.tournament_team_members.filter((m) => m.status === "JOINED").length;
+          const left = Math.max((game.players_per_team ?? 0) - joinedCount, 0);
+          return { name: t.name, left };
+        })
+    : [];
+  const TEAM_COUNTS_PREVIEW_LIMIT = 4;
   const fixtures = game.tournament_format
     ? computeFixtures(game.tournament_format, orderedTeamNames)
     : [];
@@ -252,6 +265,32 @@ function GameCard({
                 {fixtures.length > FIXTURES_PREVIEW_LIMIT && (
                   <Text className="text-muted text-xs mt-0.5">
                     +{fixtures.length - FIXTURES_PREVIEW_LIMIT} more
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Row 5c: per-team "N players left" (team-based games only) */}
+            {teamPlayerCounts.length > 0 && (
+              <View className="flex-row items-center flex-wrap mt-2" style={{ gap: 6 }}>
+                {teamPlayerCounts.slice(0, TEAM_COUNTS_PREVIEW_LIMIT).map((t) => (
+                  <View
+                    key={t.name}
+                    className="rounded-full px-2.5 py-1"
+                    style={{ backgroundColor: t.left > 0 ? colors.primaryLight : "#F3F4F6" }}
+                  >
+                    <Text
+                      className="text-xs font-medium"
+                      style={{ color: t.left > 0 ? colors.primary : colors.muted }}
+                      numberOfLines={1}
+                    >
+                      {t.name}: {t.left > 0 ? `${t.left} left` : "Full"}
+                    </Text>
+                  </View>
+                ))}
+                {teamPlayerCounts.length > TEAM_COUNTS_PREVIEW_LIMIT && (
+                  <Text className="text-muted text-xs">
+                    +{teamPlayerCounts.length - TEAM_COUNTS_PREVIEW_LIMIT} more
                   </Text>
                 )}
               </View>
