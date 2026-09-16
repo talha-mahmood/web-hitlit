@@ -8,17 +8,8 @@ import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
-import {
-  useMyPendingGameInvite,
-  useCreateGameInvite,
-  useAcceptGameInvite,
-  useDeclineGameInvite,
-} from "../../hooks/useInvites";
-import {
-  useSquadFillGameSlots,
-  useSendGameSquadInvite,
-  useGameSquadInvitesForGame,
-} from "../../hooks/useSquadTeamFill";
+import { useMyPendingGameInvite, useCreateGameInvite, useAcceptGameInvite, useDeclineGameInvite } from "../../hooks/useInvites";
+import { useSquadFillGameSlots, useSendGameSquadInvite, useGameSquadInvitesForGame } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -64,7 +55,11 @@ function formatDateRangeFull(gameDate: string, endDate: string): string {
   const [sy, sm, sd] = gameDate.split("-").map(Number);
   const [ey, em, ed] = endDate.split("-").map(Number);
   const fmt = (y: number, m: number, d: number) =>
-    new Date(y, m - 1, d).toLocaleDateString("en-PK", { month: "long", day: "numeric", year: "numeric" });
+    new Date(y, m - 1, d).toLocaleDateString("en-PK", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
   return `${fmt(sy, sm, sd)} – ${fmt(ey, em, ed)}`;
 }
 
@@ -97,7 +92,14 @@ function InfoRow({
         <View className="flex-row items-center" style={{ gap: 6 }}>
           <Text className="text-muted text-xs">{label}</Text>
           {badge && (
-            <View style={{ backgroundColor: badge.color, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 }}>
+            <View
+              style={{
+                backgroundColor: badge.color,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 999,
+              }}
+            >
               <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>{badge.label}</Text>
             </View>
           )}
@@ -124,17 +126,7 @@ function InfoRow({
   );
 }
 
-function PlayerAvatar({
-  name,
-  avatar,
-  isCreator,
-  onRemove,
-}: {
-  name: string | null;
-  avatar: string | null;
-  isCreator: boolean;
-  onRemove?: () => void;
-}) {
+function PlayerAvatar({ name, avatar, isCreator, onRemove }: { name: string | null; avatar: string | null; isCreator: boolean; onRemove?: () => void }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 64 }}>
@@ -147,11 +139,7 @@ function PlayerAvatar({
           </View>
         )}
         {onRemove && (
-          <Pressable
-            onPress={onRemove}
-            hitSlop={8}
-            className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center border-2 border-white"
-          >
+          <Pressable onPress={onRemove} hitSlop={8} className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center border-2 border-white">
             <Ionicons name="close" size={11} color="white" />
           </Pressable>
         )}
@@ -184,23 +172,7 @@ function skillLevelLabel(skill: string | null): string {
   return skill.charAt(0).toUpperCase() + skill.slice(1);
 }
 
-function PendingRequestRow({
-  name,
-  avatar,
-  skill,
-  location,
-  onApprove,
-  onReject,
-  disabled,
-}: {
-  name: string | null;
-  avatar: string | null;
-  skill: string | null;
-  location: string | null;
-  onApprove: () => void;
-  onReject: () => void;
-  disabled: boolean;
-}) {
+function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject, disabled }: { name: string | null; avatar: string | null; skill: string | null; location: string | null; onApprove: () => void; onReject: () => void; disabled: boolean }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="py-3 border-b border-border">
@@ -220,18 +192,10 @@ function PendingRequestRow({
             {skillLevelLabel(skill)} · {location ?? "Location not specified"}
           </Text>
         </View>
-        <Pressable
-          onPress={onReject}
-          disabled={disabled}
-          className="border border-border rounded-lg px-3 py-1.5"
-        >
+        <Pressable onPress={onReject} disabled={disabled} className="border border-border rounded-lg px-3 py-1.5">
           <Text className="text-muted text-xs font-semibold">Reject</Text>
         </Pressable>
-        <Pressable
-          onPress={onApprove}
-          disabled={disabled}
-          className="bg-primary rounded-lg px-3 py-1.5"
-        >
+        <Pressable onPress={onApprove} disabled={disabled} className="bg-primary rounded-lg px-3 py-1.5">
           <Text className="text-white text-xs font-semibold">Approve</Text>
         </Pressable>
       </View>
@@ -251,6 +215,7 @@ export default function GameDetailScreen() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSquadFillModal, setShowSquadFillModal] = useState(false);
   const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const squadFillSlots = useSquadFillGameSlots(params.gameId);
   const sendSquadInvite = useSendGameSquadInvite(params.gameId);
@@ -263,9 +228,7 @@ export default function GameDetailScreen() {
   // realtime subscription off while still loading or for old-style flat
   // regular games (see useTournamentTeams: both are no-ops on a falsy
   // gameId).
-  const { data: tournamentTeams } = useTournamentTeams(
-    game?.number_of_teams != null ? params.gameId : ""
-  );
+  const { data: tournamentTeams } = useTournamentTeams(game?.number_of_teams != null ? params.gameId : "");
   const { data: chatUnreadCount } = useGameChatUnreadCount(game?.id, userId);
   const joinGame = useJoinGame();
   const leaveGame = useLeaveGame();
@@ -302,19 +265,14 @@ export default function GameDetailScreen() {
   const isFull = game.status === "FULL" || joinedPlayers.length >= game.max_players;
 
   const isCreator = game.creator_id === userId;
-  const myPlayerRecord = userId
-    ? game.game_players.find((p) => p.user_id === userId && p.status === "JOINED")
-    : null;
-  const myPendingRecord = userId
-    ? game.game_players.find((p) => p.user_id === userId && p.status === "PENDING")
-    : null;
+  const myPlayerRecord = userId ? game.game_players.find((p) => p.user_id === userId && p.status === "JOINED") : null;
+  const myPendingRecord = userId ? game.game_players.find((p) => p.user_id === userId && p.status === "PENDING") : null;
   const hasJoined = !!myPlayerRecord;
   const hasRequested = !!myPendingRecord;
   // Belt-and-suspenders: the DB-side cron job (expire_past_games) archives and
   // hard-deletes the game every 10 minutes, but this hides the join/leave CTA
   // immediately once the game's end time passes, without waiting on that job to run.
-  const hasEnded =
-    new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
+  const hasEnded = new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
   const isOpen = (game.status === "OPEN" || game.status === "FULL") && !hasEnded;
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
@@ -326,54 +284,31 @@ export default function GameDetailScreen() {
   // Team-based participation lives entirely in tournament_team_members, not
   // game_players — a team member never gets a game_players row, so
   // hasJoined alone would miss them for copy-ID/chat access.
-  const isTournamentTeamMember =
-    isTeamBased &&
-    !!userId &&
-    (tournamentTeams ?? []).some(
-      (t) =>
-        t.status !== "REJECTED" &&
-        t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
-    );
+  const isTournamentTeamMember = isTeamBased && !!userId && (tournamentTeams ?? []).some((t) => t.status !== "REJECTED" && t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"));
   // Chat, specifically, only opens up once the host has actually approved the
   // member's team — being on a still-forming or awaiting-approval team isn't
   // "part of the game" yet.
-  const isApprovedTournamentParticipant =
-    isTeamBased &&
-    !!userId &&
-    (tournamentTeams ?? []).some(
-      (t) =>
-        t.status === "APPROVED" &&
-        t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
-    );
+  const isApprovedTournamentParticipant = isTeamBased && !!userId && (tournamentTeams ?? []).some((t) => t.status === "APPROVED" && t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"));
 
-  const skillLabel = !game.skill_level ? "Any Level" :
-    game.skill_level === "BEGINNER" ? "Beginner" :
-    game.skill_level === "INTERMEDIATE" ? "Intermediate" :
-    game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
+  const skillLabel = !game.skill_level ? "Any Level" : game.skill_level === "BEGINNER" ? "Beginner" : game.skill_level === "INTERMEDIATE" ? "Intermediate" : game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
   const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;
 
-  const genderLabel = game.gender === "male" ? "Male Only" :
-    game.gender === "female" ? "Female Only" : "Everyone";
-  const genderPillColor =
-    game.gender === "male" ? "#2563EB" : game.gender === "female" ? "#EC4899" : colors.primary;
+  const genderLabel = game.gender === "male" ? "Male Only" : game.gender === "female" ? "Female Only" : "Everyone";
+  const genderPillColor = game.gender === "male" ? "#2563EB" : game.gender === "female" ? "#EC4899" : colors.primary;
 
   const handleJoin = () => {
     if (!userId) return;
     setShowJoinModal(true);
   };
 
-  const handleSubmitJoinRequest = (
-    skillLevel: Database["public"]["Enums"]["skill_level_type"],
-    location: string
-  ) => {
+  const handleSubmitJoinRequest = (skillLevel: Database["public"]["Enums"]["skill_level_type"], location: string) => {
     if (!userId) return;
     joinGame.mutate(
       { gameId: game.id, userId, skillLevel, location },
       {
         onSuccess: () => setShowJoinModal(false),
-        onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
-      }
+        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+      },
     );
   };
 
@@ -388,9 +323,8 @@ export default function GameDetailScreen() {
           leaveGame.mutate(
             { gameId: game.id, userId },
             {
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not leave. Try again."),
-            }
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not leave. Try again."),
+            },
           );
         },
       },
@@ -408,9 +342,8 @@ export default function GameDetailScreen() {
           leaveGame.mutate(
             { gameId: game.id, userId },
             {
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not withdraw. Try again."),
-            }
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not withdraw. Try again."),
+            },
           );
         },
       },
@@ -419,71 +352,55 @@ export default function GameDetailScreen() {
 
   const handleApprove = (gamePlayerId: string, name: string | null) => {
     approvePlayer.mutate(gamePlayerId, {
-      onError: (err) =>
-        Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "player"}.`),
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "player"}.`),
     });
   };
 
   const handleReject = (gamePlayerId: string, name: string | null) => {
-    Alert.alert(
-      "Reject Request",
-      `Reject ${name ?? "this player"}'s request to join?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reject",
-          style: "destructive",
-          onPress: () => {
-            rejectPlayer.mutate(gamePlayerId, {
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
-            });
-          },
+    Alert.alert("Reject Request", `Reject ${name ?? "this player"}'s request to join?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reject",
+        style: "destructive",
+        onPress: () => {
+          rejectPlayer.mutate(gamePlayerId, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleRemove = (gamePlayerId: string, name: string | null) => {
-    Alert.alert(
-      "Remove Player",
-      `Remove ${name ?? "this player"} from the game? They won't be able to rejoin without sending a new request.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            removePlayer.mutate(gamePlayerId, {
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not remove player."),
-            });
-          },
+    Alert.alert("Remove Player", `Remove ${name ?? "this player"} from the game? They won't be able to rejoin without sending a new request.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => {
+          removePlayer.mutate(gamePlayerId, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove player."),
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleCancel = () => {
     const noun = isTournament ? "tournament" : "game";
-    Alert.alert(
-      `Cancel ${isTournament ? "Tournament" : "Game"}`,
-      `This will cancel the ${noun} for all ${isTournament ? "teams" : "players"}. This cannot be undone.`,
-      [
-        { text: "Keep", style: "cancel" },
-        {
-          text: `Cancel ${isTournament ? "Tournament" : "Game"}`,
-          style: "destructive",
-          onPress: () => {
-            cancelGame.mutate(game.id, {
-              onSuccess: () => navigation.goBack(),
-              onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel."),
-            });
-          },
+    Alert.alert(`Cancel ${isTournament ? "Tournament" : "Game"}`, `This will cancel the ${noun} for all ${isTournament ? "teams" : "players"}. This cannot be undone.`, [
+      { text: "Keep", style: "cancel" },
+      {
+        text: `Cancel ${isTournament ? "Tournament" : "Game"}`,
+        style: "destructive",
+        onPress: () => {
+          cancelGame.mutate(game.id, {
+            onSuccess: () => navigation.goBack(),
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel."),
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleAcceptInvite = () => {
@@ -524,19 +441,31 @@ export default function GameDetailScreen() {
       <DetailSportBackdrop sportName={game.sports?.name} />
 
       {/* Header */}
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
-      >
+      <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-1">
-          <Text className="text-base font-bold text-ink" numberOfLines={1}>{game.title}</Text>
+          <Text className="text-base font-bold text-ink" numberOfLines={1}>
+            {game.title}
+          </Text>
           <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
             {sportIconInfo && game.sports?.name && (
-              <View style={{ backgroundColor: sportIconInfo.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
-                <Text style={{ color: sportIconInfo.fg, fontSize: 11, fontWeight: "700" }}>
+              <View
+                style={{
+                  backgroundColor: sportIconInfo.bg,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  borderRadius: 999,
+                }}
+              >
+                <Text
+                  style={{
+                    color: sportIconInfo.fg,
+                    fontSize: 11,
+                    fontWeight: "700",
+                  }}
+                >
                   {game.sports.name}
                 </Text>
               </View>
@@ -548,7 +477,7 @@ export default function GameDetailScreen() {
             )}
           </View>
         </View>
-        {isCreator && !isCancelled && !hasEnded && (
+        {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
           <Pressable onPress={() => setShowInviteModal(true)} className="mr-2 p-1">
             <Ionicons name="person-add-outline" size={22} color={colors.ink} />
           </Pressable>
@@ -558,17 +487,14 @@ export default function GameDetailScreen() {
             <Ionicons name="people-outline" size={22} color={colors.ink} />
           </Pressable>
         )}
-        {isCreator && !isTournament && !isCancelled && !hasEnded && (
-          <Pressable
-            onPress={() => navigation.navigate("EditGame", { gameId: game.id })}
-            className="mr-2 p-1"
-          >
-            <Ionicons name="create-outline" size={22} color={colors.ink} />
-          </Pressable>
-        )}
         {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
           <Pressable
-            onPress={() => navigation.navigate("GameChat", { gameId: game.id, gameTitle: game.title })}
+            onPress={() =>
+              navigation.navigate("GameChat", {
+                gameId: game.id,
+                gameTitle: game.title,
+              })
+            }
             className="ml-1 mr-2 items-center justify-center rounded-full"
             style={{
               width: 36,
@@ -608,131 +534,77 @@ export default function GameDetailScreen() {
         {myGameInvite && (
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
             <Text className="text-ink font-semibold text-sm mb-1">
-              {myGameInvite.profiles?.full_name ?? "The host"} invited you to{" "}
-              {isTournament ? "this tournament" : "this game"}
+              {myGameInvite.profiles?.full_name ?? "The host"} invited you to {isTournament ? "this tournament" : "this game"}
             </Text>
-            <Text className="text-muted text-xs mb-3">
-              {isTeamBased
-                ? "Accept to let them know you're in, then join a team below."
-                : "Accept to join instantly — no approval needed."}
-            </Text>
+            <Text className="text-muted text-xs mb-3">{isTeamBased ? "Accept to let them know you're in, then join a team below." : "Accept to join instantly — no approval needed."}</Text>
             <View className="flex-row" style={{ gap: 8 }}>
-              <Pressable
-                onPress={handleDeclineInvite}
-                disabled={declineInvite.isPending || acceptInvite.isPending}
-                className="flex-1 border border-danger rounded-lg py-2.5 items-center"
-              >
+              <Pressable onPress={handleDeclineInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 border border-danger rounded-lg py-2.5 items-center">
                 <Text className="text-danger font-semibold text-sm">Decline</Text>
               </Pressable>
-              <Pressable
-                onPress={handleAcceptInvite}
-                disabled={declineInvite.isPending || acceptInvite.isPending}
-                className="flex-1 bg-primary rounded-lg py-2.5 items-center"
-              >
-                {acceptInvite.isPending ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-sm">Accept</Text>
-                )}
+              <Pressable onPress={handleAcceptInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 bg-primary rounded-lg py-2.5 items-center">
+                {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
               </Pressable>
             </View>
           </View>
         )}
 
-        {/* Game info — plain rows, no card chrome */}
+        {/* Game info — plain rows, no card chrome. Collapsed behind a
+            dropdown by default; tapping the header reveals it. */}
         <View className="px-5 mt-5">
-          <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
-            <Text className="text-ink font-bold text-base">
-              {isTournament ? "Tournament Details" : "Game Details"}
-            </Text>
-            <BlinkingEyeIcon size={16} />
-          </View>
-          <InfoRow
-            icon="pricetag-outline"
-            label={isTournament ? "Tournament ID" : "Game ID"}
-            value={game.game_code}
-            action={
-              (isCreator || hasJoined || isTournamentTeamMember) && (
-                <Pressable
-                  onPress={handleCopyGameCode}
-                  hitSlop={8}
-                  className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50"
-                  style={{ gap: 4 }}
-                >
-                  <Ionicons
-                    name={codeCopied ? "checkmark" : "copy-outline"}
-                    size={14}
-                    color={codeCopied ? colors.primary : colors.muted}
+          <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center justify-between">
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Text className="text-ink font-bold text-base">{isTournament ? "Tournament Details" : "Game Details"}</Text>
+              <BlinkingEyeIcon size={16} />
+            </View>
+            <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
+          </Pressable>
+          {detailsExpanded && (
+            <View className="mt-1">
+              <InfoRow
+                icon="pricetag-outline"
+                label={isTournament ? "Tournament ID" : "Game ID"}
+                value={game.game_code}
+                action={
+                  (isCreator || hasJoined || isTournamentTeamMember) && (
+                    <Pressable onPress={handleCopyGameCode} hitSlop={8} className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50" style={{ gap: 4 }}>
+                      <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={14} color={codeCopied ? colors.primary : colors.muted} />
+                      <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>{codeCopied ? "Copied" : "Copy"}</Text>
+                    </Pressable>
+                  )
+                }
+              />
+              {isTournament && game.end_date && game.end_date !== game.game_date ? (
+                <>
+                  <InfoRow icon="calendar-outline" label="Dates" value={formatDateRangeFull(game.game_date, game.end_date)} />
+                  <InfoRow icon="time-outline" label="Daily Start Time" value={formatTime(game.game_date, game.start_time)} />
+                </>
+              ) : (
+                <>
+                  <InfoRow
+                    icon="calendar-outline"
+                    label="Date"
+                    value={formatDateFull(game.game_date)}
+                    badge={{
+                      label: dayLabel(game.game_date),
+                      color: timeBadgeColor(game.start_time),
+                    }}
                   />
-                  <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
-                    {codeCopied ? "Copied" : "Copy"}
-                  </Text>
-                </Pressable>
-              )
-            }
-          />
-          {isTournament && game.end_date && game.end_date !== game.game_date ? (
-            <>
-              <InfoRow
-                icon="calendar-outline"
-                label="Dates"
-                value={formatDateRangeFull(game.game_date, game.end_date)}
-              />
-              <InfoRow
-                icon="time-outline"
-                label="Daily Start Time"
-                value={formatTime(game.game_date, game.start_time)}
-              />
-            </>
-          ) : (
-            <>
-              <InfoRow
-                icon="calendar-outline"
-                label="Date"
-                value={formatDateFull(game.game_date)}
-                badge={{ label: dayLabel(game.game_date), color: timeBadgeColor(game.start_time) }}
-              />
-              <InfoRow
-                icon="time-outline"
-                label="Time"
-                value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`}
-              />
-            </>
+                  <InfoRow icon="time-outline" label="Time" value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, game.end_time)}`} />
+                </>
+              )}
+              {(game.venues || game.custom_venue_name) && <InfoRow icon="location-outline" label="Venue" value={game.venues ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}` : (game.custom_venue_name as string)} />}
+              <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
+              <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
+              {!isTeamBased && <InfoRow icon="person-outline" label="Team Size" value={`${Math.floor(game.max_players / 2)} players per team (2 teams)`} />}
+              <InfoRow icon="cash-outline" label="Entry Fee" value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"} pillColor={game.entry_fee > 0 ? undefined : colors.primary} />
+            </View>
           )}
-          {(game.venues || game.custom_venue_name) && (
-            <InfoRow
-              icon="location-outline"
-              label="Venue"
-              value={
-                game.venues
-                  ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`
-                  : (game.custom_venue_name as string)
-              }
-            />
-          )}
-          <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
-          <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
-          {!isTeamBased && (
-            <InfoRow
-              icon="person-outline"
-              label="Team Size"
-              value={`${Math.floor(game.max_players / 2)} players per team (2 teams)`}
-            />
-          )}
-          <InfoRow
-            icon="cash-outline"
-            label="Entry Fee"
-            value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
-            pillColor={game.entry_fee > 0 ? undefined : colors.primary}
-          />
         </View>
 
         {/* Description */}
         {!!game.description && (
           <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-2">
-              About this {isTournament ? "tournament" : "game"}
-            </Text>
+            <Text className="text-ink font-semibold text-sm mb-2">About this {isTournament ? "tournament" : "game"}</Text>
             <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
           </View>
         )}
@@ -761,26 +633,13 @@ export default function GameDetailScreen() {
                 )}
               </View>
               {emptySlots > 0 && !isCancelled && !hasEnded && (
-                <Pressable
-                  onPress={() => setShowSquadFillModal(true)}
-                  className="border border-primary rounded-lg py-2 items-center mb-3"
-                >
+                <Pressable onPress={() => setShowSquadFillModal(true)} className="border border-primary rounded-lg py-2 items-center mb-3">
                   <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Squad</Text>
                 </Pressable>
               )}
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
                 {joinedPlayers.map((p) => (
-                  <PlayerAvatar
-                    key={p.id}
-                    name={p.profiles?.full_name ?? null}
-                    avatar={p.profiles?.avatar ?? null}
-                    isCreator={p.user_id === game.creator_id}
-                    onRemove={
-                      isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting
-                        ? () => handleRemove(p.id, p.profiles?.full_name ?? null)
-                        : undefined
-                    }
-                  />
+                  <PlayerAvatar key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} isCreator={p.user_id === game.creator_id} onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? null) : undefined} />
                 ))}
                 {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
                   <EmptySlot key={`empty-${i}`} />
@@ -791,29 +650,12 @@ export default function GameDetailScreen() {
             {/* Pending join requests — host only */}
             {isCreator && pendingRequests.length > 0 && (
               <View className="px-5 mt-6">
-                <Text className="text-ink font-semibold text-sm mb-1">
-                  Join Requests ({pendingRequests.length})
-                </Text>
-                <Text className="text-muted text-xs mb-2">
-                  Approve players before they're added to the game.
-                </Text>
+                <Text className="text-ink font-semibold text-sm mb-1">Join Requests ({pendingRequests.length})</Text>
+                <Text className="text-muted text-xs mb-2">Approve players before they're added to the game.</Text>
                 {pendingRequests.map((p) => (
-                  <PendingRequestRow
-                    key={p.id}
-                    name={p.profiles?.full_name ?? null}
-                    avatar={p.profiles?.avatar ?? null}
-                    skill={p.skill_level}
-                    location={p.location}
-                    disabled={isApprovingOrRejecting || isFull}
-                    onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)}
-                    onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)}
-                  />
+                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} />
                 ))}
-                {isFull && (
-                  <Text className="text-orange-600 text-xs mt-2">
-                    Game is full — reject remaining requests or remove a player to approve more.
-                  </Text>
-                )}
+                {isFull && <Text className="text-orange-600 text-xs mt-2">Game is full — reject remaining requests or remove a player to approve more.</Text>}
               </View>
             )}
           </>
@@ -822,22 +664,15 @@ export default function GameDetailScreen() {
         {/* Host */}
         <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
           {game.profiles?.avatar ? (
-            <Image
-              source={{ uri: game.profiles.avatar }}
-              className="w-10 h-10 rounded-full bg-primary-light"
-            />
+            <Image source={{ uri: game.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
           ) : (
             <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold">
-                {(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
-              </Text>
+              <Text className="text-primary font-bold">{(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}</Text>
             </View>
           )}
           <View>
             <Text className="text-muted text-xs">Hosted by</Text>
-            <Text className="text-ink font-semibold text-sm">
-              {game.profiles?.full_name ?? "Unknown"}
-            </Text>
+            <Text className="text-ink font-semibold text-sm">{game.profiles?.full_name ?? "Unknown"}</Text>
           </View>
         </View>
       </ScrollView>
@@ -850,32 +685,19 @@ export default function GameDetailScreen() {
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
           ) : isCreator ? (
-            <Pressable
-              onPress={handleCancel}
-              className="border border-danger rounded-xl py-4 items-center"
-            >
-              <Text className="text-danger font-semibold">
-                Cancel This {isTournament ? "Tournament" : "Game"}
-              </Text>
+            <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
+              <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
             </Pressable>
           ) : hasJoined ? (
-            <Pressable
-              onPress={handleLeave}
-              className="border border-danger rounded-xl py-4 items-center"
-            >
+            <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
               <Text className="text-danger font-semibold">Leave Game</Text>
             </Pressable>
           ) : hasRequested ? (
             <View style={{ gap: 8 }}>
               <View className="bg-orange-50 rounded-xl py-3 items-center">
-                <Text className="text-orange-600 font-semibold">
-                  Request Sent — Awaiting Host Approval
-                </Text>
+                <Text className="text-orange-600 font-semibold">Request Sent — Awaiting Host Approval</Text>
               </View>
-              <Pressable
-                onPress={handleCancelRequest}
-                className="border border-danger rounded-xl py-3 items-center"
-              >
+              <Pressable onPress={handleCancelRequest} className="border border-danger rounded-xl py-3 items-center">
                 <Text className="text-danger font-semibold">Cancel Request</Text>
               </Pressable>
             </View>
@@ -884,44 +706,30 @@ export default function GameDetailScreen() {
               <Text className="text-muted font-semibold">Game is Full</Text>
             </View>
           ) : (
-            <Pressable
-              onPress={handleJoin}
-              className="bg-primary rounded-xl py-4 items-center"
-              style={primaryButtonShadow}
-            >
-              <Text className="text-white font-semibold text-base">
-                {game.entry_fee > 0
-                  ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}`
-                  : "Request to Join"}
-              </Text>
+            <Pressable onPress={handleJoin} className="bg-primary rounded-xl py-4 items-center" style={primaryButtonShadow}>
+              <Text className="text-white font-semibold text-base">{game.entry_fee > 0 ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}` : "Request to Join"}</Text>
             </Pressable>
           )}
         </View>
       )}
 
-      <JoinRequestModal
-        visible={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        onSubmit={handleSubmitJoinRequest}
-        submitting={joinGame.isPending}
-        title="Request to Join"
-        subtitle={
-          game.entry_fee > 0
-            ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.`
-            : "The host must approve your request before you're added."
-        }
-      />
+      <JoinRequestModal visible={showJoinModal} onClose={() => setShowJoinModal(false)} onSubmit={handleSubmitJoinRequest} submitting={joinGame.isPending} title="Request to Join" subtitle={game.entry_fee > 0 ? `Entry fee: Rs ${game.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.` : "The host must approve your request before you're added."} />
 
-      <InviteUsersModal
-        visible={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        title={`Invite Players · ${game.title}`}
-        excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id)]}
-        onInvite={async (user) => {
-          if (!userId) return;
-          await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
-        }}
-      />
+      {!isTeamBased && (
+        <InviteUsersModal
+          visible={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          title={`Invite Players · ${game.title}`}
+          excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id)]}
+          onInvite={async (user) => {
+            if (!userId) return;
+            await createInvite.mutateAsync({
+              invitedUserId: user.id,
+              invitedBy: userId,
+            });
+          }}
+        />
+      )}
 
       {!isTeamBased && (
         <SquadFillModal
@@ -936,9 +744,8 @@ export default function GameDetailScreen() {
               { squadId, memberUserIds },
               {
                 onSuccess: () => setShowSquadFillModal(false),
-                onError: (err) =>
-                  Alert.alert("Error", err instanceof Error ? err.message : "Could not join the game."),
-              }
+                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not join the game."),
+              },
             );
           }}
         />
@@ -957,7 +764,7 @@ export default function GameDetailScreen() {
               {
                 onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
                 onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
-              }
+              },
             );
           }}
         />

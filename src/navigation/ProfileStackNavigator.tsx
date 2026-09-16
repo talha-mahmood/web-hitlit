@@ -5,6 +5,7 @@ import BlockedUsersScreen from "../screens/main/BlockedUsersScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
+import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
@@ -20,6 +21,7 @@ export type ProfileStackParamList = {
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };
+  TournamentMatches: { gameId: string };
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
@@ -36,6 +38,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
+      <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />

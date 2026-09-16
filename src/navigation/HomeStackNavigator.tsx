@@ -9,6 +9,7 @@ import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
+import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
@@ -33,6 +34,7 @@ export type HomeStackParamList = {
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };
+  TournamentMatches: { gameId: string };
   PlayersDashboard: undefined;
   PlayerProfile: { userId: string };
 };
@@ -53,6 +55,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
+      <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
     </Stack.Navigator>

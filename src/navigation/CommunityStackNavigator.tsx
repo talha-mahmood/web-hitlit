@@ -6,6 +6,7 @@ import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
+import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import SquadsListScreen from "../screens/squads/SquadsListScreen";
 import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
@@ -37,6 +38,7 @@ export type CommunityStackParamList = {
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };
+  TournamentMatches: { gameId: string };
   SquadsList: undefined;
   CreateSquad: undefined;
   SquadDetail: { squadId: string };
@@ -57,6 +59,7 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
+      <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="SquadsList" component={SquadsListScreen} />
       <Stack.Screen name="CreateSquad" component={CreateSquadScreen} />
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
