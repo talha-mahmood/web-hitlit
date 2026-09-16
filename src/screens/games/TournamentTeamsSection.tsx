@@ -3,33 +3,22 @@ import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-na
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  useTournamentTeams,
-  useCreateTeam,
-  useRequestToJoinTeam,
-  useLeaveTeam,
-} from "../../hooks/useTournamentTeams";
+import { useTournamentTeams, useCreateTeam, useLeaveTeam } from "../../hooks/useTournamentTeams";
 import {
   useSquadFillTournamentTeam,
   useSendGameSquadInvite,
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
-import { useCreateGameInvite } from "../../hooks/useInvites";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
-import JoinRequestModal from "../../components/JoinRequestModal";
 import SquadFillModal from "../../components/SquadFillModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
-import InviteUsersModal from "../../components/InviteUsersModal";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
-import type { Database } from "../../types/database.types";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList>;
-
-type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
 const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting" },
@@ -67,7 +56,6 @@ function TeamCard({
   userId,
   disabled,
   hasActiveTeamElsewhere,
-  onRequestJoin,
   onLeave,
   onFillWithSquad,
   noun,
@@ -80,7 +68,6 @@ function TeamCard({
   // (non-rejected) team in this same tournament — until they leave it,
   // they can't join this team too.
   hasActiveTeamElsewhere: boolean;
-  onRequestJoin: () => void;
   onLeave: () => void;
   onFillWithSquad?: () => void;
   // This section is also reused for regular (non-tournament) games that
@@ -162,14 +149,6 @@ function TeamCard({
             <Text className="text-muted text-xs text-center">
               You already have a spot on another team in this {noun}.
             </Text>
-          ) : team.status === "FORMING" && !isTeamFull ? (
-            <Pressable
-              onPress={onRequestJoin}
-              disabled={disabled}
-              className="bg-primary rounded-lg py-2 items-center"
-            >
-              <Text className="text-white text-xs font-semibold">Join Team</Text>
-            </Pressable>
           ) : null}
           {/* A squad owner can register their whole squad for this slot in
               one go — independent of the individual-join flow above, and
@@ -179,9 +158,9 @@ function TeamCard({
             <Pressable
               onPress={onFillWithSquad}
               disabled={disabled}
-              className="border border-primary rounded-lg py-2 items-center mt-2"
+              className="bg-primary rounded-lg py-2 items-center mt-2"
             >
-              <Text className="text-primary text-xs font-semibold">Fill With My Squad</Text>
+              <Text className="text-white text-xs font-semibold">Enter Squad</Text>
             </Pressable>
           )}
         </View>
@@ -199,18 +178,14 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   // player-facing copy needs to say "game" instead of "tournament" there.
   const noun: "tournament" | "game" = game.game_type === "TOURNAMENT" ? "tournament" : "game";
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [joinRequestTeamId, setJoinRequestTeamId] = useState<string | null>(null);
   const [fillTeamId, setFillTeamId] = useState<string | null>(null);
   const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
-  const requestToJoinTeam = useRequestToJoinTeam(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
   const sendSquadInvite = useSendGameSquadInvite(game.id);
-  const createInvite = useCreateGameInvite(game.id);
   const { data: squadInvites } = useGameSquadInvitesForGame(game.id);
 
   if (isLoading) {
@@ -235,18 +210,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
   const isPoolFormat = game.tournament_format === "POOL";
 
-  const disabled = createTeam.isPending || requestToJoinTeam.isPending || leaveTeam.isPending;
-
-  const handleSubmitJoinRequest = (skillLevel: SkillLevel, location: string) => {
-    if (!userId || !joinRequestTeamId) return;
-    requestToJoinTeam.mutate(
-      { teamId: joinRequestTeamId, userId, skillLevel, location },
-      {
-        onSuccess: () => setJoinRequestTeamId(null),
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
-      }
-    );
-  };
+  const disabled = createTeam.isPending || leaveTeam.isPending;
 
   const handleLeave = (teamId: string) => {
     if (!userId) return;
@@ -294,16 +258,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         <View className="flex-row" style={{ gap: 8 }}>
           {isHost && (
             <Pressable
-              onPress={() => setShowInviteModal(true)}
-              className="flex-row items-center border border-primary rounded-lg px-3 py-1.5"
-              style={{ gap: 4 }}
-            >
-              <Ionicons name="person-add-outline" size={14} color={colors.primary} />
-              <Text className="text-primary text-xs font-semibold">Invite Players</Text>
-            </Pressable>
-          )}
-          {isHost && (
-            <Pressable
               onPress={() => setShowInviteSquadModal(true)}
               className="flex-row items-center border border-primary rounded-lg px-3 py-1.5"
               style={{ gap: 4 }}
@@ -342,7 +296,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               userId={userId}
               disabled={disabled}
               hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
-              onRequestJoin={() => setJoinRequestTeamId(team.id)}
               onLeave={() => handleLeave(team.id)}
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
               noun={noun}
@@ -365,15 +318,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             }
           );
         }}
-      />
-
-      <JoinRequestModal
-        visible={!!joinRequestTeamId}
-        onClose={() => setJoinRequestTeamId(null)}
-        submitting={requestToJoinTeam.isPending}
-        title="Join Team"
-        subtitle="You'll join this team instantly — no approval needed."
-        onSubmit={handleSubmitJoinRequest}
       />
 
       <SquadFillModal
@@ -410,24 +354,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
                 onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
               }
             );
-          }}
-        />
-      )}
-
-      {isHost && (
-        <InviteUsersModal
-          visible={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          title={`Invite Players · ${game.title}`}
-          excludeIds={[
-            game.creator_id,
-            ...teams.flatMap((t) =>
-              t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.user_id)
-            ),
-          ]}
-          onInvite={async (user) => {
-            if (!userId) return;
-            await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
           }}
         />
       )}
