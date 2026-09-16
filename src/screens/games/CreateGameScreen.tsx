@@ -1013,7 +1013,7 @@ export default function CreateGameScreen() {
         <View className="flex-row items-center mb-2 mt-3">
           <MaterialCommunityIcons name="cash-multiple" size={16} color={colors.primary} style={{ marginRight: 6 }} />
           <Text className="font-semibold text-sm text-ink">
-            {isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee (Rs)"}
+            {isTournament ? "Entry Fee per Team (Rs)" : "Entry Fee per Person (Rs)"}
           </Text>
         </View>
         <FieldInput
