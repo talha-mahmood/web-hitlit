@@ -13,6 +13,7 @@ import {
   useMarkInningsComplete,
   useCompleteCricketMatch,
 } from "../../hooks/useCricket";
+import { useSyncCricketMatchResult } from "../../hooks/useTournamentMatches";
 import { ballRowToEvent, friendlyCricketError } from "../../lib/api/cricket";
 import {
   replayInnings,
@@ -158,6 +159,7 @@ export default function LiveScoringScreen() {
   const startSecondInnings = useStartSecondInnings(params.matchId);
   const markInningsComplete = useMarkInningsComplete(params.matchId);
   const completeMatch = useCompleteCricketMatch();
+  const syncTournamentResult = useSyncCricketMatchResult();
 
   const [pendingStriker, setPendingStriker] = useState<string | null>(null);
   const [pendingNonStriker, setPendingNonStriker] = useState<string | null>(null);
@@ -326,12 +328,24 @@ export default function LiveScoringScreen() {
   const handleFinishMatch = () => {
     if (!currentInnings || !inningsState || !firstInnings) return;
     const summary = matchResultSummary(match.team_a_name, match.team_b_name, firstInnings, inningsState);
+    // Same comparison matchResultSummary makes internally, just kept as a
+    // plain A/B/tie result so it can be carried over to the tournament
+    // match this scorecard was started from (if any) — see
+    // syncCricketMatchResult.
+    const teamAWon: boolean | null =
+      inningsState.runs === firstInnings.runs ? null : (inningsState.runs > firstInnings.runs) === (inningsState.battingTeam === "A");
     markInningsComplete.mutate(currentInnings.id, {
       onSuccess: () => {
         completeMatch.mutate(
           { matchId: match.id, resultSummary: summary },
           {
-            onSuccess: () => navigation.replace("FullScorecard", { matchId: match.id }),
+            onSuccess: () => {
+              // Best-effort — a sync failure (e.g. this wasn't actually a
+              // tournament match) shouldn't block the host from seeing
+              // their finished scorecard.
+              syncTournamentResult.mutate({ cricketMatchId: match.id, teamAWon });
+              navigation.replace("FullScorecard", { matchId: match.id });
+            },
             onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not complete match.")),
           }
         );

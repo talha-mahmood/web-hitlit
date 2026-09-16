@@ -16,8 +16,9 @@ import {
   useLinkCricketMatch,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
-import { useCreateCricketMatch } from "../../hooks/useCricket";
-import { friendlyCricketError } from "../../lib/api/cricket";
+import { useCreateCricketMatch, useCricketMatch } from "../../hooks/useCricket";
+import { friendlyCricketError, ballRowToEvent } from "../../lib/api/cricket";
+import { computeRunRate } from "../../lib/cricketScoring";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import StartScorecardModal from "../../components/StartScorecardModal";
@@ -73,6 +74,41 @@ function FixturesPanel({
   );
 }
 
+// Only rendered once a match actually has a linked scorecard — reads the
+// same ball-by-ball log Live Scoring does and sums it directly (just total
+// runs/legal balls, not the full batting/bowling breakdown) since that's
+// all a run rate needs.
+function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
+  const { data: cricketMatch } = useCricketMatch(cricketMatchId);
+  if (!cricketMatch) return null;
+
+  const rates = cricketMatch.cricket_innings.map((inn) => {
+    const balls = inn.cricket_balls.map(ballRowToEvent);
+    const runs = balls.reduce((sum, b) => sum + b.runsBatted + b.extraRuns, 0);
+    const legalBalls = balls.filter((b) => b.extraType !== "WIDE" && b.extraType !== "NOBALL").length;
+    return {
+      battingTeam: inn.batting_team as "A" | "B",
+      runRate: computeRunRate(runs, legalBalls),
+      hasBalls: legalBalls > 0,
+    };
+  });
+  const rateFor = (side: "A" | "B") => rates.find((r) => r.battingTeam === side && r.hasBalls);
+  const a = rateFor("A");
+  const b = rateFor("B");
+  if (!a && !b) return null;
+
+  return (
+    <View className="flex-row items-center justify-between mt-1">
+      <Text className="text-muted text-xs" numberOfLines={1}>
+        {a ? `${cricketMatch.team_a_name} RR: ${a.runRate.toFixed(2)}` : ""}
+      </Text>
+      <Text className="text-muted text-xs" numberOfLines={1}>
+        {b ? `${cricketMatch.team_b_name} RR: ${b.runRate.toFixed(2)}` : ""}
+      </Text>
+    </View>
+  );
+}
+
 function MatchRow({
   match,
   allowDraw,
@@ -121,6 +157,7 @@ function MatchRow({
             </Pressable>
           )}
         </View>
+        {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       </View>
     );
   }
@@ -159,6 +196,7 @@ function MatchRow({
           )}
         </View>
       )}
+      {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       {showScorecardButton && match.team_a && match.team_b && (
         <Pressable
           onPress={onGoToScorecard}
@@ -669,6 +707,205 @@ function PoolMatchesPanel({
   );
 }
 
+// Pool format's knockout stage — every real multi-group tournament needs a
+// way to actually crown a winner once the round-robin groups are done, which
+// nothing above provides (PoolMatchesPanel only ever plays the group stage).
+// Qualifiers come straight from each pool's standings: with exactly two
+// pools, the top two from each cross-pair into a semifinal (1st-of-A vs
+// 2nd-of-B, 1st-of-B vs 2nd-of-A) so pool-mates don't meet again
+// immediately; with any other pool count, each pool's own winner goes
+// straight into a knockout bracket sized to the number of pools. From there
+// it's the exact same bracket-advancement machinery Knockout/League already
+// use (generateNextRound + pairTeamsForFixtures("KNOCKOUT", ...)) — these
+// rounds are just persisted with pool_id null, same as any other playoff.
+function PoolPlayoffPanel({
+  gameId,
+  pools,
+  approvedTeams,
+  requiredTeams,
+  isHost,
+  firstMatchId,
+  canGoToScorecard,
+  onGoToScorecard,
+}: {
+  gameId: string;
+  pools: TournamentPool[];
+  approvedTeams: TournamentTeam[];
+  requiredTeams: number;
+  isHost: boolean;
+  firstMatchId?: string;
+  canGoToScorecard: boolean;
+  onGoToScorecard: (match: TournamentMatch) => void;
+}) {
+  const { data: matches, isLoading } = useTournamentMatches(gameId);
+  const generateNextRound = useGenerateNextRound(gameId);
+  const enterResult = useEnterMatchResult(gameId);
+  const resetResult = useResetMatchResult(gameId);
+
+  if (isLoading) return null;
+
+  const allMatches = matches ?? [];
+  const groupMatches = allMatches.filter((m) => m.pool_id !== null);
+  const playoffMatches = allMatches.filter((m) => m.pool_id === null);
+  const unassigned = approvedTeams.filter((t) => !t.pool_id);
+
+  const groupStageComplete =
+    pools.length > 0 &&
+    requiredTeams > 0 &&
+    approvedTeams.length === requiredTeams &&
+    unassigned.length === 0 &&
+    pools.every((p) => {
+      const ms = groupMatches.filter((m) => m.pool_id === p.id);
+      return ms.length > 0 && ms.every((m) => m.status === "COMPLETED");
+    });
+
+  if (!groupStageComplete) return null;
+
+  const handleEnterResult = (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => {
+    Alert.alert("Enter Result", `Record "${label}"? You can edit this later if needed.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Confirm",
+        onPress: () =>
+          enterResult.mutate(
+            { matchId, winnerTeamId, isDraw },
+            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save result.") }
+          ),
+      },
+    ]);
+  };
+
+  const handleReset = (matchId: string) => {
+    Alert.alert("Edit Result", "Clear this result so you can re-enter it?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Clear",
+        style: "destructive",
+        onPress: () =>
+          resetResult.mutate(matchId, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not clear result."),
+          }),
+      },
+    ]);
+  };
+
+  if (playoffMatches.length === 0) {
+    const poolStandings = (poolId: string) =>
+      computeStandings(
+        approvedTeams.filter((t) => t.pool_id === poolId).map((t) => ({ id: t.id, name: t.name })),
+        groupMatches.filter((m) => m.pool_id === poolId)
+      );
+
+    let qualifiers: { id: string; name: string }[];
+    if (pools.length === 2) {
+      const standingsA = poolStandings(pools[0].id);
+      const standingsB = poolStandings(pools[1].id);
+      qualifiers =
+        standingsA.length >= 2 && standingsB.length >= 2
+          ? [
+              { id: standingsA[0].teamId, name: standingsA[0].name },
+              { id: standingsB[1].teamId, name: standingsB[1].name },
+              { id: standingsB[0].teamId, name: standingsB[0].name },
+              { id: standingsA[1].teamId, name: standingsA[1].name },
+            ]
+          : [];
+    } else {
+      qualifiers = pools
+        .map((p) => poolStandings(p.id)[0])
+        .filter((s): s is NonNullable<typeof s> => !!s)
+        .map((s) => ({ id: s.teamId, name: s.name }));
+    }
+
+    if (qualifiers.length < 2) return null;
+
+    return (
+      <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
+        <Text className="text-ink font-semibold text-sm mb-1">Playoffs</Text>
+        <Text className="text-muted text-xs mb-3">
+          Every group is done — generate the {knockoutRoundLabel(qualifiers.length).toLowerCase()}
+          {qualifiers.length > 2 ? "s" : ""} from the group standings.
+        </Text>
+        {isHost && (
+          <Pressable
+            onPress={() => generateNextRound.mutate({ round: 2, teams: qualifiers })}
+            disabled={generateNextRound.isPending}
+            className="bg-primary rounded-lg py-2.5 items-center"
+          >
+            {generateNextRound.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white text-xs font-semibold">
+                Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
+              </Text>
+            )}
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
+  const rounds = Array.from(new Set(playoffMatches.map((m) => m.round))).sort((a, b) => a - b);
+  const latestRound = rounds[rounds.length - 1];
+  const latestRoundMatches = playoffMatches.filter((m) => m.round === latestRound);
+  const bracketWinners = getRoundWinners(latestRoundMatches);
+  const isChampionDecided = bracketWinners !== null && bracketWinners.length === 1;
+  const canAdvanceBracket = bracketWinners !== null && bracketWinners.length > 1;
+  const disabled = enterResult.isPending || resetResult.isPending || generateNextRound.isPending;
+
+  return (
+    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
+      <Text className="text-ink font-semibold text-sm mb-2">Playoffs</Text>
+      {rounds.map((round, idx) => {
+        const roundMatches = playoffMatches.filter((m) => m.round === round);
+        return (
+          <View key={round} className={idx > 0 ? "mt-4" : undefined}>
+            <Text className="text-ink text-xs font-semibold mb-2">
+              {roundLabel("KNOCKOUT", round, roundMatches)}
+            </Text>
+            <View style={{ gap: 8 }}>
+              {roundMatches.map((m) => (
+                <MatchRow
+                  key={m.id}
+                  match={m}
+                  allowDraw={false}
+                  isHost={isHost}
+                  disabled={disabled}
+                  onEnterResult={handleEnterResult}
+                  onReset={handleReset}
+                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  onGoToScorecard={() => onGoToScorecard(m)}
+                />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+
+      {isHost && canAdvanceBracket && bracketWinners && (
+        <Pressable
+          onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
+          disabled={generateNextRound.isPending}
+          className="bg-primary rounded-lg py-2.5 items-center mt-4"
+        >
+          {generateNextRound.isPending ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text className="text-white text-xs font-semibold">
+              Generate {knockoutRoundLabel(bracketWinners.length)} Matches
+            </Text>
+          )}
+        </Pressable>
+      )}
+
+      {isChampionDecided && bracketWinners && (
+        <View className="bg-primary-light rounded-xl py-3 items-center mt-4">
+          <Text className="text-primary-dark text-xs font-semibold">🏆 Champion: {bracketWinners[0].name}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ── screen ────────────────────────────────────────────────────────────────────
 
 export default function TournamentMatchesScreen() {
@@ -709,7 +946,12 @@ export default function TournamentMatchesScreen() {
   const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
   const canGoToScorecard = isHost && isCricketSport && isVenueBooked;
-  const firstMatchId = matches?.[0]?.id;
+  // "Go To Scorecard" tracks the earliest still-pending real match (both
+  // teams set, not a bye) across the whole tournament — once one match's
+  // scorecard finishes, its result is synced automatically (see
+  // syncCricketMatchResult) and this naturally advances to the next one,
+  // round after round, all the way to the final.
+  const firstMatchId = (matches ?? []).find((m) => m.status !== "COMPLETED" && m.team_a && m.team_b)?.id;
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
@@ -809,6 +1051,16 @@ export default function TournamentMatchesScreen() {
                   />
                 );
               })}
+            <PoolPlayoffPanel
+              gameId={game.id}
+              pools={pools ?? []}
+              approvedTeams={approvedTeamsFull}
+              requiredTeams={requiredTeams}
+              isHost={isHost}
+              firstMatchId={firstMatchId}
+              canGoToScorecard={canGoToScorecard}
+              onGoToScorecard={handleGoToScorecard}
+            />
           </>
         ) : (
           <>

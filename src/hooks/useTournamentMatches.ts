@@ -7,6 +7,7 @@ import {
   enterMatchResult,
   resetMatchResult,
   linkCricketMatch,
+  syncCricketMatchResult,
 } from "../lib/api/tournamentMatches";
 import type { Database } from "../types/database.types";
 
@@ -70,5 +71,17 @@ export function useLinkCricketMatch(gameId: string) {
     mutationFn: ({ matchId, cricketMatchId }: { matchId: string; cricketMatchId: string }) =>
       linkCricketMatch(matchId, cricketMatchId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+// Callable from Live Scoring, which doesn't know its gameId up front (a
+// cricket match may or may not be tournament-linked) — invalidates every
+// tournament's matches broadly rather than needing one passed in.
+export function useSyncCricketMatchResult() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cricketMatchId, teamAWon }: { cricketMatchId: string; teamAWon: boolean | null }) =>
+      syncCricketMatchResult(cricketMatchId, teamAWon),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches"] }),
   });
 }

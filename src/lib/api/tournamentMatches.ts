@@ -121,3 +121,33 @@ export async function linkCricketMatch(matchId: string, cricketMatchId: string):
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }
+
+// Called once a Live Scoring match finishes — if that cricket match was
+// started from a tournament match (via "Go To Scorecard"), carries its
+// result straight into tournament_matches so the host never has to
+// manually re-enter "Team X won" for a match that was actually scored ball
+// by ball. teamAWon is null for a tie (cricket's "A"/"B" sides map 1:1 to
+// this tournament match's team_a/team_b, since that's how the cricket match
+// was created in the first place). A no-op if this cricket match isn't
+// linked to any tournament match (e.g. a standalone scorecard).
+export async function syncCricketMatchResult(cricketMatchId: string, teamAWon: boolean | null): Promise<void> {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, team_a_id, team_b_id")
+    .eq("cricket_match_id", cricketMatchId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return;
+
+  const winnerTeamId = teamAWon === null ? null : teamAWon ? data.team_a_id : data.team_b_id;
+  const { error: updateError } = await supabase
+    .from("tournament_matches")
+    .update({
+      status: "COMPLETED",
+      winner_team_id: winnerTeamId,
+      is_draw: teamAWon === null,
+      played_at: new Date().toISOString(),
+    })
+    .eq("id", data.id);
+  if (updateError) throw new Error(updateError.message);
+}
