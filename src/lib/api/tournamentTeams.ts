@@ -121,14 +121,32 @@ export async function leaveTeam(teamId: string, userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-// A team joins the tournament automatically the moment its roster fills up
-// (see the auto_approve_full_team DB trigger) — no captain submission or
-// host approval step. This is the host's one remaining team-level action:
-// pull an already-approved team back out of the tournament.
+// A team's roster fills up automatically via the auto_approve_full_team DB
+// trigger: if the host filled it, it's approved immediately; otherwise it
+// lands in PENDING_HOST_APPROVAL for the host to approve/reject below. This
+// is the host's remaining team-level action: pull an already-approved team
+// back out of the tournament.
 export async function rejectTeam(teamId: string): Promise<void> {
   const { error } = await supabase
     .from("tournament_teams")
     .update({ status: "REJECTED" })
     .eq("id", teamId);
+  if (error) throw new Error(error.message);
+}
+
+// Host approves a team that's awaiting their sign-off after someone else
+// filled its roster. Enforced server-side by enforce_team_status_transition.
+export async function approveTeam(teamId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_teams")
+    .update({ status: "APPROVED" })
+    .eq("id", teamId);
+  if (error) throw new Error(error.message);
+}
+
+// Host declines a pending team request: wipes the tentative roster and
+// resets the slot back to FORMING so it's immediately re-fillable.
+export async function rejectPendingTeam(teamId: string): Promise<void> {
+  const { error } = await supabase.rpc("reject_pending_team", { p_team_id: teamId });
   if (error) throw new Error(error.message);
 }

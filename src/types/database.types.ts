@@ -1822,6 +1822,7 @@ export type Database = {
           pool_id: string | null
           sort_order: number | null
           status: Database["public"]["Enums"]["tournament_team_status_type"]
+          team_code: string
           updated_at: string
         }
         Insert: {
@@ -1835,6 +1836,7 @@ export type Database = {
           pool_id?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
+          team_code?: string
           updated_at?: string
         }
         Update: {
@@ -1848,6 +1850,7 @@ export type Database = {
           pool_id?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
+          team_code?: string
           updated_at?: string
         }
         Relationships: [
@@ -2173,6 +2176,7 @@ export type Database = {
       expire_past_games: { Args: never; Returns: undefined }
       generate_game_code: { Args: never; Returns: string }
       generate_squad_code: { Args: never; Returns: string }
+      generate_team_code: { Args: never; Returns: string }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
         Returns: {
@@ -2212,6 +2216,7 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean }
       is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
+      reject_pending_team: { Args: { p_team_id: string }; Returns: undefined }
       respond_to_venue_review: {
         Args: { response_text: string; target_review_id: string }
         Returns: undefined
@@ -2228,14 +2233,24 @@ export type Database = {
         }
         Returns: undefined
       }
-      squad_fill_tournament_team: {
-        Args: {
-          p_member_user_ids: string[]
-          p_squad_id: string
-          p_team_id: string
-        }
-        Returns: undefined
-      }
+      squad_fill_tournament_team:
+        | {
+            Args: {
+              p_member_user_ids: string[]
+              p_squad_id: string
+              p_team_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_member_user_ids: string[]
+              p_squad_id: string
+              p_team_id: string
+              p_team_name?: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       booking_payment_status_type: "paid" | "unpaid"

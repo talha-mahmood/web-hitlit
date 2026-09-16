@@ -3,7 +3,14 @@ import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-na
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useTournamentTeams, useCreateTeam, useLeaveTeam } from "../../hooks/useTournamentTeams";
+import * as Clipboard from "expo-clipboard";
+import {
+  useTournamentTeams,
+  useCreateTeam,
+  useLeaveTeam,
+  useApproveTeam,
+  useRejectPendingTeam,
+} from "../../hooks/useTournamentTeams";
 import {
   useSquadFillTournamentTeam,
   useSendGameSquadInvite,
@@ -12,7 +19,7 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
-import SquadFillModal from "../../components/SquadFillModal";
+import SelectTeamModal from "../../components/SelectTeamModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -22,6 +29,7 @@ type Nav = NativeStackNavigationProp<GamesStackParamList>;
 
 const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting" },
+  PENDING_HOST_APPROVAL: { bg: "bg-amber-50", text: "text-amber-700", label: "Awaiting Approval" },
   APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Full" },
   REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed" },
 };
@@ -54,15 +62,19 @@ function TeamCard({
   team,
   requiredSize,
   userId,
+  isHost,
   disabled,
   hasActiveTeamElsewhere,
   onLeave,
   onFillWithSquad,
+  onApprove,
+  onReject,
   noun,
 }: {
   team: TournamentTeam;
   requiredSize: number;
   userId?: string;
+  isHost: boolean;
   disabled: boolean;
   // True when the user already has a JOINED spot on a *different*
   // (non-rejected) team in this same tournament — until they leave it,
@@ -70,27 +82,42 @@ function TeamCard({
   hasActiveTeamElsewhere: boolean;
   onLeave: () => void;
   onFillWithSquad?: () => void;
+  onApprove: () => void;
+  onReject: () => void;
   // This section is also reused for regular (non-tournament) games that
   // default to 2 teams — copy that mentions "the tournament" needs to say
   // "the game" there instead.
   noun: "tournament" | "game";
 }) {
+  const [codeCopied, setCodeCopied] = useState(false);
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const myMembership = userId
     ? team.tournament_team_members.find((m) => m.user_id === userId)
     : undefined;
   const isTeamFull = requiredSize > 0 && joinedMembers.length >= requiredSize;
-  // A team auto-joins the tournament the instant its roster fills up (see
-  // the auto_approve_full_team DB trigger) — the only status that still
-  // means "still recruiting, roster editable" is FORMING. REJECTED (the
-  // host pulled it back out) is terminal — there's no resubmit path.
+  // A team's roster fills up (see auto_approve_full_team) and moves to
+  // either APPROVED (host filled it) or PENDING_HOST_APPROVAL (anyone else
+  // did) — either way, FORMING is the only status where the roster is still
+  // editable. REJECTED (the host pulled it back out from Approved) is
+  // terminal — there's no resubmit path.
   const isRosterEditable = team.status === "FORMING";
+  const isPendingApproval = team.status === "PENDING_HOST_APPROVAL";
   const playersNeeded = Math.max(requiredSize - joinedMembers.length, 0);
   const badge = TEAM_STATUS_BADGE[team.status];
-  // "Fill With My Squad" registers a whole squad into a team in one go — the
-  // server only allows this on a genuinely empty team, so that's the same
-  // gate used here rather than duplicating the check loosely.
+  // The "Create Team" squad-registration CTA only makes sense on a genuinely
+  // empty team — the server only allows it there too.
   const isEmpty = joinedMembers.length === 0;
+  // A team only has a real captain/code once someone has actually claimed
+  // it (created it, or registered a squad into it) — visible to that team's
+  // own people and the host only, same rule as the game/tournament ID.
+  const isClaimed = !!team.captain_id;
+  const canSeeTeamCode = isClaimed && (isHost || !!myMembership);
+
+  const handleCopyCode = async () => {
+    await Clipboard.setStringAsync(team.team_code);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 1500);
+  };
 
   return (
     <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
@@ -106,6 +133,18 @@ function TeamCard({
         {joinedMembers.length}/{requiredSize || "—"} players
       </Text>
 
+      {canSeeTeamCode && (
+        <Pressable
+          onPress={handleCopyCode}
+          hitSlop={8}
+          className="flex-row items-center self-start px-2 py-1 rounded-lg bg-gray-50 mb-3"
+          style={{ gap: 4 }}
+        >
+          <Text className="text-muted text-xs font-medium">Team ID: {team.team_code}</Text>
+          <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={12} color={codeCopied ? colors.primary : colors.muted} />
+        </Pressable>
+      )}
+
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
         {joinedMembers.map((m) => (
           <MemberAvatar
@@ -120,12 +159,50 @@ function TeamCard({
         <Text className="text-danger text-xs mt-2">Removed from the {noun} by the host.</Text>
       )}
 
-      {/* This team's own CTA. Joining always inserts the player straight in —
-          there's no approval step to wait on — so a JOINED member just gets
-          a progress readout alongside their Leave option, and anyone else
-          gets an instant Join button. A team joins the tournament
-          automatically the instant it's full (see the auto_approve_full_team
-          DB trigger). */}
+      {/* Roster filled up but this team wasn't put together by the host —
+          it needs the host's sign-off before it actually joins the
+          tournament. The host sees Approve/Reject right here; everyone
+          else just sees where things stand. */}
+      {isPendingApproval && (
+        <View className="mt-3">
+          {isHost ? (
+            <>
+              <View className="rounded-lg py-2.5 items-center bg-amber-50">
+                <Text className="text-amber-700 text-xs font-semibold">Awaiting your approval</Text>
+              </View>
+              <View className="flex-row mt-2" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={onReject}
+                  disabled={disabled}
+                  className="flex-1 border border-danger rounded-lg py-2 items-center"
+                >
+                  <Text className="text-danger text-xs font-semibold">Reject</Text>
+                </Pressable>
+                <Pressable
+                  onPress={onApprove}
+                  disabled={disabled}
+                  className="flex-1 bg-primary rounded-lg py-2 items-center"
+                >
+                  <Text className="text-white text-xs font-semibold">Approve</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <View className="rounded-lg py-2.5 items-center bg-amber-50">
+              <Text className="text-amber-700 text-xs font-semibold text-center">
+                Sent to the host for approval
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* This team's own CTA. Individually joining always inserts the player
+          straight in — there's no approval step for that — so a JOINED
+          member just gets a progress readout alongside their Leave option,
+          and anyone else can register a whole squad via Create Team. A team
+          moves on automatically the instant it's full (see
+          auto_approve_full_team). */}
       {isRosterEditable && (
         <View className="mt-3">
           {myMembership?.status === "JOINED" ? (
@@ -150,17 +227,17 @@ function TeamCard({
               You already have a spot on another team in this {noun}.
             </Text>
           ) : null}
-          {/* A squad owner can register their whole squad for this slot in
-              one go — independent of the individual-join flow above, and
-              not gated on hasActiveTeamElsewhere since the squad owner
-              themselves need not be one of the registered players. */}
+          {/* Registers a whole squad into this slot in one go — independent
+              of the individual-join flow above, and not gated on
+              hasActiveTeamElsewhere since the squad owner themselves need
+              not be one of the registered players. */}
           {isEmpty && onFillWithSquad && (
             <Pressable
               onPress={onFillWithSquad}
               disabled={disabled}
               className="bg-primary rounded-lg py-2 items-center mt-2"
             >
-              <Text className="text-white text-xs font-semibold">Enter Squad</Text>
+              <Text className="text-white text-xs font-semibold">Create Team</Text>
             </Pressable>
           )}
         </View>
@@ -185,6 +262,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const createTeam = useCreateTeam(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
+  const approveTeam = useApproveTeam(game.id);
+  const rejectPendingTeam = useRejectPendingTeam(game.id);
   const sendSquadInvite = useSendGameSquadInvite(game.id);
   const { data: squadInvites } = useGameSquadInvitesForGame(game.id);
 
@@ -210,7 +289,10 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
   const isPoolFormat = game.tournament_format === "POOL";
 
-  const disabled = createTeam.isPending || leaveTeam.isPending;
+  const disabled =
+    createTeam.isPending || leaveTeam.isPending || approveTeam.isPending || rejectPendingTeam.isPending;
+
+  const fillTeam = fillTeamId ? teams.find((t) => t.id === fillTeamId) : undefined;
 
   const handleLeave = (teamId: string) => {
     if (!userId) return;
@@ -224,6 +306,26 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             { teamId, userId },
             { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not leave.") }
           ),
+      },
+    ]);
+  };
+
+  const handleApprove = (teamId: string) => {
+    approveTeam.mutate(teamId, {
+      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not approve this team."),
+    });
+  };
+
+  const handleReject = (teamId: string) => {
+    Alert.alert("Reject Team", "This will clear the pending roster and reopen this slot. Continue?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reject",
+        style: "destructive",
+        onPress: () =>
+          rejectPendingTeam.mutate(teamId, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not reject this team."),
+          }),
       },
     ]);
   };
@@ -294,10 +396,13 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               team={team}
               requiredSize={requiredSize}
               userId={userId}
+              isHost={isHost}
               disabled={disabled}
               hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
               onLeave={() => handleLeave(team.id)}
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
+              onApprove={() => handleApprove(team.id)}
+              onReject={() => handleReject(team.id)}
               noun={noun}
             />
           ))
@@ -320,17 +425,18 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         }}
       />
 
-      <SquadFillModal
+      <SelectTeamModal
         visible={!!fillTeamId}
         onClose={() => setFillTeamId(null)}
         userId={userId}
         requiredCount={requiredSize}
+        defaultTeamName={fillTeam?.name ?? ""}
         submitting={squadFillTeam.isPending}
-        title="Fill Team With Your Squad"
-        onSubmit={(squadId, memberUserIds) => {
+        isHost={isHost}
+        onSubmit={(squadId, memberUserIds, teamName) => {
           if (!fillTeamId) return;
           squadFillTeam.mutate(
-            { teamId: fillTeamId, squadId, memberUserIds },
+            { teamId: fillTeamId, squadId, memberUserIds, teamName },
             {
               onSuccess: () => setFillTeamId(null),
               onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not register team."),

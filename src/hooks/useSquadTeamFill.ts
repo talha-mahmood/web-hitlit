@@ -20,8 +20,17 @@ export function useMyOwnedSquads(ownerId: string | undefined) {
 export function useSquadFillTournamentTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ teamId, squadId, memberUserIds }: { teamId: string; squadId: string; memberUserIds: string[] }) =>
-      squadFillTournamentTeam(teamId, squadId, memberUserIds),
+    mutationFn: ({
+      teamId,
+      squadId,
+      memberUserIds,
+      teamName,
+    }: {
+      teamId: string;
+      squadId: string;
+      memberUserIds: string[];
+      teamName?: string;
+    }) => squadFillTournamentTeam(teamId, squadId, memberUserIds, teamName),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] }),
   });
 }

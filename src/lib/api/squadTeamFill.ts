@@ -29,12 +29,14 @@ export type GameSquadInviteWithGame = GameSquadInvite & {
 export async function squadFillTournamentTeam(
   teamId: string,
   squadId: string,
-  memberUserIds: string[]
+  memberUserIds: string[],
+  teamName?: string
 ): Promise<void> {
   const { error } = await supabase.rpc("squad_fill_tournament_team", {
     p_team_id: teamId,
     p_squad_id: squadId,
     p_member_user_ids: memberUserIds,
+    p_team_name: teamName ?? null,
   });
   if (error) throw new Error(error.message);
 }

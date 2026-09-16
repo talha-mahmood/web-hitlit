@@ -7,6 +7,8 @@ import {
   requestToJoinTeam,
   leaveTeam,
   rejectTeam,
+  approveTeam,
+  rejectPendingTeam,
 } from "../lib/api/tournamentTeams";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -105,6 +107,26 @@ export function useRejectTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (teamId: string) => rejectTeam(teamId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+    },
+  });
+}
+
+export function useApproveTeam(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (teamId: string) => approveTeam(teamId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+    },
+  });
+}
+
+export function useRejectPendingTeam(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (teamId: string) => rejectPendingTeam(teamId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },
