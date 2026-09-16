@@ -257,11 +257,14 @@ export default function GameDetailScreen() {
   const { data: squadInvites } = useGameSquadInvitesForGame(params.gameId);
 
   const { data: game, isLoading, error } = useGameDetail(params.gameId);
-  // Only meaningful once `game` has loaded and turned out to be a tournament —
-  // "" keeps the query/realtime subscription off for regular games and while
-  // still loading (see useTournamentTeams: both are no-ops on a falsy gameId).
+  // Team-based joining (create/join Team A or Team B) now applies to any
+  // game with a team structure, not just real tournaments — regular games
+  // created after this change default to 2 teams. "" keeps the query/
+  // realtime subscription off while still loading or for old-style flat
+  // regular games (see useTournamentTeams: both are no-ops on a falsy
+  // gameId).
   const { data: tournamentTeams } = useTournamentTeams(
-    game?.game_type === "TOURNAMENT" ? params.gameId : ""
+    game?.number_of_teams != null ? params.gameId : ""
   );
   const { data: chatUnreadCount } = useGameChatUnreadCount(game?.id, userId);
   const joinGame = useJoinGame();
@@ -316,11 +319,15 @@ export default function GameDetailScreen() {
   const isCancelled = game.status === "CANCELLED";
   const pendingRequests = game.game_players.filter((p) => p.status === "PENDING");
   const isTournament = game.game_type === "TOURNAMENT";
-  // Tournament participation lives entirely in tournament_team_members, not
+  // True for real tournaments and for regular games created with the newer
+  // team-based join flow (2 teams by default) — false only for old-style
+  // regular games that still use the flat game_players join list.
+  const isTeamBased = game.number_of_teams != null;
+  // Team-based participation lives entirely in tournament_team_members, not
   // game_players — a team member never gets a game_players row, so
   // hasJoined alone would miss them for copy-ID/chat access.
   const isTournamentTeamMember =
-    isTournament &&
+    isTeamBased &&
     !!userId &&
     (tournamentTeams ?? []).some(
       (t) =>
@@ -329,9 +336,9 @@ export default function GameDetailScreen() {
     );
   // Chat, specifically, only opens up once the host has actually approved the
   // member's team — being on a still-forming or awaiting-approval team isn't
-  // "part of the tournament" yet.
+  // "part of the game" yet.
   const isApprovedTournamentParticipant =
-    isTournament &&
+    isTeamBased &&
     !!userId &&
     (tournamentTeams ?? []).some(
       (t) =>
@@ -546,7 +553,7 @@ export default function GameDetailScreen() {
             <Ionicons name="person-add-outline" size={22} color={colors.ink} />
           </Pressable>
         )}
-        {isCreator && !isTournament && !isCancelled && !hasEnded && (
+        {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
           <Pressable onPress={() => setShowInviteSquadModal(true)} className="mr-2 p-1">
             <Ionicons name="people-outline" size={22} color={colors.ink} />
           </Pressable>
@@ -605,7 +612,7 @@ export default function GameDetailScreen() {
               {isTournament ? "this tournament" : "this game"}
             </Text>
             <Text className="text-muted text-xs mb-3">
-              {isTournament
+              {isTeamBased
                 ? "Accept to let them know you're in, then join a team below."
                 : "Accept to join instantly — no approval needed."}
             </Text>
@@ -705,6 +712,13 @@ export default function GameDetailScreen() {
           )}
           <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
           <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
+          {!isTeamBased && (
+            <InfoRow
+              icon="person-outline"
+              label="Team Size"
+              value={`${Math.floor(game.max_players / 2)} players per team (2 teams)`}
+            />
+          )}
           <InfoRow
             icon="cash-outline"
             label="Entry Fee"
@@ -723,8 +737,9 @@ export default function GameDetailScreen() {
           </View>
         )}
 
-        {/* Players (regular games) / Teams (tournaments) */}
-        {isTournament ? (
+        {/* Players (old-style flat regular games) / Teams (tournaments and
+            team-based regular games) */}
+        {isTeamBased ? (
           <TournamentTeamsSection game={game} />
         ) : (
           <>
@@ -827,9 +842,10 @@ export default function GameDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* CTA — for tournaments, non-host actions (create/join a team) live
+      {/* CTA — for team-based games (tournaments, and regular games created
+          with the team flow), non-host actions (create/join a team) live
           inline in TournamentTeamsSection instead of a single bottom button */}
-      {isOpen && (isCreator || !isTournament) && (
+      {isOpen && (isCreator || !isTeamBased) && (
         <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-6">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
@@ -907,7 +923,7 @@ export default function GameDetailScreen() {
         }}
       />
 
-      {!isTournament && (
+      {!isTeamBased && (
         <SquadFillModal
           visible={showSquadFillModal}
           onClose={() => setShowSquadFillModal(false)}
@@ -928,7 +944,7 @@ export default function GameDetailScreen() {
         />
       )}
 
-      {isCreator && !isTournament && (
+      {isCreator && !isTeamBased && (
         <InviteSquadModal
           visible={showInviteSquadModal}
           onClose={() => setShowInviteSquadModal(false)}

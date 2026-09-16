@@ -157,12 +157,16 @@ export function HomeGameRowCard({
   onPress: () => void;
 }) {
   const isTournament = game.game_type === "TOURNAMENT";
+  // True for real tournaments and for regular games created with the newer
+  // team-based join flow (2 teams by default) — false only for old-style
+  // regular games that still use the flat game_players join list.
+  const isTeamBased = game.number_of_teams != null;
   const joined = game.game_players.filter((p) => p.status === "JOINED");
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
   const placeName = game.venues?.name ?? game.custom_venue_name ?? "Location TBD";
   const photo = getSportImage(game.sports?.name ?? "");
   const { icon, bg, fg } = getSportIcon(game.sports?.name ?? "");
-  const isFull = game.status === "FULL" || (!isTournament && joined.length >= game.max_players);
+  const isFull = game.status === "FULL" || (!isTeamBased && joined.length >= game.max_players);
 
   return (
     <Bouncy
@@ -210,7 +214,7 @@ export function HomeGameRowCard({
               />
               <Text className="text-muted text-[11px] font-medium">
                 {joined.length}
-                {!isTournament ? `/${game.max_players}` : ""} joined
+                {!isTeamBased ? `/${game.max_players}` : ""} joined
               </Text>
             </View>
             <View
@@ -218,7 +222,7 @@ export function HomeGameRowCard({
               style={{ backgroundColor: isFull ? "#F3F4F6" : colors.primaryLight }}
             >
               <Text className="text-xs font-bold" style={{ color: isFull ? colors.muted : colors.primary }}>
-                {isTournament ? "View Details" : isFull ? "Full" : "Join"}
+                {isTeamBased ? "View Details" : isFull ? "Full" : "Join"}
               </Text>
             </View>
           </View>

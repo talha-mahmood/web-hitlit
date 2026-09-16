@@ -84,6 +84,7 @@ function TeamCard({
   onLeave,
   onRemoveTeam,
   onFillWithSquad,
+  noun,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -98,6 +99,10 @@ function TeamCard({
   onLeave: () => void;
   onRemoveTeam: () => void;
   onFillWithSquad?: () => void;
+  // This section is also reused for regular (non-tournament) games that
+  // default to 2 teams — copy that mentions "the tournament" needs to say
+  // "the game" there instead.
+  noun: "tournament" | "game";
 }) {
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const myMembership = userId
@@ -144,7 +149,7 @@ function TeamCard({
         <View className="mt-3" style={{ gap: 8 }}>
           <View className="bg-green-50 rounded-lg py-2.5 items-center">
             <Text className="text-green-700 text-xs font-semibold">
-              Approved — this team is in the tournament
+              Approved — this team is in the {noun}
             </Text>
           </View>
           {isHost && (
@@ -160,7 +165,7 @@ function TeamCard({
       )}
 
       {team.status === "REJECTED" && (
-        <Text className="text-danger text-xs mt-2">Removed from the tournament by the host.</Text>
+        <Text className="text-danger text-xs mt-2">Removed from the {noun} by the host.</Text>
       )}
 
       {/* This team's own CTA. Joining always inserts the player straight in —
@@ -176,7 +181,7 @@ function TeamCard({
               <View className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
                 <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
                   {isTeamFull
-                    ? "Team full — joining tournament…"
+                    ? `Team full — joining ${noun}…`
                     : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
                 </Text>
               </View>
@@ -190,7 +195,7 @@ function TeamCard({
             </>
           ) : hasActiveTeamElsewhere ? (
             <Text className="text-muted text-xs text-center">
-              You already have a spot on another team in this tournament.
+              You already have a spot on another team in this {noun}.
             </Text>
           ) : team.status === "FORMING" && !isTeamFull ? (
             <Pressable
@@ -820,6 +825,10 @@ function PoolMatchesPanel({
 export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const isHost = game.creator_id === userId;
+  // This section is shared with regular (non-tournament) games that default
+  // to 2 teams — everything below works the same either way, only the
+  // player-facing copy needs to say "game" instead of "tournament" there.
+  const noun: "tournament" | "game" = game.game_type === "TOURNAMENT" ? "tournament" : "game";
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinRequestTeamId, setJoinRequestTeamId] = useState<string | null>(null);
   const [fillTeamId, setFillTeamId] = useState<string | null>(null);
@@ -894,7 +903,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const handleRemoveApprovedTeam = (teamId: string, name: string) => {
     Alert.alert(
       "Remove Team",
-      `Remove "${name}" from the tournament? This frees up their slot for another team.`,
+      `Remove "${name}" from the ${noun}? This frees up their slot for another team.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -1018,6 +1027,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onLeave={() => handleLeave(team.id)}
               onRemoveTeam={() => handleRemoveApprovedTeam(team.id, team.name)}
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
+              noun={noun}
             />
           ))
         )}

@@ -43,7 +43,6 @@ import {
   DAYS,
   DURATIONS,
   TOURNAMENT_DURATIONS_DAYS,
-  MAX_PLAYERS_OPTIONS,
   NUMBER_OF_TEAMS_OPTIONS,
   PLAYERS_PER_TEAM_OPTIONS,
   NUMBER_OF_GROUPS_OPTIONS,
@@ -149,25 +148,6 @@ function TimeChipItem({
         <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
           {label}
         </Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-function MaxPlayersChipItem({
-  n,
-  selected,
-  onPress,
-}: {
-  n: number;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const pulseStyle = useSelectPulse(selected);
-  return (
-    <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -338,7 +318,6 @@ export default function CreateGameScreen() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
   const [durationDays, setDurationDays] = useState<number>(1);
-  const [maxPlayers, setMaxPlayers] = useState<number>(10);
   const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat | null>(null);
@@ -495,6 +474,10 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a number of teams and players per team.");
       return;
     }
+    if (!isTournament && perTeam < 1) {
+      Alert.alert("Missing Info", "Please select players per team.");
+      return;
+    }
     const trimmedTeamNames = teamNames.map((n) => n.trim());
     if (isTournament) {
       if (tournamentFormat !== "POOL" && !isValidTeamCount(tournamentFormat, teams)) {
@@ -559,17 +542,20 @@ export default function CreateGameScreen() {
         endDate: endDateValue,
         startTime: `${startTime}:00`,
         endTime: endTimeValue,
-        // Tournament capacity is teams × players-per-team; regular games use
-        // the Max Players picker directly.
-        maxPlayers: isTournament ? teams * perTeam : maxPlayers,
+        // Tournament capacity is teams × players-per-team. Regular games
+        // always default to 2 teams (no team names/rosters, just a flat
+        // capacity), so it's players-per-team × 2.
+        maxPlayers: isTournament ? teams * perTeam : perTeam * 2,
         skillLevel,
         visibility,
         gender,
         description: description.trim(),
         entryFee: fee,
         gameType,
-        numberOfTeams: isTournament ? teams : null,
-        playersPerTeam: isTournament ? perTeam : null,
+        // Regular games always default to 2 teams now (no format/bracket —
+        // team-based joining mirrors tournaments, but it's just one game).
+        numberOfTeams: isTournament ? teams : 2,
+        playersPerTeam: perTeam,
         tournamentFormat: isTournament ? tournamentFormat : null,
       });
       if (isTournament) {
@@ -577,6 +563,11 @@ export default function CreateGameScreen() {
         if (tournamentFormat === "POOL") {
           await createPools(game.id, trimmedGroupNames);
         }
+      } else {
+        // Regular games skip the "create a team" step entirely — "Team A"
+        // and "Team B" already exist the moment the game is created, ready
+        // to be joined (individually or filled with a squad) right away.
+        await createTournamentTeamPlaceholders(game.id, ["Team A", "Team B"]);
       }
       // The icon bucket's RLS requires the game to already exist (it checks
       // creator_id via the game row), so the upload can only happen after
@@ -1017,17 +1008,18 @@ export default function CreateGameScreen() {
           </>
         ) : (
           <>
-            <SectionLabel title="Max Players" icon="people-outline" compact />
+            <SectionLabel title="Players per Team" required icon="person-outline" compact />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {MAX_PLAYERS_OPTIONS.map((n) => (
-                <MaxPlayersChipItem
+              {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                <CountChipItem
                   key={n}
                   n={n}
-                  selected={maxPlayers === n}
-                  onPress={() => setMaxPlayers(n)}
+                  selected={playersPerTeam === n}
+                  onPress={() => setPlayersPerTeam(n)}
                 />
               ))}
             </ScrollView>
+            <InfoBox text="Regular games default to 2 teams — this sets how many players join each side." />
           </>
         )}
 

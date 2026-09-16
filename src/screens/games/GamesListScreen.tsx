@@ -69,17 +69,21 @@ function GameCard({
   index: number;
 }) {
   const isTournament = game.game_type === "TOURNAMENT";
+  // True for real tournaments and for regular games created with the newer
+  // team-based join flow (2 teams by default) — false only for old-style
+  // regular games that still use the flat game_players join list.
+  const isTeamBased = game.number_of_teams != null;
   const joined = game.game_players.filter((p) => p.status === "JOINED");
-  const hasJoined = !isTournament && game.game_players.some((p) => p.user_id === currentUserId && p.status === "JOINED");
-  const hasRequested = !isTournament && game.game_players.some((p) => p.user_id === currentUserId && p.status === "PENDING");
-  // Only teams the host has actually approved count toward the tournament's
-  // roster — a team that's still forming or awaiting approval hasn't secured
-  // a slot yet, so it shouldn't move the "X/Y teams" count.
+  const hasJoined = !isTeamBased && game.game_players.some((p) => p.user_id === currentUserId && p.status === "JOINED");
+  const hasRequested = !isTeamBased && game.game_players.some((p) => p.user_id === currentUserId && p.status === "PENDING");
+  // Only teams the host has actually approved count toward the roster — a
+  // team that's still forming or awaiting approval hasn't secured a slot
+  // yet, so it shouldn't move the "X/Y teams" count.
   const approvedTeams = game.tournament_teams.filter((t) => t.status === "APPROVED");
   const requiredTeams = game.number_of_teams ?? 0;
   const spotsLeft = game.max_players - joined.length;
   const teamsLeft = requiredTeams - approvedTeams.length;
-  const isFull = game.status === "FULL" || (isTournament ? teamsLeft <= 0 : spotsLeft <= 0);
+  const isFull = game.status === "FULL" || (isTeamBased ? teamsLeft <= 0 : spotsLeft <= 0);
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
   const skillColor = skill ? GAME_SKILL_COLORS[skill] : null;
@@ -131,7 +135,7 @@ function GameCard({
                 <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{badgeLabel}</Text>
               </View>
               {!isMyGame && !isFull && (
-                <Bouncy onPress={isTournament ? onPress : onJoinPress} scaleTo={0.94}>
+                <Bouncy onPress={isTeamBased ? onPress : onJoinPress} scaleTo={0.94}>
                   {hasJoined ? (
                     <View
                       className="flex-row items-center justify-center bg-green-50 rounded-xl px-3 py-2"
@@ -169,7 +173,7 @@ function GameCard({
                 size={24}
               />
               <Text className="text-muted text-sm font-medium">
-                {isTournament
+                {isTeamBased
                   ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""}`
                   : `${joined.length} Going`}
               </Text>
@@ -226,7 +230,7 @@ function GameCard({
               ) : (
                 <View className="bg-green-50 px-2 py-0.5 rounded-full">
                   <Text className="text-primary text-xs font-medium">
-                    {isTournament
+                    {isTeamBased
                       ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
                       : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
                   </Text>
