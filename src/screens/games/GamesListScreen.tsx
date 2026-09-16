@@ -220,7 +220,7 @@ function GameCard({
             {/* Row 4b: Entry fee — "Per Team Entry" for tournaments, "Per
                 Person Entry" for regular games. */}
             <Text className="text-ink font-bold text-sm mb-2">
-              {isTournament ? "Entry Per Team" : "Entry Per Person"} :{" "}
+              {isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"} :{" "}
               {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
             </Text>
 
