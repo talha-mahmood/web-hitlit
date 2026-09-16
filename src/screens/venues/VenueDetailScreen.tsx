@@ -21,7 +21,7 @@ import { getVenuePhoto } from "../../lib/venuePhotos";
 import { colors } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
-type VenueDetailParams = { VenueDetail: { venueId: string } };
+type VenueDetailParams = { VenueDetail: { venueId: string; forGameId?: string } };
 type VenueDetailNav = NativeStackNavigationProp<VenuesStackParamList, "VenueDetail">;
 
 export default function VenueDetailScreen() {
@@ -192,6 +192,7 @@ export default function VenueDetailScreen() {
                   venueId: venue.id,
                   venueStartTime: venue.start_time ?? "06:00:00",
                   venueEndTime: venue.end_time ?? "23:00:00",
+                  forGameId: params.forGameId,
                 })
               }
               className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-2 active:bg-primary-light"

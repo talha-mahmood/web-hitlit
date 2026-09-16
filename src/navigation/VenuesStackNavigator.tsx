@@ -8,10 +8,16 @@ import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams
 
 export type VenuesStackParamList = {
   VenuesList: { sportId?: string } | undefined;
-  VenueDetail: { venueId: string };
+  VenueDetail: { venueId: string; forGameId?: string };
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
   BookingConfirmation: BookingConfirmationParams;
+  // Type-only: BookingCheckoutScreen redirects here when its booking was
+  // launched from a tournament's "Book Venue" button (forGameId set) — at
+  // runtime that only ever happens while this screen is actually mounted
+  // inside Home/Community/Profile/GamesStackNavigator (which all register a
+  // real GameDetail screen), never while browsing venues from this tab.
+  GameDetail: { gameId: string };
 };
 
 const Stack = createNativeStackNavigator<VenuesStackParamList>();

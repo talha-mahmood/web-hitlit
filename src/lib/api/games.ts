@@ -167,6 +167,14 @@ export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
   return data as GameDetail;
 }
 
+// Links a completed venue booking back to the tournament that sent the host
+// there — this is how the "Book Venue" button on the tournament detail
+// screen knows to flip to "Venue Booked" afterward. Host-only (games_update_own).
+export async function linkGameBooking(gameId: string, bookingId: string): Promise<void> {
+  const { error } = await supabase.from("games").update({ booking_id: bookingId }).eq("id", gameId);
+  if (error) throw new Error(error.message);
+}
+
 export async function createGame(params: CreateGameParams): Promise<GameRow> {
   const { data, error } = await supabase
     .from("games")

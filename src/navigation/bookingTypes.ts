@@ -6,6 +6,11 @@ export type SlotPickerParams = {
   venueId: string;
   venueStartTime: string; // "HH:MM:SS"
   venueEndTime: string;   // "HH:MM:SS"
+  // Set only when this booking flow was launched from a tournament's "Book
+  // Venue" button — carried through to BookingCheckout so a completed
+  // booking there can be linked back to that game and redirect to it
+  // instead of the normal BookingConfirmation screen.
+  forGameId?: string;
 };
 
 // One or more slots picked in one visit — price is per-slot since a price
@@ -18,6 +23,7 @@ export type BookingCheckoutParams = {
   venueName: string;
   date: string; // YYYY-MM-DD
   slots: BookingSlotSelection[];
+  forGameId?: string;
 };
 
 export type BookingConfirmationParams = {

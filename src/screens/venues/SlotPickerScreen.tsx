@@ -196,6 +196,7 @@ export default function SlotPickerScreen() {
                 endTime: s.end,
                 price: slotPrice(s),
               })),
+              forGameId: params.forGameId,
             });
           }}
           disabled={selectedSlots.length === 0}

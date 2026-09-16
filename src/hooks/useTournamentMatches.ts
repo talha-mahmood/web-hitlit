@@ -6,6 +6,7 @@ import {
   generatePoolMatches,
   enterMatchResult,
   resetMatchResult,
+  linkCricketMatch,
 } from "../lib/api/tournamentMatches";
 import type { Database } from "../types/database.types";
 
@@ -59,6 +60,15 @@ export function useResetMatchResult(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (matchId: string) => resetMatchResult(matchId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useLinkCricketMatch(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ matchId, cricketMatchId }: { matchId: string; cricketMatchId: string }) =>
+      linkCricketMatch(matchId, cricketMatchId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
   });
 }

@@ -13,13 +13,15 @@ import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
+import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
   Notifications: undefined;
-  VenueDetail: { venueId: string };
+  VenueDetail: { venueId: string; forGameId?: string };
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
   BookingConfirmation: BookingConfirmationParams;
@@ -37,6 +39,8 @@ export type HomeStackParamList = {
   TournamentMatches: { gameId: string };
   PlayersDashboard: undefined;
   PlayerProfile: { userId: string };
+  LiveScoring: { matchId: string };
+  FullScorecard: { matchId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -58,6 +62,8 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+      <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
+      <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
     </Stack.Navigator>
   );
 }

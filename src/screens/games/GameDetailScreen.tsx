@@ -290,6 +290,23 @@ export default function GameDetailScreen() {
   // "part of the game" yet.
   const isApprovedTournamentParticipant = isTeamBased && !!userId && (tournamentTeams ?? []).some((t) => t.status === "APPROVED" && t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"));
 
+  // "Book Venue" only makes sense once the tournament's roster is actually
+  // locked in — every team slot filled and approved, same bar the Matches
+  // screen uses before it'll let the host generate fixtures.
+  const requiredTeams = game.number_of_teams ?? 0;
+  const activeTournamentTeams = (tournamentTeams ?? []).filter((t) => t.status !== "REJECTED");
+  const allTeamsFilled =
+    requiredTeams > 0 &&
+    activeTournamentTeams.length === requiredTeams &&
+    activeTournamentTeams.every((t) => t.status === "APPROVED");
+  const hasLinkedVenue = !!game.venue_id;
+  const hasCustomVenue = !!game.custom_venue_name;
+  // A real (dropdown-picked) venue needs an actual booking; a manually
+  // typed venue has no venue record to book against, so it's treated as
+  // already settled the moment the roster fills.
+  const isVenueBooked = hasLinkedVenue ? !!game.booking_id : hasCustomVenue;
+  const showBookVenue = isTournament && isCreator && allTeamsFilled && (hasLinkedVenue || hasCustomVenue);
+
   const skillLabel = !game.skill_level ? "Any Level" : game.skill_level === "BEGINNER" ? "Beginner" : game.skill_level === "INTERMEDIATE" ? "Intermediate" : game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
   const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;
 
@@ -688,9 +705,26 @@ export default function GameDetailScreen() {
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
           ) : isCreator ? (
-            <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
-              <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
-            </Pressable>
+            <>
+              {showBookVenue && (
+                <Pressable
+                  onPress={() => {
+                    if (isVenueBooked) return;
+                    navigation.navigate("VenueDetail", { venueId: game.venue_id!, forGameId: game.id });
+                  }}
+                  disabled={isVenueBooked}
+                  className={`rounded-xl py-4 items-center mb-3 ${isVenueBooked ? "bg-gray-100" : "bg-primary"}`}
+                  style={isVenueBooked ? undefined : primaryButtonShadow}
+                >
+                  <Text className={`font-semibold text-base ${isVenueBooked ? "text-muted" : "text-white"}`}>
+                    {isVenueBooked ? "Venue Booked" : "Book Venue"}
+                  </Text>
+                </Pressable>
+              )}
+              <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
+                <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
+              </Pressable>
+            </>
           ) : hasJoined ? (
             <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
               <Text className="text-danger font-semibold">Leave Game</Text>

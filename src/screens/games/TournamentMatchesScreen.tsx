@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -12,10 +13,14 @@ import {
   useGeneratePoolMatches,
   useEnterMatchResult,
   useResetMatchResult,
+  useLinkCricketMatch,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
+import { useCreateCricketMatch } from "../../hooks/useCricket";
+import { friendlyCricketError } from "../../lib/api/cricket";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
+import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -75,6 +80,8 @@ function MatchRow({
   disabled,
   onEnterResult,
   onReset,
+  showScorecardButton,
+  onGoToScorecard,
 }: {
   match: TournamentMatch;
   allowDraw: boolean;
@@ -82,6 +89,11 @@ function MatchRow({
   disabled: boolean;
   onEnterResult: (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => void;
   onReset: (matchId: string) => void;
+  // Only ever true for the single first match on the whole screen, and only
+  // once the host can actually do something with it (cricket tournament,
+  // venue already booked) — see canGoToScorecard in the screen component.
+  showScorecardButton?: boolean;
+  onGoToScorecard?: () => void;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
@@ -147,6 +159,14 @@ function MatchRow({
           )}
         </View>
       )}
+      {showScorecardButton && match.team_a && match.team_b && (
+        <Pressable
+          onPress={onGoToScorecard}
+          className="bg-primary rounded-lg py-2 items-center mt-2"
+        >
+          <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -172,12 +192,18 @@ function MatchesPanel({
   approvedTeams,
   requiredTeams,
   isHost,
+  firstMatchId,
+  canGoToScorecard,
+  onGoToScorecard,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
   approvedTeams: { id: string; name: string }[];
   requiredTeams: number;
   isHost: boolean;
+  firstMatchId?: string;
+  canGoToScorecard: boolean;
+  onGoToScorecard: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
@@ -298,6 +324,8 @@ function MatchesPanel({
                   disabled={disabled}
                   onEnterResult={handleEnterResult}
                   onReset={handleReset}
+                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  onGoToScorecard={() => onGoToScorecard(m)}
                 />
               ))}
             </View>
@@ -502,12 +530,18 @@ function PoolMatchesPanel({
   approvedTeams,
   requiredTeams,
   isHost,
+  firstMatchId,
+  canGoToScorecard,
+  onGoToScorecard,
 }: {
   gameId: string;
   pools: TournamentPool[];
   approvedTeams: TournamentTeam[];
   requiredTeams: number;
   isHost: boolean;
+  firstMatchId?: string;
+  canGoToScorecard: boolean;
+  onGoToScorecard: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
@@ -623,6 +657,8 @@ function PoolMatchesPanel({
                   disabled={disabled}
                   onEnterResult={handleEnterResult}
                   onReset={handleReset}
+                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  onGoToScorecard={() => onGoToScorecard(m)}
                 />
               ))}
             </View>
@@ -640,11 +676,14 @@ export default function TournamentMatchesScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
 
   const { data: game, isLoading: gameLoading } = useGameDetail(params.gameId);
   const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: pools } = useTournamentPools(params.gameId);
+  const createCricketMatch = useCreateCricketMatch();
+  const linkCricketMatch = useLinkCricketMatch(params.gameId);
 
   if (gameLoading || teamsLoading || !game) {
     return (
@@ -662,6 +701,64 @@ export default function TournamentMatchesScreen() {
   const requiredTeams = game.number_of_teams ?? 0;
   const hasMatches = (matches?.length ?? 0) > 0;
   const isPoolFormat = game.tournament_format === "POOL";
+
+  // "Go To Scorecard" only exists for cricket (Live Scoring is a
+  // cricket-only module) and only once the venue is settled — a real
+  // booking for a dropdown-picked venue, or immediately for a manually
+  // typed one (see the identical rule on GameDetailScreen's "Book Venue").
+  const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
+  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
+  const canGoToScorecard = isHost && isCricketSport && isVenueBooked;
+  const firstMatchId = matches?.[0]?.id;
+
+  const rosterByTeamId = new Map<string, string[]>();
+  for (const t of teams) {
+    rosterByTeamId.set(
+      t.id,
+      t.tournament_team_members
+        .filter((m) => m.status === "JOINED")
+        .map((m) => m.profiles?.full_name ?? "Player")
+    );
+  }
+
+  const handleGoToScorecard = (match: TournamentMatch) => {
+    if (match.cricket_match_id) {
+      navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+      return;
+    }
+    setScorecardMatch(match);
+  };
+
+  const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {
+    if (!scorecardMatch || !userId || !scorecardMatch.team_a || !scorecardMatch.team_b) return;
+    createCricketMatch.mutate(
+      {
+        userId,
+        teamAName: scorecardMatch.team_a.name,
+        teamBName: scorecardMatch.team_b.name,
+        teamAPlayers: rosterByTeamId.get(scorecardMatch.team_a.id) ?? [],
+        teamBPlayers: rosterByTeamId.get(scorecardMatch.team_b.id) ?? [],
+        oversLimit: toss.oversLimit,
+        tossWinner: toss.tossWinner,
+        tossDecision: toss.tossDecision,
+      },
+      {
+        onSuccess: ({ matchId }) => {
+          linkCricketMatch.mutate(
+            { matchId: scorecardMatch.id, cricketMatchId: matchId },
+            {
+              onSuccess: () => {
+                setScorecardMatch(null);
+                navigation.navigate("LiveScoring", { matchId });
+              },
+              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not link the scorecard."),
+            }
+          );
+        },
+        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start the scorecard.")),
+      }
+    );
+  };
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -693,6 +790,9 @@ export default function TournamentMatchesScreen() {
               approvedTeams={approvedTeamsFull}
               requiredTeams={requiredTeams}
               isHost={isHost}
+              firstMatchId={firstMatchId}
+              canGoToScorecard={canGoToScorecard}
+              onGoToScorecard={handleGoToScorecard}
             />
             {matches &&
               (pools ?? []).map((pool) => {
@@ -727,6 +827,9 @@ export default function TournamentMatchesScreen() {
                 approvedTeams={approvedTeams}
                 requiredTeams={requiredTeams}
                 isHost={isHost}
+                firstMatchId={firstMatchId}
+                canGoToScorecard={canGoToScorecard}
+                onGoToScorecard={handleGoToScorecard}
               />
             )}
             {game.tournament_format === "LEAGUE" && matches && (
@@ -735,6 +838,15 @@ export default function TournamentMatchesScreen() {
           </>
         )}
       </ScrollView>
+
+      <StartScorecardModal
+        visible={!!scorecardMatch}
+        onClose={() => setScorecardMatch(null)}
+        teamAName={scorecardMatch?.team_a?.name ?? "Team A"}
+        teamBName={scorecardMatch?.team_b?.name ?? "Team B"}
+        submitting={createCricketMatch.isPending || linkCricketMatch.isPending}
+        onSubmit={handleStartScorecard}
+      />
     </View>
   );
 }

@@ -1643,6 +1643,7 @@ export type Database = {
       tournament_matches: {
         Row: {
           created_at: string
+          cricket_match_id: string | null
           game_id: string
           id: string
           is_draw: boolean
@@ -1658,6 +1659,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          cricket_match_id?: string | null
           game_id: string
           id?: string
           is_draw?: boolean
@@ -1673,6 +1675,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          cricket_match_id?: string | null
           game_id?: string
           id?: string
           is_draw?: boolean
@@ -1687,6 +1690,13 @@ export type Database = {
           winner_team_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tournament_matches_cricket_match_id_fkey"
+            columns: ["cricket_match_id"]
+            isOneToOne: false
+            referencedRelation: "cricket_matches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tournament_matches_game_id_fkey"
             columns: ["game_id"]

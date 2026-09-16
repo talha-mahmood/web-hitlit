@@ -110,3 +110,14 @@ export async function resetMatchResult(matchId: string): Promise<void> {
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }
+
+// Remembers which cricket_matches row "Go To Scorecard" created for this
+// tournament match, so tapping it again re-opens the same live-scoring
+// session instead of starting a duplicate one.
+export async function linkCricketMatch(matchId: string, cricketMatchId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update({ cricket_match_id: cricketMatchId })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}

@@ -5,6 +5,13 @@ import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
 import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
+import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
+import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
+import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
+import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
+import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
+import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
+import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 
 export type GamesStackParamList = {
@@ -16,6 +23,12 @@ export type GamesStackParamList = {
   GameChat: { gameId: string; gameTitle?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
+  VenueDetail: { venueId: string; forGameId?: string };
+  SlotPicker: SlotPickerParams;
+  BookingCheckout: BookingCheckoutParams;
+  BookingConfirmation: BookingConfirmationParams;
+  LiveScoring: { matchId: string };
+  FullScorecard: { matchId: string };
 };
 
 const Stack = createNativeStackNavigator<GamesStackParamList>();
@@ -29,6 +42,12 @@ export default function GamesStackNavigator() {
       <Stack.Screen name="GameChat" component={GameChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
+      <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
+      <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
+      <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />
+      <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+      <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
+      <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
     </Stack.Navigator>
   );
 }

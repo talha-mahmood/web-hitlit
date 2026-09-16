@@ -13,6 +13,7 @@ import {
   removePlayer,
   fetchFavoriteGameIds,
   setFavoriteGame,
+  linkGameBooking,
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
@@ -197,6 +198,17 @@ export function useRemovePlayer(gameId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["game", gameId] });
       qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
+}
+
+export function useLinkGameBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gameId, bookingId }: { gameId: string; bookingId: string }) =>
+      linkGameBooking(gameId, bookingId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["game", vars.gameId] });
     },
   });
 }

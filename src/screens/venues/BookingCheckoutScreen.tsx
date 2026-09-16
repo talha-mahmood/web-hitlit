@@ -4,6 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCreateBooking } from "../../hooks/useBookings";
+import { useLinkGameBooking } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
@@ -51,9 +52,10 @@ export default function BookingCheckoutScreen() {
   const navigation = useNavigation<CheckoutNav>();
   const session = useAuthStore((s) => s.session);
   const createBooking = useCreateBooking();
+  const linkGameBooking = useLinkGameBooking();
   const insets = useSafeAreaInsets();
 
-  const { courtId, courtName, venueName, date, slots } = params;
+  const { courtId, courtName, venueName, date, slots, forGameId } = params;
   const totalAmount = slots.reduce((sum, s) => sum + s.price, 0);
   const sortedSlots = [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
@@ -66,6 +68,19 @@ export default function BookingCheckoutScreen() {
         date,
         slots,
       });
+
+      // Launched from a tournament's "Book Venue" button — link the booking
+      // back to that game and return straight to its detail screen (where
+      // the button now reads "Venue Booked") instead of the normal
+      // standalone confirmation screen.
+      if (forGameId) {
+        await linkGameBooking.mutateAsync({ gameId: forGameId, bookingId: bookings[0].id });
+        Alert.alert("Venue Booked", "Your venue has been booked for this tournament.", [
+          { text: "OK", onPress: () => navigation.navigate("GameDetail", { gameId: forGameId }) },
+        ]);
+        return;
+      }
+
       navigation.replace("BookingConfirmation", {
         bookingIds: bookings.map((b) => b.id),
         venueName,

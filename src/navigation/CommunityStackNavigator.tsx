@@ -13,6 +13,13 @@ import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
+import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
+import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
+import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
+import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
+import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
+import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 
 // The Community tab hosts its own copies of the Games/Squads/Players screens
@@ -45,6 +52,16 @@ export type CommunityStackParamList = {
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
   PlayerProfile: { userId: string };
+  // Reachable from a tournament's "Book Venue" button (see GameDetailScreen)
+  // and its "Go To Scorecard" button (see TournamentMatchesScreen) —
+  // duplicated here like the Games/Squads screens above so neither jumps
+  // the bottom tab bar's highlight over to Venues/Scorecard.
+  VenueDetail: { venueId: string; forGameId?: string };
+  SlotPicker: SlotPickerParams;
+  BookingCheckout: BookingCheckoutParams;
+  BookingConfirmation: BookingConfirmationParams;
+  LiveScoring: { matchId: string };
+  FullScorecard: { matchId: string };
 };
 
 const Stack = createNativeStackNavigator<CommunityStackParamList>();
@@ -66,6 +83,12 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+      <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
+      <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
+      <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />
+      <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+      <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
+      <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
     </Stack.Navigator>
   );
 }
