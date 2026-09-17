@@ -83,13 +83,15 @@ export function HomeSquadCard({
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
+  // Owner-closed via "Block New Join Requests" — treated the same as full.
+  const isClosedToJoins = isFull || squad.join_requests_blocked;
   const hasJoined = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
   const { icon, bg, fg } = getSportIcon(squad.sports?.name ?? "");
   const photo = squad.icon_url ? { uri: squad.icon_url } : getSportImage(squad.sports?.name ?? "");
 
-  const statusLabel = isFull ? "Full" : hasJoined ? "Joined" : "Join";
-  const statusColor = isFull ? colors.muted : hasJoined ? colors.primary : colors.primary;
-  const statusBg = isFull ? "#F3F4F6" : hasJoined ? colors.primaryLight : colors.primaryLight;
+  const statusLabel = isClosedToJoins ? "Full" : hasJoined ? "Joined" : "Join";
+  const statusColor = isClosedToJoins ? colors.muted : hasJoined ? colors.primary : colors.primary;
+  const statusBg = isClosedToJoins ? "#F3F4F6" : hasJoined ? colors.primaryLight : colors.primaryLight;
 
   return (
     <Bouncy

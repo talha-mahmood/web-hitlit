@@ -5,6 +5,7 @@ import {
   fetchSquadDetail,
   createSquad,
   updateSquad,
+  setSquadJoinBlocked,
   joinSquad,
   leaveSquad,
   disbandSquad,
@@ -100,6 +101,18 @@ export function useUpdateSquad() {
     mutationFn: updateSquad,
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["squad", data.id] });
+      qc.invalidateQueries({ queryKey: ["squads"] });
+    },
+  });
+}
+
+export function useSetSquadJoinBlocked() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ squadId, blocked }: { squadId: string; blocked: boolean }) =>
+      setSquadJoinBlocked(squadId, blocked),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["squad", vars.squadId] });
       qc.invalidateQueries({ queryKey: ["squads"] });
     },
   });

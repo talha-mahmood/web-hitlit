@@ -1581,6 +1581,7 @@ export type Database = {
           description: string | null
           icon_url: string | null
           id: string
+          join_requests_blocked: boolean
           location: string | null
           max_players: number | null
           min_players: number | null
@@ -1597,6 +1598,7 @@ export type Database = {
           description?: string | null
           icon_url?: string | null
           id?: string
+          join_requests_blocked?: boolean
           location?: string | null
           max_players?: number | null
           min_players?: number | null
@@ -1613,6 +1615,7 @@ export type Database = {
           description?: string | null
           icon_url?: string | null
           id?: string
+          join_requests_blocked?: boolean
           location?: string | null
           max_players?: number | null
           min_players?: number | null

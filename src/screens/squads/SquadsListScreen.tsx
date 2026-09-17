@@ -37,6 +37,9 @@ function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
+  // Owner-closed via "Block New Join Requests" on the squad's own page —
+  // shown and treated exactly like being full.
+  const isClosedToJoins = isFull || squad.join_requests_blocked;
   const isMySquad = squad.squad_owner_id === currentUserId;
   const hasJoined = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
   const hasRequested = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
@@ -78,12 +81,12 @@ function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
                 <Text className="text-blue-600 text-xs font-medium">My Squad</Text>
               </View>
             )}
-            {isFull && (
+            {isClosedToJoins && (
               <View className="bg-red-50 px-2 py-0.5 rounded-full">
                 <Text className="text-red-600 text-xs font-medium">Full</Text>
               </View>
             )}
-            {!isMySquad && !isFull && (
+            {!isMySquad && !isClosedToJoins && (
               <Bouncy onPress={onJoinPress} scaleTo={0.94}>
                 {hasJoined ? (
                   <View

@@ -13,6 +13,7 @@ import {
   useApproveMember,
   useRejectMember,
   useRemoveMember,
+  useSetSquadJoinBlocked,
 } from "../../hooks/useSquads";
 import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
 import { usePendingSquadInvites, useRespondToSquadInvite } from "../../hooks/useSquadTeamFill";
@@ -209,6 +210,7 @@ export default function SquadDetailScreen() {
   const approveMember = useApproveMember(params.squadId);
   const rejectMember = useRejectMember(params.squadId);
   const removeMember = useRemoveMember(params.squadId);
+  const setJoinBlocked = useSetSquadJoinBlocked();
   const { data: mySquadInvite } = useMyPendingSquadInvite(params.squadId, userId);
   const createInvite = useCreateSquadInvite(params.squadId);
   const acceptInvite = useAcceptSquadInvite(params.squadId);
@@ -238,6 +240,9 @@ export default function SquadDetailScreen() {
   const activeMembers = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const emptySlots = squad.max_players ? Math.max(0, squad.max_players - activeMembers.length) : 0;
   const isFull = !!squad.max_players && activeMembers.length >= squad.max_players;
+  // Owner-closed via "Block New Join Requests" — treated the same as being
+  // full everywhere a player would otherwise see a way to join.
+  const isClosedToJoins = isFull || squad.join_requests_blocked;
 
   const isOwner = squad.squad_owner_id === userId;
   const myMemberRecord = userId
@@ -266,6 +271,16 @@ export default function SquadDetailScreen() {
         onSuccess: () => setShowJoinModal(false),
         onError: (err) =>
           Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+      }
+    );
+  };
+
+  const handleToggleJoinBlocked = () => {
+    setJoinBlocked.mutate(
+      { squadId: squad.id, blocked: !squad.join_requests_blocked },
+      {
+        onError: (err) =>
+          Alert.alert("Error", err instanceof Error ? err.message : "Could not update this setting. Try again."),
       }
     );
   };
@@ -471,7 +486,7 @@ export default function SquadDetailScreen() {
             <ChatIcon size={19} unreadCount={chatUnreadCount} />
           </Pressable>
         )}
-        {isFull && (
+        {isClosedToJoins && (
           <View className="bg-orange-50 px-2 py-1 rounded-lg">
             <Text className="text-orange-600 text-xs font-semibold">Full</Text>
           </View>
@@ -696,12 +711,29 @@ export default function SquadDetailScreen() {
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
         ) : isOwner ? (
-          <Pressable
-            onPress={handleDisband}
-            className="border border-danger rounded-xl py-4 items-center"
-          >
-            <Text className="text-danger font-semibold">Disband This Squad</Text>
-          </Pressable>
+          <>
+            <Pressable
+              onPress={handleToggleJoinBlocked}
+              disabled={setJoinBlocked.isPending}
+              className={`rounded-xl py-4 items-center mb-3 ${
+                squad.join_requests_blocked ? "bg-gray-100" : "border border-primary"
+              }`}
+            >
+              {setJoinBlocked.isPending ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : (
+                <Text className={`font-semibold ${squad.join_requests_blocked ? "text-muted" : "text-primary"}`}>
+                  {squad.join_requests_blocked ? "Unblock New Join Requests" : "Block New Join Requests"}
+                </Text>
+              )}
+            </Pressable>
+            <Pressable
+              onPress={handleDisband}
+              className="border border-danger rounded-xl py-4 items-center"
+            >
+              <Text className="text-danger font-semibold">Disband This Squad</Text>
+            </Pressable>
+          </>
         ) : hasJoined ? (
           <Pressable
             onPress={handleLeave}
@@ -723,7 +755,7 @@ export default function SquadDetailScreen() {
               <Text className="text-danger font-semibold">Cancel Request</Text>
             </Pressable>
           </View>
-        ) : isFull ? (
+        ) : isClosedToJoins ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center">
             <Text className="text-muted font-semibold">Squad is Full</Text>
           </View>

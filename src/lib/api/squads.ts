@@ -172,6 +172,17 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
   return data;
 }
 
+// Owner-only toggle: stops new join requests (and the app's Join/Request to
+// Join CTA everywhere) without disbanding the squad or touching existing
+// members/pending requests.
+export async function setSquadJoinBlocked(squadId: string, blocked: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("squads")
+    .update({ join_requests_blocked: blocked })
+    .eq("id", squadId);
+  if (error) throw new Error(error.message);
+}
+
 export async function joinSquad(
   squadId: string,
   userId: string,
