@@ -4,6 +4,7 @@ import MyBookingsScreen from "../screens/main/MyBookingsScreen";
 import BlockedUsersScreen from "../screens/main/BlockedUsersScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
+import TeamChatScreen from "../screens/games/TeamChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
 import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
@@ -27,6 +28,7 @@ export type ProfileStackParamList = {
   // pattern HomeStackNavigator uses for its own Games shortcuts.
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
+  TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
   SquadDetail: { squadId: string };
@@ -54,6 +56,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
+      <Stack.Screen name="TeamChat" component={TeamChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />

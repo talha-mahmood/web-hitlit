@@ -16,11 +16,13 @@ import {
   useSendGameSquadInvite,
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
+import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
+import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -69,6 +71,7 @@ function TeamCard({
   onFillWithSquad,
   onApprove,
   onReject,
+  onOpenChat,
   noun,
 }: {
   team: TournamentTeam;
@@ -84,6 +87,7 @@ function TeamCard({
   onFillWithSquad?: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onOpenChat: () => void;
   // This section is also reused for regular (non-tournament) games that
   // default to 2 teams — copy that mentions "the tournament" needs to say
   // "the game" there instead.
@@ -112,6 +116,8 @@ function TeamCard({
   // own people and the host only, same rule as the game/tournament ID.
   const isClaimed = !!team.captain_id;
   const canSeeTeamCode = isClaimed && (isHost || !!myMembership);
+  const isJoinedMember = myMembership?.status === "JOINED";
+  const { data: teamChatUnread } = useTeamChatUnreadCount(isJoinedMember ? team.id : undefined, userId);
 
   const handleCopyCode = async () => {
     await Clipboard.setStringAsync(team.team_code);
@@ -154,6 +160,20 @@ function TeamCard({
           />
         ))}
       </View>
+
+      {/* Only this specific team's own joined members can see or open its
+          chat — not the whole tournament, and not anyone who hasn't joined
+          this team. */}
+      {isJoinedMember && (
+        <Pressable
+          onPress={onOpenChat}
+          className="flex-row items-center justify-center border border-primary rounded-lg py-2 mt-3"
+          style={{ gap: 6 }}
+        >
+          <ChatIcon size={16} unreadCount={teamChatUnread} />
+          <Text className="text-primary text-xs font-semibold">Team Chat</Text>
+        </Pressable>
+      )}
 
       {team.status === "REJECTED" && (
         <Text className="text-danger text-xs mt-2">Removed from the {noun} by the host.</Text>
@@ -205,7 +225,7 @@ function TeamCard({
           auto_approve_full_team). */}
       {isRosterEditable && (
         <View className="mt-3">
-          {myMembership?.status === "JOINED" ? (
+          {isJoinedMember ? (
             <>
               <View className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
                 <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
@@ -410,6 +430,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
               onApprove={() => handleApprove(team.id)}
               onReject={() => handleReject(team.id)}
+              onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name })}
               noun={noun}
             />
           ))

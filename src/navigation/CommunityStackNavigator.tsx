@@ -5,6 +5,7 @@ import GamesListScreen from "../screens/games/GamesListScreen";
 import CreateGameScreen from "../screens/games/CreateGameScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
+import TeamChatScreen from "../screens/games/TeamChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
 import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import SquadsListScreen from "../screens/squads/SquadsListScreen";
@@ -44,6 +45,7 @@ export type CommunityStackParamList = {
   CreateGame: { gameType?: Database["public"]["Enums"]["game_type_type"] } | undefined;
   GameDetail: { gameId: string };
   GameChat: { gameId: string; gameTitle?: string };
+  TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
   SquadsList: undefined;
@@ -75,6 +77,7 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="CreateGame" component={CreateGameScreen} />
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />
       <Stack.Screen name="GameChat" component={GameChatScreen} />
+      <Stack.Screen name="TeamChat" component={TeamChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="SquadsList" component={SquadsListScreen} />

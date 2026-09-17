@@ -1643,6 +1643,84 @@ export type Database = {
           },
         ]
       }
+      team_chat_reads: {
+        Row: {
+          last_read_at: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_chat_reads_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_messages: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          message: string
+          sender_id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           created_at: string
@@ -2185,6 +2263,7 @@ export type Database = {
       delete_old_community_comments: { Args: never; Returns: undefined }
       delete_old_game_messages: { Args: never; Returns: undefined }
       delete_old_squad_messages: { Args: never; Returns: undefined }
+      delete_old_team_messages: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
       expire_past_games: { Args: never; Returns: undefined }
       generate_game_code: { Args: never; Returns: string }
