@@ -285,12 +285,15 @@ function TeamCard({
   );
 }
 
-// A regular (non-tournament) team-based game only ever has one match — Team
-// A vs Team B — so instead of linking out to the tournament's multi-round
-// Matches screen, it's just shown as a single card right here. The match
-// row itself is created server-side (a trigger on tournament_teams) the
-// moment both teams are approved, mirroring the tournament flow's "Generate
-// Matches" step without needing the host to press anything.
+// A regular (non-tournament) team-based game always starts with exactly two
+// team slots — placeholders named "Team A"/"Team B" created the moment the
+// game is created (see createTournamentTeamPlaceholders in
+// CreateGameScreen) — so this card can show right away and just update live
+// as each slot gets filled/renamed, well before there's a real match row to
+// point "Go To Scorecard" at. That match row itself is created server-side
+// (a trigger on tournament_teams) the moment both teams are approved,
+// mirroring the tournament flow's "Generate Matches" step without needing
+// the host to press anything.
 function HeadToHeadMatchCard({
   game,
   isHost,
@@ -306,18 +309,17 @@ function HeadToHeadMatchCard({
   const linkCricketMatch = useLinkCricketMatch(game.id);
   const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
 
-  const match = (matches ?? [])[0];
-  if (!match) return null;
-
-  const teamAName = match.team_a?.name ?? "Team A";
-  const teamBName = match.team_b?.name ?? "Team B";
+  const match = (matches ?? [])[0] ?? null;
+  const teamAName = teams[0]?.name ?? "Team A";
+  const teamBName = teams[1]?.name ?? "Team B";
 
   // Same rule as the tournament's "Book Venue"/"Go To Scorecard": a real
   // (dropdown-picked) venue needs an actual booking, a manually typed one
-  // is treated as already settled.
+  // is treated as already settled. The button itself only ever appears once
+  // the match row exists (both teams approved).
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
   const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
-  const canGoToScorecard = isHost && isCricketSport && isVenueBooked && !!match.team_a && !!match.team_b;
+  const canGoToScorecard = isHost && isCricketSport && isVenueBooked && !!match?.team_a && !!match?.team_b;
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
@@ -328,6 +330,7 @@ function HeadToHeadMatchCard({
   }
 
   const handleGoToScorecard = () => {
+    if (!match) return;
     if (match.cricket_match_id) {
       navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
       return;
@@ -524,7 +527,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         // A regular game only ever has the one Team A vs Team B match, so
         // it's shown inline here instead of linking out to the tournament's
         // multi-round Matches screen.
-        <HeadToHeadMatchCard game={game} isHost={isHost} teams={teams} />
+        <HeadToHeadMatchCard game={game} isHost={isHost} teams={activeTeams} />
       )}
 
       <View className="mx-4 mt-4 flex-row items-center justify-between mb-3">
