@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, TextInput, Alert } from "react-native";
+import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -195,9 +195,6 @@ export default function ProfileScreen() {
   const { data: stats, isLoading } = useProfileStats(userId);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
 
@@ -240,30 +237,6 @@ export default function ProfileScreen() {
       setSkillPickerOpen(false);
     } finally {
       setSavingSkill(false);
-    }
-  }
-
-  // Permanently deletes the account and everything tied to it (games hosted,
-  // squads created, bookings, messages, etc. all cascade in the database) —
-  // required by App Store guideline 5.1.1(v) for any app that offers account
-  // creation. RootNavigator's onAuthStateChange listener takes over once the
-  // session is invalidated by the deleted auth.users row.
-  async function handleDeleteAccount() {
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase.rpc("delete_own_account");
-      if (error) throw error;
-      await signOutGoogle();
-      await supabase.auth.signOut();
-    } catch (err) {
-      Alert.alert(
-        "Couldn't delete account",
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
-    } finally {
-      setIsDeleting(false);
-      setDeleteModalOpen(false);
-      setDeleteConfirmText("");
     }
   }
 
@@ -314,15 +287,11 @@ export default function ProfileScreen() {
             ) : null}
           </View>
           <Pressable
-            onPress={handleChangeAvatar}
-            disabled={uploadingAvatar}
-            className="flex-row items-center bg-white rounded-full px-3.5 py-2"
-            style={{ gap: 6, ...CARD_SHADOW }}
+            onPress={() => navigation.navigate("AccountSettings")}
+            className="items-center justify-center bg-white rounded-full"
+            style={{ width: 38, height: 38, ...CARD_SHADOW }}
           >
-            <Ionicons name="pencil-outline" size={14} color={colors.primaryDark} />
-            <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-              Edit
-            </Text>
+            <Ionicons name="settings-outline" size={18} color={colors.primaryDark} />
           </Pressable>
         </View>
 
@@ -603,16 +572,6 @@ export default function ProfileScreen() {
         >
           <Text className="text-white font-semibold">Sign out</Text>
         </Pressable>
-        <Pressable
-          onPress={() => setDeleteModalOpen(true)}
-          className="flex-row items-center justify-center rounded-xl py-3 mt-3"
-          style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", gap: 8 }}
-        >
-          <Ionicons name="trash-outline" size={16} color={colors.danger} />
-          <Text className="font-semibold" style={{ color: colors.danger }}>
-            Delete Account
-          </Text>
-        </Pressable>
       </View>
 
       <Modal visible={skillPickerOpen} transparent animationType="fade" onRequestClose={() => setSkillPickerOpen(false)}>
@@ -640,70 +599,6 @@ export default function ProfileScreen() {
                 </Pressable>
               );
             })}
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal
-        visible={deleteModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setDeleteModalOpen(false);
-          setDeleteConfirmText("");
-        }}
-      >
-        <Pressable
-          className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-          onPress={() => {
-            setDeleteModalOpen(false);
-            setDeleteConfirmText("");
-          }}
-        >
-          <Pressable className="bg-white rounded-2xl p-5 w-full items-center" onPress={(e) => e.stopPropagation()}>
-            <View
-              className="items-center justify-center rounded-full mb-3"
-              style={{ width: 52, height: 52, backgroundColor: "#FEF2F2" }}
-            >
-              <Ionicons name="warning-outline" size={26} color={colors.danger} />
-            </View>
-            <Text className="text-ink font-bold text-lg mb-1">Delete Account</Text>
-            <Text className="text-muted text-sm mb-4 text-center">
-              This permanently deletes your account and everything tied to it — games you've hosted, squads you've
-              created, bookings, and messages. This can't be undone.
-            </Text>
-            <Text className="text-muted text-sm mb-2 self-start">Type DELETE to confirm.</Text>
-            <TextInput
-              value={deleteConfirmText}
-              onChangeText={setDeleteConfirmText}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              placeholder="DELETE"
-              className="border border-border rounded-xl px-4 py-3 mb-4 text-ink w-full"
-            />
-            <Pressable
-              disabled={deleteConfirmText !== "DELETE" || isDeleting}
-              onPress={handleDeleteAccount}
-              className="rounded-xl py-3 items-center w-full"
-              style={{ backgroundColor: colors.danger, opacity: deleteConfirmText === "DELETE" && !isDeleting ? 1 : 0.4 }}
-            >
-              {isDeleting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-semibold">Delete My Account</Text>
-              )}
-            </Pressable>
-            <Pressable
-              disabled={isDeleting}
-              onPress={() => {
-                setDeleteModalOpen(false);
-                setDeleteConfirmText("");
-              }}
-              className="items-center py-3 mt-1 w-full"
-            >
-              <Text className="text-muted font-medium">Cancel</Text>
-            </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
