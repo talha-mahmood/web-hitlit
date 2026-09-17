@@ -18,6 +18,7 @@ import {
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
@@ -72,6 +73,8 @@ function TeamCard({
   onApprove,
   onReject,
   onOpenChat,
+  genderMismatch,
+  gameGenderLabel,
   noun,
 }: {
   team: TournamentTeam;
@@ -88,6 +91,11 @@ function TeamCard({
   onApprove: () => void;
   onReject: () => void;
   onOpenChat: () => void;
+  // True when this game/tournament is restricted to one gender and the
+  // current user (or, more precisely, any squad they could use) doesn't
+  // match it — hides "Create Team" in favor of an explanation.
+  genderMismatch: boolean;
+  gameGenderLabel: string;
   // This section is also reused for regular (non-tournament) games that
   // default to 2 teams — copy that mentions "the tournament" needs to say
   // "the game" there instead.
@@ -251,7 +259,7 @@ function TeamCard({
               of the individual-join flow above, and not gated on
               hasActiveTeamElsewhere since the squad owner themselves need
               not be one of the registered players. */}
-          {isEmpty && onFillWithSquad && (
+          {isEmpty && onFillWithSquad && !genderMismatch && (
             <Pressable
               onPress={onFillWithSquad}
               disabled={disabled}
@@ -259,6 +267,11 @@ function TeamCard({
             >
               <Text className="text-white text-xs font-semibold">Create Team</Text>
             </Pressable>
+          )}
+          {isEmpty && genderMismatch && (
+            <Text className="text-muted text-xs text-center mt-2">
+              This {noun} is open to {gameGenderLabel} players only, so you can't create a team here.
+            </Text>
           )}
         </View>
       )}
@@ -269,7 +282,14 @@ function TeamCard({
 export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const navigation = useNavigation<Nav>();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const myGender = useProfileStore((s) => s.profile?.gender);
   const isHost = game.creator_id === userId;
+  // A Male/Female Only game or tournament can only have its teams created by
+  // a matching user (enforced server-side too — see tournament_teams and
+  // squad_fill_tournament_team) — the squad used to fill a team has to match
+  // as well, since a Mixed squad's own members aren't guaranteed to.
+  const genderMismatch = game.gender !== "mixed" && (!myGender || myGender !== game.gender);
+  const gameGenderLabel = game.gender === "male" ? "male" : "female";
   // This section is shared with regular (non-tournament) games that default
   // to 2 teams — everything below works the same either way, only the
   // player-facing copy needs to say "game" instead of "tournament" there.
@@ -306,7 +326,10 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
       )
     : undefined;
-  const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams;
+  const canCreateTeam = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams && !genderMismatch;
+  // Only reason the top "Create Team" button would otherwise be showing —
+  // used to surface an explanation instead of just silently hiding it.
+  const hiddenByGenderOnly = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams && genderMismatch;
   const isPoolFormat = game.tournament_format === "POOL";
 
   const disabled =
@@ -408,6 +431,12 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         </View>
       </View>
 
+      {hiddenByGenderOnly && (
+        <Text className="mx-4 -mt-2 mb-3 text-muted text-xs">
+          This {noun} is open to {gameGenderLabel} players only, so you can't create a team here.
+        </Text>
+      )}
+
       <View className="mx-4" style={{ gap: 12 }}>
         {teams.length === 0 ? (
           <View className="border border-dashed border-border rounded-2xl p-6 items-center">
@@ -431,6 +460,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onApprove={() => handleApprove(team.id)}
               onReject={() => handleReject(team.id)}
               onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name })}
+              genderMismatch={genderMismatch}
+              gameGenderLabel={gameGenderLabel}
               noun={noun}
             />
           ))
@@ -462,6 +493,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         submitting={squadFillTeam.isPending}
         isHost={isHost}
         excludeUserIds={joinedElsewhereUserIds}
+        gameGender={game.gender}
         onSubmit={(squadId, memberUserIds, teamName) => {
           if (!fillTeamId) return;
           squadFillTeam.mutate(

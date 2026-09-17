@@ -27,6 +27,7 @@ import { useCreateGame } from "../../hooks/useGames";
 import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
 import { createPools } from "../../lib/api/tournamentPools";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
@@ -311,6 +312,7 @@ export default function CreateGameScreen() {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const myGender = useProfileStore((s) => s.profile?.gender);
   const createGame = useCreateGame();
   const { data: sports } = useSports();
   const scrollRef = useRef<ScrollView>(null);
@@ -342,10 +344,7 @@ export default function CreateGameScreen() {
   // game/tournament created here is public, matching the games list query's
   // `.eq("visibility", "public")` filter.
   const visibility: Visibility = "public";
-  // "Open To" isn't a user-facing choice here (removed from the form) —
-  // every game/tournament created is open to everyone by default; the host
-  // can still narrow it later from Edit Game if needed.
-  const gender: Gender = "mixed";
+  const [gender, setGender] = useState<Gender>("mixed");
   const [description, setDescription] = useState("");
   const [entryFee, setEntryFee] = useState("0");
 
@@ -440,6 +439,16 @@ export default function CreateGameScreen() {
 
   const isTournament = gameType === "TOURNAMENT";
   const selectedSportName = sports?.find((s) => s.id === sportId)?.name ?? null;
+  // A restricted game/tournament can only be created for the host's own
+  // gender — every squad-filled team on it will need to match too (see
+  // squad_fill_tournament_team), so offering a restriction the host
+  // themselves doesn't satisfy would just be a dead end.
+  const genderOptions: { label: string; value: Gender }[] =
+    myGender === "male"
+      ? [{ label: "Everyone", value: "mixed" }, { label: "Male Only", value: "male" }]
+      : myGender === "female"
+        ? [{ label: "Everyone", value: "mixed" }, { label: "Female Only", value: "female" }]
+        : [{ label: "Everyone", value: "mixed" }];
   // Cricket's smallest real side is more than a single player — hide the
   // "1" cell from Players per Team for this sport only.
   const isCricketSport = (selectedSportName ?? "").toLowerCase().includes("cricket");
@@ -1005,6 +1014,10 @@ export default function CreateGameScreen() {
           value={skillLevel}
           onChange={setSkillLevel}
         />
+
+        {/* Open To */}
+        <SectionLabel title="Open To" icon="people-outline" compact />
+        <PillRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
 
         {/* Entry Fee */}
         <View className="flex-row items-center mb-2 mt-3">

@@ -6,6 +6,9 @@ import { colors, primaryButtonShadow } from "../constants/theme";
 import { useMyOwnedSquads } from "../hooks/useSquadTeamFill";
 import FieldInput from "./FieldInput";
 import type { SquadListItem } from "../lib/api/squads";
+import type { Database } from "../types/database.types";
+
+type Gender = Database["public"]["Enums"]["game_gender_type"];
 
 // Full-screen "Select Team" flow for claiming one specific empty team slot
 // (scoped to the card the user tapped): name the team, then register one of
@@ -20,6 +23,7 @@ export default function SelectTeamModal({
   submitting,
   isHost,
   excludeUserIds,
+  gameGender,
   onSubmit,
 }: {
   visible: boolean;
@@ -37,6 +41,11 @@ export default function SelectTeamModal({
   // two 11-a-side teams), but never with the same player twice, so these
   // are hidden from the picker entirely rather than offered and rejected.
   excludeUserIds: string[];
+  // When not "mixed", only a squad with this exact same restriction is
+  // eligible — a Mixed squad's own members aren't guaranteed to all match,
+  // so it can't be used to fill a Male/Female Only team (enforced
+  // server-side too, see squad_fill_tournament_team).
+  gameGender: Gender;
   onSubmit: (squadId: string, memberUserIds: string[], teamName: string) => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -48,8 +57,15 @@ export default function SelectTeamModal({
   const excludeSet = new Set(excludeUserIds);
   const availableMembers = (s: SquadListItem) =>
     s.squad_members.filter((m) => m.status === "ACTIVE" && !excludeSet.has(m.user_id));
+  const genderEligible = (s: SquadListItem) => gameGender === "mixed" || s.gender === gameGender;
 
-  const eligibleSquads = (squads ?? []).filter((s) => availableMembers(s).length >= requiredCount);
+  const hasEnoughMembers = (s: SquadListItem) => availableMembers(s).length >= requiredCount;
+  const eligibleSquads = (squads ?? []).filter((s) => hasEnoughMembers(s) && genderEligible(s));
+  // Distinguishes "you have no squad big enough" from "you have one, but it
+  // doesn't carry the required restriction" — worth telling apart since the
+  // fix is completely different (grow the squad vs. use/create a different one).
+  const blockedByGenderOnly =
+    gameGender !== "mixed" && (squads ?? []).some((s) => hasEnoughMembers(s) && !genderEligible(s));
 
   useEffect(() => {
     if (visible) {
@@ -119,7 +135,9 @@ export default function SelectTeamModal({
             <ActivityIndicator color={colors.primary} className="mt-4" />
           ) : eligibleSquads.length === 0 ? (
             <Text className="text-muted text-sm">
-              You don't own a squad with at least {requiredCount} active member{requiredCount === 1 ? "" : "s"}.
+              {blockedByGenderOnly
+                ? `This is open to ${gameGender} players only — register a ${gameGender} squad to create a team.`
+                : `You don't own a squad with at least ${requiredCount} active member${requiredCount === 1 ? "" : "s"}.`}
             </Text>
           ) : (
             <View style={{ gap: 8 }}>
