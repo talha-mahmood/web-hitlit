@@ -10,6 +10,11 @@ import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import EditGameScreen from "../screens/games/EditGameScreen";
 import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
+import SquadsListScreen from "../screens/squads/SquadsListScreen";
+import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
+import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
+import SquadChatScreen from "../screens/squads/SquadChatScreen";
+import EditSquadScreen from "../screens/squads/EditSquadScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
@@ -41,6 +46,14 @@ export type HomeStackParamList = {
   PlayerProfile: { userId: string };
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
+  // Squads are reachable from the Home screen's "Venues near you"/squad
+  // rows, hosted here for the same reason tournaments are above — so
+  // browsing them never jumps the tab bar's highlight over to Community.
+  SquadsList: undefined;
+  CreateSquad: undefined;
+  SquadDetail: { squadId: string };
+  SquadChat: { squadId: string; squadName?: string };
+  EditSquad: { squadId: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -64,6 +77,11 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
+      <Stack.Screen name="SquadsList" component={SquadsListScreen} />
+      <Stack.Screen name="CreateSquad" component={CreateSquadScreen} />
+      <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
+      <Stack.Screen name="SquadChat" component={SquadChatScreen} />
+      <Stack.Screen name="EditSquad" component={EditSquadScreen} />
     </Stack.Navigator>
   );
 }
