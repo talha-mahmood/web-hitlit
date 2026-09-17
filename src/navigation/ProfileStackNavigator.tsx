@@ -29,7 +29,7 @@ export type ProfileStackParamList = {
   // tapping through never switches the active tab, matching the same
   // pattern HomeStackNavigator uses for its own Games shortcuts.
   GameDetail: { gameId: string };
-  GameChat: { gameId: string; gameTitle?: string };
+  GameChat: { gameId: string; gameTitle?: string; isTournament?: boolean };
   TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };

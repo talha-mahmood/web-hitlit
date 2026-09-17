@@ -40,7 +40,7 @@ export type HomeStackParamList = {
     | undefined;
   CreateGame: { gameType?: Database["public"]["Enums"]["game_type_type"] } | undefined;
   GameDetail: { gameId: string };
-  GameChat: { gameId: string; gameTitle?: string };
+  GameChat: { gameId: string; gameTitle?: string; isTournament?: boolean };
   TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };

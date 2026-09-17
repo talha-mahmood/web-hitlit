@@ -510,6 +510,7 @@ export default function GameDetailScreen() {
               navigation.navigate("GameChat", {
                 gameId: game.id,
                 gameTitle: game.title,
+                isTournament,
               })
             }
             className="ml-1 mr-2 items-center justify-center rounded-full"

@@ -174,6 +174,7 @@ function MessageBubble({
 export default function GameChatScreen() {
   const { params } = useRoute<ChatRoute>();
   const navigation = useNavigation<Nav>();
+  const memberLabel = params.isTournament ? "tournament members" : "game members";
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const listRef = useRef<FlatList>(null);
@@ -366,7 +367,7 @@ export default function GameChatScreen() {
                 <ChatIcon size={40} />
               </View>
               <Text className="text-muted text-sm text-center">
-                No messages yet. Say hi to the squad!
+                No messages yet. Say hi to the {memberLabel}!
               </Text>
             </View>
           }
@@ -398,7 +399,7 @@ export default function GameChatScreen() {
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder="Message the group..."
+          placeholder={`Message the ${memberLabel}...`}
           className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
           maxLength={500}
           multiline
