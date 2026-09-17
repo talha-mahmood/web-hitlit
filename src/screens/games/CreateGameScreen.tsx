@@ -437,6 +437,12 @@ export default function CreateGameScreen() {
 
   const isTournament = gameType === "TOURNAMENT";
   const selectedSportName = sports?.find((s) => s.id === sportId)?.name ?? null;
+  // Cricket's smallest real side is more than a single player — hide the
+  // "1" cell from Players per Team for this sport only.
+  const isCricketSport = (selectedSportName ?? "").toLowerCase().includes("cricket");
+  const playersPerTeamOptions = isCricketSport
+    ? PLAYERS_PER_TEAM_OPTIONS.filter((n) => n !== 1)
+    : PLAYERS_PER_TEAM_OPTIONS;
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -919,7 +925,7 @@ export default function CreateGameScreen() {
 
                 <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                  {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                  {playersPerTeamOptions.map((n) => (
                     <CountChipItem
                       key={n}
                       n={n}
@@ -949,7 +955,7 @@ export default function CreateGameScreen() {
                 )}
                 <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                  {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+                  {playersPerTeamOptions.map((n) => (
                     <CountChipItem
                       key={n}
                       n={n}
@@ -969,7 +975,7 @@ export default function CreateGameScreen() {
           <>
             <SectionLabel title="Players per Team" required icon="person-outline" compact />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {PLAYERS_PER_TEAM_OPTIONS.map((n) => (
+              {playersPerTeamOptions.map((n) => (
                 <CountChipItem
                   key={n}
                   n={n}
