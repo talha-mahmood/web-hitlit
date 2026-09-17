@@ -344,6 +344,7 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
+  const [myOnly, setMyOnly] = useState(false);
   const gameType = route.params?.gameType;
   const isTournamentList = gameType === "TOURNAMENT";
 
@@ -370,7 +371,7 @@ export default function GamesListScreen() {
     search: debouncedSearch || undefined,
     gameType,
   });
-  const games = debouncedLocation
+  const locationFiltered = debouncedLocation
     ? (gamesData ?? []).filter((g) =>
         matchesLocationQuery(
           [g.venues?.name, g.venues?.city, g.venues?.address, g.custom_venue_name],
@@ -378,6 +379,7 @@ export default function GamesListScreen() {
         )
       )
     : gamesData;
+  const games = myOnly ? (locationFiltered ?? []).filter((g) => g.creator_id === userId) : locationFiltered;
 
   // Join-request modal is a single shared instance (not one per card) —
   // this tracks which regular game (if any) it's currently open for.
@@ -456,6 +458,24 @@ export default function GamesListScreen() {
         </Pressable>
       </View>
 
+      {/* All / My Games (or My Tournaments) toggle */}
+      <View className="px-5 mb-3 flex-row" style={{ gap: 8 }}>
+        <Pressable
+          onPress={() => setMyOnly(false)}
+          className={`px-4 py-2 rounded-full ${myOnly ? "bg-white border border-border" : "bg-primary"}`}
+        >
+          <Text className={`text-sm font-semibold ${myOnly ? "text-muted" : "text-white"}`}>All</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setMyOnly(true)}
+          className={`px-4 py-2 rounded-full ${myOnly ? "bg-primary" : "bg-white border border-border"}`}
+        >
+          <Text className={`text-sm font-semibold ${myOnly ? "text-white" : "text-muted"}`}>
+            {isTournamentList ? "My Tournaments" : "My Games"}
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Location + sport filters — hidden behind the filter icon until tapped */}
       {showFilters && (
         <View className="px-5 mb-3">
@@ -491,7 +511,7 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation ? (
+            debouncedSearch || debouncedLocation || myOnly ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
@@ -502,7 +522,9 @@ export default function GamesListScreen() {
                     ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}" near "${debouncedLocation}".`
                     : debouncedLocation
                       ? `No ${isTournamentList ? "tournaments" : "games"} found near "${debouncedLocation}".`
-                      : `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}". Try a different name or ${isTournamentList ? "tournament" : "game"} ID.`}
+                      : debouncedSearch
+                        ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}". Try a different name or ${isTournamentList ? "tournament" : "game"} ID.`
+                        : `You haven't created any ${isTournamentList ? "tournaments" : "games"} yet.`}
                 </Text>
               </View>
             ) : (

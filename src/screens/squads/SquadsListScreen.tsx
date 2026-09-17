@@ -180,6 +180,7 @@ export default function SquadsListScreen() {
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(undefined);
+  const [myOnly, setMyOnly] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -196,9 +197,10 @@ export default function SquadsListScreen() {
     search: debouncedSearch || undefined,
     sportId: selectedSportId,
   });
-  const squads = debouncedLocation
+  const locationFiltered = debouncedLocation
     ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], debouncedLocation))
     : squadsData;
+  const squads = myOnly ? (locationFiltered ?? []).filter((s) => s.squad_owner_id === userId) : locationFiltered;
 
   // Join-request modal is a single shared instance (not one per card) —
   // this tracks which squad (if any) it's currently open for.
@@ -275,6 +277,22 @@ export default function SquadsListScreen() {
         </Pressable>
       </View>
 
+      {/* All / My Squads toggle */}
+      <View className="px-5 mb-3 flex-row" style={{ gap: 8 }}>
+        <Pressable
+          onPress={() => setMyOnly(false)}
+          className={`px-4 py-2 rounded-full ${myOnly ? "bg-white border border-border" : "bg-primary"}`}
+        >
+          <Text className={`text-sm font-semibold ${myOnly ? "text-muted" : "text-white"}`}>All</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setMyOnly(true)}
+          className={`px-4 py-2 rounded-full ${myOnly ? "bg-primary" : "bg-white border border-border"}`}
+        >
+          <Text className={`text-sm font-semibold ${myOnly ? "text-white" : "text-muted"}`}>My Squads</Text>
+        </Pressable>
+      </View>
+
       {/* Location + sport filters — hidden behind the filter icon until tapped */}
       {showFilters && (
         <View className="px-5 mb-3">
@@ -310,7 +328,7 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation || selectedSportId ? (
+            debouncedSearch || debouncedLocation || selectedSportId || myOnly ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No squads found</Text>
@@ -321,7 +339,9 @@ export default function SquadsListScreen() {
                       ? `No squads found near "${debouncedLocation}".`
                       : debouncedSearch
                         ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
-                        : "No squads match this sport filter yet."}
+                        : myOnly
+                          ? "You haven't created any squads yet."
+                          : "No squads match this sport filter yet."}
                 </Text>
               </View>
             ) : (
