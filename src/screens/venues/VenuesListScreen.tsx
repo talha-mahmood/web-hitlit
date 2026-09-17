@@ -6,7 +6,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
-import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import VenueCard from "../../components/VenueCard";
 import SearchField from "../../components/SearchField";
 import SportFilterDropdown from "../../components/SportFilterDropdown";
@@ -52,9 +51,6 @@ export default function VenuesListScreen() {
     sportId: selectedSportId,
     location: debouncedLocation || undefined,
   });
-  const { data: favoriteIds } = useFavoriteVenueIds();
-  const toggleFavorite = useToggleFavoriteVenue();
-
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
@@ -141,14 +137,8 @@ export default function VenuesListScreen() {
             <VenueCard
               venue={item}
               index={index}
-              isFavorite={favoriteIds?.has(item.id) ?? false}
+              showFavorite={false}
               onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
-              onToggleFavorite={() =>
-                toggleFavorite.mutate({
-                  venueId: item.id,
-                  isFavorite: !(favoriteIds?.has(item.id) ?? false),
-                })
-              }
             />
           )}
         />

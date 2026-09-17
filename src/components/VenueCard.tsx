@@ -9,9 +9,12 @@ import Bouncy from "./Bouncy";
 
 type VenueCardProps = {
   venue: VenueListItem;
-  isFavorite: boolean;
+  isFavorite?: boolean;
   onPress: () => void;
-  onToggleFavorite: () => void;
+  onToggleFavorite?: () => void;
+  // Defaults to shown; pass false to omit the heart/favorite button
+  // entirely (e.g. the venue listing page no longer has one).
+  showFavorite?: boolean;
   className?: string;
   // Entrance-animation stagger index within the list this card sits in;
   // omit for a card rendered on its own (no staggered siblings).
@@ -37,6 +40,7 @@ export default function VenueCard({
   isFavorite,
   onPress,
   onToggleFavorite,
+  showFavorite = true,
   className = "",
   index,
   distanceLabel,
@@ -74,18 +78,20 @@ export default function VenueCard({
           ) : (
             <View className="w-full h-36 bg-primary-light" />
           )}
-          <Bouncy
-            onPress={onToggleFavorite}
-            scaleTo={0.75}
-            className="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 items-center justify-center"
-          >
-            <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={18}
-              color={isFavorite ? colors.danger : colors.ink}
-              margin={9}
-            />
-          </Bouncy>
+          {showFavorite && (
+            <Bouncy
+              onPress={onToggleFavorite}
+              scaleTo={0.75}
+              className="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 items-center justify-center"
+            >
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={18}
+                color={isFavorite ? colors.danger : colors.ink}
+                margin={9}
+              />
+            </Bouncy>
+          )}
           {distanceLabel ? (
             <View className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1">
               <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>

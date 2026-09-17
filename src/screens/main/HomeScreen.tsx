@@ -12,7 +12,6 @@ import { useSports } from "../../hooks/useSports";
 import { useGames } from "../../hooks/useGames";
 import { useSquads } from "../../hooks/useSquads";
 import { useVenues } from "../../hooks/useVenues";
-import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { useUnreadNotificationCount } from "../../hooks/useNotifications";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm, formatDistanceKm } from "../../lib/distance";
@@ -136,8 +135,6 @@ export default function HomeScreen() {
   const { data: venues, isLoading: venuesLoading } = useVenues({
     sportId: selectedSportId ?? undefined,
   });
-  const { data: favoriteIds } = useFavoriteVenueIds();
-  const toggleFavorite = useToggleFavoriteVenue();
   const { data: unreadCount } = useUnreadNotificationCount(userId);
 
   const { coords } = useDeviceLocation();
@@ -307,16 +304,10 @@ export default function HomeScreen() {
             <View style={{ width: VENUE_CARD_WIDTH }}>
               <VenueCard
                 venue={item}
-                isFavorite={favoriteIds?.has(item.id) ?? false}
+                showFavorite={false}
                 distanceLabel={km !== null ? formatDistanceKm(km) : undefined}
                 maxSportChips={2}
                 onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
-                onToggleFavorite={() =>
-                  toggleFavorite.mutate({
-                    venueId: item.id,
-                    isFavorite: !(favoriteIds?.has(item.id) ?? false),
-                  })
-                }
               />
             </View>
           )}
