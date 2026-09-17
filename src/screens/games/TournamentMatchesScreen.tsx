@@ -119,6 +119,7 @@ function MatchRow({
   onReset,
   showScorecardButton,
   onGoToScorecard,
+  isCricketSport,
 }: {
   match: TournamentMatch;
   allowDraw: boolean;
@@ -131,6 +132,12 @@ function MatchRow({
   // venue already booked) — see canGoToScorecard in the screen component.
   showScorecardButton?: boolean;
   onGoToScorecard?: () => void;
+  // A cricket match is always completed via "Go To Scorecard" (Live
+  // Scoring syncs the result back automatically) — the manual Team A
+  // Won/Team B Won/Draw buttons only make sense for a sport with no
+  // scorecard flow, so they're hidden here rather than offering two
+  // conflicting ways to record the same result.
+  isCricketSport: boolean;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
@@ -170,7 +177,7 @@ function MatchRow({
         <Text className="text-muted text-xs mx-2">vs</Text>
         <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
       </View>
-      {isHost && match.team_a && match.team_b && (
+      {isHost && !isCricketSport && match.team_a && match.team_b && (
         <View className="flex-row flex-wrap mt-2" style={{ gap: 6 }}>
           <Pressable
             onPress={() => onEnterResult(match.id, match.team_a!.id, false, `${teamAName} won`)}
@@ -234,6 +241,7 @@ function MatchesPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
+  isCricketSport,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
@@ -243,6 +251,7 @@ function MatchesPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
+  isCricketSport: boolean;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
@@ -365,6 +374,7 @@ function MatchesPanel({
                   onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
+                  isCricketSport={isCricketSport}
                 />
               ))}
             </View>
@@ -572,6 +582,7 @@ function PoolMatchesPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
+  isCricketSport,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -581,6 +592,7 @@ function PoolMatchesPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
+  isCricketSport: boolean;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
@@ -698,6 +710,7 @@ function PoolMatchesPanel({
                   onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
+                  isCricketSport={isCricketSport}
                 />
               ))}
             </View>
@@ -728,6 +741,7 @@ function PoolPlayoffPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
+  isCricketSport,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -737,6 +751,7 @@ function PoolPlayoffPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
+  isCricketSport: boolean;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
@@ -875,6 +890,7 @@ function PoolPlayoffPanel({
                   onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
+                  isCricketSport={isCricketSport}
                 />
               ))}
             </View>
@@ -1036,6 +1052,7 @@ export default function TournamentMatchesScreen() {
               firstMatchId={firstMatchId}
               canGoToScorecard={canGoToScorecard}
               onGoToScorecard={handleGoToScorecard}
+              isCricketSport={isCricketSport}
             />
             {matches &&
               (pools ?? []).map((pool) => {
@@ -1061,6 +1078,7 @@ export default function TournamentMatchesScreen() {
               firstMatchId={firstMatchId}
               canGoToScorecard={canGoToScorecard}
               onGoToScorecard={handleGoToScorecard}
+              isCricketSport={isCricketSport}
             />
           </>
         ) : (
@@ -1083,6 +1101,7 @@ export default function TournamentMatchesScreen() {
                 firstMatchId={firstMatchId}
                 canGoToScorecard={canGoToScorecard}
                 onGoToScorecard={handleGoToScorecard}
+                isCricketSport={isCricketSport}
               />
             )}
             {game.tournament_format === "LEAGUE" && matches && (
