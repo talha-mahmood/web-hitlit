@@ -9,6 +9,7 @@
 const KNOWN_CONSTRAINT_MESSAGES: Record<string, string> = {
   tournament_teams_name_unique_per_game:
     "A team with this name is already registered in this tournament. Please choose a different name.",
+  games_time_check: "End time must be after the start time. Please check the times and try again.",
 };
 
 export function getFriendlyErrorMessage(err: unknown, fallback: string): string {

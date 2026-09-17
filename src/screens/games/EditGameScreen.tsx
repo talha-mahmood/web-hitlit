@@ -30,7 +30,7 @@ import {
   DURATIONS,
   TOURNAMENT_DURATIONS_DAYS,
   MAX_PLAYERS_OPTIONS,
-  addMinutes,
+  addMinutesWithOverflow,
   addDays,
   diffHours,
   diffDays,
@@ -158,8 +158,16 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       Alert.alert("Missing Info", "Please select a skill level.");
       return;
     }
-    const endDateValue = isTournament ? addDays(selectedDate, durationDays - 1) : null;
-    const endTimeValue = isTournament ? "23:59:59" : `${addMinutes(startTime, Math.round(duration * 60))}:00`;
+    // A late start (e.g. 11 PM + 1 hr) can legitimately run past midnight —
+    // in that case end_date is bumped to the next day so the stored
+    // end_time is still read relative to the right calendar day.
+    const regularEnd = isTournament ? null : addMinutesWithOverflow(startTime, Math.round(duration * 60));
+    const endDateValue = isTournament
+      ? addDays(selectedDate, durationDays - 1)
+      : regularEnd!.daysOverflow > 0
+        ? addDays(selectedDate, regularEnd!.daysOverflow)
+        : null;
+    const endTimeValue = isTournament ? "23:59:59" : `${regularEnd!.time}:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {

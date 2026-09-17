@@ -258,7 +258,7 @@ export default function AssignAdminScreen() {
           ) : extraAdminsError ? (
             <View className="border border-red-200 bg-red-50 rounded-xl px-4 py-3 mb-4">
               <Text className="text-red-700 text-sm">
-                Could not load additional admins: {extraAdminsError instanceof Error ? extraAdminsError.message : "Unknown error."}
+                {getFriendlyErrorMessage(extraAdminsError, "Could not load additional admins.")}
               </Text>
             </View>
           ) : (extraAdmins ?? []).length === 0 ? (

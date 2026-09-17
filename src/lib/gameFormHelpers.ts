@@ -27,12 +27,24 @@ export function buildTimeSlots(): { label: string; value: string }[] {
   return slots;
 }
 
-export function addMinutes(timeValue: string, minutes: number): string {
+// Adds `minutes` to `timeValue` ('HH:MM'), wrapping past midnight rather
+// than clamping — `daysOverflow` says how many calendar days that wrap
+// crossed (0 for a same-day end time, 1 for a game that runs past
+// midnight; DURATIONS tops out at 4 hrs, so it can never be more than 1).
+// Callers use daysOverflow to set the game's end_date, since a plain TIME
+// column can't otherwise distinguish "ends at 00:30 the same night" from
+// "ends at 00:30 the next day".
+export function addMinutesWithOverflow(
+  timeValue: string,
+  minutes: number
+): { time: string; daysOverflow: number } {
   const [hh, mm] = timeValue.split(":").map(Number);
   const total = hh * 60 + mm + minutes;
-  const nh = Math.floor(total / 60) % 24;
-  const nm = total % 60;
-  return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
+  const daysOverflow = Math.floor(total / (24 * 60));
+  const wrapped = total - daysOverflow * 24 * 60;
+  const nh = Math.floor(wrapped / 60);
+  const nm = wrapped % 60;
+  return { time: `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`, daysOverflow };
 }
 
 // dateIso is a 'YYYY-MM-DD' local date string (see toLocalDateStr) — parsed as
@@ -54,11 +66,16 @@ export function diffDays(startIso: string, endIso: string): number {
   return Math.round((end - start) / 86_400_000) + 1;
 }
 
-// Hours between two 'HH:MM' values, rounded to the nearest supported DURATIONS step.
+// Hours between two 'HH:MM' values, rounded to the nearest supported
+// DURATIONS step. A game's duration is always positive, so an end time
+// that's numerically earlier than the start time (an overnight game whose
+// end_time wrapped past midnight) is treated as having crossed into the
+// next day rather than as a negative duration.
 export function diffHours(startTime: string, endTime: string): number {
   const [sh, sm] = startTime.split(":").map(Number);
   const [eh, em] = endTime.split(":").map(Number);
-  const minutes = eh * 60 + em - (sh * 60 + sm);
+  let minutes = eh * 60 + em - (sh * 60 + sm);
+  if (minutes < 0) minutes += 24 * 60;
   return Math.round((minutes / 60) * 2) / 2; // nearest 0.5
 }
 
