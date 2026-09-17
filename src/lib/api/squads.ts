@@ -46,6 +46,7 @@ export type CreateSquadParams = {
   skillLevel: Database["public"]["Enums"]["skill_level_type"] | null;
   location: string;
   description: string;
+  gender: Database["public"]["Enums"]["game_gender_type"];
 };
 
 // Sport is intentionally excluded — same reasoning as games' UpdateGameParams:
@@ -58,6 +59,7 @@ export type UpdateSquadParams = {
   skillLevel: Database["public"]["Enums"]["skill_level_type"] | null;
   location: string;
   description: string;
+  gender: Database["public"]["Enums"]["game_gender_type"];
 };
 
 const LIST_SELECT =
@@ -128,6 +130,7 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
       skill_level: params.skillLevel,
       location: params.location || null,
       description: params.description || null,
+      gender: params.gender,
     })
     .select()
     .single();
@@ -159,6 +162,7 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
       skill_level: params.skillLevel,
       location: params.location || null,
       description: params.description || null,
+      gender: params.gender,
     })
     .eq("id", params.squadId)
     .select()

@@ -431,6 +431,8 @@ export default function SquadDetailScreen() {
   const isApprovingOrRejecting = approveMember.isPending || rejectMember.isPending || removeMember.isPending;
 
   const squadSkillColor = squad.skill_level ? SQUAD_SKILL_COLORS[squad.skill_level] : colors.muted;
+  const genderLabel = squad.gender === "male" ? "Male Only" : squad.gender === "female" ? "Female Only" : "Everyone";
+  const genderPillColor = squad.gender === "male" ? "#2563EB" : squad.gender === "female" ? "#EC4899" : colors.primary;
 
   return (
     <View className="flex-1 bg-gray-100">
@@ -564,6 +566,7 @@ export default function SquadDetailScreen() {
             pillColor={squadSkillColor}
           />
           <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
+          <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
         </View>
 
         {/* Description */}

@@ -33,6 +33,7 @@ import { supabase } from "../../lib/supabase";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
+type Gender = Database["public"]["Enums"]["game_gender_type"];
 
 export default function CreateSquadScreen() {
   const navigation = useNavigation<Nav>();
@@ -47,6 +48,7 @@ export default function CreateSquadScreen() {
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [gender, setGender] = useState<Gender>("mixed");
   const selectedSportName = sports?.find((s) => s.id === sportId)?.name ?? null;
 
   const handleCreate = async () => {
@@ -75,6 +77,7 @@ export default function CreateSquadScreen() {
         skillLevel,
         location: location.trim(),
         description: description.trim(),
+        gender,
       });
       // The icon bucket's RLS requires the squad to already exist (it checks
       // squad_owner_id via the squad row), so the upload can only happen
@@ -187,6 +190,18 @@ export default function CreateSquadScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
+        />
+
+        {/* Open To */}
+        <SectionLabel title="Open To" icon="people-outline" />
+        <PillRow<Gender>
+          options={[
+            { label: "Everyone", value: "mixed" },
+            { label: "Male Only", value: "male" },
+            { label: "Female Only", value: "female" },
+          ]}
+          value={gender}
+          onChange={setGender}
         />
 
         {/* Location */}

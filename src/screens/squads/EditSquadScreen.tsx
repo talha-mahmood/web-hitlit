@@ -29,6 +29,7 @@ import { pickImages, uploadImage } from "../../lib/upload";
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
+type Gender = Database["public"]["Enums"]["game_gender_type"];
 
 // ── form (only mounted once the squad has loaded, so state can init from it) ──
 
@@ -41,6 +42,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(squad.skill_level);
   const [location, setLocation] = useState(squad.location ?? "");
   const [description, setDescription] = useState(squad.description ?? "");
+  const [gender, setGender] = useState<Gender>(squad.gender);
   const [iconUrl, setIconUrl] = useState<string | null>(squad.icon_url);
   const [uploadingIcon, setUploadingIcon] = useState(false);
 
@@ -79,6 +81,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         skillLevel,
         location: location.trim(),
         description: description.trim(),
+        gender,
       });
       navigation.goBack();
     } catch (err) {
@@ -154,6 +157,18 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
+        />
+
+        {/* Open To */}
+        <SectionLabel title="Open To" icon="people-outline" />
+        <PillRow<Gender>
+          options={[
+            { label: "Everyone", value: "mixed" },
+            { label: "Male Only", value: "male" },
+            { label: "Female Only", value: "female" },
+          ]}
+          value={gender}
+          onChange={setGender}
         />
 
         {/* Location */}
