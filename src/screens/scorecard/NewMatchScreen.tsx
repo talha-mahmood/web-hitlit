@@ -306,7 +306,6 @@ export default function NewMatchScreen() {
             onChangeText={setVenue}
             placeholder="e.g. Karachi Cricket Ground"
             maxLength={60}
-            right={<Ionicons name="chevron-down" size={16} color={colors.muted} />}
           />
         </CardSection>
 

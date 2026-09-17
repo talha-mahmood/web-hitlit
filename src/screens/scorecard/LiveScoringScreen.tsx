@@ -31,7 +31,7 @@ type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 
 const RUN_OPTIONS = [0, 1, 2, 3, 4, 6];
-const WIDE_OPTIONS = [1, 2, 3, 4, 5];
+const WIDE_OPTIONS = [0, 1, 2, 3, 4, 5];
 const NOBALL_BAT_OPTIONS = [0, 1, 2, 3, 4, 6];
 const BYE_OPTIONS = [1, 2, 3, 4];
 const EXTRA_TYPES: { label: string; value: ExtraType; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -264,8 +264,11 @@ export default function LiveScoringScreen() {
     submitBall({ runsBatted: runs, extraType: null, extraRuns: 0, isWicket: false, wicketType: null, dismissedName: null, fielderName: null });
   };
 
-  const handleWide = (total: number) => {
-    submitBall({ runsBatted: 0, extraType: "WIDE", extraRuns: total, isWicket: false, wicketType: null, dismissedName: null, fielderName: null });
+  const handleWide = (runsRun: number) => {
+    // The mandatory 1 for the wide itself is always added on top of whatever
+    // the batsmen ran — selecting 0 records a bare wide (1 total run),
+    // selecting 1 records a wide plus a run (2 total runs), and so on.
+    submitBall({ runsBatted: 0, extraType: "WIDE", extraRuns: runsRun + 1, isWicket: false, wicketType: null, dismissedName: null, fielderName: null });
   };
 
   const handleNoBall = (batRuns: number) => {
@@ -671,7 +674,7 @@ export default function LiveScoringScreen() {
 
             {readyToScore && extraMode === "WIDE" && (
               <View className="mt-5">
-                <RunPad options={WIDE_OPTIONS} onPress={handleWide} label="Total runs on the wide" />
+                <RunPad options={WIDE_OPTIONS} onPress={handleWide} label="Runs run on the wide" />
                 <Pressable onPress={() => setExtraMode(null)} className="mt-3 py-2">
                   <Text className="text-muted text-center text-sm">Cancel</Text>
                 </Pressable>
