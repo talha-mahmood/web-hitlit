@@ -13,6 +13,7 @@ import {
 import { pickImages, uploadImage } from "../../lib/upload";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourtImages">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourtImages">;
@@ -43,7 +44,7 @@ export default function ManageCourtImagesScreen() {
         nextOrder += 1;
       }
     } catch (err) {
-      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload photo.");
+      Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload photo."));
     } finally {
       setUploading(false);
     }
@@ -57,7 +58,7 @@ export default function ManageCourtImagesScreen() {
         style: "destructive",
         onPress: () =>
           deleteImage.mutate(imageId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete photo."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete photo.")),
           }),
       },
     ]);

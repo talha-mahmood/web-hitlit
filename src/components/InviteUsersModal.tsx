@@ -6,6 +6,7 @@ import { colors, heroShadow } from "../constants/theme";
 import { useUserSearch } from "../hooks/useInvites";
 import type { UserSearchResult } from "../lib/api/users";
 import FieldInput from "./FieldInput";
+import { getFriendlyErrorMessage } from "../lib/friendlyError";
 
 // A percentage maxHeight ("80%") resolves against the KeyboardAvoidingView's
 // own auto-sized height (it isn't flex:1), which Yoga computes differently
@@ -60,7 +61,7 @@ export default function InviteUsersModal({
       await onInvite(user);
       setInvitedIds((prev) => new Set(prev).add(user.id));
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite.");
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send invite."));
     } finally {
       setInvitingId(null);
     }

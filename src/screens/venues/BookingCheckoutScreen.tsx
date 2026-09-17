@@ -8,6 +8,7 @@ import { useLinkGameBooking } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type CheckoutRoute = RouteProp<VenuesStackParamList, "BookingCheckout">;
 type CheckoutNav = NativeStackNavigationProp<VenuesStackParamList, "BookingCheckout">;
@@ -92,7 +93,7 @@ export default function BookingCheckoutScreen() {
     } catch (err) {
       Alert.alert(
         "Booking Failed",
-        err instanceof Error ? err.message : "Could not complete your booking. Please try again."
+        getFriendlyErrorMessage(err, "Could not complete your booking. Please try again.")
       );
     }
   };

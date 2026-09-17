@@ -17,6 +17,7 @@ import { BOOKING_CSV_HEADER, formatBookingRowForCsv, toSafeFilenameSegment } fro
 import RevenueLineChart from "../../components/RevenueLineChart";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "AdminAnalytics">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminAnalytics">;
@@ -123,7 +124,7 @@ export default function AdminAnalyticsScreen() {
       const filename = `${toSafeFilenameSegment(nameParts.join("-"))}-bookings.csv`;
       await exportCsv(filename, rows);
     } catch (err) {
-      Alert.alert("Export Failed", err instanceof Error ? err.message : "Could not export bookings.");
+      Alert.alert("Export Failed", getFriendlyErrorMessage(err, "Could not export bookings."));
     } finally {
       setExporting(false);
     }

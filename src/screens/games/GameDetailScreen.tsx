@@ -25,6 +25,7 @@ import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
 import { getSportIcon } from "../../lib/sportIcons";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -324,7 +325,7 @@ export default function GameDetailScreen() {
       { gameId: game.id, userId, skillLevel, location },
       {
         onSuccess: () => setShowJoinModal(false),
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send request. Try again.")),
       },
     );
   };
@@ -340,7 +341,7 @@ export default function GameDetailScreen() {
           leaveGame.mutate(
             { gameId: game.id, userId },
             {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not leave. Try again."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not leave. Try again.")),
             },
           );
         },
@@ -359,7 +360,7 @@ export default function GameDetailScreen() {
           leaveGame.mutate(
             { gameId: game.id, userId },
             {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not withdraw. Try again."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not withdraw. Try again.")),
             },
           );
         },
@@ -369,7 +370,7 @@ export default function GameDetailScreen() {
 
   const handleApprove = (gamePlayerId: string, name: string | null) => {
     approvePlayer.mutate(gamePlayerId, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "player"}.`),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, `Could not approve ${name ?? "player"}.`)),
     });
   };
 
@@ -381,7 +382,7 @@ export default function GameDetailScreen() {
         style: "destructive",
         onPress: () => {
           rejectPlayer.mutate(gamePlayerId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not reject request.")),
           });
         },
       },
@@ -396,7 +397,7 @@ export default function GameDetailScreen() {
         style: "destructive",
         onPress: () => {
           removePlayer.mutate(gamePlayerId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove player."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove player.")),
           });
         },
       },
@@ -413,7 +414,7 @@ export default function GameDetailScreen() {
         onPress: () => {
           cancelGame.mutate(game.id, {
             onSuccess: () => navigation.goBack(),
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not cancel."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not cancel.")),
           });
         },
       },
@@ -423,7 +424,7 @@ export default function GameDetailScreen() {
   const handleAcceptInvite = () => {
     if (!myGameInvite) return;
     acceptInvite.mutate(myGameInvite.id, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not accept invite."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not accept invite.")),
     });
   };
 
@@ -436,7 +437,7 @@ export default function GameDetailScreen() {
         style: "destructive",
         onPress: () =>
           declineInvite.mutate(myGameInvite.id, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not decline invite."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not decline invite.")),
           }),
       },
     ]);
@@ -784,7 +785,7 @@ export default function GameDetailScreen() {
               { squadId, memberUserIds },
               {
                 onSuccess: () => setShowSquadFillModal(false),
-                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not join the game."),
+                onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not join the game.")),
               },
             );
           }}
@@ -803,7 +804,7 @@ export default function GameDetailScreen() {
               { squadId, invitedBy: userId },
               {
                 onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
-                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
+                onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send invite.")),
               },
             );
           }}

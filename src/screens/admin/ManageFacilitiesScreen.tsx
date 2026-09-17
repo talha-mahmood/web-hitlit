@@ -8,6 +8,7 @@ import { useAdminVenueDetail, useAddFacility, useDeleteFacility } from "../../ho
 import { colors, heroShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "ManageFacilities">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageFacilities">;
@@ -41,7 +42,7 @@ export default function ManageFacilitiesScreen() {
           setType("");
           setDescription("");
         },
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not add facility."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add facility.")),
       }
     );
   };
@@ -54,7 +55,7 @@ export default function ManageFacilitiesScreen() {
         style: "destructive",
         onPress: () =>
           deleteFacility.mutate(facilityId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove facility."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove facility.")),
           }),
       },
     ]);

@@ -10,6 +10,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 
@@ -31,7 +32,7 @@ export default function AllVenuesListScreen() {
           style: "destructive",
           onPress: () =>
             deleteVenue.mutate(venueId, {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete venue."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete venue.")),
             }),
         },
       ]

@@ -6,6 +6,7 @@ import { useBlockedUsers, useUnblockUser } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { BlockedUser } from "../../lib/api/moderation";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 export default function BlockedUsersScreen() {
   const navigation = useNavigation();
@@ -22,7 +23,7 @@ export default function BlockedUsersScreen() {
         onPress: () =>
           unblockUser.mutate(user.blocked_id, {
             onError: (err) =>
-              Alert.alert("Error", err instanceof Error ? err.message : "Could not unblock user."),
+              Alert.alert("Error", getFriendlyErrorMessage(err, "Could not unblock user.")),
           }),
       },
     ]);

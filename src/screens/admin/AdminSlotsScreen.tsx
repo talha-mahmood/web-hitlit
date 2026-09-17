@@ -18,6 +18,7 @@ import {
 } from "../../lib/slots";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "AdminSlots">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminSlots">;
@@ -68,7 +69,7 @@ export default function AdminSlotsScreen() {
             if (!userId) return;
             blockSlot.mutate(
               { adminUserId: userId, startTime: slot.start, endTime: slot.end },
-              { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not block slot.") }
+              { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not block slot.")) }
             );
           },
         },
@@ -83,7 +84,7 @@ export default function AdminSlotsScreen() {
           text: "Unblock",
           onPress: () =>
             unblockSlot.mutate(booking.id, {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not unblock slot."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not unblock slot.")),
             }),
         },
       ]);

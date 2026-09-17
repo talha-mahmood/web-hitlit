@@ -21,6 +21,7 @@ import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 import { matchesLocationQuery } from "../../lib/locationFilter";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
@@ -395,7 +396,7 @@ export default function GamesListScreen() {
       {
         onSuccess: () => setJoinTargetGame(null),
         onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send request.")),
       }
     );
   };

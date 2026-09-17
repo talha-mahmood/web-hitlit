@@ -7,6 +7,7 @@ import { useAdminVenueDetail, useDeleteCourt } from "../../hooks/useVenuesAdmin"
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import SportIconBadge from "../../components/SportIconBadge";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourts">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourts">;
@@ -28,7 +29,7 @@ export default function ManageCourtsScreen() {
         style: "destructive",
         onPress: () =>
           deleteCourt.mutate(courtId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not deactivate court."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not deactivate court.")),
           }),
       },
     ]);

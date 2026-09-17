@@ -20,6 +20,7 @@ import { detectCurrentCoordinates } from "../../lib/locationPicker";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "EditVenueDetails">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditVenueDetails">;
@@ -70,7 +71,7 @@ export default function EditVenueDetailsScreen() {
       setLongitude(String(coords.longitude));
       if (coords.city && !city.trim()) setCity(coords.city);
     } catch (err) {
-      Alert.alert("Couldn't Detect Location", err instanceof Error ? err.message : "Please try again.");
+      Alert.alert("Couldn't Detect Location", getFriendlyErrorMessage(err, "Please try again."));
     } finally {
       setDetectingLocation(false);
     }
@@ -116,7 +117,7 @@ export default function EditVenueDetailsScreen() {
       },
       {
         onSuccess: () => navigation.goBack(),
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save venue."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save venue.")),
       }
     );
   };

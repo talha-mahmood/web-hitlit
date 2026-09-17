@@ -9,6 +9,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import FieldInput from "../../components/FieldInput";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "CreateVenue">;
 
@@ -51,7 +52,7 @@ export default function CreateVenueScreen() {
         onSuccess: (venue) => {
           navigation.replace("AssignAdmin", { venueId: venue.id, venueName: venue.name, currentAdminEmail: null });
         },
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not create venue."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not create venue.")),
       }
     );
   };

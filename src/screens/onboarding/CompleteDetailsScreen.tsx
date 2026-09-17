@@ -10,6 +10,7 @@ import { DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
 import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
 import type { Database } from "../../types/database.types";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Gender = Database["public"]["Enums"]["gender_type"];
 
@@ -59,7 +60,7 @@ export default function CompleteDetailsScreen() {
     } catch (err) {
       Alert.alert(
         "Couldn't go back",
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        getFriendlyErrorMessage(err, "Something went wrong. Please try again.")
       );
       setIsGoingBack(false);
     }
@@ -97,7 +98,7 @@ export default function CompleteDetailsScreen() {
     } catch (err) {
       Alert.alert(
         "Could not save",
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        getFriendlyErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setIsSaving(false);

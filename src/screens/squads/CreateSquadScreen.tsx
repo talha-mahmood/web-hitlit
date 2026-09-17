@@ -31,6 +31,7 @@ import SportHeroBadge from "../../components/SportHeroBadge";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -103,7 +104,7 @@ export default function CreateSquadScreen() {
     } catch (err) {
       Alert.alert(
         "Error",
-        err instanceof Error ? err.message : "Could not create squad. Please try again."
+        getFriendlyErrorMessage(err, "Could not create squad. Please try again.")
       );
     }
   };

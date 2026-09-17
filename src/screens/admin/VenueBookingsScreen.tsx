@@ -15,6 +15,7 @@ import SportIconBadge from "../../components/SportIconBadge";
 import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "VenueBookings">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "VenueBookings">;
@@ -148,7 +149,7 @@ export default function VenueBookingsScreen() {
       const filename = `${toSafeFilenameSegment(nameParts.join("-"))}-bookings.csv`;
       await exportCsv(filename, rows);
     } catch (err) {
-      Alert.alert("Export Failed", err instanceof Error ? err.message : "Could not export bookings.");
+      Alert.alert("Export Failed", getFriendlyErrorMessage(err, "Could not export bookings."));
     } finally {
       setExporting(false);
     }

@@ -34,6 +34,7 @@ import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import DetailSportBackdrop from "../../components/DetailSportBackdrop";
 import type { Database } from "../../types/database.types";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadDetail">;
@@ -277,7 +278,7 @@ export default function SquadDetailScreen() {
       {
         onSuccess: () => setShowJoinModal(false),
         onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request. Try again."),
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send request. Try again.")),
       }
     );
   };
@@ -287,7 +288,7 @@ export default function SquadDetailScreen() {
       { squadId: squad.id, blocked: !squad.join_requests_blocked },
       {
         onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not update this setting. Try again."),
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update this setting. Try again.")),
       }
     );
   };
@@ -304,7 +305,7 @@ export default function SquadDetailScreen() {
             { squadId: squad.id, userId },
             {
               onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not leave. Try again."),
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not leave. Try again.")),
             }
           );
         },
@@ -324,7 +325,7 @@ export default function SquadDetailScreen() {
             { squadId: squad.id, userId },
             {
               onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not withdraw. Try again."),
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not withdraw. Try again.")),
             }
           );
         },
@@ -337,7 +338,7 @@ export default function SquadDetailScreen() {
       { inviteId, accept },
       {
         onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not respond to invite."),
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not respond to invite.")),
       }
     );
   };
@@ -345,7 +346,7 @@ export default function SquadDetailScreen() {
   const handleApprove = (squadMemberId: string, name: string | null) => {
     approveMember.mutate(squadMemberId, {
       onError: (err) =>
-        Alert.alert("Error", err instanceof Error ? err.message : `Could not approve ${name ?? "member"}.`),
+        Alert.alert("Error", getFriendlyErrorMessage(err, `Could not approve ${name ?? "member"}.`)),
     });
   };
 
@@ -361,7 +362,7 @@ export default function SquadDetailScreen() {
           onPress: () => {
             rejectMember.mutate(squadMemberId, {
               onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not reject request."),
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not reject request.")),
             });
           },
         },
@@ -381,7 +382,7 @@ export default function SquadDetailScreen() {
           onPress: () => {
             removeMember.mutate(squadMemberId, {
               onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not remove member."),
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove member.")),
             });
           },
         },
@@ -399,7 +400,7 @@ export default function SquadDetailScreen() {
           disbandSquad.mutate(squad.id, {
             onSuccess: () => navigation.goBack(),
             onError: (err) =>
-              Alert.alert("Error", err instanceof Error ? err.message : "Could not disband."),
+              Alert.alert("Error", getFriendlyErrorMessage(err, "Could not disband.")),
           });
         },
       },
@@ -415,7 +416,7 @@ export default function SquadDetailScreen() {
   const handleAcceptInvite = () => {
     if (!mySquadInvite) return;
     acceptInvite.mutate(mySquadInvite.id, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not accept invite."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not accept invite.")),
     });
   };
 
@@ -428,7 +429,7 @@ export default function SquadDetailScreen() {
         style: "destructive",
         onPress: () =>
           declineInvite.mutate(mySquadInvite.id, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not decline invite."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not decline invite.")),
           }),
       },
     ]);

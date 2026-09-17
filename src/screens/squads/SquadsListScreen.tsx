@@ -21,6 +21,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 import { matchesLocationQuery } from "../../lib/locationFilter";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
 
@@ -231,7 +232,7 @@ export default function SquadsListScreen() {
       {
         onSuccess: () => setJoinTargetSquad(null),
         onError: (err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not send request."),
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send request.")),
       }
     );
   };

@@ -25,6 +25,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { markTeamChatRead, type TeamMessage } from "../../lib/api/teamMessages";
 import ChatIcon from "../../components/ChatIcon";
 import SeenByModal from "../../components/SeenByModal";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
 
@@ -207,7 +208,7 @@ export default function TeamChatScreen() {
         style: "destructive",
         onPress: () =>
           deleteMessage.mutate(message.id, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete message."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete message.")),
           }),
       },
     ]);
@@ -255,7 +256,7 @@ export default function TeamChatScreen() {
       { senderId: userId, message: text, parentId },
       {
         onError: (err) => {
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not send message.");
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send message."));
           setDraft(text);
         },
       }
@@ -292,7 +293,7 @@ export default function TeamChatScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2">Couldn't load chat</Text>
           <Text className="text-muted text-sm text-center">
-            {error instanceof Error ? error.message : "Please try again."}
+            {getFriendlyErrorMessage(error, "Please try again.")}
           </Text>
         </View>
       ) : (
@@ -335,14 +336,14 @@ export default function TeamChatScreen() {
                       {
                         onSuccess: () => Alert.alert("Reported", "Thanks — we'll review this message."),
                         onError: (err) =>
-                          Alert.alert("Error", err instanceof Error ? err.message : "Could not submit report."),
+                          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not submit report.")),
                       }
                     );
                   },
                   onBlock: () => {
                     blockUser.mutate(item.sender_id, {
                       onError: (err) =>
-                        Alert.alert("Error", err instanceof Error ? err.message : "Could not block user."),
+                        Alert.alert("Error", getFriendlyErrorMessage(err, "Could not block user.")),
                     });
                   },
                 });

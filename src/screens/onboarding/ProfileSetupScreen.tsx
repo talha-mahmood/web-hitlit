@@ -16,6 +16,7 @@ import { supabase } from "../../lib/supabase";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { primaryButtonShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 export default function ProfileSetupScreen() {
   const session = useAuthStore((s) => s.session);
@@ -68,7 +69,7 @@ export default function ProfileSetupScreen() {
     } catch (err) {
       Alert.alert(
         "Upload failed",
-        err instanceof Error ? err.message : "Could not upload photo."
+        getFriendlyErrorMessage(err, "Could not upload photo.")
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -91,7 +92,7 @@ export default function ProfileSetupScreen() {
     } catch (err) {
       Alert.alert(
         "Could not save profile",
-        err instanceof Error ? err.message : "Please try again."
+        getFriendlyErrorMessage(err, "Please try again.")
       );
     } finally {
       setIsSaving(false);

@@ -6,6 +6,7 @@ import { signInWithGoogle } from "../../lib/googleAuth";
 import { signInWithApple } from "../../lib/appleAuth";
 import { colors } from "../../constants/theme";
 import GoogleIcon from "../../components/GoogleIcon";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 export default function LoginScreen() {
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -20,7 +21,7 @@ export default function LoginScreen() {
     } catch (err) {
       Alert.alert(
         "Sign-in failed",
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        getFriendlyErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setIsSigningIn(false);

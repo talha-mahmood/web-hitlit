@@ -38,6 +38,7 @@ import {
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -117,7 +118,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       const { publicUrl } = await uploadImage(assets[0], { bucket: "game-icons", pathPrefix: game.id });
       setIconUrl(publicUrl);
     } catch (err) {
-      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload icon.");
+      Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload icon."));
     } finally {
       setUploadingIcon(false);
     }
@@ -183,7 +184,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       });
       navigation.goBack();
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Could not save changes. Please try again.");
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save changes. Please try again."));
     }
   };
 

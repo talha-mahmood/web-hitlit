@@ -16,6 +16,7 @@ import type { AdminLookupResult } from "../../lib/api/superadmin";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "AssignAdmin">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AssignAdmin">;
@@ -109,7 +110,7 @@ export default function AssignAdminScreen() {
     if (!ownerEmail.trim()) return;
     ownerLookup.mutate(ownerEmail.trim(), {
       onSuccess: (profile) => setOwnerResult(profile),
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Lookup failed."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Lookup failed.")),
     });
   };
 
@@ -122,7 +123,7 @@ export default function AssignAdminScreen() {
         onPress: () =>
           assignOwner.mutate(ownerResult.id, {
             onSuccess: () => navigation.replace("AdminDashboard", { venueId: params.venueId }),
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not assign owner."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not assign owner.")),
           }),
       },
     ]);
@@ -137,7 +138,7 @@ export default function AssignAdminScreen() {
         onPress: () =>
           removeOwner.mutate(undefined, {
             onSuccess: () => navigation.goBack(),
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove owner."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove owner.")),
           }),
       },
     ]);
@@ -147,7 +148,7 @@ export default function AssignAdminScreen() {
     if (!extraEmail.trim()) return;
     extraAdminLookup.mutate(extraEmail.trim(), {
       onSuccess: (profile) => setExtraResult(profile),
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Lookup failed."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Lookup failed.")),
     });
   };
 
@@ -158,7 +159,7 @@ export default function AssignAdminScreen() {
         setExtraEmail("");
         setExtraResult("not_searched");
       },
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not add admin."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add admin.")),
     });
   };
 
@@ -170,7 +171,7 @@ export default function AssignAdminScreen() {
         style: "destructive",
         onPress: () =>
           revokeAdmin.mutate(userId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove admin."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove admin.")),
           }),
       },
     ]);

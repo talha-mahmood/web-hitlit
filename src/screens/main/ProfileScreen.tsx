@@ -19,6 +19,7 @@ import { pickImages, uploadImage } from "../../lib/upload";
 import { colors } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import type { Database } from "../../types/database.types";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
@@ -208,7 +209,7 @@ export default function ProfileScreen() {
       const { publicUrl } = await uploadImage(assets[0], { bucket: "avatars", pathPrefix: userId });
       await updateProfile(userId, { avatar: publicUrl });
     } catch (err) {
-      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload photo.");
+      Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload photo."));
     } finally {
       setUploadingAvatar(false);
     }

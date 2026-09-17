@@ -34,6 +34,7 @@ import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import LocationPickerField from "../../components/LocationPickerField";
 import SelectDropdownField from "../../components/SelectDropdownField";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "EditCourt">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditCourt">;
@@ -96,7 +97,7 @@ function PriceRulesSection({ courtId }: { courtId: string }) {
           setRuleEnd("");
           setRulePrice("");
         },
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not add this rate."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add this rate.")),
       }
     );
   };
@@ -112,7 +113,7 @@ function PriceRulesSection({ courtId }: { courtId: string }) {
           style: "destructive",
           onPress: () =>
             deleteRule.mutate(rule.id, {
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not remove this rate."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove this rate.")),
             }),
         },
       ]
@@ -253,7 +254,7 @@ export default function EditCourtScreen() {
 
     mutation
       .then(() => navigation.goBack())
-      .catch((err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save court."));
+      .catch((err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save court.")));
   };
 
   const isPending = addCourt.isPending || updateCourt.isPending;

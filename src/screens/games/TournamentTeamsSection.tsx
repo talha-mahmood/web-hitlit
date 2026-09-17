@@ -27,6 +27,7 @@ import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList>;
 
@@ -354,7 +355,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         onPress: () =>
           leaveTeam.mutate(
             { teamId, userId },
-            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not leave.") }
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not leave.")) }
           ),
       },
     ]);
@@ -362,7 +363,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
   const handleApprove = (teamId: string) => {
     approveTeam.mutate(teamId, {
-      onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not approve this team."),
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not approve this team.")),
     });
   };
 
@@ -374,7 +375,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         style: "destructive",
         onPress: () =>
           rejectPendingTeam.mutate(teamId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not reject this team."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not reject this team.")),
           }),
       },
     ]);
@@ -478,7 +479,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             { creatorId: userId, name },
             {
               onSuccess: () => setShowCreateModal(false),
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not create team."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not create team.")),
             }
           );
         }}
@@ -500,7 +501,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             { teamId: fillTeamId, squadId, memberUserIds, teamName },
             {
               onSuccess: () => setFillTeamId(null),
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not register team."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not register team.")),
             }
           );
         }}
@@ -518,7 +519,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               { squadId, invitedBy: userId },
               {
                 onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
-                onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send invite."),
+                onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send invite.")),
               }
             );
           }}

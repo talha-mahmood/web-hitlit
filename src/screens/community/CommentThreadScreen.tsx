@@ -26,6 +26,7 @@ import {
 import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<CommunityStackParamList, "CommentThread">;
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommentThread">;
@@ -132,7 +133,7 @@ export default function CommentThreadScreen() {
       { userId, body, parentId: replyTarget?.id ?? params.rootId },
       {
         onError: (err) => {
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not post reply.");
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post reply."));
           setDraft(body);
         },
       }
@@ -157,7 +158,7 @@ export default function CommentThreadScreen() {
                 if (isDeletingRoot) navigation.goBack();
               },
               onError: (err) =>
-                Alert.alert("Error", err instanceof Error ? err.message : "Could not delete comment."),
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete comment.")),
             }),
         },
       ]
@@ -169,7 +170,7 @@ export default function CommentThreadScreen() {
     toggleLike.mutate(
       { commentId: comment.id, userId, liked: !comment.likedByMe },
       {
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not update like."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update like.")),
       }
     );
   };
@@ -196,7 +197,7 @@ export default function CommentThreadScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2">Couldn't load this comment</Text>
           <Text className="text-muted text-sm text-center">
-            {error instanceof Error ? error.message : "It may have been deleted."}
+            {getFriendlyErrorMessage(error, "It may have been deleted.")}
           </Text>
         </View>
       ) : (

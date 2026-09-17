@@ -25,6 +25,7 @@ import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
 import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "AccountSettings">;
 
@@ -105,7 +106,7 @@ export default function AccountSettingsScreen() {
       await updateProfile(userId, { full_name: name.trim() });
       Alert.alert("Saved", "Your display name has been updated.");
     } catch (err) {
-      Alert.alert("Could not save", err instanceof Error ? err.message : "Something went wrong.");
+      Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
     } finally {
       setSavingName(false);
     }
@@ -118,7 +119,7 @@ export default function AccountSettingsScreen() {
       await updateProfile(userId, { phone: `${phoneDial}${phoneNumber}` });
       Alert.alert("Saved", "Your phone number has been updated.");
     } catch (err) {
-      Alert.alert("Could not save", err instanceof Error ? err.message : "Something went wrong.");
+      Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
     } finally {
       setSavingPhone(false);
     }
@@ -139,7 +140,7 @@ export default function AccountSettingsScreen() {
     } catch (err) {
       Alert.alert(
         "Couldn't delete account",
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        getFriendlyErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setIsDeleting(false);

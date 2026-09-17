@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { detectCurrentLocationLabel } from "../lib/locationPicker";
 import { colors } from "../constants/theme";
 import FieldInput from "./FieldInput";
+import { getFriendlyErrorMessage } from "../lib/friendlyError";
 
 export default function LocationPickerField({
   value,
@@ -22,7 +23,7 @@ export default function LocationPickerField({
       const label = await detectCurrentLocationLabel();
       onChange(label);
     } catch (err) {
-      Alert.alert("Couldn't Detect Location", err instanceof Error ? err.message : "Please try again.");
+      Alert.alert("Couldn't Detect Location", getFriendlyErrorMessage(err, "Please try again."));
     } finally {
       setDetecting(false);
     }

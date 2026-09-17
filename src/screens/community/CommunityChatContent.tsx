@@ -12,6 +12,7 @@ import {
 } from "../../hooks/useCommunityChat";
 import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -107,7 +108,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
       { userId, body },
       {
         onError: (err) => {
-          Alert.alert("Error", err instanceof Error ? err.message : "Could not post comment.");
+          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post comment."));
           setDraft(body);
         },
       }
@@ -122,7 +123,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
         style: "destructive",
         onPress: () =>
           deleteComment.mutate(comment.id, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete comment."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete comment.")),
           }),
       },
     ]);
@@ -133,7 +134,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
     toggleLike.mutate(
       { commentId: comment.id, userId, liked: !comment.likedByMe },
       {
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not update like."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update like.")),
       }
     );
   };
@@ -165,7 +166,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2">Couldn't load comments</Text>
           <Text className="text-muted text-sm text-center">
-            {error instanceof Error ? error.message : "Please try again."}
+            {getFriendlyErrorMessage(error, "Please try again.")}
           </Text>
         </View>
       ) : (

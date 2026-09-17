@@ -26,6 +26,7 @@ import LocationPickerField from "../../components/LocationPickerField";
 import FieldInput from "../../components/FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
@@ -72,7 +73,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
       const { publicUrl } = await uploadImage(assets[0], { bucket: "squad-icons", pathPrefix: squad.id });
       setIconUrl(publicUrl);
     } catch (err) {
-      Alert.alert("Upload failed", err instanceof Error ? err.message : "Could not upload icon.");
+      Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload icon."));
     } finally {
       setUploadingIcon(false);
     }
@@ -103,7 +104,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
       });
       navigation.goBack();
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Could not save changes. Please try again.");
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save changes. Please try again."));
     }
   };
 

@@ -9,6 +9,7 @@ import { useVenueReviews, useRespondToVenueReview } from "../../hooks/useVenueRe
 import type { VenueReview } from "../../lib/api/venueReviews";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "AdminReviews">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminReviews">;
@@ -72,7 +73,7 @@ export default function AdminReviewsScreen() {
           setRespondingTo(null);
           setResponseText("");
         },
-        onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not send response."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send response.")),
       }
     );
   };

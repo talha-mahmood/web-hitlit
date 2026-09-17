@@ -27,6 +27,7 @@ import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import type { TournamentMatch } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import {
   computeFixtures,
   computeStandings,
@@ -262,7 +263,7 @@ function MatchesPanel({
         onPress: () =>
           enterResult.mutate(
             { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save result.") }
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
           ),
       },
     ]);
@@ -276,7 +277,7 @@ function MatchesPanel({
         style: "destructive",
         onPress: () =>
           resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not clear result."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
           }),
       },
     ]);
@@ -480,7 +481,7 @@ function GroupsPanel({
         onPress: () =>
           assignTeam.mutate(
             { teamId, poolId },
-            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not assign team.") }
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not assign team.")) }
           ),
       },
     ]);
@@ -605,7 +606,7 @@ function PoolMatchesPanel({
         onPress: () =>
           enterResult.mutate(
             { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save result.") }
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
           ),
       },
     ]);
@@ -619,7 +620,7 @@ function PoolMatchesPanel({
         style: "destructive",
         onPress: () =>
           resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not clear result."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
           }),
       },
     ]);
@@ -769,7 +770,7 @@ function PoolPlayoffPanel({
         onPress: () =>
           enterResult.mutate(
             { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not save result.") }
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
           ),
       },
     ]);
@@ -783,7 +784,7 @@ function PoolPlayoffPanel({
         style: "destructive",
         onPress: () =>
           resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not clear result."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
           }),
       },
     ]);
@@ -993,7 +994,7 @@ export default function TournamentMatchesScreen() {
                 setScorecardMatch(null);
                 navigation.navigate("LiveScoring", { matchId });
               },
-              onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not link the scorecard."),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not link the scorecard.")),
             }
           );
         },
