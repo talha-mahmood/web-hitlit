@@ -187,35 +187,47 @@ export default function SelectTeamModal({
                   another team in this tournament {hiddenInSquadCount === 1 ? "isn't" : "aren't"} shown.
                 </Text>
               )}
-              <View style={{ gap: 8 }}>
-                {activeMembers.map((m) => {
-                  const selected = selectedMemberIds.has(m.user_id);
-                  const name = m.profiles?.full_name ?? "Member";
-                  return (
-                    <Pressable
-                      key={m.id}
-                      onPress={() => toggleMember(m.user_id)}
-                      className="flex-row items-center border rounded-xl px-3 py-2.5"
-                      style={{ borderColor: selected ? colors.primary : colors.border, gap: 10 }}
-                    >
-                      {m.profiles?.avatar ? (
-                        <Image source={{ uri: m.profiles.avatar }} className="w-9 h-9 rounded-full" />
-                      ) : (
-                        <View className="w-9 h-9 rounded-full bg-primary-light items-center justify-center">
-                          <Text className="text-primary font-bold text-xs">{name.charAt(0).toUpperCase()}</Text>
-                        </View>
-                      )}
-                      <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
-                        {name}
-                      </Text>
-                      <Ionicons
-                        name={selected ? "checkmark-circle" : "ellipse-outline"}
-                        size={22}
-                        color={selected ? colors.primary : colors.border}
-                      />
-                    </Pressable>
-                  );
-                })}
+              {/* More than 6 members scrolls inside its own fixed-height box
+                  instead of pushing the submit button far down the page —
+                  keeps it reachable without a long scroll on a big squad. */}
+              <View
+                style={activeMembers.length > 6 ? { maxHeight: 6 * 52 + 5 * 8 } : undefined}
+              >
+                <ScrollView
+                  contentContainerStyle={{ gap: 8 }}
+                  scrollEnabled={activeMembers.length > 6}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={activeMembers.length > 6}
+                >
+                  {activeMembers.map((m) => {
+                    const selected = selectedMemberIds.has(m.user_id);
+                    const name = m.profiles?.full_name ?? "Member";
+                    return (
+                      <Pressable
+                        key={m.id}
+                        onPress={() => toggleMember(m.user_id)}
+                        className="flex-row items-center border rounded-xl px-3 py-2.5"
+                        style={{ borderColor: selected ? colors.primary : colors.border, gap: 10 }}
+                      >
+                        {m.profiles?.avatar ? (
+                          <Image source={{ uri: m.profiles.avatar }} className="w-9 h-9 rounded-full" />
+                        ) : (
+                          <View className="w-9 h-9 rounded-full bg-primary-light items-center justify-center">
+                            <Text className="text-primary font-bold text-xs">{name.charAt(0).toUpperCase()}</Text>
+                          </View>
+                        )}
+                        <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
+                          {name}
+                        </Text>
+                        <Ionicons
+                          name={selected ? "checkmark-circle" : "ellipse-outline"}
+                          size={22}
+                          color={selected ? colors.primary : colors.border}
+                        />
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
               </View>
             </>
           )}
