@@ -19,6 +19,7 @@ export default function SelectTeamModal({
   defaultTeamName,
   submitting,
   isHost,
+  excludeUserIds,
   onSubmit,
 }: {
   visible: boolean;
@@ -31,6 +32,11 @@ export default function SelectTeamModal({
   // which outcome message to show; approval branching itself happens
   // server-side regardless of what's shown here.
   isHost: boolean;
+  // Players already JOINED on another team in this same tournament — a
+  // squad can fill more than one team here (e.g. a 22-player squad fielding
+  // two 11-a-side teams), but never with the same player twice, so these
+  // are hidden from the picker entirely rather than offered and rejected.
+  excludeUserIds: string[];
   onSubmit: (squadId: string, memberUserIds: string[], teamName: string) => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -39,9 +45,11 @@ export default function SelectTeamModal({
   const [selectedSquad, setSelectedSquad] = useState<SquadListItem | null>(null);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
 
-  const eligibleSquads = (squads ?? []).filter(
-    (s) => s.squad_members.filter((m) => m.status === "ACTIVE").length >= requiredCount
-  );
+  const excludeSet = new Set(excludeUserIds);
+  const availableMembers = (s: SquadListItem) =>
+    s.squad_members.filter((m) => m.status === "ACTIVE" && !excludeSet.has(m.user_id));
+
+  const eligibleSquads = (squads ?? []).filter((s) => availableMembers(s).length >= requiredCount);
 
   useEffect(() => {
     if (visible) {
@@ -79,9 +87,10 @@ export default function SelectTeamModal({
     onSubmit(selectedSquad.id, Array.from(selectedMemberIds), teamName.trim());
   };
 
-  const activeMembers = selectedSquad
-    ? selectedSquad.squad_members.filter((m) => m.status === "ACTIVE")
-    : [];
+  const activeMembers = selectedSquad ? availableMembers(selectedSquad) : [];
+  const hiddenInSquadCount = selectedSquad
+    ? selectedSquad.squad_members.filter((m) => m.status === "ACTIVE" && excludeSet.has(m.user_id)).length
+    : 0;
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -154,6 +163,12 @@ export default function SelectTeamModal({
                 Select exactly {requiredCount} member{requiredCount === 1 ? "" : "s"} ({selectedMemberIds.size}/
                 {requiredCount} selected)
               </Text>
+              {hiddenInSquadCount > 0 && (
+                <Text className="text-muted text-xs mb-2">
+                  {hiddenInSquadCount} squad member{hiddenInSquadCount === 1 ? "" : "s"} already playing for
+                  another team in this tournament {hiddenInSquadCount === 1 ? "isn't" : "aren't"} shown.
+                </Text>
+              )}
               <View style={{ gap: 8 }}>
                 {activeMembers.map((m) => {
                   const selected = selectedMemberIds.has(m.user_id);

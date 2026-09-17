@@ -293,6 +293,13 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     createTeam.isPending || leaveTeam.isPending || approveTeam.isPending || rejectPendingTeam.isPending;
 
   const fillTeam = fillTeamId ? teams.find((t) => t.id === fillTeamId) : undefined;
+  // A squad can fill more than one team here (its owner just repeats
+  // "Create Team" on another card with a different subset of members), but
+  // never with the same player on two teams — this is every player already
+  // JOINED anywhere else, so SelectTeamModal can hide them from the picker.
+  const joinedElsewhereUserIds = activeTeams.flatMap((t) =>
+    t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.user_id)
+  );
 
   const handleLeave = (teamId: string) => {
     if (!userId) return;
@@ -433,6 +440,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         defaultTeamName={fillTeam?.name ?? ""}
         submitting={squadFillTeam.isPending}
         isHost={isHost}
+        excludeUserIds={joinedElsewhereUserIds}
         onSubmit={(squadId, memberUserIds, teamName) => {
           if (!fillTeamId) return;
           squadFillTeam.mutate(
