@@ -16,7 +16,6 @@ type Gender = Database["public"]["Enums"]["gender_type"];
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
 ];
 
 // Pakistan's mobile numbers are always exactly 10 digits after +92; every
