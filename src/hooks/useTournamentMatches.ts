@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMatchesForTournament,
@@ -9,16 +10,41 @@ import {
   linkCricketMatch,
   syncCricketMatchResult,
 } from "../lib/api/tournamentMatches";
+import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
 
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
 
 export function useTournamentMatches(gameId: string) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["tournamentMatches", gameId],
     queryFn: () => fetchMatchesForTournament(gameId),
     enabled: !!gameId,
   });
+
+  useEffect(() => {
+    if (!gameId) return;
+    // A regular (non-tournament) 2-team game's single head-to-head match is
+    // inserted by a DB trigger the moment both teams are approved — not by
+    // any mutation this hook's callers fire directly — so the query needs
+    // its own realtime subscription rather than relying on a mutation's
+    // onSuccess to invalidate it.
+    const channel = supabase
+      .channel(uniqueChannelName(`tournamentMatches:${gameId}`))
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_matches", filter: `game_id=eq.${gameId}` },
+        () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [gameId, qc]);
+
+  return query;
 }
 
 export function useGenerateMatches(gameId: string) {

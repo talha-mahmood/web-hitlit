@@ -291,9 +291,11 @@ export default function GameDetailScreen() {
   // "part of the game" yet.
   const isApprovedTournamentParticipant = isTeamBased && !!userId && (tournamentTeams ?? []).some((t) => t.status === "APPROVED" && t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"));
 
-  // "Book Venue" only makes sense once the tournament's roster is actually
-  // locked in — every team slot filled and approved, same bar the Matches
-  // screen uses before it'll let the host generate fixtures.
+  // "Book Venue" only makes sense once the roster is actually locked in —
+  // every team slot filled and approved. Applies to any team-based game
+  // (tournaments, and regular games created with the team flow), same bar
+  // the Matches screen uses before it'll let a tournament host generate
+  // fixtures.
   const requiredTeams = game.number_of_teams ?? 0;
   const activeTournamentTeams = (tournamentTeams ?? []).filter((t) => t.status !== "REJECTED");
   const allTeamsFilled =
@@ -306,7 +308,7 @@ export default function GameDetailScreen() {
   // typed venue has no venue record to book against, so it's treated as
   // already settled the moment the roster fills.
   const isVenueBooked = hasLinkedVenue ? !!game.booking_id : hasCustomVenue;
-  const showBookVenue = isTournament && isCreator && allTeamsFilled && (hasLinkedVenue || hasCustomVenue);
+  const showBookVenue = isTeamBased && isCreator && allTeamsFilled && (hasLinkedVenue || hasCustomVenue);
 
   const skillLabel = !game.skill_level ? "Any Level" : game.skill_level === "BEGINNER" ? "Beginner" : game.skill_level === "INTERMEDIATE" ? "Intermediate" : game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
   const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;

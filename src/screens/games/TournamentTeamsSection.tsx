@@ -17,6 +17,9 @@ import {
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
+import { useTournamentMatches, useLinkCricketMatch } from "../../hooks/useTournamentMatches";
+import { useCreateCricketMatch } from "../../hooks/useCricket";
+import { friendlyCricketError } from "../../lib/api/cricket";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow } from "../../constants/theme";
@@ -24,8 +27,10 @@ import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
 import ChatIcon from "../../components/ChatIcon";
+import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
+import type { TournamentMatch } from "../../lib/api/tournamentMatches";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -280,6 +285,115 @@ function TeamCard({
   );
 }
 
+// A regular (non-tournament) team-based game only ever has one match — Team
+// A vs Team B — so instead of linking out to the tournament's multi-round
+// Matches screen, it's just shown as a single card right here. The match
+// row itself is created server-side (a trigger on tournament_teams) the
+// moment both teams are approved, mirroring the tournament flow's "Generate
+// Matches" step without needing the host to press anything.
+function HeadToHeadMatchCard({
+  game,
+  isHost,
+  teams,
+}: {
+  game: GameDetail;
+  isHost: boolean;
+  teams: TournamentTeam[];
+}) {
+  const navigation = useNavigation<Nav>();
+  const { data: matches } = useTournamentMatches(game.id);
+  const createCricketMatch = useCreateCricketMatch();
+  const linkCricketMatch = useLinkCricketMatch(game.id);
+  const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
+
+  const match = (matches ?? [])[0];
+  if (!match) return null;
+
+  const teamAName = match.team_a?.name ?? "Team A";
+  const teamBName = match.team_b?.name ?? "Team B";
+
+  // Same rule as the tournament's "Book Venue"/"Go To Scorecard": a real
+  // (dropdown-picked) venue needs an actual booking, a manually typed one
+  // is treated as already settled.
+  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
+  const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
+  const canGoToScorecard = isHost && isCricketSport && isVenueBooked && !!match.team_a && !!match.team_b;
+
+  const rosterByTeamId = new Map<string, string[]>();
+  for (const t of teams) {
+    rosterByTeamId.set(
+      t.id,
+      t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.profiles?.full_name ?? "Player")
+    );
+  }
+
+  const handleGoToScorecard = () => {
+    if (match.cricket_match_id) {
+      navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+      return;
+    }
+    setScorecardMatch(match);
+  };
+
+  const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {
+    if (!scorecardMatch?.team_a || !scorecardMatch?.team_b) return;
+    createCricketMatch.mutate(
+      {
+        userId: game.creator_id,
+        teamAName: scorecardMatch.team_a.name,
+        teamBName: scorecardMatch.team_b.name,
+        teamAPlayers: rosterByTeamId.get(scorecardMatch.team_a.id) ?? [],
+        teamBPlayers: rosterByTeamId.get(scorecardMatch.team_b.id) ?? [],
+        oversLimit: toss.oversLimit,
+        tossWinner: toss.tossWinner,
+        tossDecision: toss.tossDecision,
+      },
+      {
+        onSuccess: ({ matchId }) => {
+          linkCricketMatch.mutate(
+            { matchId: scorecardMatch.id, cricketMatchId: matchId },
+            {
+              onSuccess: () => {
+                setScorecardMatch(null);
+                navigation.navigate("LiveScoring", { matchId });
+              },
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not link the scorecard.")),
+            }
+          );
+        },
+        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start the scorecard.")),
+      }
+    );
+  };
+
+  return (
+    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
+      <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
+      <View className="bg-gray-50 rounded-xl px-3 py-2.5">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
+          <Text className="text-muted text-xs mx-2">vs</Text>
+          <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+        </View>
+        {canGoToScorecard && (
+          <Pressable onPress={handleGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
+            <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+          </Pressable>
+        )}
+      </View>
+
+      <StartScorecardModal
+        visible={!!scorecardMatch}
+        onClose={() => setScorecardMatch(null)}
+        teamAName={scorecardMatch?.team_a?.name ?? "Team A"}
+        teamBName={scorecardMatch?.team_b?.name ?? "Team B"}
+        submitting={createCricketMatch.isPending || linkCricketMatch.isPending}
+        onSubmit={handleStartScorecard}
+      />
+    </View>
+  );
+}
+
 export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const navigation = useNavigation<Nav>();
   const userId = useAuthStore((s) => s.session?.user.id);
@@ -294,7 +408,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   // This section is shared with regular (non-tournament) games that default
   // to 2 teams — everything below works the same either way, only the
   // player-facing copy needs to say "game" instead of "tournament" there.
-  const noun: "tournament" | "game" = game.game_type === "TOURNAMENT" ? "tournament" : "game";
+  const isTournament = game.game_type === "TOURNAMENT";
+  const noun: "tournament" | "game" = isTournament ? "tournament" : "game";
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [fillTeamId, setFillTeamId] = useState<string | null>(null);
   const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
@@ -383,26 +498,34 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
   return (
     <View>
-      {/* Groups/Fixtures/Matches/Standings all live on their own screen now
-          instead of stacking inline here — this just links to it. */}
-      <Pressable
-        onPress={() => navigation.navigate("TournamentMatches", { gameId: game.id })}
-        className="mx-4 mt-4 flex-row items-center justify-between border border-border rounded-2xl bg-white p-4"
-        style={cardShadow}
-      >
-        <View className="flex-row items-center" style={{ gap: 10 }}>
-          <View
-            className="items-center justify-center rounded-full"
-            style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
-          >
-            <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
+      {isTournament ? (
+        // Groups/Fixtures/Matches/Standings all live on their own screen —
+        // a real tournament can have multiple rounds/pools, so this just
+        // links out to it rather than trying to fit all of that here.
+        <Pressable
+          onPress={() => navigation.navigate("TournamentMatches", { gameId: game.id })}
+          className="mx-4 mt-4 flex-row items-center justify-between border border-border rounded-2xl bg-white p-4"
+          style={cardShadow}
+        >
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+            >
+              <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
+            </View>
+            <Text className="text-ink font-semibold text-sm">
+              {isPoolFormat ? "Groups & Matches List" : "Matches List"}
+            </Text>
           </View>
-          <Text className="text-ink font-semibold text-sm">
-            {isPoolFormat ? "Groups & Matches List" : "Matches List"}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-      </Pressable>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+      ) : (
+        // A regular game only ever has the one Team A vs Team B match, so
+        // it's shown inline here instead of linking out to the tournament's
+        // multi-round Matches screen.
+        <HeadToHeadMatchCard game={game} isHost={isHost} teams={teams} />
+      )}
 
       <View className="mx-4 mt-4 flex-row items-center justify-between mb-3">
         <Text className="text-ink font-semibold text-sm">
