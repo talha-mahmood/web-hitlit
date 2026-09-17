@@ -29,6 +29,14 @@ export function useGameMessages(gameId: string) {
           return [...prev, message];
         });
       },
+      // A soft-delete arrives as an UPDATE — only deleted_at actually
+      // changed, so merge just that in rather than overwriting the row
+      // (the realtime payload doesn't carry the joined profile).
+      (message) => {
+        qc.setQueryData<GameMessage[]>(["gameMessages", gameId], (prev) =>
+          prev ? prev.map((m) => (m.id === message.id ? { ...m, deleted_at: message.deleted_at } : m)) : prev
+        );
+      },
       (messageId) => {
         qc.setQueryData<GameMessage[]>(["gameMessages", gameId], (prev) =>
           prev ? prev.filter((m) => m.id !== messageId) : prev
@@ -45,8 +53,8 @@ export function useGameMessages(gameId: string) {
 
 export function useSendGameMessage(gameId: string) {
   return useMutation({
-    mutationFn: ({ senderId, message }: { senderId: string; message: string }) =>
-      sendGameMessage(gameId, senderId, message),
+    mutationFn: ({ senderId, message, parentId }: { senderId: string; message: string; parentId?: string }) =>
+      sendGameMessage(gameId, senderId, message, parentId),
   });
 }
 

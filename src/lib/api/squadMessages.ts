@@ -7,19 +7,24 @@ type SquadMessageRow = Database["public"]["Tables"]["squad_messages"]["Row"];
 
 export type SquadMessage = Pick<
   SquadMessageRow,
-  "id" | "squad_id" | "sender_id" | "message" | "created_at"
+  "id" | "squad_id" | "sender_id" | "message" | "created_at" | "parent_id" | "deleted_at"
 > & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
 };
 
-const MESSAGE_SELECT = "id, squad_id, sender_id, message, created_at, profiles(id, full_name, avatar)";
+const MESSAGE_SELECT =
+  "id, squad_id, sender_id, message, created_at, parent_id, deleted_at, profiles(id, full_name, avatar)";
 
+// One flat, chronological list — replies show inline (WhatsApp-style, with
+// a quoted preview of the message they're replying to) rather than in a
+// separate thread screen. A soft-deleted message (deleted_at set) stays in
+// the list too — the caller renders "This message was deleted" in its
+// place instead of removing it, same as WhatsApp.
 export async function fetchSquadMessages(squadId: string): Promise<SquadMessage[]> {
   const { data, error } = await supabase
     .from("squad_messages")
     .select(MESSAGE_SELECT)
     .eq("squad_id", squadId)
-    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as SquadMessage[];
@@ -28,11 +33,12 @@ export async function fetchSquadMessages(squadId: string): Promise<SquadMessage[
 export async function sendSquadMessage(
   squadId: string,
   senderId: string,
-  message: string
+  message: string,
+  parentId?: string
 ): Promise<void> {
   const { error } = await supabase
     .from("squad_messages")
-    .insert({ squad_id: squadId, sender_id: senderId, message });
+    .insert({ squad_id: squadId, sender_id: senderId, message, parent_id: parentId ?? null });
   if (error) throw new Error(error.message);
 }
 
@@ -67,12 +73,15 @@ export async function markSquadChatRead(squadId: string, userId: string): Promis
   if (error) throw new Error(error.message);
 }
 
-// Messages older than 24h are hard-deleted by a DB cron job, so a DELETE event
-// means "this expired," not "someone chose to remove it" — the caller drops it
-// from the local list either way.
+// Messages older than 24h are hard-deleted by a DB cron job (a real DELETE
+// event — the message is gone, drop it from the list); a user deleting
+// their own message is a soft delete instead (UPDATE setting deleted_at) —
+// the message stays in the list, just rendered as "This message was
+// deleted" (see onUpdate).
 export function subscribeToSquadMessages(
   squadId: string,
   onInsert: (message: SquadMessage) => void,
+  onUpdate: (message: SquadMessage) => void,
   onDelete: (messageId: string) => void
 ): RealtimeChannel {
   return supabase
@@ -93,7 +102,26 @@ export function subscribeToSquadMessages(
           sender_id: row.sender_id,
           message: row.message,
           created_at: row.created_at,
+          parent_id: row.parent_id,
+          deleted_at: row.deleted_at,
           profiles: data ?? null,
+        });
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "squad_messages", filter: `squad_id=eq.${squadId}` },
+      (payload) => {
+        const row = payload.new as SquadMessageRow;
+        onUpdate({
+          id: row.id,
+          squad_id: row.squad_id,
+          sender_id: row.sender_id,
+          message: row.message,
+          created_at: row.created_at,
+          parent_id: row.parent_id,
+          deleted_at: row.deleted_at,
+          profiles: null,
         });
       }
     )

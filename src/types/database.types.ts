@@ -802,6 +802,8 @@ export type Database = {
           game_id: string
           id: string
           message: string
+          parent_id: string | null
+          root_id: string | null
           sender_id: string
           updated_at: string
         }
@@ -811,6 +813,8 @@ export type Database = {
           game_id: string
           id?: string
           message: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id: string
           updated_at?: string
         }
@@ -820,6 +824,8 @@ export type Database = {
           game_id?: string
           id?: string
           message?: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id?: string
           updated_at?: string
         }
@@ -829,6 +835,20 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "game_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_messages_root_id_fkey"
+            columns: ["root_id"]
+            isOneToOne: false
+            referencedRelation: "game_messages"
             referencedColumns: ["id"]
           },
           {
@@ -1535,6 +1555,8 @@ export type Database = {
           deleted_at: string | null
           id: string
           message: string
+          parent_id: string | null
+          root_id: string | null
           sender_id: string
           squad_id: string
           updated_at: string
@@ -1544,6 +1566,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           message: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id: string
           squad_id: string
           updated_at?: string
@@ -1553,11 +1577,27 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           message?: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id?: string
           squad_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "squad_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "squad_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_messages_root_id_fkey"
+            columns: ["root_id"]
+            isOneToOne: false
+            referencedRelation: "squad_messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "squad_messages_sender_id_fkey"
             columns: ["sender_id"]
@@ -1685,6 +1725,8 @@ export type Database = {
           deleted_at: string | null
           id: string
           message: string
+          parent_id: string | null
+          root_id: string | null
           sender_id: string
           team_id: string
           updated_at: string
@@ -1694,6 +1736,8 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           message: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id: string
           team_id: string
           updated_at?: string
@@ -1703,11 +1747,27 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           message?: string
+          parent_id?: string | null
+          root_id?: string | null
           sender_id?: string
           team_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "team_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "team_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_messages_root_id_fkey"
+            columns: ["root_id"]
+            isOneToOne: false
+            referencedRelation: "team_messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "team_messages_sender_id_fkey"
             columns: ["sender_id"]
@@ -2268,6 +2328,10 @@ export type Database = {
       delete_old_squad_messages: { Args: never; Returns: undefined }
       delete_old_team_messages: { Args: never; Returns: undefined }
       delete_own_account: { Args: never; Returns: undefined }
+      delete_own_chat_message: {
+        Args: { p_message_id: string; p_table: string }
+        Returns: undefined
+      }
       expire_past_games: { Args: never; Returns: undefined }
       generate_game_code: { Args: never; Returns: string }
       generate_squad_code: { Args: never; Returns: string }

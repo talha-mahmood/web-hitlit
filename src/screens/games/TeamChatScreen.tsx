@@ -16,12 +16,15 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTeamMessages, useSendTeamMessage } from "../../hooks/useTeamMessages";
+import { useDeleteChatMessage } from "../../hooks/useChatThread";
+import { useSeenBy } from "../../hooks/useChatReads";
 import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { markTeamChatRead, type TeamMessage } from "../../lib/api/teamMessages";
 import ChatIcon from "../../components/ChatIcon";
+import SeenByModal from "../../components/SeenByModal";
 
 const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
 
@@ -73,21 +76,52 @@ function formatMessageTime(iso: string): string {
   });
 }
 
+// The small quoted box WhatsApp shows above a reply — tapping it jumps back
+// to the original message. If that message has since been deleted, the
+// quote shows the same placeholder the deleted message itself does.
+function QuotedPreview({ parent, isOwn, onPress }: { parent: TeamMessage; isOwn: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="rounded-lg px-2.5 py-1.5 mb-1"
+      style={{ backgroundColor: isOwn ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.05)", borderLeftWidth: 3, borderLeftColor: isOwn ? "white" : colors.primary }}
+    >
+      <Text className={`text-xs font-semibold ${isOwn ? "text-white" : "text-primary"}`} numberOfLines={1}>
+        {parent.profiles?.full_name ?? "Member"}
+      </Text>
+      <Text className={`text-xs ${isOwn ? "text-white/80" : "text-muted"}`} numberOfLines={1} style={parent.deleted_at ? { fontStyle: "italic" } : undefined}>
+        {parent.deleted_at ? "This message was deleted" : parent.message}
+      </Text>
+    </Pressable>
+  );
+}
+
 function MessageBubble({
   message,
   isOwn,
+  parent,
+  isHighlighted,
   onLongPress,
+  onReply,
+  onDelete,
+  onJumpToParent,
 }: {
   message: TeamMessage;
   isOwn: boolean;
+  parent: TeamMessage | null;
+  isHighlighted: boolean;
   onLongPress: () => void;
+  onReply: () => void;
+  onDelete: () => void;
+  onJumpToParent: () => void;
 }) {
   const name = message.profiles?.full_name ?? "Member";
   const initials = name.charAt(0).toUpperCase();
+  const isDeleted = !!message.deleted_at;
 
   return (
     <Pressable
-      onLongPress={isOwn ? undefined : onLongPress}
+      onLongPress={isDeleted ? undefined : onLongPress}
       className={`flex-row px-4 py-1.5 ${isOwn ? "justify-end" : "justify-start"}`}
       style={{ gap: 8 }}
     >
@@ -103,12 +137,35 @@ function MessageBubble({
         {!isOwn && <Text className="text-muted text-xs mb-0.5 ml-1">{name}</Text>}
         <View
           className={`px-3 py-2 rounded-2xl ${isOwn ? "bg-primary rounded-br-sm" : "bg-gray-100 rounded-bl-sm"}`}
+          style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
         >
-          <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
+          {isDeleted ? (
+            <Text
+              className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
+              style={{ fontStyle: "italic" }}
+            >
+              This message was deleted
+            </Text>
+          ) : (
+            <>
+              {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
+              <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
+            </>
+          )}
         </View>
-        <Text className={`text-muted text-xs mt-0.5 ${isOwn ? "text-right mr-1" : "ml-1"}`}>
-          {formatMessageTime(message.created_at)}
-        </Text>
+        {!isDeleted && (
+          <View className={`flex-row items-center mt-1 ${isOwn ? "justify-end mr-1" : "ml-1"}`} style={{ gap: 12 }}>
+            <Text className="text-muted text-xs">{formatMessageTime(message.created_at)}</Text>
+            <Pressable onPress={onReply} hitSlop={8}>
+              <Text className="text-primary text-xs font-medium">Reply</Text>
+            </Pressable>
+            {isOwn && (
+              <Pressable onPress={onDelete} hitSlop={8}>
+                <Ionicons name="trash-outline" size={13} color={colors.muted} />
+              </Pressable>
+            )}
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -121,6 +178,9 @@ export default function TeamChatScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const listRef = useRef<FlatList>(null);
   const [draft, setDraft] = useState("");
+  const [replyTarget, setReplyTarget] = useState<TeamMessage | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [seenByTarget, setSeenByTarget] = useState<TeamMessage | null>(null);
 
   const { data: allMessages, isLoading, error } = useTeamMessages(params.teamId);
   const sendMessage = useSendTeamMessage(params.teamId);
@@ -130,6 +190,50 @@ export default function TeamChatScreen() {
   const qc = useQueryClient();
 
   const messages = (allMessages ?? []).filter((m) => !blockedIds?.has(m.sender_id));
+  const deleteMessage = useDeleteChatMessage("team", params.teamId);
+  const { data: seenBy, isLoading: seenByLoading } = useSeenBy(
+    "team",
+    params.teamId,
+    seenByTarget?.created_at,
+    seenByTarget?.sender_id ?? "",
+    !!seenByTarget
+  );
+
+  const handleDelete = (message: TeamMessage) => {
+    Alert.alert("Delete Message", "Delete this message? This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () =>
+          deleteMessage.mutate(message.id, {
+            onError: (err) => Alert.alert("Error", err instanceof Error ? err.message : "Could not delete message."),
+          }),
+      },
+    ]);
+  };
+
+  // FlatList can't jump straight to an index it hasn't measured yet (common
+  // for a message further up an active chat) — scrollToIndex then just
+  // throws instead of scrolling. onScrollToIndexFailed's job is to recover:
+  // jump to the estimated offset first (forcing those rows to render/
+  // measure), then retry the precise scroll once they have. Briefly
+  // highlighting the landed-on message (like WhatsApp) makes it obvious
+  // which one it jumped to, since it's easy to lose track of a scroll.
+  const handleJumpToParent = (parentId: string) => {
+    const index = messages.findIndex((m) => m.id === parentId);
+    if (index < 0) return;
+    listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+    setHighlightedId(parentId);
+    setTimeout(() => setHighlightedId((cur) => (cur === parentId ? null : cur)), 1500);
+  };
+
+  const handleScrollToIndexFailed = (info: { index: number; averageItemLength: number }) => {
+    listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
+    setTimeout(() => {
+      listRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+    }, 100);
+  };
 
   // Marks the chat read on open, and again whenever a new message arrives
   // (via realtime) while this screen stays mounted — otherwise the unread
@@ -145,8 +249,10 @@ export default function TeamChatScreen() {
     const text = draft.trim();
     if (!text || !userId) return;
     setDraft("");
+    const parentId = replyTarget?.id;
+    setReplyTarget(null);
     sendMessage.mutate(
-      { senderId: userId, message: text },
+      { senderId: userId, message: text, parentId },
       {
         onError: (err) => {
           Alert.alert("Error", err instanceof Error ? err.message : "Could not send message.");
@@ -195,12 +301,22 @@ export default function TeamChatScreen() {
           className="flex-1"
           data={messages}
           keyExtractor={(m) => m.id}
+          onScrollToIndexFailed={handleScrollToIndexFailed}
           renderItem={({ item }) => (
             <MessageBubble
               message={item}
               isOwn={item.sender_id === userId}
+              parent={item.parent_id ? (messages.find((m) => m.id === item.parent_id) ?? null) : null}
+              isHighlighted={item.id === highlightedId}
+              onReply={() => setReplyTarget(item)}
+              onDelete={() => handleDelete(item)}
+              onJumpToParent={() => item.parent_id && handleJumpToParent(item.parent_id)}
               onLongPress={() => {
                 if (!userId) return;
+                if (item.sender_id === userId) {
+                  setSeenByTarget(item);
+                  return;
+                }
                 showMessageActions({
                   message: item,
                   teamId: params.teamId,
@@ -251,6 +367,23 @@ export default function TeamChatScreen() {
         />
       )}
 
+      {/* Reply preview — cleared on send or dismissed manually. */}
+      {replyTarget && (
+        <View className="flex-row items-center justify-between px-4 py-2 border-t border-border bg-primary-light">
+          <View className="flex-1 mr-2">
+            <Text className="text-primary text-xs font-semibold" numberOfLines={1}>
+              Replying to {replyTarget.profiles?.full_name ?? "Member"}
+            </Text>
+            <Text className="text-muted text-xs" numberOfLines={1}>
+              {replyTarget.message}
+            </Text>
+          </View>
+          <Pressable onPress={() => setReplyTarget(null)} hitSlop={8}>
+            <Ionicons name="close" size={18} color={colors.primary} />
+          </Pressable>
+        </View>
+      )}
+
       {/* Composer */}
       <View
         className="flex-row items-center border-t border-border px-3 py-2"
@@ -272,6 +405,13 @@ export default function TeamChatScreen() {
           <Ionicons name="send" size={16} color="white" />
         </Pressable>
       </View>
+
+      <SeenByModal
+        visible={!!seenByTarget}
+        onClose={() => setSeenByTarget(null)}
+        seenBy={seenBy ?? []}
+        isLoading={seenByLoading}
+      />
     </KeyboardAvoidingView>
   );
 }
