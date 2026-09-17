@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCreateSquad } from "../../hooks/useSquads";
 import { useSports } from "../../hooks/useSports";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
@@ -39,8 +40,20 @@ export default function CreateSquadScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const myGender = useProfileStore((s) => s.profile?.gender);
   const createSquad = useCreateSquad();
   const { data: sports } = useSports();
+
+  // The squad owner auto-joins their own squad as captain, and a Male/Female
+  // Only squad only accepts members matching that gender (see the
+  // squad_members RLS policy) — so a restricted option that would exclude
+  // the creator themselves is never offered.
+  const genderOptions: { label: string; value: Gender }[] =
+    myGender === "male"
+      ? [{ label: "Everyone", value: "mixed" }, { label: "Male Only", value: "male" }]
+      : myGender === "female"
+        ? [{ label: "Everyone", value: "mixed" }, { label: "Female Only", value: "female" }]
+        : [{ label: "Everyone", value: "mixed" }];
 
   const [name, setName] = useState("");
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -194,15 +207,7 @@ export default function CreateSquadScreen() {
 
         {/* Open To */}
         <SectionLabel title="Open To" icon="people-outline" />
-        <PillRow<Gender>
-          options={[
-            { label: "Everyone", value: "mixed" },
-            { label: "Male Only", value: "male" },
-            { label: "Female Only", value: "female" },
-          ]}
-          value={gender}
-          onChange={setGender}
-        />
+        <PillRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
 
         {/* Location */}
         <SectionLabel title="Location" required />

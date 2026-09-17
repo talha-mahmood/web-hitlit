@@ -336,6 +336,7 @@ export default function HomeScreen() {
               <HomeSquadCard
                 squad={item}
                 currentUserId={userId}
+                myGender={profile?.gender}
                 onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
               />
             </View>

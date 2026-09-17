@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSquadDetail, useUpdateSquad } from "../../hooks/useSquads";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
@@ -37,6 +38,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const updateSquad = useUpdateSquad();
+  const myGender = useProfileStore((s) => s.profile?.gender);
 
   const [name, setName] = useState(squad.name);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(squad.skill_level);
@@ -45,6 +47,22 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   const [gender, setGender] = useState<Gender>(squad.gender);
   const [iconUrl, setIconUrl] = useState<string | null>(squad.icon_url);
   const [uploadingIcon, setUploadingIcon] = useState(false);
+
+  // Same reasoning as CreateSquadScreen: the owner is always a member of
+  // their own squad, and a Male/Female Only squad only accepts matching
+  // members (squad_members RLS) — so only offer a restriction the owner
+  // themselves satisfies. The squad's current setting stays selectable even
+  // if it wouldn't otherwise be offered, so existing data never disappears
+  // from the picker.
+  const genderOptions: { label: string; value: Gender }[] =
+    myGender === "male"
+      ? [{ label: "Everyone", value: "mixed" }, { label: "Male Only", value: "male" }]
+      : myGender === "female"
+        ? [{ label: "Everyone", value: "mixed" }, { label: "Female Only", value: "female" }]
+        : [{ label: "Everyone", value: "mixed" }];
+  if (!genderOptions.some((o) => o.value === squad.gender)) {
+    genderOptions.push({ label: squad.gender === "male" ? "Male Only" : "Female Only", value: squad.gender });
+  }
 
   const handlePickIcon = async () => {
     const assets = await pickImages({});
@@ -161,15 +179,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
 
         {/* Open To */}
         <SectionLabel title="Open To" icon="people-outline" />
-        <PillRow<Gender>
-          options={[
-            { label: "Everyone", value: "mixed" },
-            { label: "Male Only", value: "male" },
-            { label: "Female Only", value: "female" },
-          ]}
-          value={gender}
-          onChange={setGender}
-        />
+        <PillRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
 
         {/* Location */}
         <SectionLabel title="Location" required />

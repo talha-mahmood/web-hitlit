@@ -342,7 +342,10 @@ export default function CreateGameScreen() {
   // game/tournament created here is public, matching the games list query's
   // `.eq("visibility", "public")` filter.
   const visibility: Visibility = "public";
-  const [gender, setGender] = useState<Gender>("mixed");
+  // "Open To" isn't a user-facing choice here (removed from the form) —
+  // every game/tournament created is open to everyone by default; the host
+  // can still narrow it later from Edit Game if needed.
+  const gender: Gender = "mixed";
   const [description, setDescription] = useState("");
   const [entryFee, setEntryFee] = useState("0");
 
@@ -1001,18 +1004,6 @@ export default function CreateGameScreen() {
           ]}
           value={skillLevel}
           onChange={setSkillLevel}
-        />
-
-        {/* Gender */}
-        <SectionLabel title="Open To" icon="people-outline" compact />
-        <PillRow<Gender>
-          options={[
-            { label: "Everyone", value: "mixed" },
-            { label: "Male Only", value: "male" },
-            { label: "Female Only", value: "female" },
-          ]}
-          value={gender}
-          onChange={setGender}
         />
 
         {/* Entry Fee */}

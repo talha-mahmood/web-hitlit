@@ -75,10 +75,12 @@ export function HomeSportTile({
 export function HomeSquadCard({
   squad,
   currentUserId,
+  myGender,
   onPress,
 }: {
   squad: SquadListItem;
   currentUserId?: string;
+  myGender?: string | null;
   onPress: () => void;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
@@ -86,12 +88,23 @@ export function HomeSquadCard({
   // Owner-closed via "Block New Join Requests" — treated the same as full.
   const isClosedToJoins = isFull || squad.join_requests_blocked;
   const hasJoined = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
+  const hasRequested = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
+  const isGenderRestricted =
+    squad.gender !== "mixed" && (!myGender || myGender !== squad.gender) && !hasJoined && !hasRequested;
   const { icon, bg, fg } = getSportIcon(squad.sports?.name ?? "");
   const photo = squad.icon_url ? { uri: squad.icon_url } : getSportImage(squad.sports?.name ?? "");
 
-  const statusLabel = isClosedToJoins ? "Full" : hasJoined ? "Joined" : "Join";
-  const statusColor = isClosedToJoins ? colors.muted : hasJoined ? colors.primary : colors.primary;
-  const statusBg = isClosedToJoins ? "#F3F4F6" : hasJoined ? colors.primaryLight : colors.primaryLight;
+  const statusLabel = isClosedToJoins
+    ? "Full"
+    : isGenderRestricted
+      ? squad.gender === "male"
+        ? "Male Only"
+        : "Female Only"
+      : hasJoined
+        ? "Joined"
+        : "Join";
+  const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : hasJoined ? colors.primary : colors.primary;
+  const statusBg = isClosedToJoins || isGenderRestricted ? "#F3F4F6" : hasJoined ? colors.primaryLight : colors.primaryLight;
 
   return (
     <Bouncy

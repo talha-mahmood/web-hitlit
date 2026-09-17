@@ -18,6 +18,7 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import type { SquadListItem } from "../../lib/api/squads";
 import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 import { matchesLocationQuery } from "../../lib/locationFilter";
 
@@ -28,11 +29,12 @@ type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
 // even though its own label has no icon and varies ("Join"/"Joined"/"Requested").
 const JOIN_BUTTON_MIN_WIDTH = 96;
 
-function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
+function SquadCard({ squad, onPress, onJoinPress, currentUserId, myGender, index }: {
   squad: SquadListItem;
   onPress: () => void;
   onJoinPress: () => void;
   currentUserId?: string;
+  myGender?: string | null;
   index: number;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
@@ -43,6 +45,11 @@ function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
   const isMySquad = squad.squad_owner_id === currentUserId;
   const hasJoined = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
   const hasRequested = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
+  // A Male Only/Female Only squad can't be joined by someone who doesn't
+  // match — enforced server-side too (squad_members RLS), this just keeps
+  // the CTA from offering something that would be rejected.
+  const isGenderRestricted =
+    squad.gender !== "mixed" && (!myGender || myGender !== squad.gender) && !hasJoined && !hasRequested;
   const skill = squad.skill_level;
   const skillColor = skill ? SQUAD_SKILL_COLORS[skill] : null;
 
@@ -86,7 +93,14 @@ function SquadCard({ squad, onPress, onJoinPress, currentUserId, index }: {
                 <Text className="text-red-600 text-xs font-medium">Full</Text>
               </View>
             )}
-            {!isMySquad && !isClosedToJoins && (
+            {!isMySquad && !isClosedToJoins && isGenderRestricted && (
+              <View className="bg-gray-100 px-2 py-0.5 rounded-full">
+                <Text className="text-muted text-xs font-medium">
+                  {squad.gender === "male" ? "Male Only" : "Female Only"}
+                </Text>
+              </View>
+            )}
+            {!isMySquad && !isClosedToJoins && !isGenderRestricted && (
               <Bouncy onPress={onJoinPress} scaleTo={0.94}>
                 {hasJoined ? (
                   <View
@@ -174,6 +188,7 @@ export default function SquadsListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const myGender = useProfileStore((s) => s.profile?.gender);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -364,6 +379,7 @@ export default function SquadsListScreen() {
             <SquadCard
               squad={item}
               currentUserId={userId}
+              myGender={myGender}
               index={index}
               onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
               onJoinPress={() => setJoinTargetSquad(item)}

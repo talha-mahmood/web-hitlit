@@ -24,6 +24,7 @@ import {
   useDeclineSquadInvite,
 } from "../../hooks/useInvites";
 import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
@@ -198,6 +199,7 @@ export default function SquadDetailScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
+  const myGender = useProfileStore((s) => s.profile?.gender);
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -253,6 +255,11 @@ export default function SquadDetailScreen() {
     : null;
   const hasJoined = !!myMemberRecord;
   const hasRequested = !!myPendingRecord;
+  // A Male Only/Female Only squad can't be joined by someone who doesn't
+  // match — enforced server-side too (squad_members RLS), this just shows
+  // why up front instead of letting them tap Request to Join and hit an error.
+  const isGenderRestricted =
+    squad.gender !== "mixed" && (!myGender || myGender !== squad.gender) && !hasJoined && !hasRequested;
   const pendingRequests = squad.squad_members.filter((m) => m.status === "PENDING");
 
   const handleJoin = () => {
@@ -761,6 +768,13 @@ export default function SquadDetailScreen() {
         ) : isClosedToJoins ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center">
             <Text className="text-muted font-semibold">Squad is Full</Text>
+          </View>
+        ) : isGenderRestricted ? (
+          <View className="bg-gray-100 rounded-xl py-4 items-center px-6">
+            <Text className="text-muted font-semibold text-center">
+              This squad is open to {squad.gender === "male" ? "male" : "female"} players only, so you can't
+              request to join.
+            </Text>
           </View>
         ) : (
           <Pressable
