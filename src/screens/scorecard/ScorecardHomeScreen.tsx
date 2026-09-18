@@ -83,6 +83,14 @@ export default function ScorecardHomeScreen() {
           subtitle="Points, games & sets with game/break/set/match point"
           onPress={() => navigation.navigate("TennisHome")}
         />
+        <SportCard
+          icon="table-tennis"
+          iconColor="#6D28D9"
+          bgColor="#EDE9FE"
+          title="Pickleball"
+          subtitle="Side-out or rally scoring, singles & doubles"
+          onPress={() => navigation.navigate("PickleballHome")}
+        />
       </View>
     </View>
   );

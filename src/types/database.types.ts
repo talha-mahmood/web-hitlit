@@ -1358,6 +1358,100 @@ export type Database = {
           },
         ]
       }
+      pickleball_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          first_serving_team: string
+          id: string
+          play_mode: string
+          result_summary: string | null
+          scoring_mode: string
+          status: string
+          team_a_name: string
+          team_a_players: string[]
+          team_b_name: string
+          team_b_players: string[]
+          user_id: string
+          venue: string | null
+          winner_team: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          first_serving_team: string
+          id?: string
+          play_mode: string
+          result_summary?: string | null
+          scoring_mode: string
+          status?: string
+          team_a_name: string
+          team_a_players?: string[]
+          team_b_name: string
+          team_b_players?: string[]
+          user_id: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          first_serving_team?: string
+          id?: string
+          play_mode?: string
+          result_summary?: string | null
+          scoring_mode?: string
+          status?: string
+          team_a_name?: string
+          team_a_players?: string[]
+          team_b_name?: string
+          team_b_players?: string[]
+          user_id?: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickleball_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pickleball_rallies: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          seq?: number
+          winner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickleball_rallies_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "pickleball_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
