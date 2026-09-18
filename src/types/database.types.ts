@@ -1185,6 +1185,103 @@ export type Database = {
           },
         ]
       }
+      padel_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          deuce_type: string
+          first_server_player_index: number
+          first_server_team: string
+          format: string
+          id: string
+          result_summary: string | null
+          status: string
+          team_a_name: string
+          team_a_players: string[]
+          team_b_name: string
+          team_b_players: string[]
+          user_id: string
+          venue: string | null
+          winner_team: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          deuce_type: string
+          first_server_player_index: number
+          first_server_team: string
+          format: string
+          id?: string
+          result_summary?: string | null
+          status?: string
+          team_a_name: string
+          team_a_players?: string[]
+          team_b_name: string
+          team_b_players?: string[]
+          user_id: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          deuce_type?: string
+          first_server_player_index?: number
+          first_server_team?: string
+          format?: string
+          id?: string
+          result_summary?: string | null
+          status?: string
+          team_a_name?: string
+          team_a_players?: string[]
+          team_b_name?: string
+          team_b_players?: string[]
+          user_id?: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "padel_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      padel_points: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          seq?: number
+          winner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "padel_points_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "padel_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
