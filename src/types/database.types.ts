@@ -737,6 +737,159 @@ export type Database = {
           },
         ]
       }
+      football_goals: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          minute_label: string
+          phase: string
+          seq: number
+          team: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          minute_label: string
+          phase: string
+          seq: number
+          team: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          minute_label?: string
+          phase?: string
+          seq?: number
+          team?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "football_goals_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "football_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      football_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          extra_time_first_added_minutes: number | null
+          extra_time_first_kickoff_at: string | null
+          extra_time_second_added_minutes: number | null
+          extra_time_second_kickoff_at: string | null
+          first_half_added_minutes: number | null
+          first_half_kickoff_at: string | null
+          id: string
+          is_draw: boolean
+          phase: string
+          requires_winner: boolean
+          result_summary: string | null
+          second_half_added_minutes: number | null
+          second_half_kickoff_at: string | null
+          status: string
+          team_a_name: string
+          team_b_name: string
+          user_id: string
+          venue: string | null
+          winner_team: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          extra_time_first_added_minutes?: number | null
+          extra_time_first_kickoff_at?: string | null
+          extra_time_second_added_minutes?: number | null
+          extra_time_second_kickoff_at?: string | null
+          first_half_added_minutes?: number | null
+          first_half_kickoff_at?: string | null
+          id?: string
+          is_draw?: boolean
+          phase?: string
+          requires_winner?: boolean
+          result_summary?: string | null
+          second_half_added_minutes?: number | null
+          second_half_kickoff_at?: string | null
+          status?: string
+          team_a_name: string
+          team_b_name: string
+          user_id: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          extra_time_first_added_minutes?: number | null
+          extra_time_first_kickoff_at?: string | null
+          extra_time_second_added_minutes?: number | null
+          extra_time_second_kickoff_at?: string | null
+          first_half_added_minutes?: number | null
+          first_half_kickoff_at?: string | null
+          id?: string
+          is_draw?: boolean
+          phase?: string
+          requires_winner?: boolean
+          result_summary?: string | null
+          second_half_added_minutes?: number | null
+          second_half_kickoff_at?: string | null
+          status?: string
+          team_a_name?: string
+          team_b_name?: string
+          user_id?: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "football_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      football_penalty_kicks: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          scored: boolean
+          seq: number
+          team: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          scored: boolean
+          seq: number
+          team: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          scored?: boolean
+          seq?: number
+          team?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "football_penalty_kicks_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "football_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_chat_reads: {
         Row: {
           game_id: string

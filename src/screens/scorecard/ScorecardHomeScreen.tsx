@@ -107,6 +107,14 @@ export default function ScorecardHomeScreen() {
           subtitle="Rally scoring to 11, with ITTF service rotation"
           onPress={() => navigation.navigate("TableTennisHome")}
         />
+        <SportCard
+          icon="soccer"
+          iconColor="#0F766E"
+          bgColor="#CCFBF1"
+          title="Football"
+          subtitle="Live match clock, halves, extra time & penalties"
+          onPress={() => navigation.navigate("FootballHome")}
+        />
       </ScrollView>
     </View>
   );

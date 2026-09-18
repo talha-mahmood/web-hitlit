@@ -1,0 +1,220 @@
+// Pure football (association football) scoring engine — no I/O, no React.
+// Unlike the other six sports built into this scorecard (cricket, padel,
+// tennis, pickleball, badminton, table tennis), football has no
+// point/game/set ladder at all — it's a running match clock plus a log of
+// goals. So instead of replaying an abstract "who won the point" log, this
+// module works off:
+//   - a handful of phase-transition timestamps (when each half/period
+//     kicked off, how much added time the referee gave at the end of each)
+//     stored directly on the match row, since a real match can't be
+//     "rewound" the way a sequence of points can — there's nothing to undo
+//     about when kickoff happened;
+//   - an append-only goal log (and a separate penalty-kick log for a
+//     shootout), which IS replayed/derived from, exactly like the other
+//     five engines — this is what "Undo Last Goal" operates on.
+//
+// The match clock is continuous, not reset at half-time: the second half's
+// displayed time runs 45:00 → 90:00 (not 0:00 → 45:00), matching how real
+// broadcasts show it and how the spec's own "67:20" second-half example
+// already implied.
+
+export type Team = "A" | "B";
+
+export type Phase =
+  | "NOT_STARTED"
+  | "FIRST_HALF"
+  | "HALF_TIME"
+  | "SECOND_HALF"
+  | "FULL_TIME"
+  | "EXTRA_TIME_FIRST"
+  | "EXTRA_TIME_BREAK"
+  | "EXTRA_TIME_SECOND"
+  | "EXTRA_TIME_FULL_TIME"
+  | "PENALTIES"
+  | "COMPLETE";
+
+// A phase that's actively "running" — its elapsed time counts up live.
+// Break/complete phases are frozen at whatever the clock read when they began.
+const RUNNING_PHASES: Phase[] = ["FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_FIRST", "EXTRA_TIME_SECOND"];
+
+// The scheduled clock-minute at which each running phase's stoppage time
+// begins (i.e. when it switches from "23:45" to "45+2'" style display).
+const PHASE_BOUNDARY_MINUTE: Partial<Record<Phase, number>> = {
+  FIRST_HALF: 45,
+  SECOND_HALF: 90,
+  EXTRA_TIME_FIRST: 105,
+  EXTRA_TIME_SECOND: 120,
+};
+
+export type GoalEvent = {
+  seq: number;
+  team: Team;
+  phase: Phase; // which phase it was scored in — determines which score bucket(s) it counts toward
+  minuteLabel: string; // e.g. "23'" or "45+2'", computed once at the moment it was scored
+};
+
+export type PenaltyKick = {
+  seq: number;
+  team: Team;
+  scored: boolean;
+};
+
+export type MatchTimestamps = {
+  firstHalfKickoffAt: string | null;
+  firstHalfAddedMinutes: number | null;
+  secondHalfKickoffAt: string | null;
+  secondHalfAddedMinutes: number | null;
+  extraTimeFirstKickoffAt: string | null;
+  extraTimeFirstAddedMinutes: number | null;
+  extraTimeSecondKickoffAt: string | null;
+  extraTimeSecondAddedMinutes: number | null;
+};
+
+// Whole seconds accumulated by every phase that has *fully finished*
+// before `phase` began — i.e. the clock reading the instant `phase` started.
+function accumulatedSecondsBeforePhase(phase: Phase, t: MatchTimestamps): number {
+  let seconds = 0;
+  if (phase === "FIRST_HALF") return 0;
+  seconds += 45 * 60 + (t.firstHalfAddedMinutes ?? 0) * 60;
+  if (phase === "HALF_TIME" || phase === "SECOND_HALF") return seconds;
+  seconds += 45 * 60 + (t.secondHalfAddedMinutes ?? 0) * 60;
+  if (phase === "FULL_TIME" || phase === "EXTRA_TIME_FIRST") return seconds;
+  seconds += 15 * 60 + (t.extraTimeFirstAddedMinutes ?? 0) * 60;
+  if (phase === "EXTRA_TIME_BREAK" || phase === "EXTRA_TIME_SECOND") return seconds;
+  seconds += 15 * 60 + (t.extraTimeSecondAddedMinutes ?? 0) * 60;
+  return seconds; // EXTRA_TIME_FULL_TIME, PENALTIES, COMPLETE
+}
+
+function kickoffTimestampFor(phase: Phase, t: MatchTimestamps): string | null {
+  if (phase === "FIRST_HALF") return t.firstHalfKickoffAt;
+  if (phase === "SECOND_HALF") return t.secondHalfKickoffAt;
+  if (phase === "EXTRA_TIME_FIRST") return t.extraTimeFirstKickoffAt;
+  if (phase === "EXTRA_TIME_SECOND") return t.extraTimeSecondKickoffAt;
+  return null;
+}
+
+// The live, continuously-running elapsed match time, in seconds, right now
+// (or as of `nowMs` if given — used for testing without a real clock).
+export function computeElapsedSeconds(phase: Phase, t: MatchTimestamps, nowMs: number = Date.now()): number {
+  const before = accumulatedSecondsBeforePhase(phase, t);
+  if (!RUNNING_PHASES.includes(phase)) return before;
+  const kickoff = kickoffTimestampFor(phase, t);
+  if (!kickoff) return before;
+  const running = Math.max(0, Math.floor((nowMs - new Date(kickoff).getTime()) / 1000));
+  return before + running;
+}
+
+// "23:45" during normal time, "45+2'" once past the phase's scheduled
+// boundary (stoppage/added time) — the running clock shown on the live screen.
+export function formatClock(elapsedSeconds: number, phase: Phase): string {
+  const boundary = PHASE_BOUNDARY_MINUTE[phase];
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (boundary !== undefined && elapsedMinutes >= boundary) {
+    const added = elapsedMinutes - boundary + 1;
+    return `${boundary}+${added}'`;
+  }
+  const seconds = Math.floor(elapsedSeconds % 60);
+  return `${String(elapsedMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+// "23'" / "45+2'" — the compact goal-history label, computed once at the
+// instant a goal is recorded (1-indexed: the very first second of the
+// match is "1'", matching how goals are conventionally announced).
+export function formatGoalMinuteLabel(elapsedSeconds: number, phase: Phase): string {
+  const boundary = PHASE_BOUNDARY_MINUTE[phase];
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60) + 1;
+  if (boundary !== undefined && elapsedMinutes > boundary) {
+    return `${boundary}+${elapsedMinutes - boundary}'`;
+  }
+  return `${elapsedMinutes}'`;
+}
+
+const REGULATION_PHASES: Phase[] = ["FIRST_HALF", "HALF_TIME", "SECOND_HALF", "FULL_TIME"];
+const EXTRA_TIME_PHASES: Phase[] = ["EXTRA_TIME_FIRST", "EXTRA_TIME_BREAK", "EXTRA_TIME_SECOND", "EXTRA_TIME_FULL_TIME"];
+
+export type ScoreTally = { a: number; b: number };
+
+function tally(goals: GoalEvent[]): ScoreTally {
+  return goals.reduce((acc, g) => (g.team === "A" ? { ...acc, a: acc.a + 1 } : { ...acc, b: acc.b + 1 }), { a: 0, b: 0 });
+}
+
+export type MatchScoreSummary = {
+  halfTime: ScoreTally; // score at the break (first-half goals only)
+  fullTime: ScoreTally; // score after 90 minutes (first + second half)
+  afterExtraTime: ScoreTally | null; // full-time + extra-time goals, only once extra time has been played
+  current: ScoreTally; // whichever of the above reflects the match's current point
+};
+
+// `wentToExtraTime` should reflect whether extra time actually kicked off
+// (e.g. `!!match.extra_time_first_kickoff_at`) rather than being inferred
+// from goals — a scoreless extra time (0-0, going to penalties) still
+// counts as having been played, even though no goal event marks it.
+export function computeScoreSummary(goals: GoalEvent[], phase: Phase, wentToExtraTime: boolean): MatchScoreSummary {
+  const halfTime = tally(goals.filter((g) => g.phase === "FIRST_HALF"));
+  const fullTime = tally(goals.filter((g) => REGULATION_PHASES.includes(g.phase)));
+  const afterExtraTime = wentToExtraTime
+    ? tally(goals.filter((g) => REGULATION_PHASES.includes(g.phase) || EXTRA_TIME_PHASES.includes(g.phase)))
+    : null;
+  const current = afterExtraTime ?? fullTime;
+  return { halfTime, fullTime, afterExtraTime, current };
+}
+
+export type PenaltyShootoutState = {
+  scoreA: number;
+  scoreB: number;
+  isDecided: boolean;
+  winner: Team | null;
+};
+
+// Standard shootout rule: 5 kicks each, but decided as soon as the
+// trailing side can no longer catch up even with every remaining kick of
+// their initial 5 (real shootouts routinely end before kick 5 for exactly
+// this reason) — then sudden death, one kick each per round, decided the
+// moment a completed round leaves the scores unequal.
+export function computePenaltyShootoutState(kicks: PenaltyKick[]): PenaltyShootoutState {
+  const scoreA = kicks.filter((k) => k.team === "A" && k.scored).length;
+  const scoreB = kicks.filter((k) => k.team === "B" && k.scored).length;
+  const takenA = kicks.filter((k) => k.team === "A").length;
+  const takenB = kicks.filter((k) => k.team === "B").length;
+
+  if (takenA < 5 || takenB < 5) {
+    // Still within the initial 5 kicks each — decided early the moment the
+    // trailing side can no longer catch up with whatever kicks they have
+    // left in this phase, even before both sides reach 5.
+    const remainingA = 5 - takenA;
+    const remainingB = 5 - takenB;
+    if (scoreA > scoreB + remainingB) return { scoreA, scoreB, isDecided: true, winner: "A" };
+    if (scoreB > scoreA + remainingA) return { scoreA, scoreB, isDecided: true, winner: "B" };
+    if (takenA === 5 && takenB === 5 && scoreA !== scoreB) {
+      return { scoreA, scoreB, isDecided: true, winner: scoreA > scoreB ? "A" : "B" };
+    }
+    return { scoreA, scoreB, isDecided: false, winner: null };
+  }
+
+  // Sudden death: one kick each per round beyond the initial 5. Only
+  // decided once a round is *complete* (both sides have taken the same
+  // number of sudden-death kicks) — a lead after just one side's kick in
+  // the round doesn't count, since the other side still gets to answer it.
+  const suddenDeathRoundsA = takenA - 5;
+  const suddenDeathRoundsB = takenB - 5;
+  if (suddenDeathRoundsA === suddenDeathRoundsB && scoreA !== scoreB) {
+    return { scoreA, scoreB, isDecided: true, winner: scoreA > scoreB ? "A" : "B" };
+  }
+  return { scoreA, scoreB, isDecided: false, winner: null };
+}
+
+export function matchResultSummary(
+  teamAName: string,
+  teamBName: string,
+  scoreSummary: MatchScoreSummary,
+  shootout: PenaltyShootoutState | null
+): string {
+  if (shootout?.isDecided) {
+    const winnerName = shootout.winner === "A" ? teamAName : teamBName;
+    return `${winnerName} won on penalties (${shootout.scoreA}-${shootout.scoreB}) after ${scoreSummary.current.a}-${scoreSummary.current.b}`;
+  }
+  const { a, b } = scoreSummary.current;
+  if (a === b) return `Draw ${a}-${b}`;
+  const winnerName = a > b ? teamAName : teamBName;
+  return `${winnerName} won ${a}-${b}`;
+}
