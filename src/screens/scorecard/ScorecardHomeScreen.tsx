@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -58,7 +58,7 @@ export default function ScorecardHomeScreen() {
         <Text className="text-muted text-sm mt-0.5">Choose a sport to start or view a match</Text>
       </View>
 
-      <View className="px-5" style={{ gap: 14 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 14 }}>
         <SportCard
           icon="cricket"
           iconColor="#166534"
@@ -91,7 +91,15 @@ export default function ScorecardHomeScreen() {
           subtitle="Side-out or rally scoring, singles & doubles"
           onPress={() => navigation.navigate("PickleballHome")}
         />
-      </View>
+        <SportCard
+          icon="badminton"
+          iconColor="#BE185D"
+          bgColor="#FCE7F3"
+          title="Badminton"
+          subtitle="Rally scoring to 21, with the 29-29 golden point rule"
+          onPress={() => navigation.navigate("BadmintonHome")}
+        />
+      </ScrollView>
     </View>
   );
 }
