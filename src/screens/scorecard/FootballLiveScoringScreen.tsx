@@ -513,14 +513,14 @@ export default function FootballLiveScoringScreen() {
                   <Pressable
                     onPress={() => handlePenaltyKick(penaltyKicks.length % 2 === 0 ? "A" : "B", true)}
                     className="flex-1 rounded-2xl py-4 items-center bg-primary"
-                    style={primaryButtonShadow}
+                    style={addPenaltyKick.isPending ? undefined : primaryButtonShadow}
                   >
                     <Text className="text-white font-bold text-sm">Scored</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => handlePenaltyKick(penaltyKicks.length % 2 === 0 ? "A" : "B", false)}
                     className="flex-1 rounded-2xl py-4 items-center"
-                    style={{ backgroundColor: colors.danger, ...primaryButtonShadow }}
+                    style={{ backgroundColor: colors.danger, ...(addPenaltyKick.isPending ? undefined : primaryButtonShadow) }}
                   >
                     <Text className="text-white font-bold text-sm">Missed</Text>
                   </Pressable>
