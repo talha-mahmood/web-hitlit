@@ -316,24 +316,26 @@ export default function PadelLiveScoringScreen() {
           </View>
         )}
 
-        {/* Scoring buttons */}
+        {/* Scoring buttons — both dim and stop accepting taps the instant
+            one is pressed, until that point is actually reflected in the
+            total score, same as the cricket scorer's run buttons. */}
         <View style={{ gap: 10 }}>
-          <Pressable
-            onPress={() => handlePoint("A")}
-            disabled={addPoint.isPending}
-            className="rounded-2xl py-4 items-center bg-primary"
-            style={primaryButtonShadow}
-          >
-            <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Point</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => handlePoint("B")}
-            disabled={addPoint.isPending}
-            className="rounded-2xl py-4 items-center"
-            style={{ backgroundColor: "#1D4ED8", ...primaryButtonShadow }}
-          >
-            <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Point</Text>
-          </Pressable>
+          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ opacity: addPoint.isPending ? 0.5 : 1, gap: 10 }}>
+            <Pressable
+              onPress={() => handlePoint("A")}
+              className="rounded-2xl py-4 items-center bg-primary"
+              style={addPoint.isPending ? undefined : primaryButtonShadow}
+            >
+              <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Point</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handlePoint("B")}
+              className="rounded-2xl py-4 items-center"
+              style={{ backgroundColor: "#1D4ED8", ...(addPoint.isPending ? undefined : primaryButtonShadow) }}
+            >
+              <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Point</Text>
+            </Pressable>
+          </View>
 
           <Pressable
             onPress={handleUndo}
