@@ -75,6 +75,14 @@ export default function ScorecardHomeScreen() {
           subtitle="Points, games & sets — FIP scoring rules"
           onPress={() => navigation.navigate("PadelHome")}
         />
+        <SportCard
+          icon="tennis-ball"
+          iconColor="#B45309"
+          bgColor="#FEF3C7"
+          title="Tennis"
+          subtitle="Points, games & sets with game/break/set/match point"
+          onPress={() => navigation.navigate("TennisHome")}
+        />
       </View>
     </View>
   );

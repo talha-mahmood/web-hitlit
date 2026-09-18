@@ -7,6 +7,9 @@ import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
 import PadelHomeScreen from "../screens/scorecard/PadelHomeScreen";
 import PadelNewMatchScreen from "../screens/scorecard/PadelNewMatchScreen";
 import PadelLiveScoringScreen from "../screens/scorecard/PadelLiveScoringScreen";
+import TennisHomeScreen from "../screens/scorecard/TennisHomeScreen";
+import TennisNewMatchScreen from "../screens/scorecard/TennisNewMatchScreen";
+import TennisLiveScoringScreen from "../screens/scorecard/TennisLiveScoringScreen";
 
 export type ScorecardStackParamList = {
   ScorecardHome: undefined;
@@ -17,6 +20,9 @@ export type ScorecardStackParamList = {
   PadelHome: undefined;
   PadelNewMatch: undefined;
   PadelLiveScoring: { matchId: string };
+  TennisHome: undefined;
+  TennisNewMatch: undefined;
+  TennisLiveScoring: { matchId: string };
 };
 
 const Stack = createNativeStackNavigator<ScorecardStackParamList>();
@@ -32,6 +38,9 @@ export default function ScorecardStackNavigator() {
       <Stack.Screen name="PadelHome" component={PadelHomeScreen} />
       <Stack.Screen name="PadelNewMatch" component={PadelNewMatchScreen} />
       <Stack.Screen name="PadelLiveScoring" component={PadelLiveScoringScreen} />
+      <Stack.Screen name="TennisHome" component={TennisHomeScreen} />
+      <Stack.Screen name="TennisNewMatch" component={TennisNewMatchScreen} />
+      <Stack.Screen name="TennisLiveScoring" component={TennisLiveScoringScreen} />
     </Stack.Navigator>
   );
 }

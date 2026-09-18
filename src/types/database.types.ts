@@ -1881,6 +1881,91 @@ export type Database = {
           },
         ]
       }
+      tennis_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          first_server: string
+          format: string
+          id: string
+          player_a_name: string
+          player_b_name: string
+          result_summary: string | null
+          status: string
+          user_id: string
+          venue: string | null
+          winner_player: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          first_server: string
+          format: string
+          id?: string
+          player_a_name: string
+          player_b_name: string
+          result_summary?: string | null
+          status?: string
+          user_id: string
+          venue?: string | null
+          winner_player?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          first_server?: string
+          format?: string
+          id?: string
+          player_a_name?: string
+          player_b_name?: string
+          result_summary?: string | null
+          status?: string
+          user_id?: string
+          venue?: string | null
+          winner_player?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tennis_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tennis_points: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          seq?: number
+          winner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tennis_points_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "tennis_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           created_at: string
