@@ -130,8 +130,9 @@ export default function FootballLiveScoringScreen() {
       }
     : null;
 
-  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, now) : 0;
-  const clock = formatClock(elapsedSeconds, phase);
+  const matchConfig = { halfDurationMinutes: match?.half_duration_minutes ?? 45 };
+  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, now) : 0;
+  const clock = formatClock(elapsedSeconds, phase, matchConfig);
 
   const goals = useMemo(() => {
     if (!match) return [];
@@ -170,7 +171,7 @@ export default function FootballLiveScoringScreen() {
   const handleGoal = (team: Team) => {
     if (!isRunning) return;
     const seq = goals.length + 1;
-    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds, phase);
+    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds, phase, matchConfig);
     addGoal.mutate(
       { seq, team, phase, minuteLabel },
       { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not record goal.")) }

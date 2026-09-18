@@ -14,6 +14,12 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
 
+// Presets are TOTAL match minutes (both halves combined) — the familiar way
+// a casual match gets described ("we're playing a 30 minute match"). Each
+// is split into two equal halves when creating the match.
+const DURATION_PRESETS = ["20", "30", "40", "60", "90"];
+const STANDARD_TOTAL_MINUTES = 90;
+
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
     <View
@@ -65,9 +71,15 @@ export default function FootballNewMatchScreen() {
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
+  const [totalMinutes, setTotalMinutes] = useState<string | null>(String(STANDARD_TOTAL_MINUTES));
   const [venue, setVenue] = useState("");
 
-  const isValid = teamAName.trim().length > 0 && teamBName.trim().length > 0 && !!requiresWinner;
+  const totalMinutesNumber = parseInt(totalMinutes ?? "", 10);
+  const isDurationValid = !!totalMinutes && totalMinutesNumber > 0;
+  const halfDurationMinutes = isDurationValid ? Math.max(1, Math.round(totalMinutesNumber / 2)) : 0;
+  const actualTotalMinutes = halfDurationMinutes * 2;
+
+  const isValid = teamAName.trim().length > 0 && teamBName.trim().length > 0 && !!requiresWinner && isDurationValid;
 
   const handleCreate = () => {
     if (!isValid || !userId || !requiresWinner) return;
@@ -77,6 +89,7 @@ export default function FootballNewMatchScreen() {
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
         requiresWinner: requiresWinner === "YES",
+        halfDurationMinutes,
         venue: venue.trim() || undefined,
       },
       {
@@ -111,6 +124,29 @@ export default function FootballNewMatchScreen() {
           <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. City Stadium" maxLength={60} />
         </CardSection>
 
+        <CardSection icon="time-outline" title="Match Duration">
+          <PillRow
+            options={DURATION_PRESETS.map((n) => ({ label: n === "90" ? "90 (Standard)" : n, value: n }))}
+            value={DURATION_PRESETS.includes(totalMinutes ?? "") ? totalMinutes : null}
+            onChange={setTotalMinutes}
+          />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom total (minutes)</Text>
+          <FieldInput
+            value={totalMinutes ?? ""}
+            onChangeText={(t) => setTotalMinutes(t.replace(/[^0-9]/g, "").slice(0, 3))}
+            placeholder="e.g. 10"
+            keyboardType="number-pad"
+            maxLength={3}
+          />
+          <InfoBox
+            text={
+              isDurationValid
+                ? `Split into two ${halfDurationMinutes}-minute halves${actualTotalMinutes !== totalMinutesNumber ? ` (${actualTotalMinutes} min total)` : ""}.`
+                : "Enter how many minutes the whole match should run — it's split evenly into two halves."
+            }
+          />
+        </CardSection>
+
         <CardSection icon="trophy-outline" title="Needs a Winner?">
           <PillRow
             options={[
@@ -123,8 +159,8 @@ export default function FootballNewMatchScreen() {
           <InfoBox
             text={
               requiresWinner === "YES"
-                ? "If the match is level after 90 minutes, you'll be offered extra time, then a penalty shootout if it's still level."
-                : "A draw after 90 minutes ends the match — no extra time or shootout will be offered."
+                ? `If the match is level after ${isDurationValid ? actualTotalMinutes : STANDARD_TOTAL_MINUTES} minutes, you'll be offered extra time, then a penalty shootout if it's still level.`
+                : `A draw after ${isDurationValid ? actualTotalMinutes : STANDARD_TOTAL_MINUTES} minutes ends the match — no extra time or shootout will be offered.`
             }
           />
         </CardSection>

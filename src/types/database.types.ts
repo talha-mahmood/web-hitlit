@@ -785,6 +785,7 @@ export type Database = {
           extra_time_second_kickoff_at: string | null
           first_half_added_minutes: number | null
           first_half_kickoff_at: string | null
+          half_duration_minutes: number
           id: string
           is_draw: boolean
           phase: string
@@ -808,6 +809,7 @@ export type Database = {
           extra_time_second_kickoff_at?: string | null
           first_half_added_minutes?: number | null
           first_half_kickoff_at?: string | null
+          half_duration_minutes?: number
           id?: string
           is_draw?: boolean
           phase?: string
@@ -831,6 +833,7 @@ export type Database = {
           extra_time_second_kickoff_at?: string | null
           first_half_added_minutes?: number | null
           first_half_kickoff_at?: string | null
+          half_duration_minutes?: number
           id?: string
           is_draw?: boolean
           phase?: string
