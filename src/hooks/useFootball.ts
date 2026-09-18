@@ -48,7 +48,13 @@ function useFootballMatchMutation<TArgs>(matchId: string, mutationFn: (args: TAr
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["footballMatch", matchId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["footballMatch", matchId] });
+      // Every goal/phase/completion change also has to be reflected on the
+      // match list card (score, LIVE/COMPLETED badge, phase label) — the
+      // other five sports' equivalent hooks invalidate both queries too.
+      qc.invalidateQueries({ queryKey: ["footballMatches"] });
+    },
   });
 }
 
