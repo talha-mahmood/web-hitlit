@@ -239,7 +239,7 @@ export default function PickleballHomeScreen() {
                 className="items-center justify-center rounded-full"
                 style={{ width: 200, height: 200, backgroundColor: "#EDE9FE", opacity: 0.5 }}
               >
-                <MaterialCommunityIcons name="table-tennis" size={90} color="#6D28D9" style={{ opacity: 0.85, transform: [{ rotate: "-12deg" }] }} />
+                <MaterialCommunityIcons name="racquetball" size={90} color="#6D28D9" style={{ opacity: 0.85, transform: [{ rotate: "-12deg" }] }} />
               </View>
               <Text className="text-ink font-bold text-lg mt-2">No matches yet</Text>
               <Text className="text-muted text-sm text-center px-10">

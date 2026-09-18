@@ -84,7 +84,7 @@ export default function ScorecardHomeScreen() {
           onPress={() => navigation.navigate("TennisHome")}
         />
         <SportCard
-          icon="table-tennis"
+          icon="racquetball"
           iconColor="#6D28D9"
           bgColor="#EDE9FE"
           title="Pickleball"
@@ -98,6 +98,14 @@ export default function ScorecardHomeScreen() {
           title="Badminton"
           subtitle="Rally scoring to 21, with the 29-29 golden point rule"
           onPress={() => navigation.navigate("BadmintonHome")}
+        />
+        <SportCard
+          icon="table-tennis"
+          iconColor="#C2410C"
+          bgColor="#FFEDD5"
+          title="Table Tennis"
+          subtitle="Rally scoring to 11, with ITTF service rotation"
+          onPress={() => navigation.navigate("TableTennisHome")}
         />
       </ScrollView>
     </View>

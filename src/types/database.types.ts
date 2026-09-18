@@ -1974,6 +1974,103 @@ export type Database = {
           },
         ]
       }
+      table_tennis_matches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          first_server_index: number
+          first_serving_team: string
+          format: string
+          id: string
+          play_mode: string
+          result_summary: string | null
+          status: string
+          team_a_name: string
+          team_a_players: string[]
+          team_b_name: string
+          team_b_players: string[]
+          user_id: string
+          venue: string | null
+          winner_team: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          first_server_index?: number
+          first_serving_team: string
+          format: string
+          id?: string
+          play_mode: string
+          result_summary?: string | null
+          status?: string
+          team_a_name: string
+          team_a_players?: string[]
+          team_b_name: string
+          team_b_players?: string[]
+          user_id: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          first_server_index?: number
+          first_serving_team?: string
+          format?: string
+          id?: string
+          play_mode?: string
+          result_summary?: string | null
+          status?: string
+          team_a_name?: string
+          team_a_players?: string[]
+          team_b_name?: string
+          team_b_players?: string[]
+          user_id?: string
+          venue?: string | null
+          winner_team?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_tennis_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_tennis_rallies: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          seq: number
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          seq?: number
+          winner?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_tennis_rallies_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "table_tennis_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_chat_reads: {
         Row: {
           last_read_at: string

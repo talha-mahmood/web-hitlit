@@ -1,0 +1,280 @@
+import { useState } from "react";
+import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { useAuthStore } from "../../store/authStore";
+import { useCreateTableTennisMatch } from "../../hooks/useTableTennis";
+import { friendlyTableTennisError } from "../../lib/api/tableTennis";
+import { PillRow } from "../../components/GameFormControls";
+import FieldInput from "../../components/FieldInput";
+import type { PlayMode, MatchFormat, Team } from "../../lib/tableTennisScoring";
+import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+
+type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TableTennisNewMatch">;
+
+const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
+  { label: "Singles", value: "SINGLES" },
+  { label: "Doubles", value: "DOUBLES" },
+];
+
+const FORMAT_OPTIONS: { label: string; value: MatchFormat }[] = [
+  { label: "Best of 5 Games", value: "BEST_OF_5" },
+  { label: "Best of 7 Games", value: "BEST_OF_7" },
+];
+
+const FORMAT_INFO: Record<MatchFormat, string> = {
+  BEST_OF_5: "First player/team to win 3 games wins the match.",
+  BEST_OF_7: "First player/team to win 4 games wins the match.",
+};
+
+function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View
+      className="items-center justify-center rounded-xl"
+      style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+    >
+      <Ionicons name={icon} size={17} color={colors.primaryDark} />
+    </View>
+  );
+}
+
+function CardSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+      <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
+        <IconBadge icon={icon} />
+        <Text className="text-ink font-bold text-base">{title}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function InfoBox({ text }: { text: string }) {
+  return (
+    <View className="flex-row rounded-xl px-3 py-2.5 mt-3" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
+      <Ionicons name="information-circle" size={16} color={colors.primaryDark} style={{ marginTop: 1 }} />
+      <Text className="text-xs flex-1" style={{ color: colors.primaryDark }}>
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+function TeamCard({
+  letter,
+  name,
+  onNameChange,
+  playMode,
+  players,
+  onPlayersChange,
+}: {
+  letter: "A" | "B";
+  name: string;
+  onNameChange: (v: string) => void;
+  playMode: PlayMode;
+  players: [string, string];
+  onPlayersChange: (players: [string, string]) => void;
+}) {
+  return (
+    <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
+      <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 30, height: 30, backgroundColor: colors.primary }}
+        >
+          <Text className="text-white font-extrabold text-sm">{letter}</Text>
+        </View>
+        <Text className="text-ink font-bold text-sm flex-1">{playMode === "DOUBLES" ? `Team ${letter}` : `Player ${letter}`}</Text>
+      </View>
+
+      <View className="px-4 pt-4 pb-4">
+        <Text className="text-ink font-semibold text-sm mb-2">
+          {playMode === "DOUBLES" ? `Team ${letter} Name` : `Player ${letter} Name`} <Text className="text-red-500">*</Text>
+        </Text>
+        <FieldInput
+          value={name}
+          onChangeText={onNameChange}
+          placeholder={letter === "A" ? "e.g. Alex" : "e.g. Sam"}
+          maxLength={40}
+        />
+
+        {playMode === "DOUBLES" && (
+          <>
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 1 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[0]}
+              onChangeText={(v) => onPlayersChange([v, players[1]])}
+              placeholder="e.g. Alex"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 2 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[1]}
+              onChangeText={(v) => onPlayersChange([players[0], v])}
+              placeholder="e.g. Jo"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+export default function TableTennisNewMatchScreen() {
+  const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
+  const userId = useAuthStore((s) => s.session?.user.id);
+  const createMatch = useCreateTableTennisMatch();
+
+  const [teamAName, setTeamAName] = useState("");
+  const [teamBName, setTeamBName] = useState("");
+  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>(["", ""]);
+  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>(["", ""]);
+  const [playMode, setPlayMode] = useState<PlayMode | null>("SINGLES");
+  const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_5");
+  const [firstServingTeam, setFirstServingTeam] = useState<Team | null>(null);
+  const [firstServerIndex, setFirstServerIndex] = useState<0 | 1 | null>(null);
+  const [venue, setVenue] = useState("");
+
+  const isDoubles = playMode === "DOUBLES";
+  const doublesPlayersValid =
+    !isDoubles || (teamAPlayers[0].trim().length > 0 && teamAPlayers[1].trim().length > 0 && teamBPlayers[0].trim().length > 0 && teamBPlayers[1].trim().length > 0);
+  const serverTeamPlayers = firstServingTeam === "A" ? teamAPlayers : firstServingTeam === "B" ? teamBPlayers : ["", ""];
+
+  const isValid =
+    teamAName.trim().length > 0 &&
+    teamBName.trim().length > 0 &&
+    doublesPlayersValid &&
+    !!playMode &&
+    !!format &&
+    !!firstServingTeam &&
+    (!isDoubles || firstServerIndex !== null);
+
+  const handleCreate = () => {
+    if (!isValid || !userId || !playMode || !format || !firstServingTeam) return;
+    createMatch.mutate(
+      {
+        userId,
+        teamAName: teamAName.trim(),
+        teamBName: teamBName.trim(),
+        teamAPlayers: isDoubles ? teamAPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        teamBPlayers: isDoubles ? teamBPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        playMode,
+        format,
+        firstServingTeam,
+        firstServerIndex: isDoubles ? firstServerIndex ?? 0 : 0,
+        venue: venue.trim() || undefined,
+      },
+      {
+        onSuccess: ({ matchId }) => navigation.replace("TableTennisLiveScoring", { matchId }),
+        onError: (err) => Alert.alert("Error", friendlyTableTennisError(err, "Could not create match.")),
+      }
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </Pressable>
+        <View className="flex-1">
+          <Text className="text-2xl font-bold text-ink">New Table Tennis Match</Text>
+          <Text className="text-muted text-sm mt-0.5">Set up players and match rules</Text>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <CardSection icon="people-outline" title="Play Mode">
+          <PillRow
+            options={PLAY_MODE_OPTIONS}
+            value={playMode}
+            onChange={(v) => {
+              setPlayMode(v);
+              setFirstServingTeam(null);
+              setFirstServerIndex(null);
+            }}
+          />
+        </CardSection>
+
+        {playMode && (
+          <>
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+          </>
+        )}
+
+        <CardSection icon="location-outline" title="Venue">
+          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Table Tennis Club Karachi" maxLength={60} />
+        </CardSection>
+
+        <CardSection icon="trophy-outline" title="Match Format">
+          <PillRow options={FORMAT_OPTIONS} value={format} onChange={setFormat} />
+          {format && <InfoBox text={FORMAT_INFO[format]} />}
+        </CardSection>
+
+        <CardSection icon="tennisball-outline" title={isDoubles ? "First Serving Team" : "First Server"}>
+          <Text className="text-muted text-xs font-semibold mb-2">{isDoubles ? "Serving Team" : "Server"}</Text>
+          <PillRow
+            options={[
+              { label: teamAName.trim() || (isDoubles ? "Team A" : "Player A"), value: "A" as const },
+              { label: teamBName.trim() || (isDoubles ? "Team B" : "Player B"), value: "B" as const },
+            ]}
+            value={firstServingTeam}
+            onChange={(v) => {
+              setFirstServingTeam(v);
+              setFirstServerIndex(null);
+            }}
+          />
+          {isDoubles && firstServingTeam && (
+            <>
+              <Text className="text-muted text-xs font-semibold mb-2 mt-4">Serving Player</Text>
+              <PillRow
+                options={([0, 1] as const)
+                  .filter((i) => serverTeamPlayers[i].trim().length > 0)
+                  .map((i) => ({ label: serverTeamPlayers[i].trim(), value: String(i) as "0" | "1" }))}
+                value={firstServerIndex === null ? null : (String(firstServerIndex) as "0" | "1")}
+                onChange={(v) => setFirstServerIndex(v === "0" ? 0 : 1)}
+              />
+            </>
+          )}
+        </CardSection>
+
+        <Pressable
+          onPress={handleCreate}
+          disabled={!isValid || createMatch.isPending}
+          className={`flex-row items-center justify-center rounded-2xl py-4 mt-2 ${isValid ? "bg-primary" : "bg-gray-200"}`}
+          style={{ gap: 8, ...(isValid ? primaryButtonShadow : undefined) }}
+        >
+          {createMatch.isPending ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <>
+              <Ionicons name="play" size={16} color={isValid ? "white" : colors.muted} />
+              <Text className={`font-bold text-base ${isValid ? "text-white" : "text-muted"}`}>Start Match</Text>
+            </>
+          )}
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
