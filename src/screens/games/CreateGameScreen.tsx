@@ -188,20 +188,6 @@ function CountChipItem({
   );
 }
 
-// "Players per Team" is really just "1 or 2" for every sport that isn't
-// cricket/football — Singles/Doubles cells read far clearer there than a
-// generic 1-20 number grid, so this swaps in for that field wherever it's
-// shown (regular games and both tournament formats) once a sport with that
-// shape is selected.
-function PlayModeCells({ playersPerTeam, onChange }: { playersPerTeam: number | null; onChange: (n: number) => void }) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-      <TimeChipItem label="Singles" selected={playersPerTeam === 1} onPress={() => onChange(1)} />
-      <TimeChipItem label="Doubles" selected={playersPerTeam === 2} onPress={() => onChange(2)} />
-    </ScrollView>
-  );
-}
-
 // A light-green callout used for helper/explanatory text (format
 // descriptions, the derived group-count math, etc.) — same visual language
 // as the rest of the app's "info" callouts.
@@ -467,14 +453,9 @@ export default function CreateGameScreen() {
   // Cricket's smallest real side is more than a single player — hide the
   // "1" cell from Players per Team for this sport only.
   const isCricketSport = (selectedSportName ?? "").toLowerCase().includes("cricket");
-  const isFootballSport = (selectedSportName ?? "").toLowerCase().includes("football");
   const playersPerTeamOptions = isCricketSport
     ? PLAYERS_PER_TEAM_OPTIONS.filter((n) => n !== 1)
     : PLAYERS_PER_TEAM_OPTIONS;
-  // Every other sport (padel, tennis, badminton, pickleball, table tennis)
-  // only ever has a team of 1 or 2 — Singles/Doubles reads far clearer for
-  // those than a generic 1-20 number grid.
-  const showPlayModeSelector = !!selectedSportName && !isCricketSport && !isFootballSport;
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -961,21 +942,17 @@ export default function CreateGameScreen() {
                   }
                 />
 
-                <SectionLabel title={showPlayModeSelector ? "Play Mode" : "Players per Team"} required icon="person-outline" compact />
-                {showPlayModeSelector ? (
-                  <PlayModeCells playersPerTeam={playersPerTeam} onChange={setPlayersPerTeam} />
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                    {playersPerTeamOptions.map((n) => (
-                      <CountChipItem
-                        key={n}
-                        n={n}
-                        selected={playersPerTeam === n}
-                        onPress={() => setPlayersPerTeam(n)}
-                      />
-                    ))}
-                  </ScrollView>
-                )}
+                <SectionLabel title="Players per Team" required icon="person-outline" compact />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                  {playersPerTeamOptions.map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={playersPerTeam === n}
+                      onPress={() => setPlayersPerTeam(n)}
+                    />
+                  ))}
+                </ScrollView>
 
               </>
             ) : (
@@ -995,21 +972,17 @@ export default function CreateGameScreen() {
                 {tournamentFormat === "LEAGUE" && (
                   <InfoBox text="League tournaments can't have exactly 3 teams." />
                 )}
-                <SectionLabel title={showPlayModeSelector ? "Play Mode" : "Players per Team"} required icon="person-outline" compact />
-                {showPlayModeSelector ? (
-                  <PlayModeCells playersPerTeam={playersPerTeam} onChange={setPlayersPerTeam} />
-                ) : (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                    {playersPerTeamOptions.map((n) => (
-                      <CountChipItem
-                        key={n}
-                        n={n}
-                        selected={playersPerTeam === n}
-                        onPress={() => setPlayersPerTeam(n)}
-                      />
-                    ))}
-                  </ScrollView>
-                )}
+                <SectionLabel title="Players per Team" required icon="person-outline" compact />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                  {playersPerTeamOptions.map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={playersPerTeam === n}
+                      onPress={() => setPlayersPerTeam(n)}
+                    />
+                  ))}
+                </ScrollView>
               </>
             )}
 
@@ -1019,21 +992,17 @@ export default function CreateGameScreen() {
           </>
         ) : (
           <>
-            <SectionLabel title={showPlayModeSelector ? "Play Mode" : "Players per Team"} required icon="person-outline" compact />
-            {showPlayModeSelector ? (
-              <PlayModeCells playersPerTeam={playersPerTeam} onChange={setPlayersPerTeam} />
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {playersPerTeamOptions.map((n) => (
-                  <CountChipItem
-                    key={n}
-                    n={n}
-                    selected={playersPerTeam === n}
-                    onPress={() => setPlayersPerTeam(n)}
-                  />
-                ))}
-              </ScrollView>
-            )}
+            <SectionLabel title="Players per Team" required icon="person-outline" compact />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {playersPerTeamOptions.map((n) => (
+                <CountChipItem
+                  key={n}
+                  n={n}
+                  selected={playersPerTeam === n}
+                  onPress={() => setPlayersPerTeam(n)}
+                />
+              ))}
+            </ScrollView>
             <InfoBox text="Regular games default to 2 teams (Team A and Team B) — this sets how many players join each side." />
           </>
         )}
