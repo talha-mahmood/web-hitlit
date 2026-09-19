@@ -453,9 +453,15 @@ export default function CreateGameScreen() {
   // Cricket's smallest real side is more than a single player — hide the
   // "1" cell from Players per Team for this sport only.
   const isCricketSport = (selectedSportName ?? "").toLowerCase().includes("cricket");
+  const isFootballSport = (selectedSportName ?? "").toLowerCase().includes("football");
+  // Every other sport (padel, tennis, badminton, pickleball, table tennis)
+  // only ever has a team of 1 or 2 — no point scrolling through the full
+  // 1-20 grid for those.
   const playersPerTeamOptions = isCricketSport
     ? PLAYERS_PER_TEAM_OPTIONS.filter((n) => n !== 1)
-    : PLAYERS_PER_TEAM_OPTIONS;
+    : !isFootballSport && selectedSportName
+      ? PLAYERS_PER_TEAM_OPTIONS.slice(0, 2)
+      : PLAYERS_PER_TEAM_OPTIONS;
 
   const handleCreate = async () => {
     if (!userId) return;
