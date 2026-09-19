@@ -125,6 +125,19 @@ function evaluateRace(pointsA: number, pointsB: number, target: number): Team | 
   return null;
 }
 
+// Games-per-set win check. A 1-game set can't have a "win by 2 clear"
+// margin — winning the only game that exists has to be enough on its own,
+// or the set (and, under Best of 1, the whole match) could never end. Any
+// longer set keeps the normal win-by-2 race (with a tiebreak at target-target).
+function evaluateSetWinner(gamesA: number, gamesB: number, target: number): Team | null {
+  if (target <= 1) {
+    if (gamesA >= 1) return "A";
+    if (gamesB >= 1) return "B";
+    return null;
+  }
+  return evaluateRace(gamesA, gamesB, target);
+}
+
 // Fixed 4-slot service rotation seeded by whichever team/player serves
 // first — team always alternates (A, B, A, B, ...) and each team's two
 // players alternate on that team's own service turns, which is the
@@ -223,21 +236,19 @@ export function replayPadelMatch(points: PointEvent[], config: PadelMatchConfig)
       pointsB = 0;
       gamesPlayedTotal++;
 
-      if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
-        inTiebreak = true;
-      } else {
-        const setWinner = evaluateRace(gamesA, gamesB, config.gamesPerSet);
-        if (setWinner) {
-          sets.push({ gamesA, gamesB, winner: setWinner, isMatchTiebreak: false, tiebreak: null });
-          if (setWinner === "A") setsWonA++;
-          else setsWonB++;
-          gamesA = 0;
-          gamesB = 0;
-          if (setsWonA === setsToWin || setsWonB === setsToWin) {
-            matchComplete = true;
-            matchWinner = setWinner;
-          }
+      const setWinner = evaluateSetWinner(gamesA, gamesB, config.gamesPerSet);
+      if (setWinner) {
+        sets.push({ gamesA, gamesB, winner: setWinner, isMatchTiebreak: false, tiebreak: null });
+        if (setWinner === "A") setsWonA++;
+        else setsWonB++;
+        gamesA = 0;
+        gamesB = 0;
+        if (setsWonA === setsToWin || setsWonB === setsToWin) {
+          matchComplete = true;
+          matchWinner = setWinner;
         }
+      } else if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
+        inTiebreak = true;
       }
     }
   }

@@ -91,6 +91,19 @@ function evaluateRace(pointsA: number, pointsB: number, target: number): Player 
   return null;
 }
 
+// Games-per-set win check. A 1-game set can't have a "win by 2 clear"
+// margin — winning the only game that exists has to be enough on its own,
+// or the set (and, under Best of 1, the whole match) could never end. Any
+// longer set keeps the normal win-by-2 race (with a tiebreak at target-target).
+function evaluateSetWinner(gamesA: number, gamesB: number, target: number): Player | null {
+  if (target <= 1) {
+    if (gamesA >= 1) return "A";
+    if (gamesB >= 1) return "B";
+    return null;
+  }
+  return evaluateRace(gamesA, gamesB, target);
+}
+
 // Within a tiebreak, whoever's next in the server rotation serves the first
 // point alone, then service alternates every two points — the standard
 // tiebreak serving pattern.
@@ -152,21 +165,19 @@ export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfi
       pointsB = 0;
       gamesPlayedTotal++;
 
-      if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
-        inTiebreak = true;
-      } else {
-        const setWinner = evaluateRace(gamesA, gamesB, config.gamesPerSet);
-        if (setWinner) {
-          sets.push({ gamesA, gamesB, winner: setWinner, tiebreak: null });
-          if (setWinner === "A") setsWonA++;
-          else setsWonB++;
-          gamesA = 0;
-          gamesB = 0;
-          if (setsWonA === setsToWin || setsWonB === setsToWin) {
-            matchComplete = true;
-            matchWinner = setWinner;
-          }
+      const setWinner = evaluateSetWinner(gamesA, gamesB, config.gamesPerSet);
+      if (setWinner) {
+        sets.push({ gamesA, gamesB, winner: setWinner, tiebreak: null });
+        if (setWinner === "A") setsWonA++;
+        else setsWonB++;
+        gamesA = 0;
+        gamesB = 0;
+        if (setsWonA === setsToWin || setsWonB === setsToWin) {
+          matchComplete = true;
+          matchWinner = setWinner;
         }
+      } else if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
+        inTiebreak = true;
       }
     }
   }
@@ -220,7 +231,7 @@ export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfi
 
       const nextGamesA = gamesA + (candidate === "A" ? 1 : 0);
       const nextGamesB = gamesB + (candidate === "B" ? 1 : 0);
-      const wouldWinSet = inTiebreak ? true : evaluateRace(nextGamesA, nextGamesB, config.gamesPerSet) === candidate;
+      const wouldWinSet = inTiebreak ? true : evaluateSetWinner(nextGamesA, nextGamesB, config.gamesPerSet) === candidate;
 
       if (wouldWinSet) {
         const nextSetsA = setsWonA + (candidate === "A" ? 1 : 0);
