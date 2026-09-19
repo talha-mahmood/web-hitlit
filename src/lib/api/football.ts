@@ -55,6 +55,7 @@ export async function createFootballMatch(params: {
   extraTimePeriodMinutes: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
+  const startedAt = new Date().toISOString();
   const { data, error } = await supabase
     .from("football_matches")
     .insert({
@@ -67,8 +68,11 @@ export async function createFootballMatch(params: {
       venue: params.venue?.trim() || null,
       // Kicks off immediately — this app has no "scheduled, not yet
       // started" state for any of the other sports either, matches that.
+      // Starts paused, though: the clock only actually begins counting
+      // once the host taps "Start Time" on the live screen.
       phase: "FIRST_HALF",
-      first_half_kickoff_at: new Date().toISOString(),
+      first_half_kickoff_at: startedAt,
+      paused_at: startedAt,
     })
     .select()
     .single();
@@ -94,15 +98,17 @@ const ADDED_MINUTES_COLUMN: Record<RunningPhase, string> = {
 
 // Kicks off the second half, or either extra-time period — records "now"
 // as that period's kickoff instant, which is what the continuous match
-// clock is measured from.
+// clock is measured from. Starts paused, same as the first half: the clock
+// only actually begins counting once the host taps "Start Time".
 export async function startRunningPeriod(
   matchId: string,
   phase: Exclude<RunningPhase, "FIRST_HALF">
 ): Promise<void> {
   const column = KICKOFF_COLUMN[phase];
+  const startedAt = new Date().toISOString();
   const { error } = await supabase
     .from("football_matches")
-    .update({ phase, [column]: new Date().toISOString() } as never)
+    .update({ phase, [column]: startedAt, paused_at: startedAt } as never)
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }
@@ -120,6 +126,35 @@ export async function endRunningPeriod(
   const { error } = await supabase
     .from("football_matches")
     .update({ phase: resultingPhase, [column]: addedMinutes } as never)
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+const RUNNING_KICKOFF_COLUMN: Record<RunningPhase, string> = {
+  FIRST_HALF: "first_half_kickoff_at",
+  ...KICKOFF_COLUMN,
+};
+
+// Freezes the display clock: the live screen stops advancing elapsed time
+// the instant this is recorded (it reads the frozen `paused_at` instead of
+// the live clock while set).
+export async function pauseFootballMatch(matchId: string): Promise<void> {
+  const { error } = await supabase
+    .from("football_matches")
+    .update({ paused_at: new Date().toISOString() })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+// Resumes a paused match by shifting the current running phase's kickoff
+// timestamp forward by exactly how long it was paused — this makes the
+// paused interval simply not count toward elapsed time, without touching
+// any of the elapsed-time math in footballScoring.ts.
+export async function resumeFootballMatch(matchId: string, phase: RunningPhase, newKickoffAt: string): Promise<void> {
+  const column = RUNNING_KICKOFF_COLUMN[phase];
+  const { error } = await supabase
+    .from("football_matches")
+    .update({ [column]: newKickoffAt, paused_at: null } as never)
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }

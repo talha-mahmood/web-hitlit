@@ -14,10 +14,12 @@ import {
   useDeleteLastPenaltyKick,
   useStartRunningPeriod,
   useEndRunningPeriod,
+  usePauseFootballMatch,
+  useResumeFootballMatch,
   useStartPenalties,
   useCompleteFootballMatch,
 } from "../../hooks/useFootball";
-import { friendlyFootballError, goalRowToEvent, penaltyKickRowToEvent } from "../../lib/api/football";
+import { friendlyFootballError, goalRowToEvent, penaltyKickRowToEvent, type RunningPhase } from "../../lib/api/football";
 import {
   computeElapsedSeconds,
   formatClock,
@@ -60,6 +62,8 @@ export default function FootballLiveScoringScreen() {
   const deleteLastPenaltyKick = useDeleteLastPenaltyKick(params.matchId);
   const startRunningPeriod = useStartRunningPeriod(params.matchId);
   const endRunningPeriod = useEndRunningPeriod(params.matchId);
+  const pauseMatch = usePauseFootballMatch(params.matchId);
+  const resumeMatch = useResumeFootballMatch(params.matchId);
   const startPenalties = useStartPenalties(params.matchId);
   const completeMatch = useCompleteFootballMatch(params.matchId);
 
@@ -124,7 +128,12 @@ export default function FootballLiveScoringScreen() {
     halfDurationMinutes: match?.half_duration_minutes ?? 45,
     extraTimePeriodMinutes: match?.extra_time_period_minutes ?? 15,
   };
-  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, now) : 0;
+  // While paused, freeze the clock at the instant it was stopped — reading
+  // paused_at instead of the live-ticking `now` — rather than changing any
+  // of the elapsed-time math itself.
+  const pausedAtMs = match?.paused_at ? new Date(match.paused_at).getTime() : null;
+  const isPaused = pausedAtMs !== null;
+  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, pausedAtMs ?? now) : 0;
   const clock = formatClock(elapsedSeconds, phase, matchConfig);
 
   // The instant a running period reaches its scheduled length, ring
@@ -181,10 +190,36 @@ export default function FootballLiveScoringScreen() {
     );
   }
 
+  const handleToggleClock = () => {
+    if (isPaused && pausedAtMs !== null) {
+      const kickoffAt =
+        phase === "FIRST_HALF"
+          ? match.first_half_kickoff_at
+          : phase === "SECOND_HALF"
+            ? match.second_half_kickoff_at
+            : phase === "EXTRA_TIME_FIRST"
+              ? match.extra_time_first_kickoff_at
+              : phase === "EXTRA_TIME_SECOND"
+                ? match.extra_time_second_kickoff_at
+                : null;
+      if (!kickoffAt) return;
+      const pausedDurationMs = Date.now() - pausedAtMs;
+      const newKickoffAt = new Date(new Date(kickoffAt).getTime() + pausedDurationMs).toISOString();
+      resumeMatch.mutate(
+        { phase: phase as RunningPhase, newKickoffAt },
+        { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not start the clock.")) }
+      );
+    } else {
+      pauseMatch.mutate(undefined, {
+        onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not stop the clock.")),
+      });
+    }
+  };
+
   const handleGoal = (team: Team) => {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return;
     const seq = goals.length + 1;
-    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds, phase, matchConfig);
+    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds);
     addGoal.mutate(
       { seq, team, phase, minuteLabel },
       { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not record goal.")) }
@@ -409,46 +444,62 @@ export default function FootballLiveScoringScreen() {
         {/* Phase-specific controls */}
         {isRunning && (
           <>
-            <View pointerEvents={addGoal.isPending ? "none" : "auto"} style={{ opacity: addGoal.isPending ? 0.5 : 1, gap: 10 }}>
+            <View pointerEvents={addGoal.isPending || isPaused ? "none" : "auto"} style={{ opacity: addGoal.isPending || isPaused ? 0.5 : 1, gap: 10 }}>
               <Pressable
                 onPress={() => handleGoal("A")}
                 className="rounded-2xl py-4 items-center bg-primary"
-                style={addGoal.isPending ? undefined : primaryButtonShadow}
+                style={addGoal.isPending || isPaused ? undefined : primaryButtonShadow}
               >
                 <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Goal</Text>
               </Pressable>
               <Pressable
                 onPress={() => handleGoal("B")}
                 className="rounded-2xl py-4 items-center"
-                style={{ backgroundColor: "#1D4ED8", ...(addGoal.isPending ? undefined : primaryButtonShadow) }}
+                style={{ backgroundColor: "#1D4ED8", ...(addGoal.isPending || isPaused ? undefined : primaryButtonShadow) }}
               >
                 <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Goal</Text>
               </Pressable>
             </View>
 
-            <Pressable
-              onPress={handleEndPeriodPress}
-              disabled={endRunningPeriod.isPending}
-              className={`flex-row items-center justify-center rounded-2xl py-3 mt-3 ${isRinging ? "" : "border border-border"}`}
-              style={{ gap: 8, ...(isRinging ? { backgroundColor: colors.danger } : null) }}
-            >
-              <Ionicons name="stop-circle-outline" size={16} color={isRinging ? "white" : colors.muted} />
-              <Text className={`text-sm font-semibold ${isRinging ? "text-white" : "text-muted"}`}>
-                {phase === "FIRST_HALF" && "End First Half"}
-                {phase === "SECOND_HALF" && "End Second Half"}
-                {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
-                {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
-              </Text>
-            </Pressable>
+            {isRinging ? (
+              <Pressable
+                onPress={handleEndPeriodPress}
+                disabled={endRunningPeriod.isPending}
+                className="flex-row items-center justify-center rounded-2xl py-3 mt-3"
+                style={{ gap: 8, backgroundColor: colors.danger, opacity: endRunningPeriod.isPending ? 0.5 : 1 }}
+              >
+                <Ionicons name="stop-circle-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-semibold">
+                  {phase === "FIRST_HALF" && "End First Half"}
+                  {phase === "SECOND_HALF" && "End Second Half"}
+                  {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
+                  {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={handleToggleClock}
+                disabled={pauseMatch.isPending || resumeMatch.isPending}
+                className="flex-row items-center justify-center rounded-2xl py-3 mt-3"
+                style={{
+                  gap: 8,
+                  backgroundColor: isPaused ? colors.primary : colors.warning,
+                  opacity: pauseMatch.isPending || resumeMatch.isPending ? 0.5 : 1,
+                }}
+              >
+                <Ionicons name={isPaused ? "play-circle-outline" : "pause-circle-outline"} size={16} color="white" />
+                <Text className="text-white text-sm font-bold">{isPaused ? "Start Time" : "Stop Time"}</Text>
+              </Pressable>
+            )}
 
             <Pressable
               onPress={handleUndo}
-              disabled={goals.length === 0 || deleteLastGoal.isPending}
-              className="flex-row items-center justify-center rounded-2xl py-3 mt-2 border border-border"
-              style={{ gap: 8, opacity: goals.length === 0 ? 0.5 : 1 }}
+              disabled={goals.length === 0 || deleteLastGoal.isPending || isPaused}
+              className="flex-row items-center justify-center rounded-2xl py-3 mt-2"
+              style={{ gap: 8, borderWidth: 1, borderColor: colors.warning, opacity: goals.length === 0 || isPaused ? 0.5 : 1 }}
             >
-              <Ionicons name="arrow-undo-outline" size={16} color={colors.muted} />
-              <Text className="text-muted text-sm font-semibold">Undo Last Goal</Text>
+              <Ionicons name="arrow-undo-outline" size={16} color={colors.warning} />
+              <Text className="text-sm font-semibold" style={{ color: colors.warning }}>Undo Last Goal</Text>
             </Pressable>
           </>
         )}

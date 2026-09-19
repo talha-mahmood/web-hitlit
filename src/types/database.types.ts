@@ -789,6 +789,7 @@ export type Database = {
           half_duration_minutes: number
           id: string
           is_draw: boolean
+          paused_at: string | null
           phase: string
           requires_winner: boolean
           result_summary: string | null
@@ -814,6 +815,7 @@ export type Database = {
           half_duration_minutes?: number
           id?: string
           is_draw?: boolean
+          paused_at?: string | null
           phase?: string
           requires_winner?: boolean
           result_summary?: string | null
@@ -839,6 +841,7 @@ export type Database = {
           half_duration_minutes?: number
           id?: string
           is_draw?: boolean
+          paused_at?: string | null
           phase?: string
           requires_winner?: boolean
           result_summary?: string | null

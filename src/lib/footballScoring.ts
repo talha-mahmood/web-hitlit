@@ -147,23 +147,18 @@ export function formatClock(elapsedSeconds: number, phase: Phase, config: MatchC
   const elapsedMinutes = Math.floor(elapsedSeconds / 60);
   if (boundary !== undefined && elapsedMinutes >= boundary) {
     const added = elapsedMinutes - boundary + 1;
-    return `${boundary}+${added}'`;
+    return `${boundary}+${added} minutes`;
   }
   const seconds = Math.floor(elapsedSeconds % 60);
   return `${String(elapsedMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-// "23'" / "45+2'" — the compact goal-history label, computed once at the
-// instant a goal is recorded (1-indexed: the very first second of the
-// match is "1'", matching how goals are conventionally announced).
-export function formatGoalMinuteLabel(elapsedSeconds: number, phase: Phase, config: MatchConfig): string {
-  const boundarySeconds = phaseBoundarySeconds(phase, config);
-  const boundary = boundarySeconds !== undefined ? Math.round(boundarySeconds / 60) : undefined;
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60) + 1;
-  if (boundary !== undefined && elapsedMinutes > boundary) {
-    return `${boundary}+${elapsedMinutes - boundary}'`;
-  }
-  return `${elapsedMinutes}'`;
+// "01:18" — the exact match-clock reading at the instant a goal is
+// recorded, for the goal-history list.
+export function formatGoalMinuteLabel(elapsedSeconds: number): string {
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = Math.floor(elapsedSeconds % 60);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 const REGULATION_PHASES: Phase[] = ["FIRST_HALF", "HALF_TIME", "SECOND_HALF", "FULL_TIME"];

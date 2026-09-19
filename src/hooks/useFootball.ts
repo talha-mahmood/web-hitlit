@@ -5,6 +5,8 @@ import {
   createFootballMatch,
   startRunningPeriod,
   endRunningPeriod,
+  pauseFootballMatch,
+  resumeFootballMatch,
   startPenalties,
   completeFootballMatch,
   deleteFootballMatch,
@@ -69,6 +71,16 @@ export function useEndRunningPeriod(matchId: string) {
     matchId,
     (args: { endingPhase: RunningPhase; addedMinutes: number; resultingPhase: BreakPhase }) =>
       endRunningPeriod(matchId, args.endingPhase, args.addedMinutes, args.resultingPhase)
+  );
+}
+
+export function usePauseFootballMatch(matchId: string) {
+  return useFootballMatchMutation(matchId, () => pauseFootballMatch(matchId));
+}
+
+export function useResumeFootballMatch(matchId: string) {
+  return useFootballMatchMutation(matchId, (args: { phase: RunningPhase; newKickoffAt: string }) =>
+    resumeFootballMatch(matchId, args.phase, args.newKickoffAt)
   );
 }
 
