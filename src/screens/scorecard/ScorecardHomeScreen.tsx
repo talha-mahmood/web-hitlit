@@ -1,29 +1,33 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
+import { getSportImage } from "../../lib/sportImages";
+import { getSportIcon } from "../../lib/sportIcons";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
 
+// Same sport photos/icons used for the "Filter by Sport" tiles on the home
+// screen (see getSportImage/getSportIcon + HomeSportTile) — reused here
+// instead of a separate flat-color glyph per card, so a sport looks the
+// same wherever it appears in the app.
 function SportCard({
-  icon,
-  iconColor,
-  bgColor,
+  sportName,
   title,
   subtitle,
   onPress,
 }: {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  iconColor: string;
-  bgColor: string;
+  sportName: string;
   title: string;
   subtitle: string;
   onPress: () => void;
 }) {
+  const photo = getSportImage(sportName);
+  const { icon, bg, fg } = getSportIcon(sportName);
   return (
     <Bouncy
       onPress={onPress}
@@ -32,10 +36,14 @@ function SportCard({
     >
       <View className="rounded-3xl bg-white p-5 flex-row items-center" style={{ gap: 16 }}>
         <View
-          className="items-center justify-center rounded-2xl"
-          style={{ width: 64, height: 64, backgroundColor: bgColor }}
+          className="items-center justify-center overflow-hidden rounded-2xl"
+          style={{ width: 64, height: 64, backgroundColor: photo ? colors.border : bg }}
         >
-          <MaterialCommunityIcons name={icon} size={34} color={iconColor} />
+          {photo ? (
+            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          ) : (
+            <MaterialCommunityIcons name={icon} size={34} color={fg} />
+          )}
         </View>
         <View className="flex-1">
           <Text className="text-ink font-bold text-lg">{title}</Text>
@@ -60,60 +68,46 @@ export default function ScorecardHomeScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 14 }}>
         <SportCard
-          icon="cricket"
-          iconColor="#166534"
-          bgColor="#DCFCE7"
+          sportName="cricket"
           title="Cricket"
           subtitle="Ball-by-ball scoring with full innings & wickets"
           onPress={() => navigation.navigate("CricketHome")}
         />
         <SportCard
-          icon="tennis"
-          iconColor="#1D4ED8"
-          bgColor="#DBEAFE"
+          sportName="padel"
           title="Padel"
           subtitle="Points, games & sets — FIP scoring rules"
           onPress={() => navigation.navigate("PadelHome")}
         />
         <SportCard
-          icon="tennis-ball"
-          iconColor="#B45309"
-          bgColor="#FEF3C7"
-          title="Tennis"
-          subtitle="Points, games & sets with game/break/set/match point"
-          onPress={() => navigation.navigate("TennisHome")}
+          sportName="football"
+          title="Football"
+          subtitle="Live match clock, halves, extra time & penalties"
+          onPress={() => navigation.navigate("FootballHome")}
         />
         <SportCard
-          icon="racquetball"
-          iconColor="#6D28D9"
-          bgColor="#EDE9FE"
-          title="Pickleball"
-          subtitle="Side-out or rally scoring, singles & doubles"
-          onPress={() => navigation.navigate("PickleballHome")}
-        />
-        <SportCard
-          icon="badminton"
-          iconColor="#BE185D"
-          bgColor="#FCE7F3"
+          sportName="badminton"
           title="Badminton"
           subtitle="Rally scoring to 21, with the 29-29 golden point rule"
           onPress={() => navigation.navigate("BadmintonHome")}
         />
         <SportCard
-          icon="table-tennis"
-          iconColor="#C2410C"
-          bgColor="#FFEDD5"
+          sportName="pickleball"
+          title="Pickleball"
+          subtitle="Side-out or rally scoring, singles & doubles"
+          onPress={() => navigation.navigate("PickleballHome")}
+        />
+        <SportCard
+          sportName="tennis"
+          title="Tennis"
+          subtitle="Points, games & sets with game/break/set/match point"
+          onPress={() => navigation.navigate("TennisHome")}
+        />
+        <SportCard
+          sportName="table tennis"
           title="Table Tennis"
           subtitle="Rally scoring to 11, with ITTF service rotation"
           onPress={() => navigation.navigate("TableTennisHome")}
-        />
-        <SportCard
-          icon="soccer"
-          iconColor="#0F766E"
-          bgColor="#CCFBF1"
-          title="Football"
-          subtitle="Live match clock, halves, extra time & penalties"
-          onPress={() => navigation.navigate("FootballHome")}
         />
       </ScrollView>
     </View>
