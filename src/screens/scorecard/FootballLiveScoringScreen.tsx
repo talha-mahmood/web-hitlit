@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -30,29 +30,12 @@ import {
   type Phase,
   type Team,
 } from "../../lib/footballScoring";
-import { PillRow } from "../../components/GameFormControls";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Route = RouteProp<ScorecardStackParamList, "FootballLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballLiveScoring">;
 
 const RUNNING_PHASES: Phase[] = ["FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_FIRST", "EXTRA_TIME_SECOND"];
-
-// Labels for the "this period just reached its scheduled length" alert —
-// mirrors the wording already used on the manual "End ..." button below,
-// since tapping the alert's button triggers that exact same flow.
-const HALF_ENDED_TITLE: Partial<Record<Phase, string>> = {
-  FIRST_HALF: "1st Half Time Ended",
-  SECOND_HALF: "2nd Half Time Ended",
-  EXTRA_TIME_FIRST: "Extra Time (1st Half) Ended",
-  EXTRA_TIME_SECOND: "Extra Time (2nd Half) Ended",
-};
-const HALF_ENDED_BUTTON: Partial<Record<Phase, string>> = {
-  FIRST_HALF: "End First Half",
-  SECOND_HALF: "End Second Half",
-  EXTRA_TIME_FIRST: "End Extra Time (1st Half)",
-  EXTRA_TIME_SECOND: "End Extra Time (2nd Half)",
-};
 
 const PHASE_LABEL: Partial<Record<Phase, string>> = {
   FIRST_HALF: "1ST HALF",
@@ -65,49 +48,6 @@ const PHASE_LABEL: Partial<Record<Phase, string>> = {
   EXTRA_TIME_FULL_TIME: "EXTRA TIME — FULL-TIME",
   PENALTIES: "PENALTY SHOOTOUT",
 };
-
-const ADDED_TIME_OPTIONS = ["0", "1", "2", "3", "4", "5"];
-
-function AddedTimeModal({
-  visible,
-  onClose,
-  onConfirm,
-  submitting,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onConfirm: (minutes: number) => void;
-  submitting: boolean;
-}) {
-  const [minutes, setMinutes] = useState("0");
-  useEffect(() => {
-    if (visible) setMinutes("0");
-  }, [visible]);
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <View className="bg-white rounded-2xl p-5 w-full" style={cardShadow}>
-          <Text className="text-ink font-bold text-base mb-1">Added Time</Text>
-          <Text className="text-muted text-xs mb-3">How many minutes of stoppage time?</Text>
-          <PillRow options={ADDED_TIME_OPTIONS.map((n) => ({ label: n, value: n }))} value={minutes} onChange={setMinutes} />
-          <View className="flex-row mt-4" style={{ gap: 10 }}>
-            <Pressable onPress={onClose} className="flex-1 border border-border rounded-xl py-3 items-center">
-              <Text className="text-muted font-semibold text-sm">Cancel</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onConfirm(parseInt(minutes, 10) || 0)}
-              disabled={submitting}
-              className="flex-1 bg-primary rounded-xl py-3 items-center"
-            >
-              {submitting ? <ActivityIndicator color="white" size="small" /> : <Text className="text-white font-semibold text-sm">Confirm</Text>}
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
 
 export default function FootballLiveScoringScreen() {
   const { params } = useRoute<Route>();
@@ -124,15 +64,38 @@ export default function FootballLiveScoringScreen() {
   const completeMatch = useCompleteFootballMatch(params.matchId);
 
   const [now, setNow] = useState(Date.now());
-  const [endingPeriod, setEndingPeriod] = useState(false);
   const ringPlayer = useAudioPlayer(require("../../../assets/sounds/half-time-ring.wav"));
-  // Which running phase's "time's up" alert (and ring) is currently active
-  // for — guards against re-firing every second once the boundary is
-  // crossed, and against firing again for the same half after it's acted on.
-  const alertedForPhaseRef = useRef<Phase | null>(null);
+  // Which running phase's "time's up" ring is currently active for — guards
+  // against re-firing every second once the boundary is crossed, and also
+  // drives the "End ..." button turning red while it rings.
+  const [ringingPhase, setRingingPhase] = useState<Phase | null>(null);
 
   const phase = (match?.phase ?? "NOT_STARTED") as Phase;
   const isRunning = RUNNING_PHASES.includes(phase);
+
+  const endCurrentPeriod = () => {
+    if (phase === "FIRST_HALF") {
+      endRunningPeriod.mutate(
+        { endingPhase: "FIRST_HALF", addedMinutes: 0, resultingPhase: "HALF_TIME" },
+        { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the half.")) }
+      );
+    } else if (phase === "SECOND_HALF") {
+      endRunningPeriod.mutate(
+        { endingPhase: "SECOND_HALF", addedMinutes: 0, resultingPhase: "FULL_TIME" },
+        { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the half.")) }
+      );
+    } else if (phase === "EXTRA_TIME_FIRST") {
+      endRunningPeriod.mutate(
+        { endingPhase: "EXTRA_TIME_FIRST", addedMinutes: 0, resultingPhase: "EXTRA_TIME_BREAK" },
+        { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the period.")) }
+      );
+    } else if (phase === "EXTRA_TIME_SECOND") {
+      endRunningPeriod.mutate(
+        { endingPhase: "EXTRA_TIME_SECOND", addedMinutes: 0, resultingPhase: "EXTRA_TIME_FULL_TIME" },
+        { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the period.")) }
+      );
+    }
+  };
 
   useEffect(() => {
     ringPlayer.loop = true;
@@ -165,31 +128,24 @@ export default function FootballLiveScoringScreen() {
   const clock = formatClock(elapsedSeconds, phase, matchConfig);
 
   // The instant a running period reaches its scheduled length, ring
-  // continuously and pop up an alert — the ring only stops once the host
-  // taps the alert's button, which is the same action as the manual
-  // "End ..." button below (opens the added-time entry, same as always).
+  // continuously and turn the "End ..." button red — the ring only stops
+  // once the host taps that (now red) button, which immediately ends the
+  // period. No popup: the button itself is the alert.
   const boundarySeconds = phaseBoundarySeconds(phase, matchConfig);
   const hasReachedScheduledEnd = isRunning && boundarySeconds !== undefined && elapsedSeconds >= boundarySeconds;
+  const isRinging = ringingPhase === phase;
   useEffect(() => {
-    if (!hasReachedScheduledEnd || alertedForPhaseRef.current === phase) return;
-    alertedForPhaseRef.current = phase;
+    if (!hasReachedScheduledEnd || ringingPhase === phase) return;
+    setRingingPhase(phase);
     ringPlayer.play();
-    Alert.alert(
-      HALF_ENDED_TITLE[phase] ?? "Time Ended",
-      undefined,
-      [
-        {
-          text: HALF_ENDED_BUTTON[phase] ?? "End Period",
-          onPress: () => {
-            ringPlayer.pause();
-            setEndingPeriod(true);
-          },
-        },
-      ],
-      { cancelable: false }
-    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasReachedScheduledEnd, phase]);
+
+  const handleEndPeriodPress = () => {
+    ringPlayer.pause();
+    setRingingPhase(null);
+    endCurrentPeriod();
+  };
 
   const goals = useMemo(() => {
     if (!match) return [];
@@ -264,30 +220,6 @@ export default function FootballLiveScoringScreen() {
           }),
       },
     ]);
-  };
-
-  const handleConfirmEndPeriod = (addedMinutes: number) => {
-    if (phase === "FIRST_HALF") {
-      endRunningPeriod.mutate(
-        { endingPhase: "FIRST_HALF", addedMinutes, resultingPhase: "HALF_TIME" },
-        { onSuccess: () => setEndingPeriod(false), onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the half.")) }
-      );
-    } else if (phase === "SECOND_HALF") {
-      endRunningPeriod.mutate(
-        { endingPhase: "SECOND_HALF", addedMinutes, resultingPhase: "FULL_TIME" },
-        { onSuccess: () => setEndingPeriod(false), onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the half.")) }
-      );
-    } else if (phase === "EXTRA_TIME_FIRST") {
-      endRunningPeriod.mutate(
-        { endingPhase: "EXTRA_TIME_FIRST", addedMinutes, resultingPhase: "EXTRA_TIME_BREAK" },
-        { onSuccess: () => setEndingPeriod(false), onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the period.")) }
-      );
-    } else if (phase === "EXTRA_TIME_SECOND") {
-      endRunningPeriod.mutate(
-        { endingPhase: "EXTRA_TIME_SECOND", addedMinutes, resultingPhase: "EXTRA_TIME_FULL_TIME" },
-        { onSuccess: () => setEndingPeriod(false), onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not end the period.")) }
-      );
-    }
   };
 
   const handleStartSecondHalf = () =>
@@ -495,12 +427,13 @@ export default function FootballLiveScoringScreen() {
             </View>
 
             <Pressable
-              onPress={() => setEndingPeriod(true)}
-              className="flex-row items-center justify-center rounded-2xl py-3 mt-3 border border-border"
-              style={{ gap: 8 }}
+              onPress={handleEndPeriodPress}
+              disabled={endRunningPeriod.isPending}
+              className={`flex-row items-center justify-center rounded-2xl py-3 mt-3 ${isRinging ? "" : "border border-border"}`}
+              style={{ gap: 8, ...(isRinging ? { backgroundColor: colors.danger } : null) }}
             >
-              <Ionicons name="stop-circle-outline" size={16} color={colors.muted} />
-              <Text className="text-muted text-sm font-semibold">
+              <Ionicons name="stop-circle-outline" size={16} color={isRinging ? "white" : colors.muted} />
+              <Text className={`text-sm font-semibold ${isRinging ? "text-white" : "text-muted"}`}>
                 {phase === "FIRST_HALF" && "End First Half"}
                 {phase === "SECOND_HALF" && "End Second Half"}
                 {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
@@ -597,13 +530,6 @@ export default function FootballLiveScoringScreen() {
           </>
         )}
       </ScrollView>
-
-      <AddedTimeModal
-        visible={endingPeriod}
-        onClose={() => setEndingPeriod(false)}
-        onConfirm={handleConfirmEndPeriod}
-        submitting={endRunningPeriod.isPending}
-      />
     </View>
   );
 }
