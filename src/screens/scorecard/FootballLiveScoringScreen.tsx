@@ -20,6 +20,7 @@ import {
   useCompleteFootballMatch,
 } from "../../hooks/useFootball";
 import { friendlyFootballError, goalRowToEvent, penaltyKickRowToEvent, type RunningPhase } from "../../lib/api/football";
+import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import {
   computeElapsedSeconds,
   formatClock,
@@ -54,6 +55,10 @@ const PHASE_LABEL: Partial<Record<Phase, string>> = {
 export default function FootballLiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
+  // Goes back to wherever the scorer came from — the sport's match list in
+  // the Scorecard tab, or a tournament's match list when started from
+  // "Go To Scorecard" (that route doesn't exist in the other tab stacks).
+  const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("FootballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useFootballMatch(params.matchId);
   const addGoal = useAddFootballGoal(params.matchId);
@@ -66,6 +71,7 @@ export default function FootballLiveScoringScreen() {
   const resumeMatch = useResumeFootballMatch(params.matchId);
   const startPenalties = useStartPenalties(params.matchId);
   const completeMatch = useCompleteFootballMatch(params.matchId);
+  const syncTournamentResult = useSyncScorecardMatchResult();
 
   const [now, setNow] = useState(Date.now());
   const ringPlayer = useAudioPlayer(require("../../../assets/sounds/half-time-ring.wav"));
@@ -182,7 +188,12 @@ export default function FootballLiveScoringScreen() {
     const summary = matchResultSummary(match.team_a_name, match.team_b_name, scoreSummary, shootout);
     completeMatch.mutate(
       { winnerTeam: shootout.winner, isDraw: false, resultSummary: summary },
-      { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not save the match result.")) }
+      {
+        onSuccess: () => {
+          syncTournamentResult.mutate({ sport: "football", scorecardMatchId: params.matchId, teamAWon: shootout.winner === "A" });
+        },
+        onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not save the match result.")),
+      }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, shootout?.isDecided, match?.status]);
@@ -284,10 +295,21 @@ export default function FootballLiveScoringScreen() {
 
   const handleFinishAsIs = () => {
     const { a, b } = scoreSummary.current;
+    const isDraw = a === b;
+    const winnerTeam = isDraw ? null : a > b ? "A" : "B";
     const summary = matchResultSummary(match.team_a_name, match.team_b_name, scoreSummary, null);
     completeMatch.mutate(
-      { winnerTeam: a === b ? null : a > b ? "A" : "B", isDraw: a === b, resultSummary: summary },
-      { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not finish the match.")) }
+      { winnerTeam, isDraw, resultSummary: summary },
+      {
+        onSuccess: () => {
+          syncTournamentResult.mutate({
+            sport: "football",
+            scorecardMatchId: params.matchId,
+            teamAWon: isDraw ? null : winnerTeam === "A",
+          });
+        },
+        onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not finish the match.")),
+      }
     );
   };
 
@@ -305,7 +327,7 @@ export default function FootballLiveScoringScreen() {
     return (
       <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
-          <Pressable onPress={() => navigation.navigate("FootballHome")} hitSlop={8} className="p-1">
+          <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <Text className="text-base font-bold text-ink">Match Complete</Text>
@@ -359,7 +381,7 @@ export default function FootballLiveScoringScreen() {
           </View>
 
           <Pressable
-            onPress={() => navigation.navigate("FootballHome")}
+            onPress={() => leaveScorecard()}
             className="rounded-2xl py-4 items-center mt-6 bg-primary"
             style={primaryButtonShadow}
           >
@@ -373,7 +395,7 @@ export default function FootballLiveScoringScreen() {
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
-        <Pressable onPress={() => navigation.navigate("FootballHome")} hitSlop={8} className="p-1">
+        <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>

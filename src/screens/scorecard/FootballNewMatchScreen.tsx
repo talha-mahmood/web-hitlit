@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreateFootballMatch } from "../../hooks/useFootball";
 import { friendlyFootballError } from "../../lib/api/football";
+import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
+type Route = RouteProp<ScorecardStackParamList, "FootballNewMatch">;
+
+const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 
 // Presets are TOTAL minutes (both halves / both extra-time periods
 // combined) — the familiar way a casual match gets described ("we're
@@ -67,16 +71,19 @@ function InfoBox({ text }: { text: string }) {
 
 export default function FootballNewMatchScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
+  const prefill = params?.prefill;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateFootballMatch();
+  const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
   const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(prefill?.venue ?? "");
 
   const totalMatchNumber = parseInt(totalMatchMinutes ?? "", 10);
   const isMatchDurationValid = !!totalMatchMinutes && totalMatchNumber > 0;
@@ -111,7 +118,12 @@ export default function FootballNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => navigation.replace("FootballLiveScoring", { matchId }),
+        onSuccess: ({ matchId }) => {
+          if (prefill) {
+            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "football", scorecardMatchId: matchId });
+          }
+          navigation.replace("FootballLiveScoring", { matchId });
+        },
         onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not create match.")),
       }
     );
@@ -130,16 +142,41 @@ export default function FootballNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
+        {prefill && (
+          <InfoBox text="Team names and venue come from the tournament match and can't be changed here — everything else is up to you." />
+        )}
+
         <CardSection icon="shirt-outline" title="Team A">
-          <FieldInput value={teamAName} onChangeText={setTeamAName} placeholder="e.g. Strikers FC" maxLength={40} />
+          <FieldInput
+            value={teamAName}
+            onChangeText={setTeamAName}
+            placeholder="e.g. Strikers FC"
+            maxLength={40}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="shirt-outline" title="Team B">
-          <FieldInput value={teamBName} onChangeText={setTeamBName} placeholder="e.g. United FC" maxLength={40} />
+          <FieldInput
+            value={teamBName}
+            onChangeText={setTeamBName}
+            placeholder="e.g. United FC"
+            maxLength={40}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="location-outline" title="Venue">
-          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. City Stadium" maxLength={60} />
+          <FieldInput
+            value={venue}
+            onChangeText={setVenue}
+            placeholder="e.g. City Stadium"
+            maxLength={60}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="time-outline" title="Match Duration">

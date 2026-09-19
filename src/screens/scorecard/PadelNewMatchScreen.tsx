@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreatePadelMatch } from "../../hooks/usePadel";
 import { friendlyPadelError } from "../../lib/api/padel";
+import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { MatchFormat, DeuceType, Team } from "../../lib/padelScoring";
@@ -16,6 +17,9 @@ type PlayMode = "SINGLES" | "DOUBLES";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelNewMatch">;
+type Route = RouteProp<ScorecardStackParamList, "PadelNewMatch">;
+
+const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 
 const FORMAT_OPTIONS: { label: string; value: MatchFormat }[] = [
   { label: "Best of 1 Set", value: "BEST_OF_1" },
@@ -100,6 +104,7 @@ function TeamCard({
   playMode,
   players,
   onPlayersChange,
+  locked,
 }: {
   letter: "A" | "B";
   name: string;
@@ -107,6 +112,7 @@ function TeamCard({
   playMode: PlayMode;
   players: [string, string];
   onPlayersChange: (players: [string, string]) => void;
+  locked?: boolean;
 }) {
   const isDoubles = playMode === "DOUBLES";
   return (
@@ -125,7 +131,14 @@ function TeamCard({
         <Text className="text-ink font-semibold text-sm mb-2">
           {isDoubles ? `Team ${letter} Name` : `Player ${letter} Name`} <Text className="text-red-500">*</Text>
         </Text>
-        <FieldInput value={name} onChangeText={onNameChange} placeholder={letter === "A" ? "e.g. Smashers" : "e.g. Net Ninjas"} maxLength={40} />
+        <FieldInput
+          value={name}
+          onChangeText={onNameChange}
+          placeholder={letter === "A" ? "e.g. Smashers" : "e.g. Net Ninjas"}
+          maxLength={40}
+          editable={!locked}
+          containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
+        />
 
         {isDoubles && (
           <>
@@ -137,6 +150,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([v, players[1]])}
               placeholder="e.g. Alex"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
 
@@ -148,6 +163,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([players[0], v])}
               placeholder="e.g. Sam"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
           </>
@@ -159,20 +176,35 @@ function TeamCard({
 
 export default function PadelNewMatchScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
+  const prefill = params?.prefill;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePadelMatch();
+  const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [playMode, setPlayMode] = useState<PlayMode | null>("DOUBLES");
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
-  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>(["", ""]);
-  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>(["", ""]);
+  // When prefilled, team/player fields are locked to the tournament
+  // roster — so Doubles can only be offered as a choice if that roster
+  // actually has 2 real players per side. Otherwise there'd be no way to
+  // fill the (locked, blank) second player slot Doubles requires.
+  const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
+  const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>([
+    prefill?.teamAPlayers[0] ?? "",
+    prefill?.teamAPlayers[1] ?? "",
+  ]);
+  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>([
+    prefill?.teamBPlayers[0] ?? "",
+    prefill?.teamBPlayers[1] ?? "",
+  ]);
   const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
   const [deuceType, setDeuceType] = useState<DeuceType | null>("ADVANTAGE");
   const [firstServerTeam, setFirstServerTeam] = useState<Team | null>(null);
   const [firstServerPlayerIndex, setFirstServerPlayerIndex] = useState<0 | 1 | null>(null);
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(prefill?.venue ?? "");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const isDoubles = playMode === "DOUBLES";
@@ -212,7 +244,12 @@ export default function PadelNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => navigation.replace("PadelLiveScoring", { matchId }),
+        onSuccess: ({ matchId }) => {
+          if (prefill) {
+            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "padel", scorecardMatchId: matchId });
+          }
+          navigation.replace("PadelLiveScoring", { matchId });
+        },
         onError: (err) => Alert.alert("Error", friendlyPadelError(err, "Could not create match.")),
       }
     );
@@ -231,26 +268,40 @@ export default function PadelNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
+        {prefill && (
+          <InfoBox text="Team/player names and venue come from the tournament match and can't be changed here — everything else is up to you." />
+        )}
+
         <CardSection icon="people-outline" title="Play Mode">
           <PillRow
-            options={PLAY_MODE_OPTIONS}
+            options={playModeOptions}
             value={playMode}
             onChange={(v) => {
               setPlayMode(v);
               setFirstServerPlayerIndex(null);
             }}
           />
+          {!canOfferDoubles && (
+            <InfoBox text="Doubles isn't available here — this tournament team only has one registered player." />
+          )}
         </CardSection>
 
         {playMode && (
           <>
-            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
-            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} locked={!!prefill} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} locked={!!prefill} />
           </>
         )}
 
         <CardSection icon="location-outline" title="Venue">
-          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Padel Club Karachi" maxLength={60} />
+          <FieldInput
+            value={venue}
+            onChangeText={setVenue}
+            placeholder="e.g. Padel Club Karachi"
+            maxLength={60}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="trophy-outline" title="Match Format">

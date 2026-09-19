@@ -25,7 +25,7 @@ import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import type { TournamentMatch } from "../../lib/api/tournamentMatches";
+import type { TournamentMatch, ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import {
@@ -956,13 +956,19 @@ export default function TournamentMatchesScreen() {
   const hasMatches = (matches?.length ?? 0) > 0;
   const isPoolFormat = game.tournament_format === "POOL";
 
-  // "Go To Scorecard" only exists for cricket (Live Scoring is a
-  // cricket-only module) and only once the venue is settled — a real
-  // booking for a dropdown-picked venue, or immediately for a manually
-  // typed one (see the identical rule on GameDetailScreen's "Book Venue").
-  const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
+  // "Go To Scorecard" exists for every sport, and only once the venue is
+  // settled — a real booking for a dropdown-picked venue, or immediately
+  // for a manually typed one (see the identical rule on GameDetailScreen's
+  // "Book Venue"). Cricket keeps its own lightweight toss/overs modal
+  // (StartScorecardModal) since its Live Scoring needs a real coin-toss
+  // decided right before play; every other sport instead jumps straight to
+  // that sport's own New Match screen with team names/rosters/venue
+  // pre-filled and locked, letting the host pick the rest of that sport's
+  // match rules there (see handleGoToScorecard below).
+  const sportName = (game.sports?.name ?? "").trim().toLowerCase();
+  const isCricketSport = sportName.includes("cricket");
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
-  const canGoToScorecard = isHost && isCricketSport && isVenueBooked;
+  const canGoToScorecard = isHost && isVenueBooked;
   // "Go To Scorecard" tracks the earliest still-pending real match (both
   // teams set, not a bye) across the whole tournament — once one match's
   // scorecard finishes, its result is synced automatically (see
@@ -981,11 +987,52 @@ export default function TournamentMatchesScreen() {
   }
 
   const handleGoToScorecard = (match: TournamentMatch) => {
-    if (match.cricket_match_id) {
-      navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+    if (isCricketSport) {
+      if (match.cricket_match_id) {
+        navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+        return;
+      }
+      setScorecardMatch(match);
       return;
     }
-    setScorecardMatch(match);
+
+    if (!match.team_a || !match.team_b) return;
+    const prefill: ScorecardPrefill = {
+      tournamentMatchId: match.id,
+      gameId: params.gameId,
+      teamAName: match.team_a.name,
+      teamBName: match.team_b.name,
+      teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
+      teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+      venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
+    };
+
+    switch (sportName) {
+      case "padel":
+        if (match.padel_match_id) navigation.navigate("PadelLiveScoring", { matchId: match.padel_match_id });
+        else navigation.navigate("PadelNewMatch", { prefill });
+        return;
+      case "tennis":
+        if (match.tennis_match_id) navigation.navigate("TennisLiveScoring", { matchId: match.tennis_match_id });
+        else navigation.navigate("TennisNewMatch", { prefill });
+        return;
+      case "badminton":
+        if (match.badminton_match_id) navigation.navigate("BadmintonLiveScoring", { matchId: match.badminton_match_id });
+        else navigation.navigate("BadmintonNewMatch", { prefill });
+        return;
+      case "pickleball":
+        if (match.pickleball_match_id) navigation.navigate("PickleballLiveScoring", { matchId: match.pickleball_match_id });
+        else navigation.navigate("PickleballNewMatch", { prefill });
+        return;
+      case "table tennis":
+        if (match.table_tennis_match_id) navigation.navigate("TableTennisLiveScoring", { matchId: match.table_tennis_match_id });
+        else navigation.navigate("TableTennisNewMatch", { prefill });
+        return;
+      case "football":
+        if (match.football_match_id) navigation.navigate("FootballLiveScoring", { matchId: match.football_match_id });
+        else navigation.navigate("FootballNewMatch", { prefill });
+        return;
+    }
   };
 
   const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {

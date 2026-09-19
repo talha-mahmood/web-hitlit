@@ -12,6 +12,7 @@ import {
   useCompletePickleballMatch,
 } from "../../hooks/usePickleball";
 import { friendlyPickleballError, rallyRowToEvent } from "../../lib/api/pickleball";
+import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import {
   replayPickleballMatch,
   formatTraditionalDoublesScore,
@@ -33,11 +34,16 @@ const INDICATOR_LABEL: Record<Exclude<Indicator, null>, string> = {
 export default function PickleballLiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
+  // Goes back to wherever the scorer came from — the sport's match list in
+  // the Scorecard tab, or a tournament's match list when started from
+  // "Go To Scorecard" (that route doesn't exist in the other tab stacks).
+  const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("PickleballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = usePickleballMatch(params.matchId);
   const addRally = useAddPickleballRally(params.matchId);
   const deleteLastRally = useDeleteLastPickleballRally(params.matchId);
   const completeMatch = useCompletePickleballMatch();
+  const syncTournamentResult = useSyncScorecardMatchResult();
 
   const rallies = useMemo(() => {
     if (!match) return [];
@@ -67,7 +73,12 @@ export default function PickleballLiveScoringScreen() {
       const summary = matchResultSummary(match.team_a_name, match.team_b_name, state);
       completeMatch.mutate(
         { matchId: match.id, winnerTeam: state.winner, resultSummary: summary },
-        { onError: (err) => Alert.alert("Error", friendlyPickleballError(err, "Could not save the match result.")) }
+        {
+          onSuccess: () => {
+            syncTournamentResult.mutate({ sport: "pickleball", scorecardMatchId: match.id, teamAWon: state.winner === "A" });
+          },
+          onError: (err) => Alert.alert("Error", friendlyPickleballError(err, "Could not save the match result.")),
+        }
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +133,7 @@ export default function PickleballLiveScoringScreen() {
     return (
       <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
-          <Pressable onPress={() => navigation.navigate("PickleballHome")} hitSlop={8} className="p-1">
+          <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <Text className="text-base font-bold text-ink">Match Complete</Text>
@@ -157,7 +168,7 @@ export default function PickleballLiveScoringScreen() {
           </View>
 
           <Pressable
-            onPress={() => navigation.navigate("PickleballHome")}
+            onPress={() => leaveScorecard()}
             className="rounded-2xl py-4 items-center mt-6 bg-primary"
             style={primaryButtonShadow}
           >
@@ -171,7 +182,7 @@ export default function PickleballLiveScoringScreen() {
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
-        <Pressable onPress={() => navigation.navigate("PickleballHome")} hitSlop={8} className="p-1">
+        <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>

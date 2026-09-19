@@ -151,3 +151,79 @@ export async function syncCricketMatchResult(cricketMatchId: string, teamAWon: b
     .eq("id", data.id);
   if (updateError) throw new Error(updateError.message);
 }
+
+// The same "Go To Scorecard" link/sync plumbing as cricket's, generalized
+// across the other six sports (padel, tennis, badminton, pickleball, table
+// tennis, football) — unlike the scoring engines, this is plain CRUD with
+// no sport-specific rules, so one parametrized pair of functions covers all
+// six instead of duplicating linkCricketMatch/syncCricketMatchResult six times.
+export type ScorecardSport = "padel" | "tennis" | "badminton" | "pickleball" | "table_tennis" | "football";
+
+// What "Go To Scorecard" hands off to a sport's New Match screen for a
+// tournament match — team names/rosters/venue are already known (from the
+// tournament team roster and the game's booked venue), so that screen
+// locks those specific fields instead of asking the host to retype them,
+// while every match-rule field (format, points/games targets, play mode,
+// server, etc.) stays a normal, editable choice.
+export type ScorecardPrefill = {
+  tournamentMatchId: string;
+  gameId: string;
+  teamAName: string;
+  teamBName: string;
+  teamAPlayers: string[];
+  teamBPlayers: string[];
+  venue?: string;
+};
+
+const SPORT_MATCH_ID_COLUMN: Record<ScorecardSport, string> = {
+  padel: "padel_match_id",
+  tennis: "tennis_match_id",
+  badminton: "badminton_match_id",
+  pickleball: "pickleball_match_id",
+  table_tennis: "table_tennis_match_id",
+  football: "football_match_id",
+};
+
+// Remembers which <sport>_matches row "Go To Scorecard" created for this
+// tournament match, so opening it again re-opens the same live-scoring
+// session instead of starting a duplicate one.
+export async function linkScorecardMatch(matchId: string, sport: ScorecardSport, scorecardMatchId: string): Promise<void> {
+  const column = SPORT_MATCH_ID_COLUMN[sport];
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update({ [column]: scorecardMatchId } as never)
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+// Called once a Live Scoring match finishes — if it was started from a
+// tournament match (via "Go To Scorecard"), carries its result straight
+// into tournament_matches, same as syncCricketMatchResult. A no-op if this
+// scorecard match isn't linked to any tournament match (e.g. a standalone
+// scorecard created from the Scorecard tab directly).
+export async function syncScorecardMatchResult(
+  sport: ScorecardSport,
+  scorecardMatchId: string,
+  teamAWon: boolean | null
+): Promise<void> {
+  const column = SPORT_MATCH_ID_COLUMN[sport];
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, team_a_id, team_b_id")
+    .eq(column, scorecardMatchId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return;
+
+  const winnerTeamId = teamAWon === null ? null : teamAWon ? data.team_a_id : data.team_b_id;
+  const { error: updateError } = await supabase
+    .from("tournament_matches")
+    .update({
+      status: "COMPLETED",
+      winner_team_id: winnerTeamId,
+      is_draw: teamAWon === null,
+      played_at: new Date().toISOString(),
+    })
+    .eq("id", data.id);
+  if (updateError) throw new Error(updateError.message);
+}

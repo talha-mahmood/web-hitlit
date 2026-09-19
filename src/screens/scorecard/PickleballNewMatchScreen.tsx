@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreatePickleballMatch } from "../../hooks/usePickleball";
 import { friendlyPickleballError } from "../../lib/api/pickleball";
+import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { ScoringMode, PlayMode, Team } from "../../lib/pickleballScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PickleballNewMatch">;
+type Route = RouteProp<ScorecardStackParamList, "PickleballNewMatch">;
+
+const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 
 const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
   { label: "Singles", value: "SINGLES" },
@@ -88,6 +92,7 @@ function TeamCard({
   playMode,
   players,
   onPlayersChange,
+  locked,
 }: {
   letter: "A" | "B";
   name: string;
@@ -95,6 +100,7 @@ function TeamCard({
   playMode: PlayMode;
   players: [string, string];
   onPlayersChange: (players: [string, string]) => void;
+  locked?: boolean;
 }) {
   return (
     <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
@@ -117,6 +123,8 @@ function TeamCard({
           onChangeText={onNameChange}
           placeholder={letter === "A" ? "e.g. Alex" : "e.g. Sam"}
           maxLength={40}
+          editable={!locked}
+          containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
         />
 
         {playMode === "DOUBLES" && (
@@ -129,6 +137,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([v, players[1]])}
               placeholder="e.g. Alex"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
             <Text className="text-ink font-semibold text-sm mb-2 mt-4">
@@ -139,6 +149,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([players[0], v])}
               placeholder="e.g. Jo"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
           </>
@@ -150,18 +162,33 @@ function TeamCard({
 
 export default function PickleballNewMatchScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
+  const prefill = params?.prefill;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePickleballMatch();
+  const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
-  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>(["", ""]);
-  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>(["", ""]);
-  const [playMode, setPlayMode] = useState<PlayMode | null>("DOUBLES");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>([
+    prefill?.teamAPlayers[0] ?? "",
+    prefill?.teamAPlayers[1] ?? "",
+  ]);
+  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>([
+    prefill?.teamBPlayers[0] ?? "",
+    prefill?.teamBPlayers[1] ?? "",
+  ]);
+  // When prefilled, team/player fields are locked to the tournament
+  // roster — so Doubles can only be offered as a choice if that roster
+  // actually has 2 real players per side. Otherwise there'd be no way to
+  // fill the (locked, blank) second player slot Doubles requires.
+  const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
+  const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(canOfferDoubles ? "DOUBLES" : "SINGLES");
   const [scoringMode, setScoringMode] = useState<ScoringMode | null>("SIDE_OUT");
   const [firstServingTeam, setFirstServingTeam] = useState<Team | null>(null);
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(prefill?.venue ?? "");
   const [pointsToWin, setPointsToWin] = useState<string | null>(String(STANDARD_POINTS_TO_WIN));
   const [gamesToWin, setGamesToWin] = useState<string | null>(String(STANDARD_GAMES_TO_WIN));
 
@@ -201,7 +228,12 @@ export default function PickleballNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => navigation.replace("PickleballLiveScoring", { matchId }),
+        onSuccess: ({ matchId }) => {
+          if (prefill) {
+            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "pickleball", scorecardMatchId: matchId });
+          }
+          navigation.replace("PickleballLiveScoring", { matchId });
+        },
         onError: (err) => Alert.alert("Error", friendlyPickleballError(err, "Could not create match.")),
       }
     );
@@ -220,26 +252,40 @@ export default function PickleballNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
+        {prefill && (
+          <InfoBox text="Team/player names and venue come from the tournament match and can't be changed here — everything else is up to you." />
+        )}
+
         <CardSection icon="people-outline" title="Play Mode">
           <PillRow
-            options={PLAY_MODE_OPTIONS}
+            options={playModeOptions}
             value={playMode}
             onChange={(v) => {
               setPlayMode(v);
               setFirstServingTeam(null);
             }}
           />
+          {!canOfferDoubles && (
+            <InfoBox text="Doubles isn't available here — this tournament team only has one registered player." />
+          )}
         </CardSection>
 
         {playMode && (
           <>
-            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
-            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} locked={!!prefill} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} locked={!!prefill} />
           </>
         )}
 
         <CardSection icon="location-outline" title="Venue">
-          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Pickleball Club Karachi" maxLength={60} />
+          <FieldInput
+            value={venue}
+            onChangeText={setVenue}
+            placeholder="e.g. Pickleball Club Karachi"
+            maxLength={60}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="options-outline" title="Scoring Mode">

@@ -12,8 +12,21 @@ import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
 import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
 import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
 import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
+import PadelNewMatchScreen from "../screens/scorecard/PadelNewMatchScreen";
+import PadelLiveScoringScreen from "../screens/scorecard/PadelLiveScoringScreen";
+import TennisNewMatchScreen from "../screens/scorecard/TennisNewMatchScreen";
+import TennisLiveScoringScreen from "../screens/scorecard/TennisLiveScoringScreen";
+import BadmintonNewMatchScreen from "../screens/scorecard/BadmintonNewMatchScreen";
+import BadmintonLiveScoringScreen from "../screens/scorecard/BadmintonLiveScoringScreen";
+import PickleballNewMatchScreen from "../screens/scorecard/PickleballNewMatchScreen";
+import PickleballLiveScoringScreen from "../screens/scorecard/PickleballLiveScoringScreen";
+import TableTennisNewMatchScreen from "../screens/scorecard/TableTennisNewMatchScreen";
+import TableTennisLiveScoringScreen from "../screens/scorecard/TableTennisLiveScoringScreen";
+import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen";
+import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
+import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 
 export type GamesStackParamList = {
   GamesList:
@@ -31,6 +44,18 @@ export type GamesStackParamList = {
   BookingConfirmation: BookingConfirmationParams;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
+  PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PadelLiveScoring: { matchId: string };
+  TennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TennisLiveScoring: { matchId: string };
+  BadmintonNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  BadmintonLiveScoring: { matchId: string };
+  PickleballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PickleballLiveScoring: { matchId: string };
+  TableTennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TableTennisLiveScoring: { matchId: string };
+  FootballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  FootballLiveScoring: { matchId: string };
 };
 
 const Stack = createNativeStackNavigator<GamesStackParamList>();
@@ -51,6 +76,18 @@ export default function GamesStackNavigator() {
       <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
+      <Stack.Screen name="PadelNewMatch" component={PadelNewMatchScreen} />
+      <Stack.Screen name="PadelLiveScoring" component={PadelLiveScoringScreen} />
+      <Stack.Screen name="TennisNewMatch" component={TennisNewMatchScreen} />
+      <Stack.Screen name="TennisLiveScoring" component={TennisLiveScoringScreen} />
+      <Stack.Screen name="BadmintonNewMatch" component={BadmintonNewMatchScreen} />
+      <Stack.Screen name="BadmintonLiveScoring" component={BadmintonLiveScoringScreen} />
+      <Stack.Screen name="PickleballNewMatch" component={PickleballNewMatchScreen} />
+      <Stack.Screen name="PickleballLiveScoring" component={PickleballLiveScoringScreen} />
+      <Stack.Screen name="TableTennisNewMatch" component={TableTennisNewMatchScreen} />
+      <Stack.Screen name="TableTennisLiveScoring" component={TableTennisLiveScoringScreen} />
+      <Stack.Screen name="FootballNewMatch" component={FootballNewMatchScreen} />
+      <Stack.Screen name="FootballLiveScoring" component={FootballLiveScoringScreen} />
     </Stack.Navigator>
   );
 }

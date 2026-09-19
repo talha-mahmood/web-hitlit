@@ -2457,59 +2457,91 @@ export type Database = {
       }
       tournament_matches: {
         Row: {
+          badminton_match_id: string | null
           created_at: string
           cricket_match_id: string | null
+          football_match_id: string | null
           game_id: string
           id: string
           is_draw: boolean
+          padel_match_id: string | null
+          pickleball_match_id: string | null
           played_at: string | null
           pool_id: string | null
           round: number
           sort_order: number
           status: string
+          table_tennis_match_id: string | null
           team_a_id: string | null
           team_b_id: string | null
+          tennis_match_id: string | null
           updated_at: string
           winner_team_id: string | null
         }
         Insert: {
+          badminton_match_id?: string | null
           created_at?: string
           cricket_match_id?: string | null
+          football_match_id?: string | null
           game_id: string
           id?: string
           is_draw?: boolean
+          padel_match_id?: string | null
+          pickleball_match_id?: string | null
           played_at?: string | null
           pool_id?: string | null
           round?: number
           sort_order?: number
           status?: string
+          table_tennis_match_id?: string | null
           team_a_id?: string | null
           team_b_id?: string | null
+          tennis_match_id?: string | null
           updated_at?: string
           winner_team_id?: string | null
         }
         Update: {
+          badminton_match_id?: string | null
           created_at?: string
           cricket_match_id?: string | null
+          football_match_id?: string | null
           game_id?: string
           id?: string
           is_draw?: boolean
+          padel_match_id?: string | null
+          pickleball_match_id?: string | null
           played_at?: string | null
           pool_id?: string | null
           round?: number
           sort_order?: number
           status?: string
+          table_tennis_match_id?: string | null
           team_a_id?: string | null
           team_b_id?: string | null
+          tennis_match_id?: string | null
           updated_at?: string
           winner_team_id?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "tournament_matches_badminton_match_id_fkey"
+            columns: ["badminton_match_id"]
+            isOneToOne: false
+            referencedRelation: "badminton_matches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_matches_cricket_match_id_fkey"
             columns: ["cricket_match_id"]
             isOneToOne: false
             referencedRelation: "cricket_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_football_match_id_fkey"
+            columns: ["football_match_id"]
+            isOneToOne: false
+            referencedRelation: "football_matches"
             referencedColumns: ["id"]
           },
           {
@@ -2520,10 +2552,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tournament_matches_padel_match_id_fkey"
+            columns: ["padel_match_id"]
+            isOneToOne: false
+            referencedRelation: "padel_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_pickleball_match_id_fkey"
+            columns: ["pickleball_match_id"]
+            isOneToOne: false
+            referencedRelation: "pickleball_matches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_matches_pool_id_fkey"
             columns: ["pool_id"]
             isOneToOne: false
             referencedRelation: "tournament_pools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_table_tennis_match_id_fkey"
+            columns: ["table_tennis_match_id"]
+            isOneToOne: false
+            referencedRelation: "table_tennis_matches"
             referencedColumns: ["id"]
           },
           {
@@ -2538,6 +2591,13 @@ export type Database = {
             columns: ["team_b_id"]
             isOneToOne: false
             referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_tennis_match_id_fkey"
+            columns: ["tennis_match_id"]
+            isOneToOne: false
+            referencedRelation: "tennis_matches"
             referencedColumns: ["id"]
           },
           {

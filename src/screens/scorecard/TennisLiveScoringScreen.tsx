@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useTennisMatch, useAddTennisPoint, useDeleteLastTennisPoint, useCompleteTennisMatch } from "../../hooks/useTennis";
+import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import { friendlyTennisError, pointRowToEvent } from "../../lib/api/tennis";
 import { replayTennisMatch, formatSetScore, matchResultSummary, type TennisMatchConfig, type Player, type Indicator } from "../../lib/tennisScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -23,11 +24,16 @@ const INDICATOR_LABEL: Record<Exclude<Indicator, null>, string> = {
 export default function TennisLiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
+  // Goes back to wherever the scorer came from — the sport's match list in
+  // the Scorecard tab, or a tournament's match list when started from
+  // "Go To Scorecard" (that route doesn't exist in the other tab stacks).
+  const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("TennisHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useTennisMatch(params.matchId);
   const addPoint = useAddTennisPoint(params.matchId);
   const deleteLastPoint = useDeleteLastTennisPoint(params.matchId);
   const completeMatch = useCompleteTennisMatch();
+  const syncTournamentResult = useSyncScorecardMatchResult();
 
   const points = useMemo(() => {
     if (!match) return [];
@@ -58,7 +64,12 @@ export default function TennisLiveScoringScreen() {
       const summary = matchResultSummary(match.player_a_name, match.player_b_name, state);
       completeMatch.mutate(
         { matchId: match.id, winnerPlayer: state.winner, resultSummary: summary },
-        { onError: (err) => Alert.alert("Error", friendlyTennisError(err, "Could not save the match result.")) }
+        {
+          onSuccess: () => {
+            syncTournamentResult.mutate({ sport: "tennis", scorecardMatchId: match.id, teamAWon: state.winner === "A" });
+          },
+          onError: (err) => Alert.alert("Error", friendlyTennisError(err, "Could not save the match result.")),
+        }
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,7 +124,7 @@ export default function TennisLiveScoringScreen() {
     return (
       <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
-          <Pressable onPress={() => navigation.navigate("TennisHome")} hitSlop={8} className="p-1">
+          <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <Text className="text-base font-bold text-ink">Match Complete</Text>
@@ -148,7 +159,7 @@ export default function TennisLiveScoringScreen() {
           </View>
 
           <Pressable
-            onPress={() => navigation.navigate("TennisHome")}
+            onPress={() => leaveScorecard()}
             className="rounded-2xl py-4 items-center mt-6 bg-primary"
             style={primaryButtonShadow}
           >
@@ -162,7 +173,7 @@ export default function TennisLiveScoringScreen() {
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
-        <Pressable onPress={() => navigation.navigate("TennisHome")} hitSlop={8} className="p-1">
+        <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>

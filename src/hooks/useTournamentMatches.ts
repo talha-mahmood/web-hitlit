@@ -9,6 +9,9 @@ import {
   resetMatchResult,
   linkCricketMatch,
   syncCricketMatchResult,
+  linkScorecardMatch,
+  syncScorecardMatchResult,
+  type ScorecardSport,
 } from "../lib/api/tournamentMatches";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -108,6 +111,33 @@ export function useSyncCricketMatchResult() {
   return useMutation({
     mutationFn: ({ cricketMatchId, teamAWon }: { cricketMatchId: string; teamAWon: boolean | null }) =>
       syncCricketMatchResult(cricketMatchId, teamAWon),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches"] }),
+  });
+}
+
+// Same as useLinkCricketMatch/useSyncCricketMatchResult, generalized across
+// the other six sports via the `sport` tag.
+export function useLinkScorecardMatch(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ matchId, sport, scorecardMatchId }: { matchId: string; sport: ScorecardSport; scorecardMatchId: string }) =>
+      linkScorecardMatch(matchId, sport, scorecardMatchId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useSyncScorecardMatchResult() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      sport,
+      scorecardMatchId,
+      teamAWon,
+    }: {
+      sport: ScorecardSport;
+      scorecardMatchId: string;
+      teamAWon: boolean | null;
+    }) => syncScorecardMatchResult(sport, scorecardMatchId, teamAWon),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches"] }),
   });
 }

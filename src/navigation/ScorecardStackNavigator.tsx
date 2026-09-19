@@ -22,6 +22,7 @@ import TableTennisLiveScoringScreen from "../screens/scorecard/TableTennisLiveSc
 import FootballHomeScreen from "../screens/scorecard/FootballHomeScreen";
 import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen";
 import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
+import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 
 export type ScorecardStackParamList = {
   ScorecardHome: undefined;
@@ -30,22 +31,22 @@ export type ScorecardStackParamList = {
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
   PadelHome: undefined;
-  PadelNewMatch: undefined;
+  PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
   PadelLiveScoring: { matchId: string };
   TennisHome: undefined;
-  TennisNewMatch: undefined;
+  TennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
   TennisLiveScoring: { matchId: string };
   PickleballHome: undefined;
-  PickleballNewMatch: undefined;
+  PickleballNewMatch: { prefill?: ScorecardPrefill } | undefined;
   PickleballLiveScoring: { matchId: string };
   BadmintonHome: undefined;
-  BadmintonNewMatch: undefined;
+  BadmintonNewMatch: { prefill?: ScorecardPrefill } | undefined;
   BadmintonLiveScoring: { matchId: string };
   TableTennisHome: undefined;
-  TableTennisNewMatch: undefined;
+  TableTennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
   TableTennisLiveScoring: { matchId: string };
   FootballHome: undefined;
-  FootballNewMatch: undefined;
+  FootballNewMatch: { prefill?: ScorecardPrefill } | undefined;
   FootballLiveScoring: { matchId: string };
 };
 

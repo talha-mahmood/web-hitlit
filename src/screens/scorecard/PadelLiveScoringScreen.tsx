@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { usePadelMatch, useAddPadelPoint, useDeleteLastPadelPoint, useCompletePadelMatch } from "../../hooks/usePadel";
+import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import { friendlyPadelError, pointRowToEvent } from "../../lib/api/padel";
 import { replayPadelMatch, formatSetScore, matchResultSummary, type PadelMatchConfig, type Team } from "../../lib/padelScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -16,11 +17,16 @@ type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelLiveScoring"
 export default function PadelLiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
+  // Goes back to wherever the scorer came from — the sport's match list in
+  // the Scorecard tab, or a tournament's match list when started from
+  // "Go To Scorecard" (that route doesn't exist in the other tab stacks).
+  const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("PadelHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = usePadelMatch(params.matchId);
   const addPoint = useAddPadelPoint(params.matchId);
   const deleteLastPoint = useDeleteLastPadelPoint(params.matchId);
   const completeMatch = useCompletePadelMatch();
+  const syncTournamentResult = useSyncScorecardMatchResult();
   const [receivingSide, setReceivingSide] = useState<"RIGHT" | "LEFT">("RIGHT");
 
   const points = useMemo(() => {
@@ -52,7 +58,15 @@ export default function PadelLiveScoringScreen() {
       const summary = matchResultSummary(match.team_a_name, match.team_b_name, state);
       completeMatch.mutate(
         { matchId: match.id, winnerTeam: state.winner, resultSummary: summary },
-        { onError: (err) => Alert.alert("Error", friendlyPadelError(err, "Could not save the match result.")) }
+        {
+          onSuccess: () => {
+            // Best-effort — a sync failure (e.g. this wasn't actually a
+            // tournament match) shouldn't block the host from seeing their
+            // finished scorecard.
+            syncTournamentResult.mutate({ sport: "padel", scorecardMatchId: match.id, teamAWon: state.winner === "A" });
+          },
+          onError: (err) => Alert.alert("Error", friendlyPadelError(err, "Could not save the match result.")),
+        }
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +131,7 @@ export default function PadelLiveScoringScreen() {
     return (
       <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
-          <Pressable onPress={() => navigation.navigate("PadelHome")} hitSlop={8} className="p-1">
+          <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <Text className="text-base font-bold text-ink">Match Complete</Text>
@@ -154,7 +168,7 @@ export default function PadelLiveScoringScreen() {
           </View>
 
           <Pressable
-            onPress={() => navigation.navigate("PadelHome")}
+            onPress={() => leaveScorecard()}
             className="rounded-2xl py-4 items-center mt-6 bg-primary"
             style={primaryButtonShadow}
           >
@@ -168,7 +182,7 @@ export default function PadelLiveScoringScreen() {
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
-        <Pressable onPress={() => navigation.navigate("PadelHome")} hitSlop={8} className="p-1">
+        <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>

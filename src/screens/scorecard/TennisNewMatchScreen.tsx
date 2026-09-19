@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreateTennisMatch } from "../../hooks/useTennis";
 import { friendlyTennisError } from "../../lib/api/tennis";
+import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { MatchFormat, PlayMode, Player } from "../../lib/tennisScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisNewMatch">;
+type Route = RouteProp<ScorecardStackParamList, "TennisNewMatch">;
+
+const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 
 const FORMAT_OPTIONS: { label: string; value: MatchFormat }[] = [
   { label: "Best of 1 Set", value: "BEST_OF_1" },
@@ -86,6 +90,7 @@ function TeamCard({
   onPlayersChange,
   serverIndex,
   onServerIndexChange,
+  locked,
 }: {
   letter: "A" | "B";
   name: string;
@@ -95,6 +100,7 @@ function TeamCard({
   onPlayersChange: (players: [string, string]) => void;
   serverIndex: 0 | 1;
   onServerIndexChange: (v: 0 | 1) => void;
+  locked?: boolean;
 }) {
   const isDoubles = playMode === "DOUBLES";
   return (
@@ -118,6 +124,8 @@ function TeamCard({
           onChangeText={onNameChange}
           placeholder={letter === "A" ? "e.g. Alex" : "e.g. Sam"}
           maxLength={40}
+          editable={!locked}
+          containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
         />
 
         {isDoubles && (
@@ -130,6 +138,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([v, players[1]])}
               placeholder="e.g. Alex"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
             <Text className="text-ink font-semibold text-sm mb-2 mt-4">
@@ -140,6 +150,8 @@ function TeamCard({
               onChangeText={(v) => onPlayersChange([players[0], v])}
               placeholder="e.g. Jo"
               maxLength={40}
+              editable={!locked}
+              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
 
@@ -160,20 +172,35 @@ function TeamCard({
 
 export default function TennisNewMatchScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
+  const prefill = params?.prefill;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateTennisMatch();
+  const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [playMode, setPlayMode] = useState<PlayMode | null>("SINGLES");
-  const [playerAName, setPlayerAName] = useState("");
-  const [playerBName, setPlayerBName] = useState("");
-  const [playerAPlayers, setPlayerAPlayers] = useState<[string, string]>(["", ""]);
-  const [playerBPlayers, setPlayerBPlayers] = useState<[string, string]>(["", ""]);
+  // When prefilled, team/player fields are locked to the tournament
+  // roster — so Doubles can only be offered as a choice if that roster
+  // actually has 2 real players per side. Otherwise there'd be no way to
+  // fill the (locked, blank) second player slot Doubles requires.
+  const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
+  const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [playerAName, setPlayerAName] = useState(prefill?.teamAName ?? "");
+  const [playerBName, setPlayerBName] = useState(prefill?.teamBName ?? "");
+  const [playerAPlayers, setPlayerAPlayers] = useState<[string, string]>([
+    prefill?.teamAPlayers[0] ?? "",
+    prefill?.teamAPlayers[1] ?? "",
+  ]);
+  const [playerBPlayers, setPlayerBPlayers] = useState<[string, string]>([
+    prefill?.teamBPlayers[0] ?? "",
+    prefill?.teamBPlayers[1] ?? "",
+  ]);
   const [playerAServerIndex, setPlayerAServerIndex] = useState<0 | 1>(0);
   const [playerBServerIndex, setPlayerBServerIndex] = useState<0 | 1>(0);
   const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
   const [firstServer, setFirstServer] = useState<Player | null>(null);
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(prefill?.venue ?? "");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const isDoubles = playMode === "DOUBLES";
@@ -214,7 +241,12 @@ export default function TennisNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => navigation.replace("TennisLiveScoring", { matchId }),
+        onSuccess: ({ matchId }) => {
+          if (prefill) {
+            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "tennis", scorecardMatchId: matchId });
+          }
+          navigation.replace("TennisLiveScoring", { matchId });
+        },
         onError: (err) => Alert.alert("Error", friendlyTennisError(err, "Could not create match.")),
       }
     );
@@ -233,8 +265,15 @@ export default function TennisNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
+        {prefill && (
+          <InfoBox text="Team/player names and venue come from the tournament match and can't be changed here — everything else is up to you." />
+        )}
+
         <CardSection icon="people-outline" title="Play Mode">
-          <PillRow options={PLAY_MODE_OPTIONS} value={playMode} onChange={setPlayMode} />
+          <PillRow options={playModeOptions} value={playMode} onChange={setPlayMode} />
+          {!canOfferDoubles && (
+            <InfoBox text="Doubles isn't available here — this tournament team only has one registered player." />
+          )}
         </CardSection>
 
         {playMode && (
@@ -248,6 +287,7 @@ export default function TennisNewMatchScreen() {
               onPlayersChange={setPlayerAPlayers}
               serverIndex={playerAServerIndex}
               onServerIndexChange={setPlayerAServerIndex}
+              locked={!!prefill}
             />
             <TeamCard
               letter="B"
@@ -258,12 +298,20 @@ export default function TennisNewMatchScreen() {
               onPlayersChange={setPlayerBPlayers}
               serverIndex={playerBServerIndex}
               onServerIndexChange={setPlayerBServerIndex}
+              locked={!!prefill}
             />
           </>
         )}
 
         <CardSection icon="location-outline" title="Venue">
-          <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Tennis Club Karachi" maxLength={60} />
+          <FieldInput
+            value={venue}
+            onChangeText={setVenue}
+            placeholder="e.g. Tennis Club Karachi"
+            maxLength={60}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+          />
         </CardSection>
 
         <CardSection icon="trophy-outline" title="Match Format">
