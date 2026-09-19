@@ -68,7 +68,9 @@ function extraTimePeriodSeconds(config: MatchConfig): number {
 // (from an odd total split in half) still schedules precisely;
 // `formatClock`/`formatGoalMinuteLabel` round this to a whole minute only
 // for the "45+2'" style label, which is always whole-minute by convention.
-function phaseBoundarySeconds(phase: Phase, config: MatchConfig): number | undefined {
+// Exported so the live screen can detect "this half has reached its
+// scheduled length" to trigger the end-of-half alert.
+export function phaseBoundarySeconds(phase: Phase, config: MatchConfig): number | undefined {
   if (phase === "FIRST_HALF") return config.halfDurationMinutes * 60;
   if (phase === "SECOND_HALF") return config.halfDurationMinutes * 2 * 60;
   if (phase === "EXTRA_TIME_FIRST") return config.halfDurationMinutes * 2 * 60 + extraTimePeriodSeconds(config);

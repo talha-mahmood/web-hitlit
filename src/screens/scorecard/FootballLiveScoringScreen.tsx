@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { useAudioPlayer } from "expo-audio";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import {
   useFootballMatch,
@@ -24,6 +25,7 @@ import {
   computeScoreSummary,
   computePenaltyShootoutState,
   matchResultSummary,
+  phaseBoundarySeconds,
   type MatchTimestamps,
   type Phase,
   type Team,
@@ -35,6 +37,22 @@ type Route = RouteProp<ScorecardStackParamList, "FootballLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballLiveScoring">;
 
 const RUNNING_PHASES: Phase[] = ["FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_FIRST", "EXTRA_TIME_SECOND"];
+
+// Labels for the "this period just reached its scheduled length" alert —
+// mirrors the wording already used on the manual "End ..." button below,
+// since tapping the alert's button triggers that exact same flow.
+const HALF_ENDED_TITLE: Partial<Record<Phase, string>> = {
+  FIRST_HALF: "1st Half Time Ended",
+  SECOND_HALF: "2nd Half Time Ended",
+  EXTRA_TIME_FIRST: "Extra Time (1st Half) Ended",
+  EXTRA_TIME_SECOND: "Extra Time (2nd Half) Ended",
+};
+const HALF_ENDED_BUTTON: Partial<Record<Phase, string>> = {
+  FIRST_HALF: "End First Half",
+  SECOND_HALF: "End Second Half",
+  EXTRA_TIME_FIRST: "End Extra Time (1st Half)",
+  EXTRA_TIME_SECOND: "End Extra Time (2nd Half)",
+};
 
 const PHASE_LABEL: Partial<Record<Phase, string>> = {
   FIRST_HALF: "1ST HALF",
@@ -107,9 +125,18 @@ export default function FootballLiveScoringScreen() {
 
   const [now, setNow] = useState(Date.now());
   const [endingPeriod, setEndingPeriod] = useState(false);
+  const ringPlayer = useAudioPlayer(require("../../../assets/sounds/half-time-ring.wav"));
+  // Which running phase's "time's up" alert (and ring) is currently active
+  // for — guards against re-firing every second once the boundary is
+  // crossed, and against firing again for the same half after it's acted on.
+  const alertedForPhaseRef = useRef<Phase | null>(null);
 
   const phase = (match?.phase ?? "NOT_STARTED") as Phase;
   const isRunning = RUNNING_PHASES.includes(phase);
+
+  useEffect(() => {
+    ringPlayer.loop = true;
+  }, [ringPlayer]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -136,6 +163,33 @@ export default function FootballLiveScoringScreen() {
   };
   const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, now) : 0;
   const clock = formatClock(elapsedSeconds, phase, matchConfig);
+
+  // The instant a running period reaches its scheduled length, ring
+  // continuously and pop up an alert — the ring only stops once the host
+  // taps the alert's button, which is the same action as the manual
+  // "End ..." button below (opens the added-time entry, same as always).
+  const boundarySeconds = phaseBoundarySeconds(phase, matchConfig);
+  const hasReachedScheduledEnd = isRunning && boundarySeconds !== undefined && elapsedSeconds >= boundarySeconds;
+  useEffect(() => {
+    if (!hasReachedScheduledEnd || alertedForPhaseRef.current === phase) return;
+    alertedForPhaseRef.current = phase;
+    ringPlayer.play();
+    Alert.alert(
+      HALF_ENDED_TITLE[phase] ?? "Time Ended",
+      undefined,
+      [
+        {
+          text: HALF_ENDED_BUTTON[phase] ?? "End Period",
+          onPress: () => {
+            ringPlayer.pause();
+            setEndingPeriod(true);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasReachedScheduledEnd, phase]);
 
   const goals = useMemo(() => {
     if (!match) return [];

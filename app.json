@@ -53,7 +53,14 @@
           "iosUrlScheme": "com.googleusercontent.apps.349675210058-1irg7qi9l3vq2ctpt3jtuohsj4adeue5"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "extra": {
       "eas": {
