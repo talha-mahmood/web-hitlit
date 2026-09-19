@@ -51,6 +51,8 @@ export async function createFootballMatch(params: {
   teamAName: string;
   teamBName: string;
   requiresWinner: boolean;
+  halfDurationMinutes: number;
+  extraTimePeriodMinutes: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -60,6 +62,8 @@ export async function createFootballMatch(params: {
       team_a_name: params.teamAName,
       team_b_name: params.teamBName,
       requires_winner: params.requiresWinner,
+      half_duration_minutes: params.halfDurationMinutes,
+      extra_time_period_minutes: params.extraTimePeriodMinutes,
       venue: params.venue?.trim() || null,
       // Kicks off immediately — this app has no "scheduled, not yet
       // started" state for any of the other sports either, matches that.

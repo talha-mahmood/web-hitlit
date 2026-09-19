@@ -781,10 +781,12 @@ export type Database = {
           created_at: string
           extra_time_first_added_minutes: number | null
           extra_time_first_kickoff_at: string | null
+          extra_time_period_minutes: number
           extra_time_second_added_minutes: number | null
           extra_time_second_kickoff_at: string | null
           first_half_added_minutes: number | null
           first_half_kickoff_at: string | null
+          half_duration_minutes: number
           id: string
           is_draw: boolean
           phase: string
@@ -804,10 +806,12 @@ export type Database = {
           created_at?: string
           extra_time_first_added_minutes?: number | null
           extra_time_first_kickoff_at?: string | null
+          extra_time_period_minutes?: number
           extra_time_second_added_minutes?: number | null
           extra_time_second_kickoff_at?: string | null
           first_half_added_minutes?: number | null
           first_half_kickoff_at?: string | null
+          half_duration_minutes?: number
           id?: string
           is_draw?: boolean
           phase?: string
@@ -827,10 +831,12 @@ export type Database = {
           created_at?: string
           extra_time_first_added_minutes?: number | null
           extra_time_first_kickoff_at?: string | null
+          extra_time_period_minutes?: number
           extra_time_second_added_minutes?: number | null
           extra_time_second_kickoff_at?: string | null
           first_half_added_minutes?: number | null
           first_half_kickoff_at?: string | null
+          half_duration_minutes?: number
           id?: string
           is_draw?: boolean
           phase?: string

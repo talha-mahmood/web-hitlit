@@ -14,6 +14,15 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
 
+// Presets are TOTAL minutes (both halves / both extra-time periods
+// combined) — the familiar way a casual match gets described ("we're
+// playing a 30 minute match"). Each is split into two equal halves/periods
+// when creating the match.
+const MATCH_DURATION_PRESETS = ["20", "30", "40", "60", "90"];
+const STANDARD_MATCH_TOTAL_MINUTES = 90;
+const EXTRA_TIME_PRESETS = ["10", "20", "30"];
+const STANDARD_EXTRA_TIME_TOTAL_MINUTES = 30;
+
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
     <View
@@ -65,9 +74,27 @@ export default function FootballNewMatchScreen() {
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
+  const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
+  const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
   const [venue, setVenue] = useState("");
 
-  const isValid = teamAName.trim().length > 0 && teamBName.trim().length > 0 && !!requiresWinner;
+  const totalMatchNumber = parseInt(totalMatchMinutes ?? "", 10);
+  const isMatchDurationValid = !!totalMatchMinutes && totalMatchNumber > 0;
+  const halfDurationMinutes = isMatchDurationValid ? Math.max(1, Math.round(totalMatchNumber / 2)) : 0;
+  const actualTotalMatchMinutes = halfDurationMinutes * 2;
+
+  const needsExtraTime = requiresWinner === "YES";
+  const totalExtraTimeNumber = parseInt(totalExtraTimeMinutes ?? "", 10);
+  const isExtraTimeDurationValid = !needsExtraTime || (!!totalExtraTimeMinutes && totalExtraTimeNumber > 0);
+  const extraTimePeriodMinutes = needsExtraTime && isExtraTimeDurationValid ? Math.max(1, Math.round(totalExtraTimeNumber / 2)) : 0;
+  const actualTotalExtraTimeMinutes = extraTimePeriodMinutes * 2;
+
+  const isValid =
+    teamAName.trim().length > 0 &&
+    teamBName.trim().length > 0 &&
+    !!requiresWinner &&
+    isMatchDurationValid &&
+    isExtraTimeDurationValid;
 
   const handleCreate = () => {
     if (!isValid || !userId || !requiresWinner) return;
@@ -76,7 +103,11 @@ export default function FootballNewMatchScreen() {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        requiresWinner: requiresWinner === "YES",
+        requiresWinner: needsExtraTime,
+        halfDurationMinutes,
+        // Not needed for a match that can end in a draw, but the column is
+        // required — the standard 15-min period is a harmless default.
+        extraTimePeriodMinutes: needsExtraTime ? extraTimePeriodMinutes : 15,
         venue: venue.trim() || undefined,
       },
       {
@@ -111,6 +142,29 @@ export default function FootballNewMatchScreen() {
           <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. City Stadium" maxLength={60} />
         </CardSection>
 
+        <CardSection icon="time-outline" title="Match Duration">
+          <PillRow
+            options={MATCH_DURATION_PRESETS.map((n) => ({ label: n === "90" ? "90 (Standard)" : n, value: n }))}
+            value={MATCH_DURATION_PRESETS.includes(totalMatchMinutes ?? "") ? totalMatchMinutes : null}
+            onChange={setTotalMatchMinutes}
+          />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom total (minutes)</Text>
+          <FieldInput
+            value={totalMatchMinutes ?? ""}
+            onChangeText={(t) => setTotalMatchMinutes(t.replace(/[^0-9]/g, "").slice(0, 3))}
+            placeholder="e.g. 10"
+            keyboardType="number-pad"
+            maxLength={3}
+          />
+          <InfoBox
+            text={
+              isMatchDurationValid
+                ? `Split into two ${halfDurationMinutes}-minute halves${actualTotalMatchMinutes !== totalMatchNumber ? ` (${actualTotalMatchMinutes} min total)` : ""}.`
+                : "Enter how many minutes the whole match should run — it's split evenly into two halves."
+            }
+          />
+        </CardSection>
+
         <CardSection icon="trophy-outline" title="Needs a Winner?">
           <PillRow
             options={[
@@ -122,12 +176,37 @@ export default function FootballNewMatchScreen() {
           />
           <InfoBox
             text={
-              requiresWinner === "YES"
-                ? "If the match is level after 90 minutes, you'll be offered extra time, then a penalty shootout if it's still level."
-                : "A draw after 90 minutes ends the match — no extra time or shootout will be offered."
+              needsExtraTime
+                ? `If the match is level after ${isMatchDurationValid ? actualTotalMatchMinutes : STANDARD_MATCH_TOTAL_MINUTES} minutes, you'll be offered extra time, then a penalty shootout if it's still level.`
+                : `A draw after ${isMatchDurationValid ? actualTotalMatchMinutes : STANDARD_MATCH_TOTAL_MINUTES} minutes ends the match — no extra time or shootout will be offered.`
             }
           />
         </CardSection>
+
+        {needsExtraTime && (
+          <CardSection icon="timer-outline" title="Extra Time Duration">
+            <PillRow
+              options={EXTRA_TIME_PRESETS.map((n) => ({ label: n === "30" ? "30 (Standard)" : n, value: n }))}
+              value={EXTRA_TIME_PRESETS.includes(totalExtraTimeMinutes ?? "") ? totalExtraTimeMinutes : null}
+              onChange={setTotalExtraTimeMinutes}
+            />
+            <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom total (minutes)</Text>
+            <FieldInput
+              value={totalExtraTimeMinutes ?? ""}
+              onChangeText={(t) => setTotalExtraTimeMinutes(t.replace(/[^0-9]/g, "").slice(0, 3))}
+              placeholder="e.g. 10"
+              keyboardType="number-pad"
+              maxLength={3}
+            />
+            <InfoBox
+              text={
+                isExtraTimeDurationValid && extraTimePeriodMinutes > 0
+                  ? `Split into two ${extraTimePeriodMinutes}-minute periods${actualTotalExtraTimeMinutes !== totalExtraTimeNumber ? ` (${actualTotalExtraTimeMinutes} min total)` : ""} if the match needs a decider.`
+                  : "Enter the total extra-time length — it's split evenly into two periods, separate from the regular match duration."
+              }
+            />
+          </CardSection>
+        )}
 
         <Pressable
           onPress={handleCreate}
