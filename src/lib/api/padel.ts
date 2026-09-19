@@ -53,6 +53,7 @@ export async function createPadelMatch(params: {
   firstServerTeam: Team;
   firstServerPlayerIndex: 0 | 1;
   gamesPerSet: number;
+  playMode: "SINGLES" | "DOUBLES";
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -68,6 +69,7 @@ export async function createPadelMatch(params: {
       first_server_team: params.firstServerTeam,
       first_server_player_index: params.firstServerPlayerIndex,
       games_per_set: params.gamesPerSet,
+      play_mode: params.playMode,
       venue: params.venue?.trim() || null,
     })
     .select()

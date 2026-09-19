@@ -1460,6 +1460,7 @@ export type Database = {
           format: string
           games_per_set: number
           id: string
+          play_mode: string
           result_summary: string | null
           status: string
           team_a_name: string
@@ -1479,6 +1480,7 @@ export type Database = {
           format: string
           games_per_set?: number
           id?: string
+          play_mode?: string
           result_summary?: string | null
           status?: string
           team_a_name: string
@@ -1498,6 +1500,7 @@ export type Database = {
           format?: string
           games_per_set?: number
           id?: string
+          play_mode?: string
           result_summary?: string | null
           status?: string
           team_a_name?: string
@@ -2357,8 +2360,13 @@ export type Database = {
           format: string
           games_per_set: number
           id: string
+          play_mode: string
           player_a_name: string
+          player_a_players: string[]
+          player_a_server_index: number
           player_b_name: string
+          player_b_players: string[]
+          player_b_server_index: number
           result_summary: string | null
           status: string
           user_id: string
@@ -2372,8 +2380,13 @@ export type Database = {
           format: string
           games_per_set?: number
           id?: string
+          play_mode?: string
           player_a_name: string
+          player_a_players?: string[]
+          player_a_server_index?: number
           player_b_name: string
+          player_b_players?: string[]
+          player_b_server_index?: number
           result_summary?: string | null
           status?: string
           user_id: string
@@ -2387,8 +2400,13 @@ export type Database = {
           format?: string
           games_per_set?: number
           id?: string
+          play_mode?: string
           player_a_name?: string
+          player_a_players?: string[]
+          player_a_server_index?: number
           player_b_name?: string
+          player_b_players?: string[]
+          player_b_server_index?: number
           result_summary?: string | null
           status?: string
           user_id?: string

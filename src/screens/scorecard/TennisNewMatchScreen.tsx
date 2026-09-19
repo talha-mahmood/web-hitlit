@@ -10,7 +10,7 @@ import { useCreateTennisMatch } from "../../hooks/useTennis";
 import { friendlyTennisError } from "../../lib/api/tennis";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
-import type { MatchFormat, Player } from "../../lib/tennisScoring";
+import type { MatchFormat, PlayMode, Player } from "../../lib/tennisScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisNewMatch">;
@@ -29,6 +29,11 @@ const FORMAT_INFO: Record<MatchFormat, string> = {
 
 const GAMES_PER_SET_PRESETS = ["3", "4", "6"];
 const STANDARD_GAMES_PER_SET = 6;
+
+const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
+  { label: "Singles", value: "SINGLES" },
+  { label: "Doubles", value: "DOUBLES" },
+];
 
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
@@ -72,35 +77,140 @@ function InfoBox({ text }: { text: string }) {
   );
 }
 
+function TeamCard({
+  letter,
+  name,
+  onNameChange,
+  playMode,
+  players,
+  onPlayersChange,
+  serverIndex,
+  onServerIndexChange,
+}: {
+  letter: "A" | "B";
+  name: string;
+  onNameChange: (v: string) => void;
+  playMode: PlayMode;
+  players: [string, string];
+  onPlayersChange: (players: [string, string]) => void;
+  serverIndex: 0 | 1;
+  onServerIndexChange: (v: 0 | 1) => void;
+}) {
+  const isDoubles = playMode === "DOUBLES";
+  return (
+    <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
+      <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 30, height: 30, backgroundColor: colors.primary }}
+        >
+          <Text className="text-white font-extrabold text-sm">{letter}</Text>
+        </View>
+        <Text className="text-ink font-bold text-sm flex-1">{isDoubles ? `Team ${letter}` : `Player ${letter}`}</Text>
+      </View>
+
+      <View className="px-4 pt-4 pb-4">
+        <Text className="text-ink font-semibold text-sm mb-2">
+          {isDoubles ? `Team ${letter} Name` : `Player ${letter} Name`} <Text className="text-red-500">*</Text>
+        </Text>
+        <FieldInput
+          value={name}
+          onChangeText={onNameChange}
+          placeholder={letter === "A" ? "e.g. Alex" : "e.g. Sam"}
+          maxLength={40}
+        />
+
+        {isDoubles && (
+          <>
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 1 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[0]}
+              onChangeText={(v) => onPlayersChange([v, players[1]])}
+              placeholder="e.g. Alex"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 2 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[1]}
+              onChangeText={(v) => onPlayersChange([players[0], v])}
+              placeholder="e.g. Jo"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">Serves for {name.trim() || `Team ${letter}`}</Text>
+            <PillRow
+              options={([0, 1] as const)
+                .filter((i) => players[i].trim().length > 0)
+                .map((i) => ({ label: players[i].trim(), value: String(i) as "0" | "1" }))}
+              value={String(serverIndex) as "0" | "1"}
+              onChange={(v) => onServerIndexChange(v === "0" ? 0 : 1)}
+            />
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
 export default function TennisNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateTennisMatch();
 
+  const [playMode, setPlayMode] = useState<PlayMode | null>("SINGLES");
   const [playerAName, setPlayerAName] = useState("");
   const [playerBName, setPlayerBName] = useState("");
+  const [playerAPlayers, setPlayerAPlayers] = useState<[string, string]>(["", ""]);
+  const [playerBPlayers, setPlayerBPlayers] = useState<[string, string]>(["", ""]);
+  const [playerAServerIndex, setPlayerAServerIndex] = useState<0 | 1>(0);
+  const [playerBServerIndex, setPlayerBServerIndex] = useState<0 | 1>(0);
   const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
   const [firstServer, setFirstServer] = useState<Player | null>(null);
   const [venue, setVenue] = useState("");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
+  const isDoubles = playMode === "DOUBLES";
+  const doublesPlayersValid =
+    !isDoubles ||
+    (playerAPlayers[0].trim().length > 0 &&
+      playerAPlayers[1].trim().length > 0 &&
+      playerBPlayers[0].trim().length > 0 &&
+      playerBPlayers[1].trim().length > 0);
+
   const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
   const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
 
   const isValid =
-    playerAName.trim().length > 0 && playerBName.trim().length > 0 && !!format && !!firstServer && isGamesPerSetValid;
+    playerAName.trim().length > 0 &&
+    playerBName.trim().length > 0 &&
+    doublesPlayersValid &&
+    !!playMode &&
+    !!format &&
+    !!firstServer &&
+    isGamesPerSetValid;
 
   const handleCreate = () => {
-    if (!isValid || !userId || !format || !firstServer) return;
+    if (!isValid || !userId || !format || !firstServer || !playMode) return;
     createMatch.mutate(
       {
         userId,
         playerAName: playerAName.trim(),
         playerBName: playerBName.trim(),
+        playerAPlayers: isDoubles ? playerAPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        playerBPlayers: isDoubles ? playerBPlayers.map((p) => p.trim()).filter(Boolean) : [],
         format,
         firstServer,
         gamesPerSet: gamesPerSetNumber,
+        playMode,
+        playerAServerIndex: isDoubles ? playerAServerIndex : 0,
+        playerBServerIndex: isDoubles ? playerBServerIndex : 0,
         venue: venue.trim() || undefined,
       },
       {
@@ -123,13 +233,34 @@ export default function TennisNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        <CardSection icon="person-outline" title="Player A">
-          <FieldInput value={playerAName} onChangeText={setPlayerAName} placeholder="e.g. Alex" maxLength={40} />
+        <CardSection icon="people-outline" title="Play Mode">
+          <PillRow options={PLAY_MODE_OPTIONS} value={playMode} onChange={setPlayMode} />
         </CardSection>
 
-        <CardSection icon="person-outline" title="Player B">
-          <FieldInput value={playerBName} onChangeText={setPlayerBName} placeholder="e.g. Sam" maxLength={40} />
-        </CardSection>
+        {playMode && (
+          <>
+            <TeamCard
+              letter="A"
+              name={playerAName}
+              onNameChange={setPlayerAName}
+              playMode={playMode}
+              players={playerAPlayers}
+              onPlayersChange={setPlayerAPlayers}
+              serverIndex={playerAServerIndex}
+              onServerIndexChange={setPlayerAServerIndex}
+            />
+            <TeamCard
+              letter="B"
+              name={playerBName}
+              onNameChange={setPlayerBName}
+              playMode={playMode}
+              players={playerBPlayers}
+              onPlayersChange={setPlayerBPlayers}
+              serverIndex={playerBServerIndex}
+              onServerIndexChange={setPlayerBServerIndex}
+            />
+          </>
+        )}
 
         <CardSection icon="location-outline" title="Venue">
           <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Tennis Club Karachi" maxLength={60} />
@@ -163,11 +294,11 @@ export default function TennisNewMatchScreen() {
           />
         </CardSection>
 
-        <CardSection icon="tennisball-outline" title="First Server">
+        <CardSection icon="tennisball-outline" title={isDoubles ? "First Serving Team" : "First Server"}>
           <PillRow
             options={[
-              { label: playerAName.trim() || "Player A", value: "A" as const },
-              { label: playerBName.trim() || "Player B", value: "B" as const },
+              { label: playerAName.trim() || (isDoubles ? "Team A" : "Player A"), value: "A" as const },
+              { label: playerBName.trim() || (isDoubles ? "Team B" : "Player B"), value: "B" as const },
             ]}
             value={firstServer}
             onChange={setFirstServer}

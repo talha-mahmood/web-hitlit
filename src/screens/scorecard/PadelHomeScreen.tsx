@@ -81,7 +81,10 @@ function MatchCard({
               {isLive ? "LIVE" : "COMPLETED"}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          <View className="flex-row items-center" style={{ gap: 4 }}>
+            <Text className="text-muted text-sm">{match.play_mode === "DOUBLES" ? "Doubles" : "Singles"}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </View>
         </View>
 
         <View className="flex-row items-center justify-between px-6 pb-3">

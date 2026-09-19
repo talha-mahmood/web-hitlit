@@ -39,6 +39,9 @@ export default function TennisLiveScoringScreen() {
         format: match.format as TennisMatchConfig["format"],
         firstServer: match.first_server as Player,
         gamesPerSet: match.games_per_set,
+        playMode: match.play_mode as TennisMatchConfig["playMode"],
+        playerAServerIndex: match.player_a_server_index as 0 | 1,
+        playerBServerIndex: match.player_b_server_index as 0 | 1,
       }
     : null;
 
@@ -94,7 +97,16 @@ export default function TennisLiveScoringScreen() {
     ]);
   };
 
-  const serverName = state.server.player === "A" ? match.player_a_name : match.player_b_name;
+  const isDoubles = match.play_mode === "DOUBLES";
+  const playerAPlayerNames = match.player_a_players.length > 0 ? match.player_a_players : ["Player A1", "Player A2"];
+  const playerBPlayerNames = match.player_b_players.length > 0 ? match.player_b_players : ["Player B1", "Player B2"];
+  const serverName = isDoubles
+    ? state.server.player === "A"
+      ? `${playerAPlayerNames[state.server.playerIndex] ?? playerAPlayerNames[0]} (${match.player_a_name})`
+      : `${playerBPlayerNames[state.server.playerIndex] ?? playerBPlayerNames[0]} (${match.player_b_name})`
+    : state.server.player === "A"
+      ? match.player_a_name
+      : match.player_b_name;
 
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.player_a_name : match.player_b_name;
@@ -164,9 +176,19 @@ export default function TennisLiveScoringScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
         {/* Player headers */}
-        <View className="flex-row items-center justify-between px-2 mb-4">
-          <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{match.player_a_name}</Text>
-          <Text className="text-ink font-bold text-base flex-1 text-right" numberOfLines={1}>{match.player_b_name}</Text>
+        <View className="flex-row items-start justify-between px-2 mb-4">
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.player_a_name}</Text>
+            {isDoubles && playerAPlayerNames.map((p, i) => (
+              <Text key={i} className="text-muted text-xs mt-0.5" numberOfLines={1}>{p}</Text>
+            ))}
+          </View>
+          <View className="flex-1 items-end">
+            <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.player_b_name}</Text>
+            {isDoubles && playerBPlayerNames.map((p, i) => (
+              <Text key={i} className="text-muted text-xs mt-0.5 text-right" numberOfLines={1}>{p}</Text>
+            ))}
+          </View>
         </View>
 
         {/* Sets won */}

@@ -26,6 +26,9 @@ function computeMatchState(match: TennisMatchDetail) {
     format: match.format as TennisMatchConfig["format"],
     firstServer: match.first_server as Player,
     gamesPerSet: match.games_per_set,
+    playMode: match.play_mode as TennisMatchConfig["playMode"],
+    playerAServerIndex: match.player_a_server_index as 0 | 1,
+    playerBServerIndex: match.player_b_server_index as 0 | 1,
   };
   const points = [...match.tennis_points].sort((a, b) => a.seq - b.seq).map(pointRowToEvent);
   return replayTennisMatch(points, config);
@@ -79,7 +82,10 @@ function MatchCard({
               {isLive ? "LIVE" : "COMPLETED"}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          <View className="flex-row items-center" style={{ gap: 4 }}>
+            <Text className="text-muted text-sm">{match.play_mode === "DOUBLES" ? "Doubles" : "Singles"}</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </View>
         </View>
 
         <View className="flex-row items-center justify-between px-6 pb-3">

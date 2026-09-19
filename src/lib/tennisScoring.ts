@@ -14,6 +14,7 @@
 
 export type Player = "A" | "B";
 export type MatchFormat = "BEST_OF_1" | "BEST_OF_3" | "BEST_OF_5";
+export type PlayMode = "SINGLES" | "DOUBLES";
 
 export type PointEvent = {
   seq: number;
@@ -40,12 +41,23 @@ export type CurrentGameState = {
 // (winning it breaks the opponent's serve) rather than the server.
 export type Indicator = "GAME_POINT" | "BREAK_POINT" | "SET_POINT" | "MATCH_POINT" | null;
 
-export type ServerInfo = { player: Player };
+export type ServerInfo = {
+  player: Player;
+  // Which of that player's team serves — always 0 in singles. Doubles
+  // keeps this fixed for the whole match rather than rotating partners
+  // game-to-game (the same simplification badminton's engine makes): the
+  // spec this was built from doesn't call for a per-set rotation, so the
+  // host just names a designated server per side up front.
+  playerIndex: 0 | 1;
+};
 
 export type TennisMatchConfig = {
   format: MatchFormat;
   firstServer: Player;
   gamesPerSet: number; // standard is 6 (tiebreak at 6-6); host can shorten each set
+  playMode: PlayMode;
+  playerAServerIndex: 0 | 1;
+  playerBServerIndex: 0 | 1;
 };
 
 export type TennisMatchState = {
@@ -110,6 +122,11 @@ function evaluateSetWinner(gamesA: number, gamesB: number, target: number): Play
 function tiebreakServerOffset(pointsPlayedInTiebreak: number): number {
   if (pointsPlayedInTiebreak === 0) return 0;
   return 1 + Math.floor((pointsPlayedInTiebreak - 1) / 2);
+}
+
+function serverIndexFor(config: TennisMatchConfig, player: Player): 0 | 1 {
+  if (config.playMode === "SINGLES") return 0;
+  return player === "A" ? config.playerAServerIndex : config.playerBServerIndex;
 }
 
 export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfig): TennisMatchState {
@@ -203,14 +220,16 @@ export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfi
 
   let server: ServerInfo;
   if (matchComplete) {
-    server = { player: config.firstServer };
+    server = { player: config.firstServer, playerIndex: serverIndexFor(config, config.firstServer) };
   } else if (inTiebreak) {
     const offset = tiebreakServerOffset(pointsA + pointsB);
     const startsWithA = gamesPlayedTotal % 2 === 0;
     const rotationBase: Player = startsWithA ? config.firstServer : config.firstServer === "A" ? "B" : "A";
-    server = { player: offset % 2 === 0 ? rotationBase : rotationBase === "A" ? "B" : "A" };
+    const servingPlayer = offset % 2 === 0 ? rotationBase : rotationBase === "A" ? "B" : "A";
+    server = { player: servingPlayer, playerIndex: serverIndexFor(config, servingPlayer) };
   } else {
-    server = { player: gamesPlayedTotal % 2 === 0 ? config.firstServer : (config.firstServer === "A" ? "B" : "A") };
+    const servingPlayer = gamesPlayedTotal % 2 === 0 ? config.firstServer : config.firstServer === "A" ? "B" : "A";
+    server = { player: servingPlayer, playerIndex: serverIndexFor(config, servingPlayer) };
   }
 
   // Live scoring indicators — simulate "what if this player wins the very

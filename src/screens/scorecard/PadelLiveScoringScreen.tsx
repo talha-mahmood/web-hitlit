@@ -95,13 +95,22 @@ export default function PadelLiveScoringScreen() {
     ]);
   };
 
+  const isDoubles = match.play_mode === "DOUBLES";
   const teamAPlayerNames = match.team_a_players.length > 0 ? match.team_a_players : ["Player A1", "Player A2"];
   const teamBPlayerNames = match.team_b_players.length > 0 ? match.team_b_players : ["Player B1", "Player B2"];
-  const serverName =
-    state.server.team === "A"
+  const serverName = isDoubles
+    ? state.server.team === "A"
       ? teamAPlayerNames[state.server.playerIndex] ?? teamAPlayerNames[0]
-      : teamBPlayerNames[state.server.playerIndex] ?? teamBPlayerNames[0];
+      : teamBPlayerNames[state.server.playerIndex] ?? teamBPlayerNames[0]
+    : state.server.team === "A"
+      ? match.team_a_name
+      : match.team_b_name;
   const receiverNames = state.server.team === "A" ? teamBPlayerNames : teamAPlayerNames;
+  const receivingLabel = isDoubles
+    ? receiverNames.filter(Boolean).join(" / ")
+    : state.server.team === "A"
+      ? match.team_b_name
+      : match.team_a_name;
 
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
@@ -176,13 +185,13 @@ export default function PadelLiveScoringScreen() {
         <View className="flex-row items-start justify-between px-2 mb-4">
           <View className="flex-1">
             <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.team_a_name}</Text>
-            {teamAPlayerNames.map((p, i) => (
+            {isDoubles && teamAPlayerNames.map((p, i) => (
               <Text key={i} className="text-muted text-xs mt-0.5" numberOfLines={1}>{p}</Text>
             ))}
           </View>
           <View className="flex-1 items-end">
             <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.team_b_name}</Text>
-            {teamBPlayerNames.map((p, i) => (
+            {isDoubles && teamBPlayerNames.map((p, i) => (
               <Text key={i} className="text-muted text-xs mt-0.5 text-right" numberOfLines={1}>{p}</Text>
             ))}
           </View>
@@ -281,11 +290,11 @@ export default function PadelLiveScoringScreen() {
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
           <Text className="text-ink text-sm flex-1" numberOfLines={1}>
             <Text className="font-bold">SERVER: </Text>
-            {serverName} ({state.server.team === "A" ? match.team_a_name : match.team_b_name})
+            {isDoubles ? `${serverName} (${state.server.team === "A" ? match.team_a_name : match.team_b_name})` : serverName}
           </Text>
         </View>
         <Text className="text-muted text-xs text-center -mt-2 mb-4">
-          Receiving: {receiverNames.filter(Boolean).join(" / ")}
+          Receiving: {receivingLabel}
         </Text>
 
         {/* Point history */}

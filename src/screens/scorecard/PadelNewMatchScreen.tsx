@@ -11,6 +11,8 @@ import { friendlyPadelError } from "../../lib/api/padel";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { MatchFormat, DeuceType, Team } from "../../lib/padelScoring";
+
+type PlayMode = "SINGLES" | "DOUBLES";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelNewMatch">;
@@ -36,6 +38,11 @@ const DEUCE_OPTIONS: { label: string; value: DeuceType }[] = [
 
 const GAMES_PER_SET_PRESETS = ["3", "4", "6"];
 const STANDARD_GAMES_PER_SET = 6;
+
+const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
+  { label: "Singles", value: "SINGLES" },
+  { label: "Doubles", value: "DOUBLES" },
+];
 
 const DEUCE_INFO: Record<DeuceType, string> = {
   ADVANTAGE: "Traditional scoring — at 40-40, a pair must win two points in a row to take the game.",
@@ -86,21 +93,22 @@ function InfoBox({ text }: { text: string }) {
   );
 }
 
-// Padel is doubles — a team card takes exactly two player slots (a singles
-// match can still be scored by leaving the second slot blank).
 function TeamCard({
   letter,
   name,
   onNameChange,
+  playMode,
   players,
   onPlayersChange,
 }: {
   letter: "A" | "B";
   name: string;
   onNameChange: (v: string) => void;
+  playMode: PlayMode;
   players: [string, string];
   onPlayersChange: (players: [string, string]) => void;
 }) {
+  const isDoubles = playMode === "DOUBLES";
   return (
     <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
       <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
@@ -110,34 +118,40 @@ function TeamCard({
         >
           <Text className="text-white font-extrabold text-sm">{letter}</Text>
         </View>
-        <Text className="text-ink font-bold text-sm flex-1">Team {letter}</Text>
+        <Text className="text-ink font-bold text-sm flex-1">{isDoubles ? `Team ${letter}` : `Player ${letter}`}</Text>
       </View>
 
       <View className="px-4 pt-4 pb-4">
         <Text className="text-ink font-semibold text-sm mb-2">
-          Team {letter} Name <Text className="text-red-500">*</Text>
+          {isDoubles ? `Team ${letter} Name` : `Player ${letter} Name`} <Text className="text-red-500">*</Text>
         </Text>
         <FieldInput value={name} onChangeText={onNameChange} placeholder={letter === "A" ? "e.g. Smashers" : "e.g. Net Ninjas"} maxLength={40} />
 
-        <Text className="text-ink font-semibold text-sm mb-2 mt-4">
-          Player 1 <Text className="text-red-500">*</Text>
-        </Text>
-        <FieldInput
-          value={players[0]}
-          onChangeText={(v) => onPlayersChange([v, players[1]])}
-          placeholder="e.g. Alex"
-          maxLength={40}
-          left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
-        />
+        {isDoubles && (
+          <>
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 1 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[0]}
+              onChangeText={(v) => onPlayersChange([v, players[1]])}
+              placeholder="e.g. Alex"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
 
-        <Text className="text-ink font-semibold text-sm mb-2 mt-4">Player 2</Text>
-        <FieldInput
-          value={players[1]}
-          onChangeText={(v) => onPlayersChange([players[0], v])}
-          placeholder="e.g. Sam (optional for singles)"
-          maxLength={40}
-          left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
-        />
+            <Text className="text-ink font-semibold text-sm mb-2 mt-4">
+              Player 2 <Text className="text-red-500">*</Text>
+            </Text>
+            <FieldInput
+              value={players[1]}
+              onChangeText={(v) => onPlayersChange([players[0], v])}
+              placeholder="e.g. Sam"
+              maxLength={40}
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+          </>
+        )}
       </View>
     </View>
   );
@@ -149,6 +163,7 @@ export default function PadelNewMatchScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePadelMatch();
 
+  const [playMode, setPlayMode] = useState<PlayMode | null>("DOUBLES");
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
   const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>(["", ""]);
@@ -160,8 +175,9 @@ export default function PadelNewMatchScreen() {
   const [venue, setVenue] = useState("");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
-  const teamAValidPlayers = teamAPlayers.filter((p) => p.trim().length > 0);
-  const teamBValidPlayers = teamBPlayers.filter((p) => p.trim().length > 0);
+  const isDoubles = playMode === "DOUBLES";
+  const doublesPlayersValid =
+    !isDoubles || (teamAPlayers[0].trim().length > 0 && teamAPlayers[1].trim().length > 0 && teamBPlayers[0].trim().length > 0 && teamBPlayers[1].trim().length > 0);
   const serverTeamPlayers = firstServerTeam === "A" ? teamAPlayers : firstServerTeam === "B" ? teamBPlayers : ["", ""];
 
   const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
@@ -170,28 +186,29 @@ export default function PadelNewMatchScreen() {
   const isValid =
     teamAName.trim().length > 0 &&
     teamBName.trim().length > 0 &&
-    teamAValidPlayers.length > 0 &&
-    teamBValidPlayers.length > 0 &&
+    doublesPlayersValid &&
+    !!playMode &&
     !!format &&
     !!deuceType &&
     !!firstServerTeam &&
-    firstServerPlayerIndex !== null &&
+    (!isDoubles || firstServerPlayerIndex !== null) &&
     isGamesPerSetValid;
 
   const handleCreate = () => {
-    if (!isValid || !userId || !format || !deuceType || !firstServerTeam || firstServerPlayerIndex === null) return;
+    if (!isValid || !userId || !format || !deuceType || !firstServerTeam || !playMode) return;
     createMatch.mutate(
       {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers: teamAValidPlayers,
-        teamBPlayers: teamBValidPlayers,
+        teamAPlayers: isDoubles ? teamAPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        teamBPlayers: isDoubles ? teamBPlayers.map((p) => p.trim()).filter(Boolean) : [],
         format,
         deuceType,
         firstServerTeam,
-        firstServerPlayerIndex,
+        firstServerPlayerIndex: isDoubles ? firstServerPlayerIndex ?? 0 : 0,
         gamesPerSet: gamesPerSetNumber,
+        playMode,
         venue: venue.trim() || undefined,
       },
       {
@@ -214,8 +231,23 @@ export default function PadelNewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
-        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+        <CardSection icon="people-outline" title="Play Mode">
+          <PillRow
+            options={PLAY_MODE_OPTIONS}
+            value={playMode}
+            onChange={(v) => {
+              setPlayMode(v);
+              setFirstServerPlayerIndex(null);
+            }}
+          />
+        </CardSection>
+
+        {playMode && (
+          <>
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+          </>
+        )}
 
         <CardSection icon="location-outline" title="Venue">
           <FieldInput value={venue} onChangeText={setVenue} placeholder="e.g. Padel Club Karachi" maxLength={60} />
@@ -267,7 +299,7 @@ export default function PadelNewMatchScreen() {
               setFirstServerPlayerIndex(null);
             }}
           />
-          {firstServerTeam && (
+          {firstServerTeam && isDoubles && (
             <>
               <Text className="text-muted text-xs font-semibold mb-2 mt-4">Serving Player</Text>
               <PillRow
