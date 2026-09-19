@@ -134,7 +134,7 @@ export default function FootballLiveScoringScreen() {
   const pausedAtMs = match?.paused_at ? new Date(match.paused_at).getTime() : null;
   const isPaused = pausedAtMs !== null;
   const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, pausedAtMs ?? now) : 0;
-  const clock = formatClock(elapsedSeconds, phase, matchConfig);
+  const clock = formatClock(elapsedSeconds);
 
   // The instant a running period reaches its scheduled length, ring
   // continuously and turn the "End ..." button red — the ring only stops

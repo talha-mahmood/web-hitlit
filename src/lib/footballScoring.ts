@@ -136,21 +136,14 @@ export function computeElapsedSeconds(phase: Phase, t: MatchTimestamps, config: 
   return before + running;
 }
 
-// "23:45" during normal time, "45+2'" once past the phase's scheduled
-// boundary (stoppage/added time) — the running clock shown on the live
-// screen. The boundary is rounded to the nearest whole minute here (even
-// though it's tracked to the second internally) since stoppage-time labels
-// are always whole minutes by football convention.
-export function formatClock(elapsedSeconds: number, phase: Phase, config: MatchConfig): string {
-  const boundarySeconds = phaseBoundarySeconds(phase, config);
-  const boundary = boundarySeconds !== undefined ? Math.round(boundarySeconds / 60) : undefined;
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-  if (boundary !== undefined && elapsedMinutes >= boundary) {
-    const added = elapsedMinutes - boundary + 1;
-    return `${boundary}+${added} minutes`;
-  }
+// "23:45" — the running clock shown on the live screen. Keeps counting up
+// in plain MM:SS past a phase's scheduled length too (no "45+1"-style
+// stoppage-time switch) — the "End ..." button is what tells the host time
+// is up, the clock itself just keeps ticking until they act on it.
+export function formatClock(elapsedSeconds: number): string {
+  const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = Math.floor(elapsedSeconds % 60);
-  return `${String(elapsedMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 // "01:18" — the exact match-clock reading at the instant a goal is
