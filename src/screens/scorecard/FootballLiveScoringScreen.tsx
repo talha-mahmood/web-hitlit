@@ -151,8 +151,13 @@ export default function FootballLiveScoringScreen() {
   }, [hasReachedScheduledEnd, phase]);
 
   const handleEndPeriodPress = () => {
+    // Deliberately doesn't clear `ringingPhase` — that would flip
+    // `isRinging` false immediately (before the mutation resolves and
+    // `phase` actually changes), which would flash the Stop/Start Time
+    // button back into view for a moment. Leaving it set means the End
+    // button just stays up (dimmed via isPending) until the next phase's
+    // screen replaces this whole block.
     ringPlayer.pause();
-    setRingingPhase(null);
     endCurrentPeriod();
   };
 
@@ -217,7 +222,7 @@ export default function FootballLiveScoringScreen() {
   };
 
   const handleGoal = (team: Team) => {
-    if (!isRunning || isPaused) return;
+    if (!isRunning || isPaused || isRinging) return;
     const seq = goals.length + 1;
     const minuteLabel = formatGoalMinuteLabel(elapsedSeconds);
     addGoal.mutate(
@@ -444,18 +449,21 @@ export default function FootballLiveScoringScreen() {
         {/* Phase-specific controls */}
         {isRunning && (
           <>
-            <View pointerEvents={addGoal.isPending || isPaused ? "none" : "auto"} style={{ opacity: addGoal.isPending || isPaused ? 0.5 : 1, gap: 10 }}>
+            <View
+              pointerEvents={addGoal.isPending || isPaused || isRinging ? "none" : "auto"}
+              style={{ opacity: addGoal.isPending || isPaused || isRinging ? 0.5 : 1, gap: 10 }}
+            >
               <Pressable
                 onPress={() => handleGoal("A")}
                 className="rounded-2xl py-4 items-center bg-primary"
-                style={addGoal.isPending || isPaused ? undefined : primaryButtonShadow}
+                style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}
               >
                 <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Goal</Text>
               </Pressable>
               <Pressable
                 onPress={() => handleGoal("B")}
                 className="rounded-2xl py-4 items-center"
-                style={{ backgroundColor: "#1D4ED8", ...(addGoal.isPending || isPaused ? undefined : primaryButtonShadow) }}
+                style={{ backgroundColor: "#1D4ED8", ...(addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow) }}
               >
                 <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Goal</Text>
               </Pressable>
@@ -494,9 +502,14 @@ export default function FootballLiveScoringScreen() {
 
             <Pressable
               onPress={handleUndo}
-              disabled={goals.length === 0 || deleteLastGoal.isPending || isPaused}
+              disabled={goals.length === 0 || deleteLastGoal.isPending || isPaused || isRinging}
               className="flex-row items-center justify-center rounded-2xl py-3 mt-2"
-              style={{ gap: 8, borderWidth: 1, borderColor: colors.warning, opacity: goals.length === 0 || isPaused ? 0.5 : 1 }}
+              style={{
+                gap: 8,
+                borderWidth: 1,
+                borderColor: colors.warning,
+                opacity: goals.length === 0 || isPaused || isRinging ? 0.5 : 1,
+              }}
             >
               <Ionicons name="arrow-undo-outline" size={16} color={colors.warning} />
               <Text className="text-sm font-semibold" style={{ color: colors.warning }}>Undo Last Goal</Text>
