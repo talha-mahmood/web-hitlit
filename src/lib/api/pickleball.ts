@@ -51,6 +51,8 @@ export async function createPickleballMatch(params: {
   scoringMode: ScoringMode;
   playMode: PlayMode;
   firstServingTeam: Team;
+  pointsToWin: number;
+  gamesToWin: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -64,6 +66,8 @@ export async function createPickleballMatch(params: {
       scoring_mode: params.scoringMode,
       play_mode: params.playMode,
       first_serving_team: params.firstServingTeam,
+      points_to_win: params.pointsToWin,
+      games_to_win: params.gamesToWin,
       venue: params.venue?.trim() || null,
     })
     .select()

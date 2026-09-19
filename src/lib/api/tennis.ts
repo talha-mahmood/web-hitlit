@@ -48,6 +48,7 @@ export async function createTennisMatch(params: {
   playerBName: string;
   format: MatchFormat;
   firstServer: Player;
+  gamesPerSet: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -58,6 +59,7 @@ export async function createTennisMatch(params: {
       player_b_name: params.playerBName,
       format: params.format,
       first_server: params.firstServer,
+      games_per_set: params.gamesPerSet,
       venue: params.venue?.trim() || null,
     })
     .select()

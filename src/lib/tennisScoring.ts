@@ -13,7 +13,7 @@
 // would just be extra indirection for the few formulas that do overlap.
 
 export type Player = "A" | "B";
-export type MatchFormat = "BEST_OF_3" | "BEST_OF_5";
+export type MatchFormat = "BEST_OF_1" | "BEST_OF_3" | "BEST_OF_5";
 
 export type PointEvent = {
   seq: number;
@@ -45,6 +45,7 @@ export type ServerInfo = { player: Player };
 export type TennisMatchConfig = {
   format: MatchFormat;
   firstServer: Player;
+  gamesPerSet: number; // standard is 6 (tiebreak at 6-6); host can shorten each set
 };
 
 export type TennisMatchState = {
@@ -99,7 +100,7 @@ function tiebreakServerOffset(pointsPlayedInTiebreak: number): number {
 }
 
 export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfig): TennisMatchState {
-  const setsToWin = config.format === "BEST_OF_5" ? 3 : 2;
+  const setsToWin = config.format === "BEST_OF_5" ? 3 : config.format === "BEST_OF_1" ? 1 : 2;
 
   const sets: SetResult[] = [];
   let setsWonA = 0;
@@ -151,10 +152,10 @@ export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfi
       pointsB = 0;
       gamesPlayedTotal++;
 
-      if (gamesA === 6 && gamesB === 6) {
+      if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
         inTiebreak = true;
       } else {
-        const setWinner = evaluateRace(gamesA, gamesB, 6);
+        const setWinner = evaluateRace(gamesA, gamesB, config.gamesPerSet);
         if (setWinner) {
           sets.push({ gamesA, gamesB, winner: setWinner, tiebreak: null });
           if (setWinner === "A") setsWonA++;
@@ -219,7 +220,7 @@ export function replayTennisMatch(points: PointEvent[], config: TennisMatchConfi
 
       const nextGamesA = gamesA + (candidate === "A" ? 1 : 0);
       const nextGamesB = gamesB + (candidate === "B" ? 1 : 0);
-      const wouldWinSet = inTiebreak ? true : evaluateRace(nextGamesA, nextGamesB, 6) === candidate;
+      const wouldWinSet = inTiebreak ? true : evaluateRace(nextGamesA, nextGamesB, config.gamesPerSet) === candidate;
 
       if (wouldWinSet) {
         const nextSetsA = setsWonA + (candidate === "A" ? 1 : 0);

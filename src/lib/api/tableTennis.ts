@@ -1,6 +1,6 @@
 import { supabase } from "../supabase";
 import type { Database } from "../../types/database.types";
-import type { MatchFormat, PlayMode, RallyEvent, Team } from "../tableTennisScoring";
+import type { PlayMode, RallyEvent, Team } from "../tableTennisScoring";
 
 export type TableTennisMatch = Database["public"]["Tables"]["table_tennis_matches"]["Row"];
 export type TableTennisRallyRow = Database["public"]["Tables"]["table_tennis_rallies"]["Row"];
@@ -50,9 +50,10 @@ export async function createTableTennisMatch(params: {
   teamAPlayers: string[];
   teamBPlayers: string[];
   playMode: PlayMode;
-  format: MatchFormat;
   firstServingTeam: Team;
   firstServerIndex: 0 | 1;
+  pointsToWin: number;
+  gamesToWin: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -64,9 +65,10 @@ export async function createTableTennisMatch(params: {
       team_a_players: params.teamAPlayers,
       team_b_players: params.teamBPlayers,
       play_mode: params.playMode,
-      format: params.format,
       first_serving_team: params.firstServingTeam,
       first_server_index: params.firstServerIndex,
+      points_to_win: params.pointsToWin,
+      games_to_win: params.gamesToWin,
       venue: params.venue?.trim() || null,
     })
     .select()

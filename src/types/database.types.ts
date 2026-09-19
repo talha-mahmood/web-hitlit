@@ -19,8 +19,10 @@ export type Database = {
           completed_at: string | null
           created_at: string
           first_serving_team: string
+          games_to_win: number
           id: string
           play_mode: string
+          points_to_win: number
           result_summary: string | null
           status: string
           team_a_name: string
@@ -37,8 +39,10 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           first_serving_team: string
+          games_to_win?: number
           id?: string
           play_mode: string
+          points_to_win?: number
           result_summary?: string | null
           status?: string
           team_a_name: string
@@ -55,8 +59,10 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           first_serving_team?: string
+          games_to_win?: number
           id?: string
           play_mode?: string
+          points_to_win?: number
           result_summary?: string | null
           status?: string
           team_a_name?: string
@@ -1452,6 +1458,7 @@ export type Database = {
           first_server_player_index: number
           first_server_team: string
           format: string
+          games_per_set: number
           id: string
           result_summary: string | null
           status: string
@@ -1470,6 +1477,7 @@ export type Database = {
           first_server_player_index: number
           first_server_team: string
           format: string
+          games_per_set?: number
           id?: string
           result_summary?: string | null
           status?: string
@@ -1488,6 +1496,7 @@ export type Database = {
           first_server_player_index?: number
           first_server_team?: string
           format?: string
+          games_per_set?: number
           id?: string
           result_summary?: string | null
           status?: string
@@ -1622,8 +1631,10 @@ export type Database = {
           completed_at: string | null
           created_at: string
           first_serving_team: string
+          games_to_win: number
           id: string
           play_mode: string
+          points_to_win: number
           result_summary: string | null
           scoring_mode: string
           status: string
@@ -1639,8 +1650,10 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           first_serving_team: string
+          games_to_win?: number
           id?: string
           play_mode: string
+          points_to_win?: number
           result_summary?: string | null
           scoring_mode: string
           status?: string
@@ -1656,8 +1669,10 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           first_serving_team?: string
+          games_to_win?: number
           id?: string
           play_mode?: string
+          points_to_win?: number
           result_summary?: string | null
           scoring_mode?: string
           status?: string
@@ -2142,9 +2157,10 @@ export type Database = {
           created_at: string
           first_server_index: number
           first_serving_team: string
-          format: string
+          games_to_win: number
           id: string
           play_mode: string
+          points_to_win: number
           result_summary: string | null
           status: string
           team_a_name: string
@@ -2160,9 +2176,10 @@ export type Database = {
           created_at?: string
           first_server_index?: number
           first_serving_team: string
-          format: string
+          games_to_win?: number
           id?: string
           play_mode: string
+          points_to_win?: number
           result_summary?: string | null
           status?: string
           team_a_name: string
@@ -2178,9 +2195,10 @@ export type Database = {
           created_at?: string
           first_server_index?: number
           first_serving_team?: string
-          format?: string
+          games_to_win?: number
           id?: string
           play_mode?: string
+          points_to_win?: number
           result_summary?: string | null
           status?: string
           team_a_name?: string
@@ -2337,6 +2355,7 @@ export type Database = {
           created_at: string
           first_server: string
           format: string
+          games_per_set: number
           id: string
           player_a_name: string
           player_b_name: string
@@ -2351,6 +2370,7 @@ export type Database = {
           created_at?: string
           first_server: string
           format: string
+          games_per_set?: number
           id?: string
           player_a_name: string
           player_b_name: string
@@ -2365,6 +2385,7 @@ export type Database = {
           created_at?: string
           first_server?: string
           format?: string
+          games_per_set?: number
           id?: string
           player_a_name?: string
           player_b_name?: string

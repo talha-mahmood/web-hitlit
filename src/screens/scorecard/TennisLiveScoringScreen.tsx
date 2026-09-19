@@ -35,7 +35,11 @@ export default function TennisLiveScoringScreen() {
   }, [match]);
 
   const config: TennisMatchConfig | null = match
-    ? { format: match.format as TennisMatchConfig["format"], firstServer: match.first_server as Player }
+    ? {
+        format: match.format as TennisMatchConfig["format"],
+        firstServer: match.first_server as Player,
+        gamesPerSet: match.games_per_set,
+      }
     : null;
 
   const state = useMemo(() => {

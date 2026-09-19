@@ -16,14 +16,19 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisNewMatch">;
 
 const FORMAT_OPTIONS: { label: string; value: MatchFormat }[] = [
+  { label: "Best of 1 Set", value: "BEST_OF_1" },
   { label: "Best of 3 Sets", value: "BEST_OF_3" },
   { label: "Best of 5 Sets", value: "BEST_OF_5" },
 ];
 
 const FORMAT_INFO: Record<MatchFormat, string> = {
+  BEST_OF_1: "A single set decides the match.",
   BEST_OF_3: "First player to win 2 sets wins the match.",
   BEST_OF_5: "First player to win 3 sets wins the match.",
 };
+
+const GAMES_PER_SET_PRESETS = ["3", "4", "6"];
+const STANDARD_GAMES_PER_SET = 6;
 
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
@@ -78,8 +83,13 @@ export default function TennisNewMatchScreen() {
   const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
   const [firstServer, setFirstServer] = useState<Player | null>(null);
   const [venue, setVenue] = useState("");
+  const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
-  const isValid = playerAName.trim().length > 0 && playerBName.trim().length > 0 && !!format && !!firstServer;
+  const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
+  const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
+
+  const isValid =
+    playerAName.trim().length > 0 && playerBName.trim().length > 0 && !!format && !!firstServer && isGamesPerSetValid;
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !firstServer) return;
@@ -90,6 +100,7 @@ export default function TennisNewMatchScreen() {
         playerBName: playerBName.trim(),
         format,
         firstServer,
+        gamesPerSet: gamesPerSetNumber,
         venue: venue.trim() || undefined,
       },
       {
@@ -100,7 +111,7 @@ export default function TennisNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -111,7 +122,7 @@ export default function TennisNewMatchScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         <CardSection icon="person-outline" title="Player A">
           <FieldInput value={playerAName} onChangeText={setPlayerAName} placeholder="e.g. Alex" maxLength={40} />
         </CardSection>
@@ -127,6 +138,29 @@ export default function TennisNewMatchScreen() {
         <CardSection icon="trophy-outline" title="Match Format">
           <PillRow options={FORMAT_OPTIONS} value={format} onChange={setFormat} />
           {format && <InfoBox text={FORMAT_INFO[format]} />}
+        </CardSection>
+
+        <CardSection icon="flag-outline" title="Games Per Set">
+          <PillRow
+            options={GAMES_PER_SET_PRESETS.map((n) => ({ label: n === String(STANDARD_GAMES_PER_SET) ? `${n} (Standard)` : n, value: n }))}
+            value={GAMES_PER_SET_PRESETS.includes(gamesPerSet ?? "") ? gamesPerSet : null}
+            onChange={setGamesPerSet}
+          />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom target</Text>
+          <FieldInput
+            value={gamesPerSet ?? ""}
+            onChangeText={(t) => setGamesPerSet(t.replace(/[^0-9]/g, "").slice(0, 2))}
+            placeholder="e.g. 6"
+            keyboardType="number-pad"
+            maxLength={2}
+          />
+          <InfoBox
+            text={
+              isGamesPerSetValid
+                ? `First to ${gamesPerSetNumber} games, win by 2 clear, wins the set — tiebreak at ${gamesPerSetNumber}-${gamesPerSetNumber}.`
+                : "Enter how many games win a set."
+            }
+          />
         </CardSection>
 
         <CardSection icon="tennisball-outline" title="First Server">

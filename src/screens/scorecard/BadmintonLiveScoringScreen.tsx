@@ -49,6 +49,8 @@ export default function BadmintonLiveScoringScreen() {
         firstServingTeam: match.first_serving_team as Team,
         teamAServerIndex: match.team_a_server_index as 0 | 1,
         teamBServerIndex: match.team_b_server_index as 0 | 1,
+        pointsToWin: match.points_to_win,
+        gamesToWin: match.games_to_win,
       }
     : null;
 

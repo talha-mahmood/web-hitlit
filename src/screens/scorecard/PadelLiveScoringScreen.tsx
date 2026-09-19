@@ -34,6 +34,7 @@ export default function PadelLiveScoringScreen() {
         deuceType: match.deuce_type as PadelMatchConfig["deuceType"],
         firstServerTeam: match.first_server_team as Team,
         firstServerPlayerIndex: match.first_server_player_index as 0 | 1,
+        gamesPerSet: match.games_per_set,
       }
     : null;
 

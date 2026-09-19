@@ -55,6 +55,7 @@ export type PadelMatchConfig = {
   deuceType: DeuceType;
   firstServerTeam: Team;
   firstServerPlayerIndex: 0 | 1;
+  gamesPerSet: number; // standard is 6 (tiebreak at 6-6); host can shorten each set
 };
 
 export type PadelMatchState = {
@@ -222,10 +223,10 @@ export function replayPadelMatch(points: PointEvent[], config: PadelMatchConfig)
       pointsB = 0;
       gamesPlayedTotal++;
 
-      if (gamesA === 6 && gamesB === 6) {
+      if (gamesA === config.gamesPerSet && gamesB === config.gamesPerSet) {
         inTiebreak = true;
       } else {
-        const setWinner = evaluateRace(gamesA, gamesB, 6);
+        const setWinner = evaluateRace(gamesA, gamesB, config.gamesPerSet);
         if (setWinner) {
           sets.push({ gamesA, gamesB, winner: setWinner, isMatchTiebreak: false, tiebreak: null });
           if (setWinner === "A") setsWonA++;

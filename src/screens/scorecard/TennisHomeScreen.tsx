@@ -25,6 +25,7 @@ function computeMatchState(match: TennisMatchDetail) {
   const config: TennisMatchConfig = {
     format: match.format as TennisMatchConfig["format"],
     firstServer: match.first_server as Player,
+    gamesPerSet: match.games_per_set,
   };
   const points = [...match.tennis_points].sort((a, b) => a.seq - b.seq).map(pointRowToEvent);
   return replayTennisMatch(points, config);

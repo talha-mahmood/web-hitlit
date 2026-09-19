@@ -16,7 +16,6 @@
 
 export type Team = "A" | "B";
 export type PlayMode = "SINGLES" | "DOUBLES";
-export type MatchFormat = "BEST_OF_5" | "BEST_OF_7";
 
 export type RallyEvent = {
   seq: number;
@@ -25,9 +24,10 @@ export type RallyEvent = {
 
 export type TableTennisMatchConfig = {
   playMode: PlayMode;
-  format: MatchFormat;
   firstServingTeam: Team; // who serves first in game 1
   firstServerIndex: 0 | 1; // which player of that team serves the very first point (doubles only)
+  pointsToWin: number; // standard is 11; host can shorten the game
+  gamesToWin: number; // standard is 3 (best of 5); host can shorten the match
 };
 
 export type GameResult = {
@@ -63,12 +63,12 @@ export type TableTennisMatchState = {
   winner: Team | null;
 };
 
-// First to 11, win by 2 clear — no hard cap the way badminton has one at
-// 30; the score genuinely just keeps climbing (12-10, 13-11, 15-13, ...)
+// First to `target`, win by 2 clear — no hard cap the way badminton has
+// one; the score genuinely just keeps climbing (12-10, 13-11, 15-13, ...)
 // until someone gets 2 clear.
-function evaluateGame(scoreA: number, scoreB: number): Team | null {
-  if (scoreA >= 11 && scoreA - scoreB >= 2) return "A";
-  if (scoreB >= 11 && scoreB - scoreA >= 2) return "B";
+function evaluateGame(scoreA: number, scoreB: number, target: number): Team | null {
+  if (scoreA >= target && scoreA - scoreB >= 2) return "A";
+  if (scoreB >= target && scoreB - scoreA >= 2) return "B";
   return null;
 }
 
@@ -89,14 +89,16 @@ function buildDoublesRotation(firstTeam: Team, firstIndex: 0 | 1): { team: Team;
 }
 
 // Which rotation slot serves the next point, given how many points have
-// already been played in the current game — alternates every 2 points
-// until the score reaches 10-10, then alternates every single point for
-// the rest of the game (the score can never drop back below 10-10 once
-// reached, since it only moves in +1 steps from there, so a simple
-// points-played threshold is all that's needed).
-function serviceSlotIndex(pointsPlayedInGame: number): number {
-  if (pointsPlayedInGame < 20) return Math.floor(pointsPlayedInGame / 2) % 2;
-  return (pointsPlayedInGame - 20) % 2;
+// already been played in the current game — alternates every 2 points until
+// the score reaches (target-1)-(target-1) (10-10 for an 11-point game),
+// then alternates every single point for the rest of the game (the score
+// can never drop back below that once reached, since it only moves in +1
+// steps from there, so a simple points-played threshold is all that's
+// needed).
+function serviceSlotIndex(pointsPlayedInGame: number, target: number): number {
+  const deuceThreshold = (target - 1) * 2;
+  if (pointsPlayedInGame < deuceThreshold) return Math.floor(pointsPlayedInGame / 2) % 2;
+  return (pointsPlayedInGame - deuceThreshold) % 2;
 }
 
 // Which team/index owns rotation slot N, for singles (a plain 2-slot
@@ -106,7 +108,7 @@ function singlesSlotOwner(firstTeam: Team, slotParity: number): Team {
 }
 
 export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTennisMatchConfig): TableTennisMatchState {
-  const gamesToWin = config.format === "BEST_OF_7" ? 4 : 3;
+  const gamesToWin = config.gamesToWin;
   const doublesRotation =
     config.playMode === "DOUBLES" ? buildDoublesRotation(config.firstServingTeam, config.firstServerIndex) : null;
 
@@ -122,7 +124,7 @@ export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTenni
   let matchWinner: Team | null = null;
 
   const currentServer = (): ServerState => {
-    const parity = serviceSlotIndex(pointsPlayedInGame) % 2;
+    const parity = serviceSlotIndex(pointsPlayedInGame, config.pointsToWin) % 2;
     // Every game alternates who serves first (the player who served first
     // in a game receives first in the next — the actual ITTF rule), so the
     // "base" for this game's slot 0 shifts by one position each game.
@@ -136,7 +138,7 @@ export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTenni
     // opens serving each game (a reasonable reading of the ITTF rotation
     // rule — the spec doesn't spell out every inter-game edge case for
     // doubles, so this keeps the rotation fair and deterministic).
-    const slot = (gameIndex + serviceSlotIndex(pointsPlayedInGame)) % 4;
+    const slot = (gameIndex + serviceSlotIndex(pointsPlayedInGame, config.pointsToWin)) % 4;
     const server = rotation[slot];
     const receiver = rotation[(slot + 1) % 4];
     return { servingTeam: server.team, serverIndex: server.index, receiverIndex: receiver.index };
@@ -158,7 +160,7 @@ export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTenni
       serverAfter: after,
     });
 
-    const gameWinner = evaluateGame(scoreA, scoreB);
+    const gameWinner = evaluateGame(scoreA, scoreB, config.pointsToWin);
     if (gameWinner) {
       games.push({ scoreA, scoreB, winner: gameWinner });
       if (gameWinner === "A") gamesWonA++;
@@ -191,7 +193,7 @@ export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTenni
     for (const candidate of ["A", "B"] as const) {
       const nextA = scoreA + (candidate === "A" ? 1 : 0);
       const nextB = scoreB + (candidate === "B" ? 1 : 0);
-      const wouldWinGame = evaluateGame(nextA, nextB) === candidate;
+      const wouldWinGame = evaluateGame(nextA, nextB, config.pointsToWin) === candidate;
       if (!wouldWinGame) continue;
       const nextGamesA = gamesWonA + (candidate === "A" ? 1 : 0);
       const nextGamesB = gamesWonB + (candidate === "B" ? 1 : 0);
@@ -200,7 +202,7 @@ export function replayTableTennisMatch(rallies: RallyEvent[], config: TableTenni
       indicatorFor = candidate;
       break;
     }
-    if (!indicator && scoreA === scoreB && scoreA >= 10) {
+    if (!indicator && scoreA === scoreB && scoreA >= config.pointsToWin - 1) {
       indicator = "DEUCE";
     }
   }

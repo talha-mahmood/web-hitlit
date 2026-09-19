@@ -30,6 +30,15 @@ const SCORING_MODE_INFO: Record<ScoringMode, string> = {
   RALLY: "Every rally scores a point for whoever wins it, regardless of who's serving.",
 };
 
+const POINTS_TO_WIN_PRESETS = ["5", "7", "9", "11"];
+const STANDARD_POINTS_TO_WIN = 11;
+const GAMES_TO_WIN_PRESETS = [
+  { label: "Best of 1", value: "1" },
+  { label: "Best of 3", value: "2" },
+  { label: "Best of 5", value: "3" },
+];
+const STANDARD_GAMES_TO_WIN = 2;
+
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
   return (
     <View
@@ -153,10 +162,17 @@ export default function PickleballNewMatchScreen() {
   const [scoringMode, setScoringMode] = useState<ScoringMode | null>("SIDE_OUT");
   const [firstServingTeam, setFirstServingTeam] = useState<Team | null>(null);
   const [venue, setVenue] = useState("");
+  const [pointsToWin, setPointsToWin] = useState<string | null>(String(STANDARD_POINTS_TO_WIN));
+  const [gamesToWin, setGamesToWin] = useState<string | null>(String(STANDARD_GAMES_TO_WIN));
 
   const isDoubles = playMode === "DOUBLES";
   const doublesPlayersValid =
     !isDoubles || (teamAPlayers[0].trim().length > 0 && teamAPlayers[1].trim().length > 0 && teamBPlayers[0].trim().length > 0 && teamBPlayers[1].trim().length > 0);
+
+  const pointsToWinNumber = parseInt(pointsToWin ?? "", 10);
+  const isPointsToWinValid = !!pointsToWin && pointsToWinNumber > 0;
+  const gamesToWinNumber = parseInt(gamesToWin ?? "", 10);
+  const isGamesToWinValid = !!gamesToWin && gamesToWinNumber > 0;
 
   const isValid =
     teamAName.trim().length > 0 &&
@@ -164,7 +180,9 @@ export default function PickleballNewMatchScreen() {
     doublesPlayersValid &&
     !!playMode &&
     !!scoringMode &&
-    !!firstServingTeam;
+    !!firstServingTeam &&
+    isPointsToWinValid &&
+    isGamesToWinValid;
 
   const handleCreate = () => {
     if (!isValid || !userId || !playMode || !scoringMode || !firstServingTeam) return;
@@ -178,6 +196,8 @@ export default function PickleballNewMatchScreen() {
         scoringMode,
         playMode,
         firstServingTeam,
+        pointsToWin: pointsToWinNumber,
+        gamesToWin: gamesToWinNumber,
         venue: venue.trim() || undefined,
       },
       {
@@ -188,7 +208,7 @@ export default function PickleballNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -199,7 +219,7 @@ export default function PickleballNewMatchScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         <CardSection icon="people-outline" title="Play Mode">
           <PillRow
             options={PLAY_MODE_OPTIONS}
@@ -225,6 +245,48 @@ export default function PickleballNewMatchScreen() {
         <CardSection icon="options-outline" title="Scoring Mode">
           <PillRow options={SCORING_MODE_OPTIONS} value={scoringMode} onChange={setScoringMode} />
           {scoringMode && <InfoBox text={SCORING_MODE_INFO[scoringMode]} />}
+        </CardSection>
+
+        <CardSection icon="flag-outline" title="Points To Win a Game">
+          <PillRow
+            options={POINTS_TO_WIN_PRESETS.map((n) => ({ label: n === String(STANDARD_POINTS_TO_WIN) ? `${n} (Standard)` : n, value: n }))}
+            value={POINTS_TO_WIN_PRESETS.includes(pointsToWin ?? "") ? pointsToWin : null}
+            onChange={setPointsToWin}
+          />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom target</Text>
+          <FieldInput
+            value={pointsToWin ?? ""}
+            onChangeText={(t) => setPointsToWin(t.replace(/[^0-9]/g, "").slice(0, 2))}
+            placeholder="e.g. 11"
+            keyboardType="number-pad"
+            maxLength={2}
+          />
+          <InfoBox
+            text={
+              isPointsToWinValid
+                ? `First to ${pointsToWinNumber} points, win by 2 clear, wins the game.`
+                : "Enter how many points win a game."
+            }
+          />
+        </CardSection>
+
+        <CardSection icon="trophy-outline" title="Match Length">
+          <PillRow options={GAMES_TO_WIN_PRESETS} value={GAMES_TO_WIN_PRESETS.some((o) => o.value === gamesToWin) ? gamesToWin : null} onChange={setGamesToWin} />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom games-to-win</Text>
+          <FieldInput
+            value={gamesToWin ?? ""}
+            onChangeText={(t) => setGamesToWin(t.replace(/[^0-9]/g, "").slice(0, 1))}
+            placeholder="e.g. 2"
+            keyboardType="number-pad"
+            maxLength={1}
+          />
+          <InfoBox
+            text={
+              isGamesToWinValid
+                ? `First to win ${gamesToWinNumber} game${gamesToWinNumber === 1 ? "" : "s"} (best of ${gamesToWinNumber * 2 - 1}) wins the match.`
+                : "Enter how many games are needed to win the match."
+            }
+          />
         </CardSection>
 
         <CardSection icon="tennisball-outline" title={isDoubles ? "First Serving Team" : "First Server"}>

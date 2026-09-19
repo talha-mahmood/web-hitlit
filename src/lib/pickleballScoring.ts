@@ -25,6 +25,8 @@ export type PickleballMatchConfig = {
   scoringMode: ScoringMode;
   playMode: PlayMode;
   firstServingTeam: Team;
+  pointsToWin: number; // standard is 11; host can shorten the game
+  gamesToWin: number; // standard is 2 (best of 3); host can shorten the match
 };
 
 export type GameResult = {
@@ -67,8 +69,6 @@ export type PickleballMatchState = {
   isComplete: boolean;
   winner: Team | null;
 };
-
-const GAMES_TO_WIN = 2; // best of 3 — the only match format this spec calls for
 
 // First to `target` points, win by 2 clear — pickleball's game-to-11 rule
 // (11-7, 11-9, 12-10, 15-13 all fit this the same way tennis/padel's
@@ -134,14 +134,14 @@ export function replayPickleballMatch(rallies: RallyEvent[], config: PickleballM
       serverAfter: { servingTeam, serverNumber, servingSide: servingSideFor(servingTeam, scoreA, scoreB) },
     });
 
-    const gameWinner = evaluateRace(scoreA, scoreB, 11);
+    const gameWinner = evaluateRace(scoreA, scoreB, config.pointsToWin);
     if (gameWinner) {
       games.push({ scoreA, scoreB, winner: gameWinner });
       if (gameWinner === "A") gamesWonA++;
       else gamesWonB++;
       scoreA = 0;
       scoreB = 0;
-      if (gamesWonA === GAMES_TO_WIN || gamesWonB === GAMES_TO_WIN) {
+      if (gamesWonA === config.gamesToWin || gamesWonB === config.gamesToWin) {
         matchComplete = true;
         matchWinner = gameWinner;
       } else {
@@ -176,11 +176,11 @@ export function replayPickleballMatch(rallies: RallyEvent[], config: PickleballM
       if (config.scoringMode === "SIDE_OUT" && candidate !== servingTeam) continue;
       const nextA = scoreA + (candidate === "A" ? 1 : 0);
       const nextB = scoreB + (candidate === "B" ? 1 : 0);
-      const wouldWinGame = evaluateRace(nextA, nextB, 11) === candidate;
+      const wouldWinGame = evaluateRace(nextA, nextB, config.pointsToWin) === candidate;
       if (!wouldWinGame) continue;
       const nextGamesA = gamesWonA + (candidate === "A" ? 1 : 0);
       const nextGamesB = gamesWonB + (candidate === "B" ? 1 : 0);
-      const wouldWinMatch = (candidate === "A" ? nextGamesA : nextGamesB) === GAMES_TO_WIN;
+      const wouldWinMatch = (candidate === "A" ? nextGamesA : nextGamesB) === config.gamesToWin;
       indicator = wouldWinMatch ? "MATCH_POINT" : "GAME_POINT";
       indicatorFor = candidate;
       break;
@@ -191,7 +191,7 @@ export function replayPickleballMatch(rallies: RallyEvent[], config: PickleballM
     games,
     gamesWonA,
     gamesWonB,
-    gamesToWin: GAMES_TO_WIN,
+    gamesToWin: config.gamesToWin,
     server,
     indicator,
     indicatorFor,

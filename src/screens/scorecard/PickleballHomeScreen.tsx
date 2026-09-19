@@ -26,6 +26,8 @@ function computeMatchState(match: PickleballMatchDetail) {
     scoringMode: match.scoring_mode as PickleballMatchConfig["scoringMode"],
     playMode: match.play_mode as PickleballMatchConfig["playMode"],
     firstServingTeam: match.first_serving_team as Team,
+    pointsToWin: match.points_to_win,
+    gamesToWin: match.games_to_win,
   };
   const rallies = [...match.pickleball_rallies].sort((a, b) => a.seq - b.seq).map(rallyRowToEvent);
   return replayPickleballMatch(rallies, config);

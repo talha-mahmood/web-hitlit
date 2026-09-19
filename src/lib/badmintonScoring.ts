@@ -29,6 +29,8 @@ export type BadmintonMatchConfig = {
   // simply fixed for the whole match rather than alternating.
   teamAServerIndex: 0 | 1;
   teamBServerIndex: 0 | 1;
+  pointsToWin: number; // standard is 21; host can shorten the game
+  gamesToWin: number; // standard is 2 (best of 3); host can shorten the match
 };
 
 export type GameResult = {
@@ -64,21 +66,18 @@ export type BadmintonMatchState = {
   winner: Team | null;
 };
 
-const GAMES_TO_WIN = 2; // best of 3 — the only match format this spec calls for
-const GAME_TARGET = 21;
-const GAME_CAP = 30; // the 29-29 rule: the 30th point always wins, no further extension
-
-// First to 21, win by 2 clear — except once either side reaches 30 (which
-// can only happen via 29-29 → 30-29, since any earlier 2-point gap would
-// already have ended the game), that point wins outright regardless of
-// margin. This one extra check is all the "29-29 rule" needs — every other
-// example in the spec (21-18, 22-20, 24-22) already falls out of the plain
-// win-by-2 comparison.
-function evaluateGame(scoreA: number, scoreB: number): Team | null {
-  if (scoreA >= GAME_CAP) return "A";
-  if (scoreB >= GAME_CAP) return "B";
-  if (scoreA >= GAME_TARGET && scoreA - scoreB >= 2) return "A";
-  if (scoreB >= GAME_TARGET && scoreB - scoreA >= 2) return "B";
+// First to `target`, win by 2 clear — except once either side reaches the
+// cap (which can only happen via target-1 - target-1 -> cap - (target-1),
+// since any earlier 2-point gap would already have ended the game), that
+// point wins outright regardless of margin. The cap sits 9 points above the
+// target, the same gap as the standard 21-point game's 30-point cap (the
+// spec's "29-29 rule"), scaled to whatever target the host has set.
+function evaluateGame(scoreA: number, scoreB: number, target: number): Team | null {
+  const cap = target + 9;
+  if (scoreA >= cap) return "A";
+  if (scoreB >= cap) return "B";
+  if (scoreA >= target && scoreA - scoreB >= 2) return "A";
+  if (scoreB >= target && scoreB - scoreA >= 2) return "B";
   return null;
 }
 
@@ -128,14 +127,14 @@ export function replayBadmintonMatch(rallies: RallyEvent[], config: BadmintonMat
       },
     });
 
-    const gameWinner = evaluateGame(scoreA, scoreB);
+    const gameWinner = evaluateGame(scoreA, scoreB, config.pointsToWin);
     if (gameWinner) {
       games.push({ scoreA, scoreB, winner: gameWinner });
       if (gameWinner === "A") gamesWonA++;
       else gamesWonB++;
       scoreA = 0;
       scoreB = 0;
-      if (gamesWonA === GAMES_TO_WIN || gamesWonB === GAMES_TO_WIN) {
+      if (gamesWonA === config.gamesToWin || gamesWonB === config.gamesToWin) {
         matchComplete = true;
         matchWinner = gameWinner;
       } else {
@@ -166,11 +165,11 @@ export function replayBadmintonMatch(rallies: RallyEvent[], config: BadmintonMat
     for (const candidate of ["A", "B"] as const) {
       const nextA = scoreA + (candidate === "A" ? 1 : 0);
       const nextB = scoreB + (candidate === "B" ? 1 : 0);
-      const wouldWinGame = evaluateGame(nextA, nextB) === candidate;
+      const wouldWinGame = evaluateGame(nextA, nextB, config.pointsToWin) === candidate;
       if (!wouldWinGame) continue;
       const nextGamesA = gamesWonA + (candidate === "A" ? 1 : 0);
       const nextGamesB = gamesWonB + (candidate === "B" ? 1 : 0);
-      const wouldWinMatch = (candidate === "A" ? nextGamesA : nextGamesB) === GAMES_TO_WIN;
+      const wouldWinMatch = (candidate === "A" ? nextGamesA : nextGamesB) === config.gamesToWin;
       indicator = wouldWinMatch ? "MATCH_POINT" : "GAME_POINT";
       indicatorFor = candidate;
       break;
@@ -181,7 +180,7 @@ export function replayBadmintonMatch(rallies: RallyEvent[], config: BadmintonMat
     games,
     gamesWonA,
     gamesWonB,
-    gamesToWin: GAMES_TO_WIN,
+    gamesToWin: config.gamesToWin,
     server,
     indicator,
     indicatorFor,

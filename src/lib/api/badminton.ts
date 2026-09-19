@@ -53,6 +53,8 @@ export async function createBadmintonMatch(params: {
   firstServingTeam: Team;
   teamAServerIndex: 0 | 1;
   teamBServerIndex: 0 | 1;
+  pointsToWin: number;
+  gamesToWin: number;
   venue?: string;
 }): Promise<{ matchId: string }> {
   const { data, error } = await supabase
@@ -67,6 +69,8 @@ export async function createBadmintonMatch(params: {
       first_serving_team: params.firstServingTeam,
       team_a_server_index: params.teamAServerIndex,
       team_b_server_index: params.teamBServerIndex,
+      points_to_win: params.pointsToWin,
+      games_to_win: params.gamesToWin,
       venue: params.venue?.trim() || null,
     })
     .select()

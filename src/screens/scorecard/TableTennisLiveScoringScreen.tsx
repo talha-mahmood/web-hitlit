@@ -47,9 +47,10 @@ export default function TableTennisLiveScoringScreen() {
   const config: TableTennisMatchConfig | null = match
     ? {
         playMode: match.play_mode as TableTennisMatchConfig["playMode"],
-        format: match.format as TableTennisMatchConfig["format"],
         firstServingTeam: match.first_serving_team as Team,
         firstServerIndex: match.first_server_index as 0 | 1,
+        pointsToWin: match.points_to_win,
+        gamesToWin: match.games_to_win,
       }
     : null;
 

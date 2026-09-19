@@ -34,6 +34,9 @@ const DEUCE_OPTIONS: { label: string; value: DeuceType }[] = [
   { label: "Star Point", value: "STAR_POINT" },
 ];
 
+const GAMES_PER_SET_PRESETS = ["3", "4", "6"];
+const STANDARD_GAMES_PER_SET = 6;
+
 const DEUCE_INFO: Record<DeuceType, string> = {
   ADVANTAGE: "Traditional scoring — at 40-40, a pair must win two points in a row to take the game.",
   GOLDEN_POINT: "At 40-40, the very next point wins the game outright — no advantage.",
@@ -155,10 +158,14 @@ export default function PadelNewMatchScreen() {
   const [firstServerTeam, setFirstServerTeam] = useState<Team | null>(null);
   const [firstServerPlayerIndex, setFirstServerPlayerIndex] = useState<0 | 1 | null>(null);
   const [venue, setVenue] = useState("");
+  const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const teamAValidPlayers = teamAPlayers.filter((p) => p.trim().length > 0);
   const teamBValidPlayers = teamBPlayers.filter((p) => p.trim().length > 0);
   const serverTeamPlayers = firstServerTeam === "A" ? teamAPlayers : firstServerTeam === "B" ? teamBPlayers : ["", ""];
+
+  const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
+  const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
 
   const isValid =
     teamAName.trim().length > 0 &&
@@ -168,7 +175,8 @@ export default function PadelNewMatchScreen() {
     !!format &&
     !!deuceType &&
     !!firstServerTeam &&
-    firstServerPlayerIndex !== null;
+    firstServerPlayerIndex !== null &&
+    isGamesPerSetValid;
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !deuceType || !firstServerTeam || firstServerPlayerIndex === null) return;
@@ -183,6 +191,7 @@ export default function PadelNewMatchScreen() {
         deuceType,
         firstServerTeam,
         firstServerPlayerIndex,
+        gamesPerSet: gamesPerSetNumber,
         venue: venue.trim() || undefined,
       },
       {
@@ -193,7 +202,7 @@ export default function PadelNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -204,7 +213,7 @@ export default function PadelNewMatchScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
         <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
 
@@ -215,6 +224,29 @@ export default function PadelNewMatchScreen() {
         <CardSection icon="trophy-outline" title="Match Format">
           <PillRow options={FORMAT_OPTIONS} value={format} onChange={setFormat} />
           {format && <InfoBox text={FORMAT_INFO[format]} />}
+        </CardSection>
+
+        <CardSection icon="flag-outline" title="Games Per Set">
+          <PillRow
+            options={GAMES_PER_SET_PRESETS.map((n) => ({ label: n === String(STANDARD_GAMES_PER_SET) ? `${n} (Standard)` : n, value: n }))}
+            value={GAMES_PER_SET_PRESETS.includes(gamesPerSet ?? "") ? gamesPerSet : null}
+            onChange={setGamesPerSet}
+          />
+          <Text className="text-muted text-xs mt-3 mb-2">Or enter a custom target</Text>
+          <FieldInput
+            value={gamesPerSet ?? ""}
+            onChangeText={(t) => setGamesPerSet(t.replace(/[^0-9]/g, "").slice(0, 2))}
+            placeholder="e.g. 6"
+            keyboardType="number-pad"
+            maxLength={2}
+          />
+          <InfoBox
+            text={
+              isGamesPerSetValid
+                ? `First to ${gamesPerSetNumber} games, win by 2 clear, wins the set — tiebreak at ${gamesPerSetNumber}-${gamesPerSetNumber}.`
+                : "Enter how many games win a set."
+            }
+          />
         </CardSection>
 
         <CardSection icon="albums-outline" title="Deuce Rule">
