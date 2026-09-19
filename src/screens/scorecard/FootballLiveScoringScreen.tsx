@@ -24,12 +24,7 @@ import {
   computeScoreSummary,
   computePenaltyShootoutState,
   matchResultSummary,
-  totalMatchMinutes,
-  extraTimeTotalMinutes,
-  extraTimePeriodMinutes,
-  formatMinutesLabel,
   type MatchTimestamps,
-  type MatchConfig,
   type Phase,
   type Team,
 } from "../../lib/footballScoring";
@@ -41,34 +36,17 @@ type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballLiveScori
 
 const RUNNING_PHASES: Phase[] = ["FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_FIRST", "EXTRA_TIME_SECOND"];
 
-// Half/period phases get their scheduled length appended ("1ST HALF (45
-// min)"); break/decision phases aren't tied to a single half's duration.
-function phaseLabel(phase: Phase, config: MatchConfig): string {
-  const half = formatMinutesLabel(config.halfDurationMinutes);
-  const etPeriod = formatMinutesLabel(extraTimePeriodMinutes(config));
-  switch (phase) {
-    case "FIRST_HALF":
-      return `1ST HALF (${half} min)`;
-    case "HALF_TIME":
-      return "HALF-TIME";
-    case "SECOND_HALF":
-      return `2ND HALF (${half} min)`;
-    case "FULL_TIME":
-      return "FULL-TIME";
-    case "EXTRA_TIME_FIRST":
-      return `EXTRA TIME — 1ST HALF (${etPeriod} min)`;
-    case "EXTRA_TIME_BREAK":
-      return "EXTRA TIME BREAK";
-    case "EXTRA_TIME_SECOND":
-      return `EXTRA TIME — 2ND HALF (${etPeriod} min)`;
-    case "EXTRA_TIME_FULL_TIME":
-      return "EXTRA TIME — FULL-TIME";
-    case "PENALTIES":
-      return "PENALTY SHOOTOUT";
-    default:
-      return phase;
-  }
-}
+const PHASE_LABEL: Partial<Record<Phase, string>> = {
+  FIRST_HALF: "1ST HALF",
+  HALF_TIME: "HALF-TIME",
+  SECOND_HALF: "2ND HALF",
+  FULL_TIME: "FULL-TIME",
+  EXTRA_TIME_FIRST: "EXTRA TIME — 1ST HALF",
+  EXTRA_TIME_BREAK: "EXTRA TIME BREAK",
+  EXTRA_TIME_SECOND: "EXTRA TIME — 2ND HALF",
+  EXTRA_TIME_FULL_TIME: "EXTRA TIME — FULL-TIME",
+  PENALTIES: "PENALTY SHOOTOUT",
+};
 
 const ADDED_TIME_OPTIONS = ["0", "1", "2", "3", "4", "5"];
 
@@ -152,9 +130,8 @@ export default function FootballLiveScoringScreen() {
       }
     : null;
 
-  const matchConfig = { halfDurationMinutes: match?.half_duration_minutes ?? 45 };
-  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, matchConfig, now) : 0;
-  const clock = formatClock(elapsedSeconds, phase, matchConfig);
+  const elapsedSeconds = timestamps ? computeElapsedSeconds(phase, timestamps, now) : 0;
+  const clock = formatClock(elapsedSeconds, phase);
 
   const goals = useMemo(() => {
     if (!match) return [];
@@ -193,7 +170,7 @@ export default function FootballLiveScoringScreen() {
   const handleGoal = (team: Team) => {
     if (!isRunning) return;
     const seq = goals.length + 1;
-    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds, phase, matchConfig);
+    const minuteLabel = formatGoalMinuteLabel(elapsedSeconds, phase);
     addGoal.mutate(
       { seq, team, phase, minuteLabel },
       { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not record goal.")) }
@@ -379,13 +356,6 @@ export default function FootballLiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
-        {/* Total match time — the configured length, plus the potential
-            extra-time allowance for a match that needs a winner. */}
-        <Text className="text-muted text-xs font-semibold text-center mb-2">
-          MATCH: {formatMinutesLabel(totalMatchMinutes(matchConfig))} min
-          {match.requires_winner ? ` + ${formatMinutesLabel(extraTimeTotalMinutes(matchConfig))} min ET` : ""}
-        </Text>
-
         {/* Team headers + score */}
         <View className="bg-white rounded-2xl p-5 mb-4 items-center" style={cardShadow}>
           <View className="flex-row items-center justify-between w-full mb-3">
@@ -402,7 +372,7 @@ export default function FootballLiveScoringScreen() {
           ) : null}
           <View className="rounded-full px-3 py-1 mt-2" style={{ backgroundColor: colors.primaryLight }}>
             <Text className="text-xs font-extrabold" style={{ color: colors.primaryDark }}>
-              {phaseLabel(phase, matchConfig)}
+              {PHASE_LABEL[phase] ?? phase}
             </Text>
           </View>
         </View>

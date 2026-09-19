@@ -37,48 +37,14 @@ export type Phase =
 // Break/complete phases are frozen at whatever the clock read when they began.
 const RUNNING_PHASES: Phase[] = ["FIRST_HALF", "SECOND_HALF", "EXTRA_TIME_FIRST", "EXTRA_TIME_SECOND"];
 
-export type MatchConfig = {
-  halfDurationMinutes: number; // length of each regular half — 45 for a standard match, shorter for a casual one
+// The scheduled clock-minute at which each running phase's stoppage time
+// begins (i.e. when it switches from "23:45" to "45+2'" style display).
+const PHASE_BOUNDARY_MINUTE: Partial<Record<Phase, number>> = {
+  FIRST_HALF: 45,
+  SECOND_HALF: 90,
+  EXTRA_TIME_FIRST: 105,
+  EXTRA_TIME_SECOND: 120,
 };
-
-// Extra time is always a third of the full regulation match (90 min
-// regulation → 30 min extra time = two 15-min periods, the standard FIFA
-// length) — scaled the same way for a shortened match, so a 10-minute
-// match's extra time is 10/3 ≈ 3.33 min total, 1.67 min per period. Kept
-// exact (not rounded) internally so accumulated match time stays
-// mathematically consistent; only the on-screen labels round for display.
-export function totalMatchMinutes(config: MatchConfig): number {
-  return config.halfDurationMinutes * 2;
-}
-export function extraTimeTotalMinutes(config: MatchConfig): number {
-  return totalMatchMinutes(config) / 3;
-}
-export function extraTimePeriodMinutes(config: MatchConfig): number {
-  return extraTimeTotalMinutes(config) / 2;
-}
-
-function extraTimePeriodSeconds(config: MatchConfig): number {
-  return Math.round(extraTimePeriodMinutes(config) * 60);
-}
-
-// The scheduled clock time (in seconds) at which each running phase's
-// stoppage time begins — kept in seconds internally for the fractional
-// extra-time case; `formatClock`/`formatGoalMinuteLabel` round this to a
-// whole minute only for the "45+2'" style label, which is always
-// whole-minute by football convention.
-function phaseBoundarySeconds(phase: Phase, config: MatchConfig): number | undefined {
-  if (phase === "FIRST_HALF") return config.halfDurationMinutes * 60;
-  if (phase === "SECOND_HALF") return config.halfDurationMinutes * 2 * 60;
-  if (phase === "EXTRA_TIME_FIRST") return config.halfDurationMinutes * 2 * 60 + extraTimePeriodSeconds(config);
-  if (phase === "EXTRA_TIME_SECOND") return config.halfDurationMinutes * 2 * 60 + extraTimePeriodSeconds(config) * 2;
-  return undefined;
-}
-
-// "45 min" for a whole number, "1.7 min" (one decimal) for a fractional
-// period — used to label each half/period's scheduled length on screen.
-export function formatMinutesLabel(minutes: number): string {
-  return Number.isInteger(minutes) ? `${minutes}` : minutes.toFixed(1);
-}
 
 export type GoalEvent = {
   seq: number;
@@ -106,16 +72,16 @@ export type MatchTimestamps = {
 
 // Whole seconds accumulated by every phase that has *fully finished*
 // before `phase` began — i.e. the clock reading the instant `phase` started.
-function accumulatedSecondsBeforePhase(phase: Phase, t: MatchTimestamps, config: MatchConfig): number {
+function accumulatedSecondsBeforePhase(phase: Phase, t: MatchTimestamps): number {
   let seconds = 0;
   if (phase === "FIRST_HALF") return 0;
-  seconds += config.halfDurationMinutes * 60 + (t.firstHalfAddedMinutes ?? 0) * 60;
+  seconds += 45 * 60 + (t.firstHalfAddedMinutes ?? 0) * 60;
   if (phase === "HALF_TIME" || phase === "SECOND_HALF") return seconds;
-  seconds += config.halfDurationMinutes * 60 + (t.secondHalfAddedMinutes ?? 0) * 60;
+  seconds += 45 * 60 + (t.secondHalfAddedMinutes ?? 0) * 60;
   if (phase === "FULL_TIME" || phase === "EXTRA_TIME_FIRST") return seconds;
-  seconds += extraTimePeriodSeconds(config) + (t.extraTimeFirstAddedMinutes ?? 0) * 60;
+  seconds += 15 * 60 + (t.extraTimeFirstAddedMinutes ?? 0) * 60;
   if (phase === "EXTRA_TIME_BREAK" || phase === "EXTRA_TIME_SECOND") return seconds;
-  seconds += extraTimePeriodSeconds(config) + (t.extraTimeSecondAddedMinutes ?? 0) * 60;
+  seconds += 15 * 60 + (t.extraTimeSecondAddedMinutes ?? 0) * 60;
   return seconds; // EXTRA_TIME_FULL_TIME, PENALTIES, COMPLETE
 }
 
@@ -129,8 +95,8 @@ function kickoffTimestampFor(phase: Phase, t: MatchTimestamps): string | null {
 
 // The live, continuously-running elapsed match time, in seconds, right now
 // (or as of `nowMs` if given — used for testing without a real clock).
-export function computeElapsedSeconds(phase: Phase, t: MatchTimestamps, config: MatchConfig, nowMs: number = Date.now()): number {
-  const before = accumulatedSecondsBeforePhase(phase, t, config);
+export function computeElapsedSeconds(phase: Phase, t: MatchTimestamps, nowMs: number = Date.now()): number {
+  const before = accumulatedSecondsBeforePhase(phase, t);
   if (!RUNNING_PHASES.includes(phase)) return before;
   const kickoff = kickoffTimestampFor(phase, t);
   if (!kickoff) return before;
@@ -139,13 +105,9 @@ export function computeElapsedSeconds(phase: Phase, t: MatchTimestamps, config: 
 }
 
 // "23:45" during normal time, "45+2'" once past the phase's scheduled
-// boundary (stoppage/added time) — the running clock shown on the live
-// screen. The boundary is rounded to the nearest whole minute here (even
-// though it's tracked to the second internally) since stoppage-time labels
-// are always whole minutes by football convention.
-export function formatClock(elapsedSeconds: number, phase: Phase, config: MatchConfig): string {
-  const boundarySeconds = phaseBoundarySeconds(phase, config);
-  const boundary = boundarySeconds !== undefined ? Math.round(boundarySeconds / 60) : undefined;
+// boundary (stoppage/added time) — the running clock shown on the live screen.
+export function formatClock(elapsedSeconds: number, phase: Phase): string {
+  const boundary = PHASE_BOUNDARY_MINUTE[phase];
   const elapsedMinutes = Math.floor(elapsedSeconds / 60);
   if (boundary !== undefined && elapsedMinutes >= boundary) {
     const added = elapsedMinutes - boundary + 1;
@@ -158,9 +120,8 @@ export function formatClock(elapsedSeconds: number, phase: Phase, config: MatchC
 // "23'" / "45+2'" — the compact goal-history label, computed once at the
 // instant a goal is recorded (1-indexed: the very first second of the
 // match is "1'", matching how goals are conventionally announced).
-export function formatGoalMinuteLabel(elapsedSeconds: number, phase: Phase, config: MatchConfig): string {
-  const boundarySeconds = phaseBoundarySeconds(phase, config);
-  const boundary = boundarySeconds !== undefined ? Math.round(boundarySeconds / 60) : undefined;
+export function formatGoalMinuteLabel(elapsedSeconds: number, phase: Phase): string {
+  const boundary = PHASE_BOUNDARY_MINUTE[phase];
   const elapsedMinutes = Math.floor(elapsedSeconds / 60) + 1;
   if (boundary !== undefined && elapsedMinutes > boundary) {
     return `${boundary}+${elapsedMinutes - boundary}'`;
