@@ -227,7 +227,7 @@ export default function ProfileScreen() {
     color: getSportIcon(s.sportName).fg,
   }));
 
-  const regularGamesPlayed = Math.max(0, (stats?.gamesPlayedTotal ?? 0) - (stats?.tournamentsPlayedTotal ?? 0));
+  const regularGamesPlayed = stats?.regularGamesPlayedTotal ?? 0;
   const activityMax = Math.max(regularGamesPlayed, stats?.tournamentsPlayedTotal ?? 0, stats?.gamesHostedTotal ?? 0, 1);
   const achievements = stats ? buildAchievements(stats) : [];
 

@@ -3,6 +3,11 @@ import type { Database } from "../../types/database.types";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
+// "Games played" everywhere in the app means *scored* games only — a match with
+// a recorded result, whether scored through a scorecard or entered manually.
+// The database still returns every game a player joined as games_played (used
+// only to decide who shows up on the list); the mappers below use
+// matches_played instead.
 export type TopPlayer = {
   userId: string;
   fullName: string | null;
@@ -31,7 +36,7 @@ export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
     avatar: row.avatar,
     city: row.city,
     skillLevel: row.skill_level,
-    gamesPlayedTotal: row.games_played,
+    gamesPlayedTotal: row.matches_played,
     tournamentsPlayedTotal: row.tournaments_played,
     gamesHostedTotal: row.games_hosted,
     matchesPlayedTotal: row.matches_played,
@@ -88,7 +93,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
     city: profile.city,
     bio: profile.bio,
     skillLevel: profile.skill_level,
-    gamesPlayedTotal: stats.games_played,
+    gamesPlayedTotal: stats.matches_played,
     tournamentsPlayedTotal: stats.tournaments_played,
     gamesHostedTotal: stats.games_hosted,
     matchesPlayedTotal: stats.matches_played,

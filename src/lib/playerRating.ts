@@ -31,10 +31,11 @@ export type RatingInputs = {
 
 export function computeRating(stats: RatingInputs | undefined): number {
   if (!stats) return BASE_RATING;
-  const regularGames = Math.max(0, stats.gamesPlayedTotal - stats.tournamentsPlayedTotal);
+  // gamesPlayedTotal is already scored games only, so tournaments are no
+  // longer subtracted out of it.
   return (
     BASE_RATING +
-    regularGames * POINTS_PER_GAME +
+    stats.gamesPlayedTotal * POINTS_PER_GAME +
     stats.tournamentsPlayedTotal * POINTS_PER_TOURNAMENT +
     stats.gamesHostedTotal * POINTS_PER_HOSTED_GAME
   );

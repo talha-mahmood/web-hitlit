@@ -7,7 +7,11 @@ export type UpcomingEntry = { id: string; title: string; gameDate: string; start
 export type ActiveSquadEntry = { id: string; name: string };
 
 export type ProfileStats = {
+  // Scored games only: matches with a recorded result (via a scorecard or
+  // entered manually) that this user's team took part in.
   gamesPlayedTotal: number;
+  // The part of gamesPlayedTotal that came from regular (non-tournament) games.
+  regularGamesPlayedTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
   hoursPlayedTotal: number;
@@ -65,7 +69,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
       .eq("status", "JOINED"),
     supabase
       .from("tournament_team_members")
-      .select("tournament_teams!inner(status, games(id, title, game_date, start_time, status, sports(name)))")
+      .select("tournament_teams!inner(id, status, games(id, title, game_date, start_time, status, sports(name)))")
       .eq("user_id", userId)
       .eq("status", "JOINED")
       .eq("tournament_teams.status", "APPROVED"),
@@ -141,12 +145,38 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
     }))
     .sort((a, b) => a.gameDate.localeCompare(b.gameDate) || a.startTime.localeCompare(b.startTime));
 
+  // Scored games live on tournament_matches (a regular 2-team game has one such
+  // row too), keyed by team — so find this user's approved teams first.
+  const teamIds = Array.from(
+    new Set(
+      (tournamentsRes.data ?? [])
+        .map((r) => r.tournament_teams)
+        .filter((t): t is NonNullable<typeof t> => !!t)
+        .map((t) => t.id)
+    )
+  );
+  let scoredGamesTotal = 0;
+  let scoredRegularGamesTotal = 0;
+  if (teamIds.length > 0) {
+    const idList = teamIds.join(",");
+    const { data: matches, error: matchesError } = await supabase
+      .from("tournament_matches")
+      .select("id, games(game_type)")
+      .eq("status", "COMPLETED")
+      .or(`team_a_id.in.(${idList}),team_b_id.in.(${idList})`);
+    if (matchesError) throw new Error(matchesError.message);
+    const rows = (matches ?? []) as unknown as { id: string; games: { game_type: string | null } | null }[];
+    scoredGamesTotal = rows.length;
+    scoredRegularGamesTotal = rows.filter((m) => m.games?.game_type !== "TOURNAMENT").length;
+  }
+
   const computedSkillLevel = mostCommonSkillLevel(
     (skillLevelsRes.data ?? []).map((r) => r.skill_level)
   );
 
   return {
-    gamesPlayedTotal: history.length,
+    gamesPlayedTotal: scoredGamesTotal,
+    regularGamesPlayedTotal: scoredRegularGamesTotal,
     tournamentsPlayedTotal,
     gamesHostedTotal,
     hoursPlayedTotal: Math.round(hoursPlayedTotal * 10) / 10,
