@@ -12,7 +12,7 @@ import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
 import type { ProfileStats } from "../../lib/api/profileStats";
-import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
+import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import DonutChart from "../../components/DonutChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { pickImages, uploadImage } from "../../lib/upload";
@@ -84,7 +84,7 @@ function StatCard({
         <Ionicons name={icon} size={17} color={fg} />
       </View>
       <Text className="text-ink font-extrabold text-xl">{value}</Text>
-      <Text className="text-muted text-[11px] mt-0.5" numberOfLines={1}>
+      <Text className="text-muted text-[11px] mt-0.5" numberOfLines={2}>
         {label}
       </Text>
     </View>
@@ -400,7 +400,7 @@ export default function ProfileScreen() {
               <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={stats?.gamesHostedTotal ?? 0} label="Games Hosted" />
               <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={stats?.activeSquads.length ?? 0} label="Active Squads" />
               <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.hoursPlayedTotal ?? 0} label="Hours Played" />
-              <StatCard icon="heart-outline" bg="#FFF1F2" fg="#E11D48" value={stats?.favoriteVenuesCount ?? 0} label="Favorite Venues" />
+              <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={computeRating(stats)} label="Participation Score" />
             </View>
 
             {/* Sport breakdown + activity, side by side */}
