@@ -13,7 +13,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
 import type { ProfileStats } from "../../lib/api/profileStats";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
-import DonutChart from "../../components/DonutChart";
+import PieChart from "../../components/PieChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { colors } from "../../constants/theme";
@@ -217,7 +217,6 @@ export default function ProfileScreen() {
   }
 
   const effectiveSkillLevel = profile?.skill_level ?? stats?.computedSkillLevel ?? null;
-  const totalPlayed = stats?.gamesPlayedTotal ?? 0;
   // Same rating (and tier) the Top Players list shows for this person.
   const rating = computeRankingRating(stats);
   const ratingTier = getRatingTierInfo(rating);
@@ -228,6 +227,9 @@ export default function ProfileScreen() {
     color: getSportIcon(s.sportName).fg,
   }));
 
+  // Percentages are each sport's share of the chart's own total, so every one
+  // is between 0 and 100 and together they make up the whole pie.
+  const sportTotal = Math.max(1, sportSegments.reduce((sum, s) => sum + s.value, 0));
   const regularGamesPlayed = stats?.regularGamesPlayedTotal ?? 0;
   const activityMax = Math.max(regularGamesPlayed, stats?.tournamentsPlayedTotal ?? 0, stats?.gamesHostedTotal ?? 0, 1);
   const achievements = stats ? buildAchievements(stats) : [];
@@ -421,13 +423,7 @@ export default function ProfileScreen() {
                   </View>
                 ) : (
                   <View className="items-center">
-                    <DonutChart
-                      segments={sportSegments}
-                      size={100}
-                      thickness={16}
-                      centerLabel={String(totalPlayed)}
-                      centerSubLabel="Games"
-                    />
+                    <PieChart segments={sportSegments} size={110} />
                     <View className="w-full mt-3" style={{ gap: 6 }}>
                       {sportSegments.map((s) => (
                         <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
@@ -435,7 +431,7 @@ export default function ProfileScreen() {
                           <Text className="text-ink text-xs flex-1" numberOfLines={1}>
                             {s.label}
                           </Text>
-                          <Text className="text-muted text-[11px]">{Math.round((s.value / totalPlayed) * 100)}%</Text>
+                          <Text className="text-muted text-[11px]">{Math.round((s.value / sportTotal) * 100)}%</Text>
                         </View>
                       ))}
                     </View>
