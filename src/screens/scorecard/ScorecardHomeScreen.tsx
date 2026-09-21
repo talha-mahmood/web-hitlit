@@ -37,13 +37,11 @@ function SportCard({
   title,
   subtitle,
   onPress,
-  popular = false,
 }: {
   sportName: string;
   title: string;
   subtitle: string;
   onPress: () => void;
-  popular?: boolean;
 }) {
   const photo = getSportImage(sportName);
   const { icon, bg, fg } = getSportIcon(sportName);
@@ -66,18 +64,9 @@ function SportCard({
         )}
       </View>
       <View className="flex-1">
-        <View className="flex-row items-center" style={{ gap: 8 }}>
-          <Text className="text-ink font-bold" style={{ fontSize: 18 }}>
-            {title}
-          </Text>
-          {popular ? (
-            <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#DCFCE7" }}>
-              <Text className="font-semibold" style={{ fontSize: 12, color: colors.primaryDark }}>
-                Popular
-              </Text>
-            </View>
-          ) : null}
-        </View>
+        <Text className="text-ink font-bold" style={{ fontSize: 18 }}>
+          {title}
+        </Text>
         <Text className="text-muted mt-1" style={{ fontSize: 13, lineHeight: 18 }}>
           {subtitle}
         </Text>
@@ -204,7 +193,6 @@ export default function ScorecardHomeScreen() {
           sportName="cricket"
           title="Cricket"
           subtitle="Ball-by-ball scoring with full innings & wickets"
-          popular
           onPress={() => navigation.navigate("CricketHome")}
         />
         <SportCard
