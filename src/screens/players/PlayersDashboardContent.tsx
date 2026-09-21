@@ -9,6 +9,7 @@ import { colors, cardShadow } from "../../constants/theme";
 import { SectionLabel } from "../../components/GameFormControls";
 import SportsBySportSection from "../../components/SportsBySportSection";
 import Bouncy from "../../components/Bouncy";
+import FieldInput from "../../components/FieldInput";
 
 function PlayerRow({
   player,
@@ -71,6 +72,7 @@ export default function PlayersDashboardContent({
   onPressPlayer: (userId: string, sport?: { id: string; name: string }) => void;
 }) {
   const [sportId, setSportId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const { data: sports } = useSports();
   const { data: players, isLoading } = useTopPlayers(sportId ?? undefined);
 
@@ -90,10 +92,20 @@ export default function PlayersDashboardContent({
     [players]
   );
 
+  // A player keeps their real rank in the full ranking while searching, so
+  // "3" next to a name always means third overall (for the selected sport).
+  const visiblePlayers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const withRank = rankedPlayers.map((player, index) => ({ player, rank: index + 1 }));
+    if (!query) return withRank;
+    return withRank.filter(({ player }) => (player.fullName ?? "").toLowerCase().includes(query));
+  }, [rankedPlayers, search]);
+
   return (
     <FlatList
-      data={rankedPlayers}
-      keyExtractor={(item) => item.userId}
+      data={visiblePlayers}
+      keyboardShouldPersistTaps="handled"
+      keyExtractor={(item) => item.player.userId}
       contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       ListHeaderComponent={
         <View className="mb-1">
@@ -103,9 +115,21 @@ export default function PlayersDashboardContent({
             selectedSportId={sportId}
             onSelectSport={(id) => setSportId((prev) => (prev === id ? null : id))}
           />
-          <Text className="text-muted text-xs mt-1 mb-1">
-            Ranked by rating — 70% games win percentage, 30% scored games played.
-          </Text>
+          <View className="mt-3 mb-1">
+            <FieldInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search players by name"
+              autoCorrect={false}
+              returnKeyType="search"
+              left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
+              right={
+                search ? (
+                  <Ionicons name="close-circle" size={18} color={colors.muted} onPress={() => setSearch("")} />
+                ) : undefined
+              }
+            />
+          </View>
         </View>
       }
       ListEmptyComponent={
@@ -114,17 +138,25 @@ export default function PlayersDashboardContent({
         ) : (
           <View className="items-center mt-16" style={{ gap: 12 }}>
             <Ionicons name="trophy-outline" size={48} color={colors.border} />
-            <Text className="text-ink font-semibold text-base">No players yet</Text>
+            <Text className="text-ink font-semibold text-base">
+              {search.trim() ? "No players found" : "No players yet"}
+            </Text>
             <Text className="text-muted text-sm text-center px-8">
-              {sportId
-                ? "No one has played this sport yet — be the first!"
-                : "Play a game to show up on the leaderboard."}
+              {search.trim()
+                ? "Try a different name."
+                : sportId
+                  ? "No one has played this sport yet — be the first!"
+                  : "Play a game to show up on the leaderboard."}
             </Text>
           </View>
         )
       }
-      renderItem={({ item, index }) => (
-        <PlayerRow player={item} rank={index + 1} onPress={() => onPressPlayer(item.userId, selectedSport)} />
+      renderItem={({ item }) => (
+        <PlayerRow
+          player={item.player}
+          rank={item.rank}
+          onPress={() => onPressPlayer(item.player.userId, selectedSport)}
+        />
       )}
     />
   );
