@@ -134,14 +134,6 @@ export default function CommunityScreen() {
           overflow: "hidden",
         }}
       >
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(34,197,94,0.14)", right: -90, bottom: -150 }}
-        />
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(255,255,255,0.05)", right: 30, top: -110 }}
-        />
         <View className="flex-row items-center" style={{ gap: 14 }}>
           <View
             className="items-center justify-center"
