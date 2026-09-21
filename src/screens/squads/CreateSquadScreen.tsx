@@ -60,7 +60,7 @@ function FormCard({
       className="flex-row bg-white"
       style={{ borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
     >
-      <Ionicons name={icon} size={22} color="#4B5563" style={{ marginTop: 1 }} />
+      <Ionicons name={icon} size={22} color={colors.primary} style={{ marginTop: 1 }} />
       <View className="flex-1">
         <View className="flex-row items-center justify-between">
           <Text className="text-ink" style={{ fontSize: 15.5 }}>
