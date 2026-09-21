@@ -5,8 +5,7 @@ import {
   generateMatches,
   generateNextRound,
   generatePoolMatches,
-  enterMatchResult,
-  resetMatchResult,
+  enterManualScore,
   linkCricketMatch,
   syncCricketMatchResult,
   linkScorecardMatch,
@@ -77,19 +76,11 @@ export function useGeneratePoolMatches(gameId: string) {
   });
 }
 
-export function useEnterMatchResult(gameId: string) {
+export function useEnterManualScore(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ matchId, winnerTeamId, isDraw }: { matchId: string; winnerTeamId: string | null; isDraw: boolean }) =>
-      enterMatchResult(matchId, { winnerTeamId, isDraw }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
-  });
-}
-
-export function useResetMatchResult(gameId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (matchId: string) => resetMatchResult(matchId),
+    mutationFn: ({ matchId, result }: { matchId: string; result: Parameters<typeof enterManualScore>[1] }) =>
+      enterManualScore(matchId, result),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
   });
 }

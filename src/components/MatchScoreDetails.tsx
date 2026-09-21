@@ -15,6 +15,7 @@ import { computeMatchState as computeBadmintonState } from "../screens/scorecard
 import { computeMatchState as computePickleballState } from "../screens/scorecard/PickleballHomeScreen";
 import { computeMatchState as computeTableTennisState } from "../screens/scorecard/TableTennisHomeScreen";
 import type { ScorecardSport } from "../lib/api/tournamentMatches";
+import { manualDetailText, manualRunRate, parseManualScore } from "../lib/manualScore";
 
 // The point-by-point detail line shown under a tournament match's result —
 // what cricket's run rates are for a cricket match: sets/games/goals scored,
@@ -111,11 +112,41 @@ type LinkedIds = {
   pickleball_match_id: string | null;
   table_tennis_match_id: string | null;
   football_match_id: string | null;
+  manual_score: unknown;
+  team_a: { name: string } | null;
+  team_b: { name: string } | null;
 };
 
+// A hand-entered score (see ManualScoreScreen) — cricket shows each side's
+// run rate exactly like a live-scored cricket match does; every other sport
+// shows its sets / games / goals line.
+function ManualScoreDetails({ raw, teamAName, teamBName }: { raw: unknown; teamAName: string; teamBName: string }) {
+  const score = parseManualScore(raw);
+  if (!score) return null;
+  if (score.sport === "cricket") {
+    const rateFor = (side: "A" | "B") => {
+      const innings = score.innings.find((i) => i.team === side);
+      const rate = innings ? manualRunRate(innings) : null;
+      return rate === null ? "" : `${side === "A" ? teamAName : teamBName} RR: ${rate.toFixed(2)}`;
+    };
+    return (
+      <View className="flex-row items-center justify-between mt-1">
+        <Text className="text-muted text-xs" numberOfLines={1}>{rateFor("A")}</Text>
+        <Text className="text-muted text-xs" numberOfLines={1}>{rateFor("B")}</Text>
+      </View>
+    );
+  }
+  const text = manualDetailText(score);
+  return text ? <DetailLine text={text} /> : null;
+}
+
 // For a tournament match row: shows the score detail of whichever scorecard
-// (if any) was started from it via "Go To Scorecard".
+// (if any) was started from it via "Go To Scorecard", or of the score the host
+// entered by hand.
 export function LinkedMatchScoreDetails({ match }: { match: LinkedIds }) {
+  if (match.manual_score) {
+    return <ManualScoreDetails raw={match.manual_score} teamAName={match.team_a?.name ?? "Team A"} teamBName={match.team_b?.name ?? "Team B"} />;
+  }
   if (match.padel_match_id) return <MatchScoreDetails sport="padel" scorecardMatchId={match.padel_match_id} />;
   if (match.tennis_match_id) return <MatchScoreDetails sport="tennis" scorecardMatchId={match.tennis_match_id} />;
   if (match.badminton_match_id) return <MatchScoreDetails sport="badminton" scorecardMatchId={match.badminton_match_id} />;

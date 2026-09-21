@@ -15,6 +15,7 @@ import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
 import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
 import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
 import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
+import ManualScoreScreen from "../screens/scorecard/ManualScoreScreen";
 import NewMatchScreen from "../screens/scorecard/NewMatchScreen";
 import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
 import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
@@ -32,6 +33,7 @@ import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen"
 import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
+import type { ManualScoreParams } from "../lib/manualScore";
 
 export type ProfileStackParamList = {
   ProfileHome: undefined;
@@ -58,6 +60,7 @@ export type ProfileStackParamList = {
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
   BookingConfirmation: BookingConfirmationParams;
+  ManualScore: ManualScoreParams;
   NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
@@ -96,6 +99,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />
       <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+      <Stack.Screen name="ManualScore" component={ManualScoreScreen} />
       <Stack.Screen name="NewMatch" component={NewMatchScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />

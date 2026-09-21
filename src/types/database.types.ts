@@ -2464,6 +2464,7 @@ export type Database = {
           game_id: string
           id: string
           is_draw: boolean
+          manual_score: Json | null
           padel_match_id: string | null
           pickleball_match_id: string | null
           played_at: string | null
@@ -2486,6 +2487,7 @@ export type Database = {
           game_id: string
           id?: string
           is_draw?: boolean
+          manual_score?: Json | null
           padel_match_id?: string | null
           pickleball_match_id?: string | null
           played_at?: string | null
@@ -2508,6 +2510,7 @@ export type Database = {
           game_id?: string
           id?: string
           is_draw?: boolean
+          manual_score?: Json | null
           padel_match_id?: string | null
           pickleball_match_id?: string | null
           played_at?: string | null

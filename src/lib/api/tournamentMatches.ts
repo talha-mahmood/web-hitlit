@@ -1,6 +1,7 @@
 import { supabase } from "../supabase";
-import type { Database } from "../../types/database.types";
+import type { Database, Json } from "../../types/database.types";
 import { pairTeamsForFixtures } from "../tournamentFixtures";
+import type { ManualScore } from "../manualScore";
 
 type MatchRow = Database["public"]["Tables"]["tournament_matches"]["Row"];
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
@@ -112,27 +113,30 @@ export async function generatePoolMatches(
   }
 }
 
-export async function enterMatchResult(
+// Records a result the host typed in by hand (see ManualScoreScreen) — the
+// winner/draw plus the score detail the match card shows. The tournament
+// match's team ids are looked up here so the screen only has to say A or B.
+export async function enterManualScore(
   matchId: string,
-  result: { winnerTeamId: string | null; isDraw: boolean }
+  result: { winner: "A" | "B" | null; isDraw: boolean; manualScore: ManualScore }
 ): Promise<void> {
+  const { data, error: fetchError } = await supabase
+    .from("tournament_matches")
+    .select("team_a_id, team_b_id")
+    .eq("id", matchId)
+    .single();
+  if (fetchError) throw new Error(fetchError.message);
+
+  const winnerTeamId = result.isDraw ? null : result.winner === "A" ? data.team_a_id : data.team_b_id;
   const { error } = await supabase
     .from("tournament_matches")
     .update({
       status: "COMPLETED",
-      winner_team_id: result.isDraw ? null : result.winnerTeamId,
+      winner_team_id: winnerTeamId,
       is_draw: result.isDraw,
       played_at: new Date().toISOString(),
+      manual_score: result.manualScore as unknown as Json,
     })
-    .eq("id", matchId);
-  if (error) throw new Error(error.message);
-}
-
-// Lets the host correct a mis-entered result without deleting the match.
-export async function resetMatchResult(matchId: string): Promise<void> {
-  const { error } = await supabase
-    .from("tournament_matches")
-    .update({ status: "PENDING", winner_team_id: null, is_draw: false, played_at: null })
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }

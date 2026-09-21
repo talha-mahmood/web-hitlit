@@ -19,6 +19,7 @@ import EditSquadScreen from "../screens/squads/EditSquadScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import ManualScoreScreen from "../screens/scorecard/ManualScoreScreen";
 import NewMatchScreen from "../screens/scorecard/NewMatchScreen";
 import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
 import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
@@ -37,6 +38,7 @@ import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringS
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
+import type { ManualScoreParams } from "../lib/manualScore";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
@@ -60,6 +62,7 @@ export type HomeStackParamList = {
   TournamentMatches: { gameId: string };
   PlayersDashboard: undefined;
   PlayerProfile: { userId: string };
+  ManualScore: ManualScoreParams;
   NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
@@ -105,6 +108,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+      <Stack.Screen name="ManualScore" component={ManualScoreScreen} />
       <Stack.Screen name="NewMatch" component={NewMatchScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />

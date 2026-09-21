@@ -10,8 +10,6 @@ import {
   useGenerateMatches,
   useGenerateNextRound,
   useGeneratePoolMatches,
-  useEnterMatchResult,
-  useResetMatchResult,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
 import { useCricketMatch } from "../../hooks/useCricket";
@@ -19,6 +17,7 @@ import { ballRowToEvent } from "../../lib/api/cricket";
 import { computeRunRate } from "../../lib/cricketScoring";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
+import { manualSportForName } from "../../lib/manualScore";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
@@ -110,32 +109,18 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
 
 function MatchRow({
   match,
-  allowDraw,
-  isHost,
-  disabled,
-  onEnterResult,
-  onReset,
   showScorecardButton,
   onGoToScorecard,
-  isCricketSport,
+  onEnterScoreManually,
 }: {
   match: TournamentMatch;
-  allowDraw: boolean;
-  isHost: boolean;
-  disabled: boolean;
-  onEnterResult: (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => void;
-  onReset: (matchId: string) => void;
   // Only ever true for the single first match on the whole screen, and only
-  // once the host can actually do something with it (cricket tournament,
-  // venue already booked) — see canGoToScorecard in the screen component.
+  // once the host can actually do something with it (venue already booked)
+  // — see canGoToScorecard in the screen component. "Enter Score Manually"
+  // sits right beneath it, for a match played without live scoring.
   showScorecardButton?: boolean;
   onGoToScorecard?: () => void;
-  // A cricket match is always completed via "Go To Scorecard" (Live
-  // Scoring syncs the result back automatically) — the manual Team A
-  // Won/Team B Won/Draw buttons only make sense for a sport with no
-  // scorecard flow, so they're hidden here rather than offering two
-  // conflicting ways to record the same result.
-  isCricketSport: boolean;
+  onEnterScoreManually?: () => void;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
@@ -155,15 +140,8 @@ function MatchRow({
           <Text className="text-muted text-xs mx-2">vs</Text>
           <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
         </View>
-        <View className="flex-row items-center justify-between mt-1.5">
-          <Text className="text-primary text-xs font-semibold">{resultLabel}</Text>
-          {isHost && match.team_b && (
-            <Pressable onPress={() => onReset(match.id)} disabled={disabled} hitSlop={8}>
-              <Text className="text-muted text-xs font-medium">Edit</Text>
-            </Pressable>
-          )}
-        </View>
-        {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
+        <Text className="text-primary text-xs font-semibold mt-1.5">{resultLabel}</Text>
+        {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
         <LinkedMatchScoreDetails match={match} />
       </View>
     );
@@ -176,42 +154,17 @@ function MatchRow({
         <Text className="text-muted text-xs mx-2">vs</Text>
         <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
       </View>
-      {isHost && !isCricketSport && match.team_a && match.team_b && (
-        <View className="flex-row flex-wrap mt-2" style={{ gap: 6 }}>
-          <Pressable
-            onPress={() => onEnterResult(match.id, match.team_a!.id, false, `${teamAName} won`)}
-            disabled={disabled}
-            className="border border-primary rounded-lg px-2.5 py-1.5"
-          >
-            <Text className="text-primary text-xs font-semibold" numberOfLines={1}>{teamAName} Won</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onEnterResult(match.id, match.team_b!.id, false, `${teamBName} won`)}
-            disabled={disabled}
-            className="border border-primary rounded-lg px-2.5 py-1.5"
-          >
-            <Text className="text-primary text-xs font-semibold" numberOfLines={1}>{teamBName} Won</Text>
-          </Pressable>
-          {allowDraw && (
-            <Pressable
-              onPress={() => onEnterResult(match.id, null, true, "Draw")}
-              disabled={disabled}
-              className="border border-border rounded-lg px-2.5 py-1.5"
-            >
-              <Text className="text-muted text-xs font-semibold">Draw</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-      {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
-        <LinkedMatchScoreDetails match={match} />
+      {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
+      <LinkedMatchScoreDetails match={match} />
       {showScorecardButton && match.team_a && match.team_b && (
-        <Pressable
-          onPress={onGoToScorecard}
-          className="bg-primary rounded-lg py-2 items-center mt-2"
-        >
-          <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
-        </Pressable>
+        <>
+          <Pressable onPress={onGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
+            <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+          </Pressable>
+          <Pressable onPress={onEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
+            <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
+          </Pressable>
+        </>
       )}
     </View>
   );
@@ -241,7 +194,7 @@ function MatchesPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
-  isCricketSport,
+  onEnterScoreManually,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
@@ -251,46 +204,16 @@ function MatchesPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
-  isCricketSport: boolean;
+  onEnterScoreManually: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
-  const enterResult = useEnterMatchResult(gameId);
-  const resetResult = useResetMatchResult(gameId);
 
   if (isLoading) return null;
 
   const hasMatches = (matches?.length ?? 0) > 0;
   const canGenerate = requiredTeams > 0 && approvedTeams.length === requiredTeams;
-
-  const handleEnterResult = (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => {
-    Alert.alert("Enter Result", `Record "${label}"? You can edit this later if needed.`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Confirm",
-        onPress: () =>
-          enterResult.mutate(
-            { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
-          ),
-      },
-    ]);
-  };
-
-  const handleReset = (matchId: string) => {
-    Alert.alert("Edit Result", "Clear this result so you can re-enter it?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () =>
-          resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
-          }),
-      },
-    ]);
-  };
 
   if (!hasMatches) {
     if (!isHost) return null;
@@ -343,7 +266,6 @@ function MatchesPanel({
   const playoffSize = approvedTeams.length >= 4 ? 4 : Math.min(2, approvedTeams.length);
   const playoffTeams = standings.slice(0, playoffSize).map((s) => ({ id: s.teamId, name: s.name }));
 
-  const disabled = enterResult.isPending || resetResult.isPending || generateNextRound.isPending;
 
   return (
     <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
@@ -356,7 +278,6 @@ function MatchesPanel({
 
       {rounds.map((round, idx) => {
         const roundMatches = allMatches.filter((m) => m.round === round);
-        const allowDraw = format === "LEAGUE" && round === 1;
         return (
           <View key={round} className={idx > 0 ? "mt-4" : undefined}>
             <Text className="text-ink text-xs font-semibold mb-2">
@@ -367,14 +288,9 @@ function MatchesPanel({
                 <MatchRow
                   key={m.id}
                   match={m}
-                  allowDraw={allowDraw}
-                  isHost={isHost}
-                  disabled={disabled}
-                  onEnterResult={handleEnterResult}
-                  onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
-                  isCricketSport={isCricketSport}
+                  onEnterScoreManually={() => onEnterScoreManually(m)}
                 />
               ))}
             </View>
@@ -582,7 +498,7 @@ function PoolMatchesPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
-  isCricketSport,
+  onEnterScoreManually,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -592,12 +508,10 @@ function PoolMatchesPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
-  isCricketSport: boolean;
+  onEnterScoreManually: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
-  const enterResult = useEnterMatchResult(gameId);
-  const resetResult = useResetMatchResult(gameId);
 
   if (isLoading) return null;
 
@@ -609,34 +523,6 @@ function PoolMatchesPanel({
   // permanently short once the rest of the roster fills in.
   const canGenerate =
     pools.length > 0 && requiredTeams > 0 && approvedTeams.length === requiredTeams && unassigned.length === 0;
-
-  const handleEnterResult = (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => {
-    Alert.alert("Enter Result", `Record "${label}"? You can edit this later if needed.`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Confirm",
-        onPress: () =>
-          enterResult.mutate(
-            { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
-          ),
-      },
-    ]);
-  };
-
-  const handleReset = (matchId: string) => {
-    Alert.alert("Edit Result", "Clear this result so you can re-enter it?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () =>
-          resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
-          }),
-      },
-    ]);
-  };
 
   if (!hasMatches) {
     if (!isHost) return null;
@@ -682,7 +568,6 @@ function PoolMatchesPanel({
     );
   }
 
-  const disabled = enterResult.isPending || resetResult.isPending;
 
   return (
     <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
@@ -703,14 +588,9 @@ function PoolMatchesPanel({
                 <MatchRow
                   key={m.id}
                   match={m}
-                  allowDraw
-                  isHost={isHost}
-                  disabled={disabled}
-                  onEnterResult={handleEnterResult}
-                  onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
-                  isCricketSport={isCricketSport}
+                  onEnterScoreManually={() => onEnterScoreManually(m)}
                 />
               ))}
             </View>
@@ -741,7 +621,7 @@ function PoolPlayoffPanel({
   firstMatchId,
   canGoToScorecard,
   onGoToScorecard,
-  isCricketSport,
+  onEnterScoreManually,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -751,12 +631,10 @@ function PoolPlayoffPanel({
   firstMatchId?: string;
   canGoToScorecard: boolean;
   onGoToScorecard: (match: TournamentMatch) => void;
-  isCricketSport: boolean;
+  onEnterScoreManually: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
-  const enterResult = useEnterMatchResult(gameId);
-  const resetResult = useResetMatchResult(gameId);
 
   if (isLoading) return null;
 
@@ -776,34 +654,6 @@ function PoolPlayoffPanel({
     });
 
   if (!groupStageComplete) return null;
-
-  const handleEnterResult = (matchId: string, winnerTeamId: string | null, isDraw: boolean, label: string) => {
-    Alert.alert("Enter Result", `Record "${label}"? You can edit this later if needed.`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Confirm",
-        onPress: () =>
-          enterResult.mutate(
-            { matchId, winnerTeamId, isDraw },
-            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save result.")) }
-          ),
-      },
-    ]);
-  };
-
-  const handleReset = (matchId: string) => {
-    Alert.alert("Edit Result", "Clear this result so you can re-enter it?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () =>
-          resetResult.mutate(matchId, {
-            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not clear result.")),
-          }),
-      },
-    ]);
-  };
 
   if (playoffMatches.length === 0) {
     const poolStandings = (poolId: string) =>
@@ -866,7 +716,6 @@ function PoolPlayoffPanel({
   const bracketWinners = getRoundWinners(latestRoundMatches);
   const isChampionDecided = bracketWinners !== null && bracketWinners.length === 1;
   const canAdvanceBracket = bracketWinners !== null && bracketWinners.length > 1;
-  const disabled = enterResult.isPending || resetResult.isPending || generateNextRound.isPending;
 
   return (
     <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
@@ -883,14 +732,9 @@ function PoolPlayoffPanel({
                 <MatchRow
                   key={m.id}
                   match={m}
-                  allowDraw={false}
-                  isHost={isHost}
-                  disabled={disabled}
-                  onEnterResult={handleEnterResult}
-                  onReset={handleReset}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
-                  isCricketSport={isCricketSport}
+                  onEnterScoreManually={() => onEnterScoreManually(m)}
                 />
               ))}
             </View>
@@ -987,9 +831,9 @@ export default function TournamentMatchesScreen() {
     );
   }
 
-  const handleGoToScorecard = (match: TournamentMatch) => {
-    if (!match.team_a || !match.team_b) return;
-    const prefill: ScorecardPrefill = {
+  const buildPrefill = (match: TournamentMatch): ScorecardPrefill | null => {
+    if (!match.team_a || !match.team_b) return null;
+    return {
       tournamentMatchId: match.id,
       gameId: params.gameId,
       teamAName: match.team_a.name,
@@ -998,6 +842,21 @@ export default function TournamentMatchesScreen() {
       teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
     };
+  };
+
+  // A draw is only a valid result in a league's group stage / a pool's group
+  // matches — every bracket match needs a winner.
+  const handleEnterScoreManually = (match: TournamentMatch) => {
+    const prefill = buildPrefill(match);
+    const manualSport = manualSportForName(sportName);
+    if (!prefill || !manualSport) return;
+    const allowDraw = !!match.pool_id || (game.tournament_format === "LEAGUE" && match.round === 1);
+    navigation.navigate("ManualScore", { sport: manualSport, allowDraw, prefill });
+  };
+
+  const handleGoToScorecard = (match: TournamentMatch) => {
+    const prefill = buildPrefill(match);
+    if (!prefill) return;
 
     if (isCricketSport) {
       if (match.cricket_match_id) navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
@@ -1066,7 +925,7 @@ export default function TournamentMatchesScreen() {
               firstMatchId={firstMatchId}
               canGoToScorecard={canGoToScorecard}
               onGoToScorecard={handleGoToScorecard}
-              isCricketSport={isCricketSport}
+              onEnterScoreManually={handleEnterScoreManually}
             />
             {matches &&
               (pools ?? []).map((pool) => {
@@ -1092,7 +951,7 @@ export default function TournamentMatchesScreen() {
               firstMatchId={firstMatchId}
               canGoToScorecard={canGoToScorecard}
               onGoToScorecard={handleGoToScorecard}
-              isCricketSport={isCricketSport}
+              onEnterScoreManually={handleEnterScoreManually}
             />
           </>
         ) : (
@@ -1115,7 +974,7 @@ export default function TournamentMatchesScreen() {
                 firstMatchId={firstMatchId}
                 canGoToScorecard={canGoToScorecard}
                 onGoToScorecard={handleGoToScorecard}
-                isCricketSport={isCricketSport}
+                onEnterScoreManually={handleEnterScoreManually}
               />
             )}
             {game.tournament_format === "LEAGUE" && matches && (

@@ -17,6 +17,7 @@ import {
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
+import { manualSportForName } from "../../lib/manualScore";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
@@ -333,6 +334,24 @@ function HeadToHeadMatchCard({
     );
   }
 
+  const handleEnterScoreManually = () => {
+    const manualSport = manualSportForName(sportName);
+    if (!match?.team_a || !match?.team_b || !manualSport) return;
+    navigation.navigate("ManualScore", {
+      sport: manualSport,
+      allowDraw: true,
+      prefill: {
+        tournamentMatchId: match.id,
+        gameId: game.id,
+        teamAName: match.team_a.name,
+        teamBName: match.team_b.name,
+        teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
+        teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+        venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
+      },
+    });
+  };
+
   // Opens that sport's own New Match screen with names/roster/venue
   // pre-filled and locked (or reopens Live Scoring if already started).
   const handleGoToScorecard = () => {
@@ -399,6 +418,11 @@ function HeadToHeadMatchCard({
         {canGoToScorecard && (
           <Pressable onPress={handleGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
             <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+          </Pressable>
+        )}
+        {canGoToScorecard && match?.status !== "COMPLETED" && (
+          <Pressable onPress={handleEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
+            <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
           </Pressable>
         )}
       </View>
