@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, Dimensions, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -108,6 +108,15 @@ export default function CommunityScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [segment, setSegment] = useState<Segment>("community");
+
+  // The three segments live inside this one screen, so the tab-level
+  // "pop the stack to its root" reset (MainTabNavigator) can't reach them.
+  // Listen to the *tab's* blur (the parent navigator) — not this screen's own
+  // blur, which would also fire when drilling into a player profile and
+  // would reset Top Players out from under the user on the way back.
+  useEffect(() => {
+    return navigation.getParent()?.addListener("blur", () => setSegment("community"));
+  }, [navigation]);
 
   return (
     <View className="flex-1 bg-gray-100">
