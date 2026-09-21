@@ -19,7 +19,7 @@ function capitalize(s: string): string {
 
 function StatBlock({ value, label }: { value: string | number; label: string }) {
   return (
-    <View className="bg-white rounded-2xl p-4 items-center" style={{ width: "48%", ...cardShadow }}>
+    <View className="bg-white rounded-2xl p-4 items-center" style={{ width: "31%", ...cardShadow }}>
       <Text className="text-ink font-extrabold text-xl">{value}</Text>
       <Text className="text-muted text-xs mt-1 text-center">{label}</Text>
     </View>
@@ -121,6 +121,7 @@ export default function PlayerProfileScreen() {
           <View className="flex-row justify-between mb-3">
             <StatBlock value={player.tournamentsPlayedTotal} label="Tournaments" />
             <StatBlock value={player.gamesHostedTotal} label="Hosted" />
+            <StatBlock value={rating} label="Participation Score" />
           </View>
 
           {/* Games Win — scored matches this player's team won out of scored matches it played */}
