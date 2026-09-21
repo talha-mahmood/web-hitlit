@@ -8,6 +8,7 @@ import ProfileStackNavigator, { type ProfileStackParamList } from "./ProfileStac
 import CommunityStackNavigator, { type CommunityStackParamList } from "./CommunityStackNavigator";
 import ScorecardStackNavigator, { type ScorecardStackParamList } from "./ScorecardStackNavigator";
 import { colors } from "../constants/theme";
+import ScorecardTabIcon from "../components/ScorecardTabIcon";
 
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
@@ -48,10 +49,9 @@ const ICONS: Partial<Record<keyof MainTabParamList, keyof typeof Ionicons.glyphM
 };
 // Ionicons only has a two-person "people" glyph — MaterialCommunityIcons'
 // "account-group" is the same idea with a third figure, which is what
-// Community's icon should look like. "cricket" for Scorecard is also
-// MaterialCommunityIcons-only (Ionicons has no cricket glyph at all).
+// Community's icon should look like. (Scorecard uses its own SVG icon —
+// see ScorecardTabIcon.)
 const COMMUNITY_ICON = "account-group" as const;
-const SCORECARD_ICON = "cricket" as const;
 
 export default function MainTabNavigator() {
   return (
@@ -83,7 +83,7 @@ export default function MainTabNavigator() {
             {route.name === "Community" ? (
               <MaterialCommunityIcons name={COMMUNITY_ICON} color={color} size={size} />
             ) : route.name === "Scorecard" ? (
-              <MaterialCommunityIcons name={SCORECARD_ICON} color={color} size={size} />
+              <ScorecardTabIcon color={color} size={size} />
             ) : (
               <Ionicons
                 name={ICONS[route.name as keyof MainTabParamList]!}
