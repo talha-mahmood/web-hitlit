@@ -431,6 +431,11 @@ function HeadToHeadMatchCard({
           <Text className="text-muted text-xs mx-2">vs</Text>
           <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
         </View>
+        {match?.status === "COMPLETED" && (match.is_draw || match.winner_team) ? (
+          <Text className="text-primary text-xs font-semibold mt-1.5">
+            {match.is_draw ? "Draw" : `${match.winner_team?.name} won`}
+          </Text>
+        ) : null}
         {canGoToScorecard && (
           <Pressable onPress={handleGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
             <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>

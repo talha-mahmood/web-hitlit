@@ -220,10 +220,15 @@ export default function LiveScoringScreen() {
   const effectiveStriker = inningsState?.striker ?? pendingStriker;
   const effectiveNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
   const effectiveBowler = inningsState?.currentBowler ?? pendingBowler;
-  const needsStriker = !inningsOver && !effectiveStriker;
-  const needsNonStriker = !inningsOver && !!effectiveStriker && !effectiveNonStriker;
-  const needsBowler = !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !effectiveBowler;
-  const readyToScore = !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !!effectiveBowler;
+  // Once the last innings is marked complete there's no active innings left
+  // (currentInnings is undefined) — without this, the "Select Opening
+  // Striker" picker would flash up for the split second between finishing
+  // the match and landing on the final scorecard.
+  const hasActiveInnings = !!currentInnings;
+  const needsStriker = hasActiveInnings && !inningsOver && !effectiveStriker;
+  const needsNonStriker = hasActiveInnings && !inningsOver && !!effectiveStriker && !effectiveNonStriker;
+  const needsBowler = hasActiveInnings && !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !effectiveBowler;
+  const readyToScore = hasActiveInnings && !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !!effectiveBowler;
 
   if (isLoading || !match) {
     return (
@@ -490,7 +495,7 @@ export default function LiveScoringScreen() {
           </View>
         </View>
 
-        {inningsOver ? (
+        {inningsOver || !hasActiveInnings ? (
           <View className="bg-white rounded-2xl border border-border p-5 items-center" style={cardShadow}>
             <Ionicons name="checkmark-circle" size={40} color={colors.primary} />
             <Text className="text-ink font-bold text-lg mt-2">
@@ -507,7 +512,7 @@ export default function LiveScoringScreen() {
               </Pressable>
             ) : (
               <Pressable
-                onPress={handleFinishMatch}
+                onPress={hasActiveInnings ? handleFinishMatch : () => navigation.replace("FullScorecard", { matchId: match.id })}
                 disabled={markInningsComplete.isPending || completeMatch.isPending}
                 className="bg-primary rounded-xl px-5 py-3 mt-4"
                 style={primaryButtonShadow}
