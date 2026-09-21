@@ -1,13 +1,15 @@
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
 
@@ -61,9 +63,17 @@ export default function ScorecardHomeScreen() {
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
-      <View className="px-5 mb-6">
-        <Text className="text-2xl font-bold text-ink">Scorecard</Text>
-        <Text className="text-muted text-sm mt-0.5">Choose a sport to start or view a match</Text>
+      <View className="flex-row items-center px-5 mb-6" style={{ gap: 8 }}>
+        <Pressable
+          onPress={() => navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home")}
+          hitSlop={8}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </Pressable>
+        <View className="flex-1">
+          <Text className="text-2xl font-bold text-ink">Scorecard</Text>
+          <Text className="text-muted text-sm mt-0.5">Choose a sport to start or view a match</Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 14 }}>
