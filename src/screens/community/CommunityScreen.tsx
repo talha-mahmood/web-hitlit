@@ -17,8 +17,12 @@ type Segment = "community" | "players" | "chat";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_PADDING = 16;
-const GRID_GAP = 10;
-const CARD_WIDTH = (SCREEN_WIDTH - SIDE_PADDING * 2 - GRID_GAP) / 2;
+const GRID_GAP = 8;
+// The four cards sit a little wider than the rest of the page content (they
+// stretch out into the side margin), which makes each card — and, being
+// square, its height too — a bit bigger.
+const GRID_SIDE_PADDING = 10;
+const CARD_WIDTH = (SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_GAP) / 2;
 
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed.
@@ -45,7 +49,10 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <CommunityBanner width={SCREEN_WIDTH - SIDE_PADDING * 2} />
       </View>
 
-      <View className="flex-row flex-wrap justify-between" style={{ rowGap: GRID_GAP }}>
+      <View
+        className="flex-row flex-wrap justify-between"
+        style={{ rowGap: GRID_GAP, marginHorizontal: GRID_SIDE_PADDING - SIDE_PADDING }}
+      >
         <ImageCard
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
