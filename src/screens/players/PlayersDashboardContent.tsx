@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useTopPlayers } from "../../hooks/usePlayers";
 import type { TopPlayer } from "../../lib/api/players";
-import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
+import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { colors, cardShadow } from "../../constants/theme";
 import { SectionLabel } from "../../components/GameFormControls";
 import SportsBySportSection from "../../components/SportsBySportSection";
@@ -19,7 +19,7 @@ function PlayerRow({
   rank: number;
   onPress: () => void;
 }) {
-  const rating = computeRating(player);
+  const rating = computeRankingRating(player);
   const tier = getRatingTierInfo(rating);
   const initials = (player.fullName ?? "?").charAt(0).toUpperCase();
 
@@ -80,7 +80,13 @@ export default function PlayersDashboardContent({
   }, [sportId, sports]);
 
   const rankedPlayers = useMemo(
-    () => [...(players ?? [])].sort((a, b) => computeRating(b) - computeRating(a)),
+    () =>
+      [...(players ?? [])].sort(
+        (a, b) =>
+          computeRankingRating(b) - computeRankingRating(a) ||
+          b.matchesPlayedTotal - a.matchesPlayedTotal ||
+          b.gamesPlayedTotal - a.gamesPlayedTotal
+      ),
     [players]
   );
 
@@ -98,7 +104,7 @@ export default function PlayersDashboardContent({
             onSelectSport={(id) => setSportId((prev) => (prev === id ? null : id))}
           />
           <Text className="text-muted text-xs mt-1 mb-1">
-            Ranked by an activity-based rating — games, tournaments, and hosting all count.
+            Ranked by rating — 70% games win percentage, 30% scored games played.
           </Text>
         </View>
       }

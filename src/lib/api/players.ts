@@ -12,6 +12,8 @@ export type TopPlayer = {
   gamesPlayedTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
+  matchesPlayedTotal: number;
+  matchesWonTotal: number;
   hoursPlayedTotal: number;
 };
 
@@ -32,6 +34,8 @@ export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
     gamesPlayedTotal: row.games_played,
     tournamentsPlayedTotal: row.tournaments_played,
     gamesHostedTotal: row.games_hosted,
+    matchesPlayedTotal: row.matches_played,
+    matchesWonTotal: row.matches_won,
     hoursPlayedTotal: Number(row.hours_played),
   }));
 }

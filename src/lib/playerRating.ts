@@ -57,3 +57,25 @@ export function getRatingTierInfo(rating: number) {
     remaining: next ? next.min - rating : 0,
   };
 }
+
+// The rating shown on player profiles and used to rank Top Players:
+// 70% games-win percentage + 30% games played. Only *scored* games count as
+// played here (matchesPlayedTotal) — a game nobody scored adds nothing. That
+// count is scaled onto 0-100 first (100 scored games = full marks, capped
+// above that) so volume alone can't outweigh winning. get_top_players in the
+// database orders by the same formula, so keep the two in sync.
+const RANKING_WIN_WEIGHT = 0.7;
+const RANKING_GAMES_PLAYED_WEIGHT = 0.3;
+const RANKING_GAMES_PLAYED_FULL_MARKS = 100;
+
+export type RankingRatingInputs = {
+  matchesWonTotal: number;
+  matchesPlayedTotal: number;
+};
+
+export function computeRankingRating(stats: RankingRatingInputs | undefined): number {
+  if (!stats) return 0;
+  const winShare = stats.matchesPlayedTotal > 0 ? Math.min(100, (stats.matchesWonTotal / stats.matchesPlayedTotal) * 100) : 0;
+  const gamesPlayedShare = Math.min(100, (stats.matchesPlayedTotal / RANKING_GAMES_PLAYED_FULL_MARKS) * 100);
+  return Math.round(winShare * RANKING_WIN_WEIGHT + gamesPlayedShare * RANKING_GAMES_PLAYED_WEIGHT);
+}

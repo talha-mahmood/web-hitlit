@@ -3104,6 +3104,8 @@ export type Database = {
           games_hosted: number
           games_played: number
           hours_played: number
+          matches_played: number
+          matches_won: number
           skill_level: Database["public"]["Enums"]["skill_level_type"]
           tournaments_played: number
           user_id: string

@@ -4,7 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { usePlayerPublicProfile } from "../../hooks/usePlayers";
-import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
+import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
@@ -26,9 +26,6 @@ function StatBlock({ value, label }: { value: string | number; label: string }) 
   );
 }
 
-const RATING_WIN_WEIGHT = 0.7;
-const RATING_GAMES_PLAYED_WEIGHT = 0.3;
-
 export default function PlayerProfileScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -37,16 +34,13 @@ export default function PlayerProfileScreen() {
 
   const matchesWon = player?.matchesWonTotal ?? 0;
   const matchesPlayed = player?.matchesPlayedTotal ?? 0;
-  const winShare = matchesPlayed > 0 ? Math.min(100, (matchesWon / matchesPlayed) * 100) : 0;
-  const winPercentage = Math.round(winShare);
+  const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
   // Participation Score: the old activity-based number (games, tournaments,
   // hosting) — still shown on its own card.
   const participationScore = computeRating(player);
-  // RATING: 70% Games Win percentage + 30% Games Played. Games Played is
-  // scaled onto 0-100 first — 100 games counts as full marks, anything above
-  // is capped so volume alone can't outweigh winning.
-  const gamesPlayedShare = Math.min(100, player?.gamesPlayedTotal ?? 0);
-  const rating = Math.round(winShare * RATING_WIN_WEIGHT + gamesPlayedShare * RATING_GAMES_PLAYED_WEIGHT);
+  // RATING: 70% Games Win percentage + 30% scored games played — the same
+  // number the Top Players list ranks by.
+  const rating = computeRankingRating(player);
   const tier = getRatingTierInfo(rating);
   const effectiveSkillLevel = player?.skillLevel ?? player?.computedSkillLevel ?? null;
 
