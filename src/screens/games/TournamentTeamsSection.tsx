@@ -30,7 +30,7 @@ import ChatIcon from "../../components/ChatIcon";
 import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import type { TournamentMatch } from "../../lib/api/tournamentMatches";
+import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -310,16 +310,25 @@ function HeadToHeadMatchCard({
   const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
 
   const match = (matches ?? [])[0] ?? null;
-  const teamAName = teams[0]?.name ?? "Team A";
-  const teamBName = teams[1]?.name ?? "Team B";
+  // A team with just one joined player is shown by that player's name.
+  const displayName = (t: TournamentTeam | undefined, fallback: string) =>
+    t
+      ? soloAwareTeamName(
+          t.name,
+          t.tournament_team_members.map((m) => ({ status: m.status, full_name: m.profiles?.full_name }))
+        )
+      : fallback;
+  const teamAName = displayName(teams[0], "Team A");
+  const teamBName = displayName(teams[1], "Team B");
 
   // Same rule as the tournament's "Book Venue"/"Go To Scorecard": a real
   // (dropdown-picked) venue needs an actual booking, a manually typed one
   // is treated as already settled. The button itself only ever appears once
   // the match row exists (both teams approved).
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
-  const isCricketSport = (game.sports?.name ?? "").toLowerCase().includes("cricket");
-  const canGoToScorecard = isHost && isCricketSport && isVenueBooked && !!match?.team_a && !!match?.team_b;
+  const sportName = (game.sports?.name ?? "").trim().toLowerCase();
+  const isCricketSport = sportName.includes("cricket");
+  const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b;
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
@@ -329,13 +338,57 @@ function HeadToHeadMatchCard({
     );
   }
 
+  // Cricket keeps its toss/overs modal; every other sport opens that sport's
+  // own New Match screen with names/roster/venue pre-filled and locked (same
+  // as the tournament "Go To Scorecard" flow).
   const handleGoToScorecard = () => {
     if (!match) return;
-    if (match.cricket_match_id) {
-      navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+    if (isCricketSport) {
+      if (match.cricket_match_id) {
+        navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+        return;
+      }
+      setScorecardMatch(match);
       return;
     }
-    setScorecardMatch(match);
+
+    if (!match.team_a || !match.team_b) return;
+    const prefill: ScorecardPrefill = {
+      tournamentMatchId: match.id,
+      gameId: game.id,
+      teamAName: match.team_a.name,
+      teamBName: match.team_b.name,
+      teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
+      teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+      venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
+    };
+
+    switch (sportName) {
+      case "padel":
+        if (match.padel_match_id) navigation.navigate("PadelLiveScoring", { matchId: match.padel_match_id });
+        else navigation.navigate("PadelNewMatch", { prefill });
+        return;
+      case "tennis":
+        if (match.tennis_match_id) navigation.navigate("TennisLiveScoring", { matchId: match.tennis_match_id });
+        else navigation.navigate("TennisNewMatch", { prefill });
+        return;
+      case "badminton":
+        if (match.badminton_match_id) navigation.navigate("BadmintonLiveScoring", { matchId: match.badminton_match_id });
+        else navigation.navigate("BadmintonNewMatch", { prefill });
+        return;
+      case "pickleball":
+        if (match.pickleball_match_id) navigation.navigate("PickleballLiveScoring", { matchId: match.pickleball_match_id });
+        else navigation.navigate("PickleballNewMatch", { prefill });
+        return;
+      case "table tennis":
+        if (match.table_tennis_match_id) navigation.navigate("TableTennisLiveScoring", { matchId: match.table_tennis_match_id });
+        else navigation.navigate("TableTennisNewMatch", { prefill });
+        return;
+      case "football":
+        if (match.football_match_id) navigation.navigate("FootballLiveScoring", { matchId: match.football_match_id });
+        else navigation.navigate("FootballNewMatch", { prefill });
+        return;
+    }
   };
 
   const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {
