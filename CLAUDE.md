@@ -6,3 +6,5 @@ NEVER create test/disposable accounts via Supabase's signup API using made-up em
 While an iOS build is submitted and pending Apple App Review (or already live on TestFlight), do not touch iOS — do not rebuild or resubmit a new iOS build unless explicitly asked. Local code changes (JS/TS, assets, database migrations, etc.) do not affect a build that has already been compiled and submitted; only running a new `eas build` + `eas submit` would. The build already on TestFlight/in review stays exactly as it was at build time — same binary, same code — no matter what changes afterward in the local source. Only rebuild iOS when the user explicitly asks for a new build.
 
 For any UI change you must not change any app functionality it was just a UI change strickly do not change anything in my app just change UI
+
+Now i will give you updated UI screenshot of a screen of my app recognize which screen it is and make its UI exactly like in the attached image
