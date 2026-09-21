@@ -3053,6 +3053,11 @@ export type Database = {
         Returns: undefined
       }
       decline_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
+      unregister_push_token: { Args: { p_token: string }; Returns: undefined }
       decline_squad_invite: {
         Args: { p_invite_id: string }
         Returns: undefined

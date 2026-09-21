@@ -33,6 +33,7 @@ import { getSportIcon } from "../../lib/sportIcons";
 import { getSportImage } from "../../lib/sportImages";
 import { toLocalDateStr, generateFullDaySlots, slotBoundaryDateTime, type Slot } from "../../lib/slots";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Route = RouteProp<VenueEditingParamList, "AdminDashboard">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
@@ -282,7 +283,7 @@ export default function AdminDashboardScreen() {
             style: "destructive",
             onPress: async () => {
               await signOutGoogle();
-              supabase.auth.signOut();
+              signOutWithPushCleanup();
             },
           },
         ]);

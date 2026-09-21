@@ -18,6 +18,7 @@
     "android": {
       "package": "com.playoye.app",
       "versionCode": 4,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -54,6 +55,13 @@
         }
       ],
       "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#16A34A"
+        }
+      ],
       [
         "expo-audio",
         {

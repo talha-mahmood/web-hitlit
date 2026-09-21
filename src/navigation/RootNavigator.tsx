@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
+import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore, hasProfileName, isProfileComplete } from "../store/profileStore";
 import SplashScreen from "../screens/SplashScreen";
@@ -10,6 +12,8 @@ import AdminNavigator from "./AdminNavigator";
 import SuperAdminNavigator from "./SuperAdminNavigator";
 import ProfileSetupScreen from "../screens/onboarding/ProfileSetupScreen";
 import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
+
+const navigationRef = createNavigationContainerRef<ParamListBase>();
 
 export default function RootNavigator() {
   const session = useAuthStore((s) => s.session);
@@ -55,6 +59,42 @@ export default function RootNavigator() {
     prevTypeRef.current = nextType;
   }, [profile?.type]);
 
+  // Push notifications only start once the person is fully signed in and
+  // past onboarding, so the system permission prompt never interrupts
+  // profile setup.
+  const pushReady = !!session && !isProfileLoading && isProfileComplete(profile);
+
+  useEffect(() => {
+    if (pushReady) registerForPushNotifications();
+  }, [pushReady, session?.user.id]);
+
+  // Tapping a push notification (including the one that cold-started the
+  // app) opens that account's notifications screen.
+  const lastResponse = Notifications.useLastNotificationResponse();
+  const handledResponseRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!lastResponse || !pushReady) return;
+    if (lastResponse.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    const responseKey = lastResponse.notification.request.identifier;
+    if (handledResponseRef.current === responseKey) return;
+
+    const isAdminSide = profile?.type === "owner" || profile?.type === "superadmin";
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const open = () => {
+      if (!navigationRef.isReady()) {
+        retry = setTimeout(open, 300);
+        return;
+      }
+      handledResponseRef.current = responseKey;
+      if (isAdminSide) navigationRef.navigate("AdminNotifications");
+      else navigationRef.navigate("Home", { screen: "Notifications" });
+    };
+    open();
+    return () => {
+      if (retry) clearTimeout(retry);
+    };
+  }, [lastResponse, pushReady, profile?.type]);
+
   if (isInitializing) {
     return <SplashScreen />;
   }
@@ -82,5 +122,5 @@ export default function RootNavigator() {
     content = <MainTabNavigator />;
   }
 
-  return <NavigationContainer>{content}</NavigationContainer>;
+  return <NavigationContainer ref={navigationRef}>{content}</NavigationContainer>;
 }

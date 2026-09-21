@@ -20,6 +20,7 @@ import { colors } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import type { Database } from "../../types/database.types";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
@@ -567,7 +568,7 @@ export default function ProfileScreen() {
         <Pressable
           onPress={async () => {
             await signOutGoogle();
-            supabase.auth.signOut();
+            signOutWithPushCleanup();
           }}
           className="bg-primary rounded-xl py-3 items-center"
         >

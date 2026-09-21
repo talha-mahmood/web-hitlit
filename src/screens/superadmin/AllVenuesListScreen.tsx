@@ -11,6 +11,7 @@ import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 
@@ -73,7 +74,7 @@ export default function AllVenuesListScreen() {
             <Pressable
               onPress={async () => {
                 await signOutGoogle();
-                supabase.auth.signOut();
+                signOutWithPushCleanup();
               }}
               className="border border-danger rounded-xl py-3 items-center mt-4"
             >

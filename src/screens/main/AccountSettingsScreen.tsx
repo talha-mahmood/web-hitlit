@@ -26,6 +26,7 @@ import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "AccountSettings">;
 
@@ -136,7 +137,7 @@ export default function AccountSettingsScreen() {
       const { error } = await supabase.rpc("delete_own_account");
       if (error) throw error;
       await signOutGoogle();
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
     } catch (err) {
       Alert.alert(
         "Couldn't delete account",

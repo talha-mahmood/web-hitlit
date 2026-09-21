@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
 
@@ -78,7 +79,7 @@ export default function AdminVenueListScreen() {
           <Pressable
             onPress={async () => {
               await signOutGoogle();
-              supabase.auth.signOut();
+              signOutWithPushCleanup();
             }}
             className="border border-danger rounded-xl py-3 items-center mt-4"
           >

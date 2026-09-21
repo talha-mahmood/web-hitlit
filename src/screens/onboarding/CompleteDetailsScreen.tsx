@@ -11,6 +11,7 @@ import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
 import type { Database } from "../../types/database.types";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Gender = Database["public"]["Enums"]["gender_type"];
 
@@ -56,7 +57,7 @@ export default function CompleteDetailsScreen() {
     setIsGoingBack(true);
     try {
       await signOutGoogle();
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
     } catch (err) {
       Alert.alert(
         "Couldn't go back",
