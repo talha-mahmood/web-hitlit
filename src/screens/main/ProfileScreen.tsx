@@ -514,7 +514,7 @@ export default function ProfileScreen() {
             {stats && stats.upcomingTournaments.length > 0 ? (
               <>
                 <Text className="text-lg font-semibold text-ink mb-3">Upcoming Tournaments</Text>
-                {stats.upcomingTournaments.map((t) => (
+                {stats.upcomingTournaments.slice(0, 3).map((t) => (
                   <EnrolledRow
                     key={t.id}
                     title={t.title}
@@ -530,7 +530,7 @@ export default function ProfileScreen() {
             {stats && stats.upcomingGames.length > 0 ? (
               <>
                 <Text className="text-lg font-semibold text-ink mb-3">Upcoming Games</Text>
-                {stats.upcomingGames.map((g) => (
+                {stats.upcomingGames.slice(0, 3).map((g) => (
                   <EnrolledRow
                     key={g.id}
                     title={g.title}
