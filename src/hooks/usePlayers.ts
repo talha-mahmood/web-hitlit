@@ -9,10 +9,10 @@ export function useTopPlayers(sportId?: string) {
   });
 }
 
-export function usePlayerPublicProfile(userId: string | undefined) {
+export function usePlayerPublicProfile(userId: string | undefined, sportId?: string) {
   return useQuery({
-    queryKey: ["playerPublicProfile", userId],
-    queryFn: () => fetchPlayerPublicProfile(userId as string),
+    queryKey: ["playerPublicProfile", userId, sportId ?? "all"],
+    queryFn: () => fetchPlayerPublicProfile(userId as string, sportId),
     enabled: !!userId,
     staleTime: 60_000,
   });

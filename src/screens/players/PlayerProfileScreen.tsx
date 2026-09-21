@@ -30,10 +30,13 @@ export default function PlayerProfileScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
-  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId);
+  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId, route.params.sportId);
 
   const rating = computeRating(player);
   const tier = getRatingTierInfo(rating);
+  const matchesWon = player?.matchesWonTotal ?? 0;
+  const matchesPlayed = player?.matchesPlayedTotal ?? 0;
+  const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
   const effectiveSkillLevel = player?.skillLevel ?? player?.computedSkillLevel ?? null;
 
   return (
@@ -115,10 +118,30 @@ export default function PlayerProfileScreen() {
           </View>
 
           {/* Stat grid */}
-          <View className="flex-row justify-between mb-5">
+          <View className="flex-row justify-between mb-3">
             <StatBlock value={player.gamesPlayedTotal} label="Games Played" />
             <StatBlock value={player.tournamentsPlayedTotal} label="Tournaments" />
             <StatBlock value={player.gamesHostedTotal} label="Hosted" />
+          </View>
+
+          {/* Games Win — scored matches this player's team won out of scored matches it played */}
+          <View className="bg-white rounded-2xl p-4 mb-5" style={cardShadow}>
+            <View className="flex-row items-center justify-between mb-3">
+              <View>
+                <Text className="text-ink font-extrabold text-xl">
+                  {matchesWon} / {matchesPlayed}
+                </Text>
+                <Text className="text-muted text-xs mt-1">
+                  {route.params.sportName ? `Games Win · ${route.params.sportName}` : "Games Win"}
+                </Text>
+              </View>
+              <Text className="font-extrabold text-lg" style={{ color: colors.primaryDark }}>
+                {winPercentage}%
+              </Text>
+            </View>
+            <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.primaryLight, overflow: "hidden" }}>
+              <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+            </View>
           </View>
 
           {/* Sport breakdown */}

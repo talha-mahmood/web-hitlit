@@ -61,7 +61,8 @@ export type HomeStackParamList = {
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
   PlayersDashboard: undefined;
-  PlayerProfile: { userId: string };
+  // sportId/sportName: set when opened from Top Players with a sport filter on.
+  PlayerProfile: { userId: string; sportId?: string; sportName?: string };
   ManualScore: ManualScoreParams;
   NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };

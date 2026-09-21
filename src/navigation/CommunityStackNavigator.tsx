@@ -69,7 +69,8 @@ export type CommunityStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
-  PlayerProfile: { userId: string };
+  // sportId/sportName: set when opened from Top Players with a sport filter on.
+  PlayerProfile: { userId: string; sportId?: string; sportName?: string };
   // Reachable from a tournament's "Book Venue" button (see GameDetailScreen)
   // and its "Go To Scorecard" button (see TournamentMatchesScreen) —
   // duplicated here like the Games/Squads screens above so neither jumps

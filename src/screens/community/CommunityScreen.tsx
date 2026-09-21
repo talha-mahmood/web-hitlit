@@ -133,7 +133,9 @@ export default function CommunityScreen() {
       {segment === "community" && <MyCommunityContent navigation={navigation} />}
       {segment === "players" && (
         <PlayersDashboardContent
-          onPressPlayer={(userId) => navigation.navigate("PlayerProfile", { userId })}
+          onPressPlayer={(userId, sport) =>
+            navigation.navigate("PlayerProfile", { userId, sportId: sport?.id, sportName: sport?.name })
+          }
         />
       )}
       {segment === "chat" && (

@@ -48,6 +48,8 @@ export type PlayerPublicProfile = {
   gamesPlayedTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
+  matchesPlayedTotal: number;
+  matchesWonTotal: number;
   hoursPlayedTotal: number;
   computedSkillLevel: SkillLevel | null;
   sportBreakdown: PlayerSportBreakdownEntry[];
@@ -56,14 +58,17 @@ export type PlayerPublicProfile = {
 // Basic identity comes straight from `profiles` (publicly readable); the
 // activity aggregates come via the same SECURITY DEFINER RPC pattern as
 // fetchTopPlayers, scoped to a single player.
-export async function fetchPlayerPublicProfile(userId: string): Promise<PlayerPublicProfile> {
+// `sportId` narrows every number on the profile to that one sport — used when
+// opened from the Top Players list with a sport filter on, so the profile
+// matches the row that was tapped.
+export async function fetchPlayerPublicProfile(userId: string, sportId?: string): Promise<PlayerPublicProfile> {
   const [profileRes, statsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, avatar, city, bio, skill_level")
       .eq("id", userId)
       .single(),
-    supabase.rpc("get_player_public_stats", { p_user_id: userId }).single(),
+    supabase.rpc("get_player_public_stats", { p_user_id: userId, p_sport_id: sportId }).single(),
   ]);
   if (profileRes.error) throw new Error(profileRes.error.message);
   if (statsRes.error) throw new Error(statsRes.error.message);
@@ -82,6 +87,8 @@ export async function fetchPlayerPublicProfile(userId: string): Promise<PlayerPu
     gamesPlayedTotal: stats.games_played,
     tournamentsPlayedTotal: stats.tournaments_played,
     gamesHostedTotal: stats.games_hosted,
+    matchesPlayedTotal: stats.matches_played,
+    matchesWonTotal: stats.matches_won,
     hoursPlayedTotal: Number(stats.hours_played),
     computedSkillLevel: stats.computed_skill_level,
     sportBreakdown: sportBreakdown.sort((a, b) => b.count - a.count),

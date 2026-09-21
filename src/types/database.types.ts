@@ -3083,12 +3083,14 @@ export type Database = {
         }[]
       }
       get_player_public_stats: {
-        Args: { p_user_id: string }
+        Args: { p_sport_id?: string; p_user_id: string }
         Returns: {
           computed_skill_level: Database["public"]["Enums"]["skill_level_type"]
           games_hosted: number
           games_played: number
           hours_played: number
+          matches_played: number
+          matches_won: number
           sport_breakdown: Json
           tournaments_played: number
         }[]

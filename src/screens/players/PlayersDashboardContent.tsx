@@ -68,11 +68,16 @@ function PlayerRow({
 export default function PlayersDashboardContent({
   onPressPlayer,
 }: {
-  onPressPlayer: (userId: string) => void;
+  onPressPlayer: (userId: string, sport?: { id: string; name: string }) => void;
 }) {
   const [sportId, setSportId] = useState<string | null>(null);
   const { data: sports } = useSports();
   const { data: players, isLoading } = useTopPlayers(sportId ?? undefined);
+
+  const selectedSport = useMemo(() => {
+    const match = sportId ? (sports ?? []).find((s) => s.id === sportId) : undefined;
+    return match ? { id: match.id, name: match.name } : undefined;
+  }, [sportId, sports]);
 
   const rankedPlayers = useMemo(
     () => [...(players ?? [])].sort((a, b) => computeRating(b) - computeRating(a)),
@@ -113,7 +118,7 @@ export default function PlayersDashboardContent({
         )
       }
       renderItem={({ item, index }) => (
-        <PlayerRow player={item} rank={index + 1} onPress={() => onPressPlayer(item.userId)} />
+        <PlayerRow player={item} rank={index + 1} onPress={() => onPressPlayer(item.userId, selectedSport)} />
       )}
     />
   );
