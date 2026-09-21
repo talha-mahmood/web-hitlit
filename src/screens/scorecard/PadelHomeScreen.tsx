@@ -172,7 +172,7 @@ export default function PadelHomeScreen() {
   });
 
   return (
-    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-5 mb-4" style={{ gap: 8 }}>
         <Pressable onPress={() => navigation.navigate("ScorecardHome")} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -243,11 +243,28 @@ export default function PadelHomeScreen() {
             <View className="items-center" style={{ gap: 4, marginTop: filteredMatches.length > 0 ? 24 : 64 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 200, height: 200, backgroundColor: "#DBEAFE", opacity: 0.5 }}
+                style={{ width: 200, height: 200, backgroundColor: colors.primaryLight, opacity: 0.5 }}
               >
-                <MaterialCommunityIcons name="tennis" size={100} color="#1D4ED8" style={{ opacity: 0.85, transform: [{ rotate: "-12deg" }] }} />
+                <Ionicons
+                  name="sparkles"
+                  size={16}
+                  color={colors.primaryDark}
+                  style={{ position: "absolute", top: 34, left: 46, opacity: 0.7 }}
+                />
+                <Ionicons
+                  name="sparkles"
+                  size={12}
+                  color={colors.primaryDark}
+                  style={{ position: "absolute", bottom: 46, right: 40, opacity: 0.6 }}
+                />
+                <MaterialCommunityIcons
+                  name="tennis"
+                  size={110}
+                  color={colors.primaryDark}
+                  style={{ opacity: 0.85, transform: [{ rotate: "-12deg" }] }}
+                />
               </View>
-              <Text className="text-ink font-bold text-lg mt-2">No matches yet</Text>
+              <Text className="text-ink font-bold text-lg mt-2">No more matches yet</Text>
               <Text className="text-muted text-sm text-center px-10">
                 Create a new match to start keeping score{"\n"}and track your games here.
               </Text>
