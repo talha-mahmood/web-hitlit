@@ -234,7 +234,7 @@ export default function NewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="overflow-hidden" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View
           pointerEvents="none"
@@ -324,7 +324,7 @@ export default function NewMatchScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         {prefill && (
           <View className="flex-row rounded-xl px-3 py-2.5 mb-4" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
             <Ionicons name="information-circle" size={16} color={colors.primaryDark} style={{ marginTop: 1 }} />
