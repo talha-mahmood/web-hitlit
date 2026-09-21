@@ -324,7 +324,9 @@ function HeadToHeadMatchCard({
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = sportName.includes("cricket");
-  const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b;
+  // Once the match has a result (scored live or entered by hand) there's
+  // nothing left to score, so neither scoring button is offered.
+  const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
@@ -420,7 +422,7 @@ function HeadToHeadMatchCard({
             <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
           </Pressable>
         )}
-        {canGoToScorecard && match?.status !== "COMPLETED" && (
+        {canGoToScorecard && (
           <Pressable onPress={handleEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
             <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
           </Pressable>
