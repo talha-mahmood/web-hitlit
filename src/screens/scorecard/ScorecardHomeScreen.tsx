@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { View, Text, Image, ScrollView, Pressable } from "react-native";
+import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, cardShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
@@ -13,47 +16,147 @@ import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
 
+// Pastel disc behind each sport's photo (matches the design mock-up).
+const SPORT_DISC: Record<string, string> = {
+  cricket: "#DCF5E4",
+  padel: "#FEF3D6",
+  football: "#E0ECFB",
+  badminton: "#DDF4E6",
+  pickleball: "#EAE6F8",
+  tennis: "#FCE8EA",
+  "table tennis": "#DCE9FA",
+};
+
 // Same sport photos/icons used for the "Filter by Sport" tiles on the home
-// screen (see getSportImage/getSportIcon + HomeSportTile) — reused here
-// instead of a separate flat-color glyph per card, so a sport looks the
-// same wherever it appears in the app.
+// screen (see getSportImage/getSportIcon + HomeSportTile), shown in a round
+// pastel disc. The photos have a white backdrop, so they're multiplied onto the
+// disc colour — the white turns into the pastel and the equipment keeps its
+// colours.
 function SportCard({
   sportName,
   title,
   subtitle,
   onPress,
+  popular = false,
 }: {
   sportName: string;
   title: string;
   subtitle: string;
   onPress: () => void;
+  popular?: boolean;
 }) {
   const photo = getSportImage(sportName);
   const { icon, bg, fg } = getSportIcon(sportName);
+  const disc = SPORT_DISC[sportName] ?? bg;
+  // A card only turns green while it's being pressed.
+  const [active, setActive] = useState(false);
+
+  const body = (
+    <View className="flex-row items-center" style={{ padding: 12, gap: 14 }}>
+      <View
+        className="items-center justify-center overflow-hidden rounded-full"
+        style={{ width: 72, height: 72, backgroundColor: disc }}
+      >
+        {photo ? (
+          <View style={{ width: 96, height: 54, mixBlendMode: "multiply" }}>
+            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+          </View>
+        ) : (
+          <MaterialCommunityIcons name={icon} size={34} color={fg} />
+        )}
+      </View>
+      <View className="flex-1">
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Text className="text-ink font-bold" style={{ fontSize: 18 }}>
+            {title}
+          </Text>
+          {popular ? (
+            <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#DCFCE7" }}>
+              <Text className="font-semibold" style={{ fontSize: 12, color: colors.primaryDark }}>
+                Popular
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text className="text-muted mt-1" style={{ fontSize: 13, lineHeight: 18 }}>
+          {subtitle}
+        </Text>
+      </View>
+      <View
+        className="items-center justify-center rounded-full"
+        style={
+          active
+            ? { width: 36, height: 36, backgroundColor: colors.primary, ...primaryButtonShadow }
+            : { width: 34, height: 34, backgroundColor: "#F1F3F5" }
+        }
+      >
+        <Ionicons name="chevron-forward" size={18} color={active ? "white" : colors.muted} />
+      </View>
+    </View>
+  );
+
   return (
     <Bouncy
       onPress={onPress}
+      onPressIn={() => setActive(true)}
+      onPressOut={() => setActive(false)}
       scaleTo={0.97}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
+      style={{
+        ...cardShadow,
+        backgroundColor: active ? "#F0FDF4" : "white",
+        borderRadius: 24,
+        borderWidth: 1.5,
+        borderColor: active ? colors.primary : "transparent",
+      }}
     >
-      <View className="rounded-3xl bg-white p-5 flex-row items-center" style={{ gap: 16 }}>
-        <View
-          className="items-center justify-center overflow-hidden rounded-2xl"
-          style={{ width: 64, height: 64, backgroundColor: photo ? colors.border : bg }}
+      {active ? (
+        <LinearGradient
+          colors={["#D1F5DD", "#F0FDF4"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ borderRadius: 22.5 }}
         >
-          {photo ? (
-            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-          ) : (
-            <MaterialCommunityIcons name={icon} size={34} color={fg} />
-          )}
-        </View>
-        <View className="flex-1">
-          <Text className="text-ink font-bold text-lg">{title}</Text>
-          <Text className="text-muted text-sm mt-0.5">{subtitle}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.muted} />
-      </View>
+          {body}
+        </LinearGradient>
+      ) : (
+        <View className="rounded-3xl bg-white">{body}</View>
+      )}
     </Bouncy>
+  );
+}
+
+// Soft scoreboard-and-trophy mascot with the "Keep Score Keep Playing" tagline,
+// sitting in the top-right of the header.
+function HeaderArt() {
+  return (
+    <View pointerEvents="none" className="flex-row items-center" style={{ gap: 4 }}>
+      <Svg width={52} height={72} viewBox="0 0 52 72">
+        {/* Scoreboard */}
+        <Rect x={6} y={2} width={40} height={28} rx={6} fill="#9AD8B0" />
+        <Rect x={10} y={6} width={32} height={20} rx={4} fill="#C4E9D2" stroke="#66B788" strokeWidth={1} />
+        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#3F9A63" textAnchor="middle">
+          0-0
+        </SvgText>
+        <Rect x={13} y={30} width={4} height={10} rx={2} fill="#9AD8B0" />
+        <Rect x={35} y={30} width={4} height={10} rx={2} fill="#9AD8B0" />
+        {/* Trophy */}
+        <Path d="M14 42h24v6c0 8-5 12-12 12s-12-4-12-12z" fill="#B7E2C6" stroke="#66B788" strokeWidth={1} />
+        <Path d="M14 44c-6 0-8 3-6 7 1 2 4 3 7 3M38 44c6 0 8 3 6 7-1 2-4 3-7 3" fill="none" stroke="#66B788" strokeWidth={1.5} />
+        <Rect x={23} y={60} width={6} height={5} fill="#9AD8B0" />
+        <Rect x={16} y={65} width={20} height={5} rx={2} fill="#9AD8B0" />
+        <Circle cx={8} cy={66} r={4.5} fill="#CDEBD8" stroke="#66B788" strokeWidth={1} />
+      </Svg>
+      <View>
+        <Text
+          style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: colors.primary }}
+        >
+          {"Keep\nScore\nKeep Playing"}
+        </Text>
+        <Svg width={70} height={8} viewBox="0 0 70 8">
+          <Path d="M2 5c14-4 34-4 60-1" fill="none" stroke={colors.primary} strokeWidth={2} strokeLinecap="round" />
+        </Svg>
+      </View>
+    </View>
   );
 }
 
@@ -63,24 +166,45 @@ export default function ScorecardHomeScreen() {
 
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
-      <View className="flex-row items-center px-5 mb-6" style={{ gap: 8 }}>
+      {/* Soft green wash behind the top-right corner. */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          backgroundColor: "#DCFCE7",
+          opacity: 0.6,
+          top: insets.top - 110,
+          right: -110,
+        }}
+      />
+      <View pointerEvents="none" style={{ position: "absolute", right: 12, top: insets.top + 6 }}>
+        <HeaderArt />
+      </View>
+
+      <View className="flex-row items-center px-5 mb-5" style={{ gap: 8 }}>
         <Pressable
           onPress={() => navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home")}
           hitSlop={8}
         >
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
-        <View className="flex-1">
+        <View className="flex-1" style={{ paddingRight: 130 }}>
           <Text className="text-2xl font-bold text-ink">Scorecard</Text>
-          <Text className="text-muted text-sm mt-0.5">Choose a sport to start or view a match</Text>
+          <Text className="text-muted mt-0.5" style={{ fontSize: 13 }}>
+            Choose a sport to start or view a match
+          </Text>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 14 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"
           subtitle="Ball-by-ball scoring with full innings & wickets"
+          popular
           onPress={() => navigation.navigate("CricketHome")}
         />
         <SportCard
@@ -116,7 +240,7 @@ export default function ScorecardHomeScreen() {
         <SportCard
           sportName="table tennis"
           title="Table Tennis"
-          subtitle="Rally scoring to 11, with ITTF service rotation"
+          subtitle="11-point games, best of 5 or 7"
           onPress={() => navigation.navigate("TableTennisHome")}
         />
       </ScrollView>

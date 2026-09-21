@@ -24,6 +24,8 @@ export default function Bouncy({
   disabled,
   style,
   scaleTo = 0.97,
+  onPressIn,
+  onPressOut,
   ...rest
 }: PressableProps & {
   children: ReactNode;
@@ -40,11 +42,13 @@ export default function Bouncy({
     <AnimatedPressable
       onPress={onPress}
       disabled={disabled}
-      onPressIn={() => {
+      onPressIn={(e) => {
         scale.value = withSpring(scaleTo, { damping: 14, stiffness: 260 });
+        onPressIn?.(e);
       }}
-      onPressOut={() => {
+      onPressOut={(e) => {
         scale.value = withSpring(1, { damping: 10, stiffness: 200 });
+        onPressOut?.(e);
       }}
       style={[style, animatedStyle]}
       {...rest}
