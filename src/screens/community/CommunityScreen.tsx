@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, Dimensions, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import CommunityBanner from "../../components/CommunityBanner";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
@@ -15,8 +16,9 @@ type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommunityHome">;
 type Segment = "community" | "players" | "chat";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const GRID_GAP = 12;
-const CARD_WIDTH = (SCREEN_WIDTH - 20 * 2 - GRID_GAP) / 2;
+const SIDE_PADDING = 16;
+const GRID_GAP = 10;
+const CARD_WIDTH = (SCREEN_WIDTH - SIDE_PADDING * 2 - GRID_GAP) / 2;
 
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed.
@@ -25,11 +27,11 @@ function ImageCard({ source, onPress }: { source: number; onPress: () => void })
     <Bouncy
       onPress={onPress}
       scaleTo={0.97}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, width: CARD_WIDTH }}
+      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 22, width: CARD_WIDTH }}
     >
       <Image
         source={source}
-        style={{ width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 16 }}
+        style={{ width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 22 }}
         resizeMode="cover"
       />
     </Bouncy>
@@ -38,28 +40,10 @@ function ImageCard({ source, onPress }: { source: number; onPress: () => void })
 
 function MyCommunityContent({ navigation }: { navigation: Nav }) {
   return (
-    <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-      <LinearGradient
-        colors={[colors.primaryDark, colors.primary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ borderRadius: 20, padding: 20, marginBottom: 20, overflow: "hidden" }}
-      >
-        <Text className="text-white font-extrabold text-2xl" style={{ fontStyle: "italic" }}>
-          PlayOye Community
-        </Text>
-        <Text className="text-white text-sm mt-1.5" style={{ opacity: 0.9 }}>
-          Create Join Explore Squads & Games!
-        </Text>
-        <View
-          className="flex-row items-center"
-          style={{ position: "absolute", right: 16, bottom: 14, gap: 6, opacity: 0.35 }}
-        >
-          <MaterialCommunityIcons name="soccer" size={30} color="white" />
-          <MaterialCommunityIcons name="tennis" size={28} color="white" />
-          <MaterialCommunityIcons name="cricket" size={30} color="white" />
-        </View>
-      </LinearGradient>
+    <ScrollView contentContainerStyle={{ paddingHorizontal: SIDE_PADDING, paddingTop: 4, paddingBottom: 40 }}>
+      <View style={{ marginBottom: 14 }}>
+        <CommunityBanner width={SCREEN_WIDTH - SIDE_PADDING * 2} />
+      </View>
 
       <View className="flex-row flex-wrap justify-between" style={{ rowGap: GRID_GAP }}>
         <ImageCard
@@ -85,19 +69,27 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
 
 function SegmentButton({
   label,
+  icon,
   active,
   onPress,
 }: {
   label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   active: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      className={`flex-1 items-center py-2.5 rounded-xl ${active ? "bg-primary-light" : ""}`}
+      className="flex-1 flex-row items-center justify-center rounded-full"
+      style={{ paddingVertical: 12, gap: 6, backgroundColor: active ? colors.primary : "transparent" }}
     >
-      <Text className={active ? "text-primary font-bold text-sm" : "text-muted font-semibold text-sm"}>
+      <MaterialCommunityIcons name={icon} size={18} color={active ? "white" : colors.ink} style={active ? undefined : { opacity: 0.75 }} />
+      <Text
+        className={active ? "text-white font-bold" : "text-ink font-semibold"}
+        style={[{ fontSize: 12 }, active ? null : { opacity: 0.75 }]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </Pressable>
@@ -107,6 +99,7 @@ function SegmentButton({
 export default function CommunityScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const [segment, setSegment] = useState<Segment>("community");
 
   // The three segments live inside this one screen, so the tab-level
@@ -121,13 +114,54 @@ export default function CommunityScreen() {
   return (
     <View className="flex-1 bg-green-50">
       {/* Fixed header — stays on screen while only the content below switches. */}
+      {/* Dark-green header: icon tile + title/subtitle, rounded at the bottom; the tab bar overlaps its lower edge. */}
+      {isFocused ? <StatusBar style="light" /> : null}
       <View
-        className="flex-row items-center bg-white px-4 pb-3 border-b border-border"
-        style={{ paddingTop: insets.top + 12, gap: 8 }}
+        style={{
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 40,
+          paddingHorizontal: SIDE_PADDING + 2,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
       >
-        <SegmentButton label="My Community" active={segment === "community"} onPress={() => setSegment("community")} />
-        <SegmentButton label="Top Players" active={segment === "players"} onPress={() => setSegment("players")} />
-        <SegmentButton label="Community Chat" active={segment === "chat"} onPress={() => setSegment("chat")} />
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(34,197,94,0.14)", right: -90, bottom: -150 }}
+        />
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(255,255,255,0.05)", right: 30, top: -110 }}
+        />
+        <View className="flex-row items-center" style={{ gap: 14 }}>
+          <View
+            className="items-center justify-center"
+            style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: "#4CAF6A" }}
+          >
+            <MaterialCommunityIcons name="account-group" size={32} color="white" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-white font-extrabold" style={{ fontSize: 23 }}>
+              Community
+            </Text>
+            <Text style={{ fontSize: 14, lineHeight: 19, color: "#BBF7D0", marginTop: 2 }}>
+              Play Together, Stay Active
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={{ marginTop: -24, paddingHorizontal: SIDE_PADDING, marginBottom: 12 }}>
+        <View className="flex-row items-center bg-white" style={{ borderRadius: 30, padding: 4, ...cardShadow }}>
+          <SegmentButton label="My Community" icon="account-group" active={segment === "community"} onPress={() => setSegment("community")} />
+          <SegmentButton label="Top Players" icon="trophy-outline" active={segment === "players"} onPress={() => setSegment("players")} />
+          {segment === "community" ? (
+            <View style={{ width: 1, height: 22, backgroundColor: "#E5E7EB" }} />
+          ) : null}
+          <SegmentButton label="Community Chat" icon="message-text-outline" active={segment === "chat"} onPress={() => setSegment("chat")} />
+        </View>
       </View>
 
       {segment === "community" && <MyCommunityContent navigation={navigation} />}
