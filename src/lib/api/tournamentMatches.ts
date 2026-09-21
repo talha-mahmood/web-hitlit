@@ -11,8 +11,32 @@ export type TournamentMatch = MatchRow & {
   winner_team: { id: string; name: string } | null;
 };
 
-const MATCH_SELECT =
-  "*, team_a:tournament_teams!tournament_matches_team_a_id_fkey(id, name), team_b:tournament_teams!tournament_matches_team_b_id_fkey(id, name), winner_team:tournament_teams!tournament_matches_winner_team_id_fkey(id, name)";
+// Each team also pulls its joined members so a team with just one player
+// can be shown by that player's name (see soloAwareTeamName).
+const TEAM_FIELDS = "id, name, tournament_team_members(status, profiles(full_name))";
+const MATCH_SELECT = `*, team_a:tournament_teams!tournament_matches_team_a_id_fkey(${TEAM_FIELDS}), team_b:tournament_teams!tournament_matches_team_b_id_fkey(${TEAM_FIELDS}), winner_team:tournament_teams!tournament_matches_winner_team_id_fkey(${TEAM_FIELDS})`;
+
+type TeamWithMembers = {
+  id: string;
+  name: string;
+  tournament_team_members?: { status: string; profiles: { full_name: string | null } | null }[] | null;
+};
+
+// A team with exactly one joined player is really just that player — show
+// their name instead of the generic "Team A".
+export function soloAwareTeamName(
+  name: string,
+  members: { status: string; full_name: string | null | undefined }[]
+): string {
+  const joined = members.filter((m) => m.status === "JOINED");
+  return joined.length === 1 && joined[0].full_name ? joined[0].full_name : name;
+}
+
+function toDisplayTeam(team: TeamWithMembers | null): { id: string; name: string } | null {
+  if (!team) return null;
+  const members = (team.tournament_team_members ?? []).map((m) => ({ status: m.status, full_name: m.profiles?.full_name }));
+  return { id: team.id, name: soloAwareTeamName(team.name, members) };
+}
 
 export async function fetchMatchesForTournament(gameId: string): Promise<TournamentMatch[]> {
   const { data, error } = await supabase
@@ -22,7 +46,9 @@ export async function fetchMatchesForTournament(gameId: string): Promise<Tournam
     .order("round", { ascending: true })
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as TournamentMatch[];
+  return ((data ?? []) as unknown as (MatchRow & { team_a: TeamWithMembers | null; team_b: TeamWithMembers | null; winner_team: TeamWithMembers | null })[]).map(
+    (m) => ({ ...m, team_a: toDisplayTeam(m.team_a), team_b: toDisplayTeam(m.team_b), winner_team: toDisplayTeam(m.winner_team) })
+  );
 }
 
 // Shared by every round's generation — a bye (no second team) is inserted

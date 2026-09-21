@@ -25,7 +25,7 @@ import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import type { TournamentMatch, ScorecardPrefill } from "../../lib/api/tournamentMatches";
+import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import {
@@ -948,7 +948,14 @@ export default function TournamentMatchesScreen() {
   }
 
   const isHost = game.creator_id === userId;
-  const teams = teamsData ?? [];
+  // A team with just one joined player is shown by that player's name.
+  const teams = (teamsData ?? []).map((t) => ({
+    ...t,
+    name: soloAwareTeamName(
+      t.name,
+      t.tournament_team_members.map((m) => ({ status: m.status, full_name: m.profiles?.full_name }))
+    ),
+  }));
   const approvedTeamsFull = teams.filter((t) => t.status === "APPROVED");
   const approvedTeams = approvedTeamsFull.map((t) => ({ id: t.id, name: t.name }));
   const activeTeams = teams.filter((t) => t.status !== "REJECTED");
