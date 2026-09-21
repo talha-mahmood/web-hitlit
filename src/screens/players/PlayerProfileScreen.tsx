@@ -26,17 +26,28 @@ function StatBlock({ value, label }: { value: string | number; label: string }) 
   );
 }
 
+const RATING_WIN_WEIGHT = 0.7;
+const RATING_GAMES_PLAYED_WEIGHT = 0.3;
+
 export default function PlayerProfileScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
   const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId, route.params.sportId);
 
-  const rating = computeRating(player);
-  const tier = getRatingTierInfo(rating);
   const matchesWon = player?.matchesWonTotal ?? 0;
   const matchesPlayed = player?.matchesPlayedTotal ?? 0;
-  const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
+  const winShare = matchesPlayed > 0 ? Math.min(100, (matchesWon / matchesPlayed) * 100) : 0;
+  const winPercentage = Math.round(winShare);
+  // Participation Score: the old activity-based number (games, tournaments,
+  // hosting) — still shown on its own card.
+  const participationScore = computeRating(player);
+  // RATING: 70% Games Win percentage + 30% Games Played. Games Played is
+  // scaled onto 0-100 first — 100 games counts as full marks, anything above
+  // is capped so volume alone can't outweigh winning.
+  const gamesPlayedShare = Math.min(100, player?.gamesPlayedTotal ?? 0);
+  const rating = Math.round(winShare * RATING_WIN_WEIGHT + gamesPlayedShare * RATING_GAMES_PLAYED_WEIGHT);
+  const tier = getRatingTierInfo(rating);
   const effectiveSkillLevel = player?.skillLevel ?? player?.computedSkillLevel ?? null;
 
   return (
@@ -121,7 +132,7 @@ export default function PlayerProfileScreen() {
           <View className="flex-row justify-between mb-3">
             <StatBlock value={player.tournamentsPlayedTotal} label="Tournaments" />
             <StatBlock value={player.gamesHostedTotal} label="Hosted" />
-            <StatBlock value={rating} label="Participation Score" />
+            <StatBlock value={participationScore} label="Participation Score" />
           </View>
 
           {/* Games Win — scored matches this player's team won out of scored matches it played */}
