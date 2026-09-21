@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
-import { NavigationContainer, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
@@ -14,6 +14,13 @@ import ProfileSetupScreen from "../screens/onboarding/ProfileSetupScreen";
 import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
+
+// Behind every screen (visible during transitions and at the edges): the same
+// page colour the Home screen uses.
+const AppTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: "#F0FDF4" },
+};
 
 export default function RootNavigator() {
   const session = useAuthStore((s) => s.session);
@@ -122,5 +129,5 @@ export default function RootNavigator() {
     content = <MainTabNavigator />;
   }
 
-  return <NavigationContainer ref={navigationRef}>{content}</NavigationContainer>;
+  return <NavigationContainer ref={navigationRef} theme={AppTheme}>{content}</NavigationContainer>;
 }

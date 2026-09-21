@@ -782,7 +782,7 @@ export default function TournamentMatchesScreen() {
 
   if (gameLoading || teamsLoading || !game) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
+      <View className="flex-1 items-center justify-center bg-green-50">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -893,7 +893,7 @@ export default function TournamentMatchesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-green-50">
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
         style={{ paddingTop: insets.top + 16 }}

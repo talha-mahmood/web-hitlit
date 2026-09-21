@@ -265,7 +265,7 @@ export default function SquadChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-100"
+      className="flex-1 bg-green-50"
       // "height" was never actually proven to work for this layout — every
       // other Android screen using it (CreateSquadScreen, etc.) has no fixed
       // bottom bar; their bottom action lives in the header. This screen's

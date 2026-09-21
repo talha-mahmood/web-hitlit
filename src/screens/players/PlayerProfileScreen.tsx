@@ -45,7 +45,7 @@ export default function PlayerProfileScreen() {
   const effectiveSkillLevel = player?.skillLevel ?? player?.computedSkillLevel ?? null;
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-green-50">
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
         style={{ paddingTop: insets.top + 16 }}

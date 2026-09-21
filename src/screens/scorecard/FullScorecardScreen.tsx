@@ -149,14 +149,14 @@ export default function FullScorecardScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
+      <View className="flex-1 items-center justify-center bg-green-50">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-green-50">
       <View className="flex-row items-center bg-primary px-4 pb-4" style={{ paddingTop: insets.top + 16, gap: 10 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color="white" />

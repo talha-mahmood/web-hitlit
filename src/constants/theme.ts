@@ -6,7 +6,7 @@ export const colors = {
   ink: "#1A1A1A",
   muted: "#6B7280",
   border: "#E5E7EB",
-  background: "#F3F4F6", // page canvas (bg-gray-100) — cards/surfaces stay white on top of it
+  background: "#F0FDF4", // page canvas (bg-green-50, same as the Home screen) — cards/surfaces stay white on top of it
   danger: "#DC2626",
   warning: "#F59E0B",
 };

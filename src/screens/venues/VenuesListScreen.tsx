@@ -52,7 +52,7 @@ export default function VenuesListScreen() {
     location: debouncedLocation || undefined,
   });
   return (
-    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
       <View className="px-5">
         <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
           {navigation.canGoBack() && (

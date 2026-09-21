@@ -99,7 +99,7 @@ export default function BookingCheckoutScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-green-50">
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

@@ -119,7 +119,7 @@ export default function CommunityScreen() {
   }, [navigation]);
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-green-50">
       {/* Fixed header — stays on screen while only the content below switches. */}
       <View
         className="flex-row items-center bg-white px-4 pb-3 border-b border-border"

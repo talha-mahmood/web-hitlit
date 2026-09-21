@@ -154,7 +154,7 @@ export default function ScorecardHomeScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
       {/* Soft green wash behind the top-right corner. */}
       <View
         pointerEvents="none"

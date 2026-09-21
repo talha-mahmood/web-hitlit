@@ -111,7 +111,7 @@ export default function CreateSquadScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-100"
+      className="flex-1 bg-green-50"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SportsBackgroundDecor />

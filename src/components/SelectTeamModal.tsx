@@ -110,7 +110,7 @@ export default function SelectTeamModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-green-50">
         <View
           className="px-4 pb-4"
           style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 12 }}

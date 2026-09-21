@@ -232,7 +232,7 @@ export default function LiveScoringScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
+      <View className="flex-1 items-center justify-center bg-green-50">
         <ActivityIndicator color={colors.primary} />
       </View>
     );

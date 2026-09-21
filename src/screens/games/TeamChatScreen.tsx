@@ -265,7 +265,7 @@ export default function TeamChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-100"
+      className="flex-1 bg-green-50"
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
