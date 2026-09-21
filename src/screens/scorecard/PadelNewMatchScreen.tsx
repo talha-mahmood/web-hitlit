@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +14,7 @@ import type { MatchFormat, DeuceType, Team } from "../../lib/padelScoring";
 
 type PlayMode = "SINGLES" | "DOUBLES";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "PadelNewMatch">;
@@ -178,7 +178,6 @@ export default function PadelNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
-  const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePadelMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
@@ -256,16 +255,13 @@ export default function PadelNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-gray-100" behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-2xl font-bold text-ink">New Padel Match</Text>
-          <Text className="text-muted text-sm mt-0.5">Set up teams and match rules</Text>
-        </View>
-      </View>
+    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <SportNewMatchHeader
+        sport="padel"
+        title="New Padel Match"
+        subtitle="Set up teams and match rules"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
         {prefill && (
