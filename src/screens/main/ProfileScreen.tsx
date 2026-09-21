@@ -12,7 +12,7 @@ import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
 import type { ProfileStats } from "../../lib/api/profileStats";
-import { computeRating, getRatingTierInfo } from "../../lib/playerRating";
+import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import DonutChart from "../../components/DonutChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { pickImages, uploadImage } from "../../lib/upload";
@@ -218,7 +218,8 @@ export default function ProfileScreen() {
 
   const effectiveSkillLevel = profile?.skill_level ?? stats?.computedSkillLevel ?? null;
   const totalPlayed = stats?.gamesPlayedTotal ?? 0;
-  const rating = computeRating(stats);
+  // Same rating (and tier) the Top Players list shows for this person.
+  const rating = computeRankingRating(stats);
   const ratingTier = getRatingTierInfo(rating);
 
   const sportSegments = (stats?.sportBreakdown ?? []).map((s) => ({

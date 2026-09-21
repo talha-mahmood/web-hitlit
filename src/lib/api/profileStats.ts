@@ -12,6 +12,10 @@ export type ProfileStats = {
   gamesPlayedTotal: number;
   // The part of gamesPlayedTotal that came from regular (non-tournament) games.
   regularGamesPlayedTotal: number;
+  // Same scored-match count as gamesPlayedTotal, plus how many of them this
+  // user's team won — the inputs of the Top Players rating (computeRankingRating).
+  matchesPlayedTotal: number;
+  matchesWonTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
   hoursPlayedTotal: number;
@@ -157,16 +161,22 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
   );
   let scoredGamesTotal = 0;
   let scoredRegularGamesTotal = 0;
+  let scoredWinsTotal = 0;
   if (teamIds.length > 0) {
     const idList = teamIds.join(",");
     const { data: matches, error: matchesError } = await supabase
       .from("tournament_matches")
-      .select("id, games(game_type)")
+      .select("id, winner_team_id, games(game_type)")
       .eq("status", "COMPLETED")
       .or(`team_a_id.in.(${idList}),team_b_id.in.(${idList})`);
     if (matchesError) throw new Error(matchesError.message);
-    const rows = (matches ?? []) as unknown as { id: string; games: { game_type: string | null } | null }[];
+    const rows = (matches ?? []) as unknown as {
+      id: string;
+      winner_team_id: string | null;
+      games: { game_type: string | null } | null;
+    }[];
     scoredGamesTotal = rows.length;
+    scoredWinsTotal = rows.filter((m) => m.winner_team_id && teamIds.includes(m.winner_team_id)).length;
     scoredRegularGamesTotal = rows.filter((m) => m.games?.game_type !== "TOURNAMENT").length;
   }
 
@@ -177,6 +187,8 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
   return {
     gamesPlayedTotal: scoredGamesTotal,
     regularGamesPlayedTotal: scoredRegularGamesTotal,
+    matchesPlayedTotal: scoredGamesTotal,
+    matchesWonTotal: scoredWinsTotal,
     tournamentsPlayedTotal,
     gamesHostedTotal,
     hoursPlayedTotal: Math.round(hoursPlayedTotal * 10) / 10,
