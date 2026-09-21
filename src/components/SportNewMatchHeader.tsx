@@ -6,17 +6,10 @@ import { colors } from "../constants/theme";
 
 export type NewMatchSport = "padel" | "tennis" | "badminton" | "pickleball" | "tableTennis" | "football";
 
-// The two shapes behind the illustration, per sport — the same colours each
-// sport already uses on its own match-list screen. (The screen background
-// itself is the same bg-green-50 as the cricket New Match screen.)
-const NEW_MATCH_THEME: Record<NewMatchSport, { blob: string; mound: string }> = {
-  padel: { blob: "#DBEAFE", mound: "#60A5FA" },
-  tennis: { blob: "#FEF3C7", mound: "#FBBF24" },
-  badminton: { blob: "#FCE7F3", mound: "#F472B6" },
-  pickleball: { blob: "#EDE9FE", mound: "#A78BFA" },
-  tableTennis: { blob: "#FFEDD5", mound: "#FB923C" },
-  football: { blob: "#DCFCE7", mound: "#4ADE80" },
-};
+// The shapes behind the illustration use exactly the cricket New Match screen's
+// colours: the soft top-right circle and the green mound at the bottom-right.
+const BLOB_COLOR = colors.primaryLight;
+const MOUND_COLOR = "#4ADE80";
 
 // --- Small drawing helpers (plain Views, like the cricket stumps and ball) ---
 
@@ -308,7 +301,6 @@ export default function SportNewMatchHeader({
   onBack: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const theme = NEW_MATCH_THEME[sport];
   const Art = ART[sport];
 
   return (
@@ -320,7 +312,7 @@ export default function SportNewMatchHeader({
           width: 220,
           height: 220,
           borderRadius: 110,
-          backgroundColor: theme.blob,
+          backgroundColor: BLOB_COLOR,
           opacity: 0.5,
           top: -110,
           right: -60,
@@ -333,7 +325,7 @@ export default function SportNewMatchHeader({
           width: 280,
           height: 280,
           borderRadius: 140,
-          backgroundColor: theme.mound,
+          backgroundColor: MOUND_COLOR,
           bottom: -230,
           right: -70,
         }}
