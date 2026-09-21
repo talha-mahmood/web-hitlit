@@ -19,7 +19,7 @@ function capitalize(s: string): string {
 
 function StatBlock({ value, label }: { value: string | number; label: string }) {
   return (
-    <View className="bg-white rounded-2xl p-4 items-center" style={{ width: "31%", ...cardShadow }}>
+    <View className="bg-white rounded-2xl p-4 items-center" style={{ width: "48%", ...cardShadow }}>
       <Text className="text-ink font-extrabold text-xl">{value}</Text>
       <Text className="text-muted text-xs mt-1 text-center">{label}</Text>
     </View>
@@ -119,7 +119,6 @@ export default function PlayerProfileScreen() {
 
           {/* Stat grid */}
           <View className="flex-row justify-between mb-3">
-            <StatBlock value={player.gamesPlayedTotal} label="Games Played" />
             <StatBlock value={player.tournamentsPlayedTotal} label="Tournaments" />
             <StatBlock value={player.gamesHostedTotal} label="Hosted" />
           </View>
