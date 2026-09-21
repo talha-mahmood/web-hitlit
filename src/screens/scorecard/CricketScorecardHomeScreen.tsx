@@ -13,12 +13,11 @@ import Bouncy from "../../components/Bouncy";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "CricketHome">;
-type TabKey = "all" | "live" | "upcoming" | "completed";
+type TabKey = "all" | "live" | "completed";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All Matches" },
   { key: "live", label: "Live" },
-  { key: "upcoming", label: "Upcoming" },
   { key: "completed", label: "Completed" },
 ];
 
@@ -190,10 +189,6 @@ export default function CricketScorecardHomeScreen() {
   const filteredMatches = allMatches.filter((m) => {
     if (activeTab === "live") return m.status === "IN_PROGRESS";
     if (activeTab === "completed") return m.status === "COMPLETED";
-    // No scheduled-but-not-yet-started status exists in this app today —
-    // every match starts live at creation — so this tab is honestly empty
-    // rather than showing anything made up.
-    if (activeTab === "upcoming") return false;
     return true;
   });
 
