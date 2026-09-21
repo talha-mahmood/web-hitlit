@@ -10,10 +10,14 @@ export default function LocationPickerField({
   value,
   onChange,
   placeholder,
+  variant,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  // "card": slightly larger "Use my current location" link with a
+  // navigation-arrow icon (used on Create Squad). Default is unchanged.
+  variant?: "card";
 }) {
   const [detecting, setDetecting] = useState(false);
 
@@ -47,8 +51,17 @@ export default function LocationPickerField({
           </Pressable>
         }
       />
-      <Pressable onPress={handleDetect} disabled={detecting} className="mt-1.5 self-start">
-        <Text className="text-primary text-xs font-medium">
+      <Pressable
+        onPress={handleDetect}
+        disabled={detecting}
+        className={variant === "card" ? "mt-3 self-start flex-row items-center" : "mt-1.5 self-start"}
+        style={variant === "card" ? { gap: 8 } : undefined}
+      >
+        {variant === "card" ? <Ionicons name="navigate" size={16} color={colors.primary} /> : null}
+        <Text
+          className={variant === "card" ? "text-primary font-semibold" : "text-primary text-xs font-medium"}
+          style={variant === "card" ? { fontSize: 14 } : undefined}
+        >
           {detecting ? "Detecting your location..." : "Use my current location"}
         </Text>
       </Pressable>

@@ -9,25 +9,24 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import type * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCreateSquad } from "../../hooks/useSquads";
 import { useSports } from "../../hooks/useSports";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
-import { colors, primaryButtonShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
-import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import LocationPickerField from "../../components/LocationPickerField";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
-import SportsBackgroundDecor from "../../components/SportsBackgroundDecor";
-import SportHeroBadge from "../../components/SportHeroBadge";
+import { HomeSportTile } from "../../components/HomeWideCards";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
@@ -37,9 +36,113 @@ type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 
+// White section card with an icon on the left, a title row (with an optional
+// hint on the right) and the control(s) underneath.
+function FormCard({
+  icon,
+  title,
+  required,
+  optional,
+  hint,
+  subtitle,
+  children,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  required?: boolean;
+  optional?: boolean;
+  hint?: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View
+      className="flex-row bg-white"
+      style={{ borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
+    >
+      <Ionicons name={icon} size={22} color="#4B5563" style={{ marginTop: 1 }} />
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-ink" style={{ fontSize: 15.5 }}>
+            <Text className="font-bold">{title}</Text>
+            {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
+            {optional ? <Text className="text-muted" style={{ fontWeight: "400" }}> (Optional)</Text> : null}
+          </Text>
+          {hint ? (
+            <Text className="text-muted" style={{ fontSize: 12.5 }}>
+              {hint}
+            </Text>
+          ) : null}
+        </View>
+        {subtitle ? (
+          <Text className="text-muted" style={{ fontSize: 13, marginTop: 3 }}>
+            {subtitle}
+          </Text>
+        ) : null}
+        <View style={{ marginTop: 12 }}>{children}</View>
+      </View>
+    </View>
+  );
+}
+
+function Chip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center rounded-full"
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        gap: 7,
+        borderWidth: 1.5,
+        borderColor: selected ? colors.primary : colors.border,
+        backgroundColor: selected ? "#DCFCE7" : "white",
+      }}
+    >
+      <Text
+        className={selected ? "font-bold" : "font-medium"}
+        style={{ fontSize: 13.5, color: selected ? colors.primaryDark : colors.ink }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function ChipRow<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; value: T }[];
+  value: T | null;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+      {options.map((o) => (
+        <Chip key={o.value} label={o.label} selected={value === o.value} onPress={() => onChange(o.value)} />
+      ))}
+    </View>
+  );
+}
+
 export default function CreateSquadScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  // Same 4-across sport tiles as Create Game, sized to fit inside the Sport card
+  // (screen padding + card padding + icon column take ~100 off the width).
+  const sportTileGap = 12;
+  const sportTileWidth = (windowWidth - 100 - sportTileGap * 3) / 4;
   const userId = useAuthStore((s) => s.session?.user.id);
   const myGender = useProfileStore((s) => s.profile?.gender);
   const createSquad = useCreateSquad();
@@ -114,117 +217,233 @@ export default function CreateSquadScreen() {
       className="flex-1 bg-green-50"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SportsBackgroundDecor />
-
       {/* Header */}
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
-      >
+      <View className="flex-row items-center px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
         <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Bouncy>
-        <Text className="text-base font-bold text-ink flex-1">Create Squad</Text>
+        <View className="flex-1">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
+            Create Squad
+          </Text>
+          <Text className="text-muted" style={{ fontSize: 13, marginTop: 1 }}>
+            Build your team and find amazing players
+          </Text>
+        </View>
         <Pressable
           onPress={handleCreate}
           disabled={createSquad.isPending}
           style={{
             backgroundColor: colors.primary,
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
+            borderRadius: 14,
+            paddingHorizontal: 22,
+            paddingVertical: 9,
+            minWidth: 66,
+            alignItems: "center",
             ...primaryButtonShadow,
           }}
         >
           {createSquad.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white font-semibold text-sm">Post</Text>
+            <Text className="text-white font-bold" style={{ fontSize: 14.5 }}>
+              Post
+            </Text>
           )}
         </Pressable>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 260, gap: 12 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Custom listing icon (optional) */}
-        <SectionLabel title="Icon" />
-        <Pressable
-          onPress={async () => {
-            const assets = await pickImages({});
-            if (assets[0]) setIconAsset(assets[0]);
+        {/* Intro banner */}
+        {/* Same dark green ("#0E4429") as the custom-icon banner on Create Game. */}
+        <View
+          style={{
+            backgroundColor: "#0E4429",
+            borderRadius: 18,
+            paddingHorizontal: 18,
+            paddingVertical: 16,
+            overflow: "hidden",
+            ...cardShadow,
           }}
-          className="flex-row items-center mb-2"
-          style={{ gap: 12 }}
         >
-          <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
-            {iconAsset ? (
-              <Image source={{ uri: iconAsset.uri }} style={{ width: 56, height: 56 }} resizeMode="cover" />
-            ) : (
-              <Ionicons name="image-outline" size={22} color={colors.muted} />
-            )}
+          <View className="flex-row items-center">
+            <View className="flex-1" style={{ paddingRight: 8 }}>
+              <Text className="text-white font-extrabold" style={{ fontSize: 22 }}>
+                Play Together
+              </Text>
+              <Text className="text-white" style={{ fontSize: 13.5, lineHeight: 19, marginTop: 4, opacity: 0.8 }}>
+                Create a squad and bring people together!
+              </Text>
+            </View>
+            <View className="items-center justify-center" style={{ width: 70, height: 60 }}>
+              <MaterialCommunityIcons name="account-group" size={58} color="#4ADE80" />
+              {[
+                { left: 2, top: 2, rotate: "-40deg" },
+                { left: 30, top: -4, rotate: "0deg" },
+                { left: 58, top: 2, rotate: "40deg" },
+              ].map((p, i) => (
+                <View
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    left: p.left,
+                    top: p.top,
+                    width: 9,
+                    height: 2.5,
+                    borderRadius: 2,
+                    backgroundColor: "#86EFAC",
+                    transform: [{ rotate: p.rotate }],
+                  }}
+                />
+              ))}
+            </View>
+            <View style={{ width: 78, transform: [{ rotate: "-9deg" }] }}>
+              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#86EFAC" }}>
+                {"More\nPlayers\nMore Fun!"}
+              </Text>
+              <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#86EFAC", marginTop: 1 }} />
+            </View>
           </View>
-          <Text className="text-primary font-semibold text-sm">
-            {iconAsset ? "Change icon" : "Add a custom icon (optional)"}
-          </Text>
-        </Pressable>
+        </View>
+
+        {/* Custom listing icon (optional) */}
+        <FormCard
+          icon="pricetag"
+          title="Squad Icon"
+          optional
+          subtitle="Add a custom icon to make your squad stand out"
+        >
+          <Pressable
+            onPress={async () => {
+              const assets = await pickImages({});
+              if (assets[0]) setIconAsset(assets[0]);
+            }}
+            className="flex-row items-center"
+            style={{ gap: 12 }}
+          >
+            <View>
+              <View
+                className="items-center justify-center overflow-hidden"
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderStyle: "dashed",
+                  borderColor: "#86EFAC",
+                  backgroundColor: "#F0FDF4",
+                }}
+              >
+                {iconAsset ? (
+                  <Image source={{ uri: iconAsset.uri }} style={{ width: 64, height: 64 }} resizeMode="cover" />
+                ) : (
+                  <Ionicons name="image-outline" size={26} color={colors.muted} />
+                )}
+              </View>
+              <View
+                className="items-center justify-center"
+                style={{
+                  position: "absolute",
+                  right: -5,
+                  bottom: -5,
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: colors.primary,
+                  borderWidth: 2,
+                  borderColor: "white",
+                }}
+              >
+                <Ionicons name="add" size={13} color="white" />
+              </View>
+            </View>
+            <View className="rounded-2xl" style={{ backgroundColor: "#DCFCE7", paddingHorizontal: 22, paddingVertical: 14 }}>
+              <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 14.5 }}>
+                {iconAsset ? "Change icon" : "Add a custom icon"}
+              </Text>
+            </View>
+          </Pressable>
+        </FormCard>
 
         {/* Name */}
-        <SectionLabel title="Squad Name" required />
-        <FieldInput
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Weekend Warriors"
-          maxLength={80}
-        />
+        <FormCard icon="people" title="Squad Name" required>
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <View
+              className="items-center justify-center"
+              style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#F3F4F6" }}
+            >
+              <Ionicons name="people" size={20} color="#4B5563" />
+            </View>
+            <View className="flex-1">
+              <FieldInput
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g. Weekend Warriors"
+                maxLength={80}
+              />
+            </View>
+          </View>
+        </FormCard>
 
         {/* Sport */}
-        <SectionLabel title="Sport" required />
-        {selectedSportName && (
-          <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
-            <SportHeroBadge sportName={selectedSportName} />
-            <Text className="text-ink font-semibold flex-1">{selectedSportName}</Text>
-          </View>
-        )}
-        <PillRow
-          options={(sports ?? []).map((s) => ({ label: s.name, value: s.id }))}
-          value={sportId}
-          onChange={setSportId}
-        />
+        <FormCard icon="trophy" title="Sport" required hint="Select your sport">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ gap: sportTileGap }}
+          >
+            {(sports ?? []).map((s) => (
+              <HomeSportTile
+                key={s.id}
+                name={s.name}
+                width={sportTileWidth}
+                selected={sportId === s.id}
+                onPress={() => setSportId(s.id)}
+              />
+            ))}
+          </ScrollView>
+        </FormCard>
 
         {/* Skill Level */}
-        <SectionLabel title="Skill Level" required />
-        <PillRow<SkillLevel>
-          options={[
-            { label: "Beginner", value: "beginner" },
-            { label: "Intermediate", value: "intermediate" },
-            { label: "Expert", value: "expert" },
-          ]}
-          value={skillLevel}
-          onChange={setSkillLevel}
-        />
+        <FormCard icon="stats-chart" title="Skill Level" required hint="Choose your squad's level">
+          <ChipRow<SkillLevel>
+            options={[
+              { label: "Beginner", value: "beginner" },
+              { label: "Intermediate", value: "intermediate" },
+              { label: "Expert", value: "expert" },
+            ]}
+            value={skillLevel}
+            onChange={setSkillLevel}
+          />
+        </FormCard>
 
         {/* Open To */}
-        <SectionLabel title="Open To" icon="people-outline" />
-        <PillRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
+        <FormCard icon="people" title="Open To">
+          <ChipRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
+        </FormCard>
 
         {/* Location */}
-        <SectionLabel title="Location" required />
-        <LocationPickerField value={location} onChange={setLocation} />
+        <FormCard icon="location" title="Location" required>
+          <LocationPickerField value={location} onChange={setLocation} variant="card" />
+        </FormCard>
 
         {/* Description */}
-        <SectionLabel title="Description" />
-        <FieldInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Notes about your squad (how often you play, vibe, etc.)"
-          multiline
-          numberOfLines={3}
-          maxLength={300}
-          style={{ height: 88, textAlignVertical: "top" }}
-        />
+        <FormCard icon="document-text" title="Description">
+          <FieldInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Notes about your squad (how often you play, vibe, etc.)"
+            multiline
+            numberOfLines={3}
+            maxLength={300}
+            style={{ height: 88, textAlignVertical: "top" }}
+          />
+        </FormCard>
       </ScrollView>
     </KeyboardAvoidingView>
   );
