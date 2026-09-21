@@ -11,7 +11,8 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
@@ -112,6 +113,7 @@ export default function CommentThreadScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
   const [draft, setDraft] = useState("");
@@ -181,9 +183,10 @@ export default function CommentThreadScreen() {
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
+      {isFocused ? <StatusBar style="light" /> : null}
       <View
-        className="flex-row items-center bg-primary px-4 pb-4"
-        style={{ paddingTop: insets.top + 16, gap: 12 }}
+        className="flex-row items-center px-4 pb-4"
+        style={{ paddingTop: insets.top + 16, gap: 12, backgroundColor: "#14532D" }}
       >
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color="white" />
