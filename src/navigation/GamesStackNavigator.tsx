@@ -10,6 +10,7 @@ import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
 import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
 import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
 import BookingConfirmationScreen from "../screens/venues/BookingConfirmationScreen";
+import NewMatchScreen from "../screens/scorecard/NewMatchScreen";
 import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
 import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
 import PadelNewMatchScreen from "../screens/scorecard/PadelNewMatchScreen";
@@ -42,6 +43,7 @@ export type GamesStackParamList = {
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
   BookingConfirmation: BookingConfirmationParams;
+  NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
   PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
@@ -74,6 +76,7 @@ export default function GamesStackNavigator() {
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />
       <Stack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+      <Stack.Screen name="NewMatch" component={NewMatchScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
       <Stack.Screen name="PadelNewMatch" component={PadelNewMatchScreen} />

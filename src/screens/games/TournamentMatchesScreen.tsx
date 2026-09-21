@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -13,15 +12,13 @@ import {
   useGeneratePoolMatches,
   useEnterMatchResult,
   useResetMatchResult,
-  useLinkCricketMatch,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
-import { useCreateCricketMatch, useCricketMatch } from "../../hooks/useCricket";
-import { friendlyCricketError, ballRowToEvent } from "../../lib/api/cricket";
+import { useCricketMatch } from "../../hooks/useCricket";
+import { ballRowToEvent } from "../../lib/api/cricket";
 import { computeRunRate } from "../../lib/cricketScoring";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
-import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -930,14 +927,11 @@ export default function TournamentMatchesScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
-  const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
 
   const { data: game, isLoading: gameLoading } = useGameDetail(params.gameId);
   const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: pools } = useTournamentPools(params.gameId);
-  const createCricketMatch = useCreateCricketMatch();
-  const linkCricketMatch = useLinkCricketMatch(params.gameId);
 
   if (gameLoading || teamsLoading || !game) {
     return (
@@ -966,12 +960,9 @@ export default function TournamentMatchesScreen() {
   // "Go To Scorecard" exists for every sport, and only once the venue is
   // settled — a real booking for a dropdown-picked venue, or immediately
   // for a manually typed one (see the identical rule on GameDetailScreen's
-  // "Book Venue"). Cricket keeps its own lightweight toss/overs modal
-  // (StartScorecardModal) since its Live Scoring needs a real coin-toss
-  // decided right before play; every other sport instead jumps straight to
-  // that sport's own New Match screen with team names/rosters/venue
-  // pre-filled and locked, letting the host pick the rest of that sport's
-  // match rules there (see handleGoToScorecard below).
+  // "Book Venue"). It opens that sport's own New Match screen with team
+  // names/rosters/venue pre-filled and locked, letting the host pick the
+  // rest of the match rules there (see handleGoToScorecard below).
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = sportName.includes("cricket");
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
@@ -994,15 +985,6 @@ export default function TournamentMatchesScreen() {
   }
 
   const handleGoToScorecard = (match: TournamentMatch) => {
-    if (isCricketSport) {
-      if (match.cricket_match_id) {
-        navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
-        return;
-      }
-      setScorecardMatch(match);
-      return;
-    }
-
     if (!match.team_a || !match.team_b) return;
     const prefill: ScorecardPrefill = {
       tournamentMatchId: match.id,
@@ -1013,6 +995,12 @@ export default function TournamentMatchesScreen() {
       teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
     };
+
+    if (isCricketSport) {
+      if (match.cricket_match_id) navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+      else navigation.navigate("NewMatch", { prefill });
+      return;
+    }
 
     switch (sportName) {
       case "padel":
@@ -1040,37 +1028,6 @@ export default function TournamentMatchesScreen() {
         else navigation.navigate("FootballNewMatch", { prefill });
         return;
     }
-  };
-
-  const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {
-    if (!scorecardMatch || !userId || !scorecardMatch.team_a || !scorecardMatch.team_b) return;
-    createCricketMatch.mutate(
-      {
-        userId,
-        teamAName: scorecardMatch.team_a.name,
-        teamBName: scorecardMatch.team_b.name,
-        teamAPlayers: rosterByTeamId.get(scorecardMatch.team_a.id) ?? [],
-        teamBPlayers: rosterByTeamId.get(scorecardMatch.team_b.id) ?? [],
-        oversLimit: toss.oversLimit,
-        tossWinner: toss.tossWinner,
-        tossDecision: toss.tossDecision,
-      },
-      {
-        onSuccess: ({ matchId }) => {
-          linkCricketMatch.mutate(
-            { matchId: scorecardMatch.id, cricketMatchId: matchId },
-            {
-              onSuccess: () => {
-                setScorecardMatch(null);
-                navigation.navigate("LiveScoring", { matchId });
-              },
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not link the scorecard.")),
-            }
-          );
-        },
-        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start the scorecard.")),
-      }
-    );
   };
 
   return (
@@ -1165,14 +1122,6 @@ export default function TournamentMatchesScreen() {
         )}
       </ScrollView>
 
-      <StartScorecardModal
-        visible={!!scorecardMatch}
-        onClose={() => setScorecardMatch(null)}
-        teamAName={scorecardMatch?.team_a?.name ?? "Team A"}
-        teamBName={scorecardMatch?.team_b?.name ?? "Team B"}
-        submitting={createCricketMatch.isPending || linkCricketMatch.isPending}
-        onSubmit={handleStartScorecard}
-      />
     </View>
   );
 }

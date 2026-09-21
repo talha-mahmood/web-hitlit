@@ -17,9 +17,7 @@ import {
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
-import { useTournamentMatches, useLinkCricketMatch } from "../../hooks/useTournamentMatches";
-import { useCreateCricketMatch } from "../../hooks/useCricket";
-import { friendlyCricketError } from "../../lib/api/cricket";
+import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow } from "../../constants/theme";
@@ -27,10 +25,9 @@ import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
 import ChatIcon from "../../components/ChatIcon";
-import StartScorecardModal from "../../components/StartScorecardModal";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
+import { soloAwareTeamName, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -305,9 +302,6 @@ function HeadToHeadMatchCard({
 }) {
   const navigation = useNavigation<Nav>();
   const { data: matches } = useTournamentMatches(game.id);
-  const createCricketMatch = useCreateCricketMatch();
-  const linkCricketMatch = useLinkCricketMatch(game.id);
-  const [scorecardMatch, setScorecardMatch] = useState<TournamentMatch | null>(null);
 
   const match = (matches ?? [])[0] ?? null;
   // A team with just one joined player is shown by that player's name.
@@ -338,21 +332,10 @@ function HeadToHeadMatchCard({
     );
   }
 
-  // Cricket keeps its toss/overs modal; every other sport opens that sport's
-  // own New Match screen with names/roster/venue pre-filled and locked (same
-  // as the tournament "Go To Scorecard" flow).
+  // Opens that sport's own New Match screen with names/roster/venue
+  // pre-filled and locked (or reopens Live Scoring if already started).
   const handleGoToScorecard = () => {
-    if (!match) return;
-    if (isCricketSport) {
-      if (match.cricket_match_id) {
-        navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
-        return;
-      }
-      setScorecardMatch(match);
-      return;
-    }
-
-    if (!match.team_a || !match.team_b) return;
+    if (!match?.team_a || !match?.team_b) return;
     const prefill: ScorecardPrefill = {
       tournamentMatchId: match.id,
       gameId: game.id,
@@ -362,6 +345,12 @@ function HeadToHeadMatchCard({
       teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
     };
+
+    if (isCricketSport) {
+      if (match.cricket_match_id) navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+      else navigation.navigate("NewMatch", { prefill });
+      return;
+    }
 
     switch (sportName) {
       case "padel":
@@ -391,37 +380,6 @@ function HeadToHeadMatchCard({
     }
   };
 
-  const handleStartScorecard = (toss: { oversLimit: number; tossWinner: "A" | "B"; tossDecision: "BAT" | "BOWL" }) => {
-    if (!scorecardMatch?.team_a || !scorecardMatch?.team_b) return;
-    createCricketMatch.mutate(
-      {
-        userId: game.creator_id,
-        teamAName: scorecardMatch.team_a.name,
-        teamBName: scorecardMatch.team_b.name,
-        teamAPlayers: rosterByTeamId.get(scorecardMatch.team_a.id) ?? [],
-        teamBPlayers: rosterByTeamId.get(scorecardMatch.team_b.id) ?? [],
-        oversLimit: toss.oversLimit,
-        tossWinner: toss.tossWinner,
-        tossDecision: toss.tossDecision,
-      },
-      {
-        onSuccess: ({ matchId }) => {
-          linkCricketMatch.mutate(
-            { matchId: scorecardMatch.id, cricketMatchId: matchId },
-            {
-              onSuccess: () => {
-                setScorecardMatch(null);
-                navigation.navigate("LiveScoring", { matchId });
-              },
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not link the scorecard.")),
-            }
-          );
-        },
-        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start the scorecard.")),
-      }
-    );
-  };
-
   return (
     <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
       <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
@@ -443,14 +401,6 @@ function HeadToHeadMatchCard({
         )}
       </View>
 
-      <StartScorecardModal
-        visible={!!scorecardMatch}
-        onClose={() => setScorecardMatch(null)}
-        teamAName={scorecardMatch?.team_a?.name ?? "Team A"}
-        teamBName={scorecardMatch?.team_b?.name ?? "Team B"}
-        submitting={createCricketMatch.isPending || linkCricketMatch.isPending}
-        onSubmit={handleStartScorecard}
-      />
     </View>
   );
 }

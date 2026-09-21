@@ -27,7 +27,7 @@ import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 export type ScorecardStackParamList = {
   ScorecardHome: undefined;
   CricketHome: undefined;
-  NewMatch: undefined;
+  NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
   PadelHome: undefined;

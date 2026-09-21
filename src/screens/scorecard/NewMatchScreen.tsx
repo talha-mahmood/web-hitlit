@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useCreateCricketMatch } from "../../hooks/useCricket";
 import { friendlyCricketError } from "../../lib/api/cricket";
+import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
+type Route = RouteProp<ScorecardStackParamList, "NewMatch">;
+
+const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 
 const OVERS_PRESETS = ["2", "5", "10", "20", "50"];
 
@@ -54,12 +58,16 @@ function TeamCard({
   name,
   onNameChange,
   onPlayersChange,
+  nameLocked,
+  playersLocked,
 }: {
   letter: "A" | "B";
   players: string[];
   name: string;
   onNameChange: (v: string) => void;
   onPlayersChange: (players: string[]) => void;
+  nameLocked?: boolean;
+  playersLocked?: boolean;
 }) {
   const [draft, setDraft] = useState("");
 
@@ -107,8 +115,10 @@ function TeamCard({
           onChangeText={onNameChange}
           placeholder={letter === "A" ? "e.g. Strikers" : "e.g. Warriors"}
           maxLength={40}
+          editable={!nameLocked}
+          containerStyle={nameLocked ? LOCKED_FIELD_STYLE : undefined}
           right={
-            name.length > 0 ? (
+            name.length > 0 && !nameLocked ? (
               <Pressable onPress={() => onNameChange("")} hitSlop={8}>
                 <Ionicons name="close" size={18} color={colors.muted} />
               </Pressable>
@@ -119,6 +129,7 @@ function TeamCard({
         <Text className="text-ink font-semibold text-sm mb-2 mt-4">
           Team {letter} Players <Text className="text-red-500">*</Text>
         </Text>
+        {!playersLocked && (
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <View className="flex-1">
             <FieldInput
@@ -138,6 +149,12 @@ function TeamCard({
             <Ionicons name="add" size={20} color="white" />
           </Pressable>
         </View>
+        )}
+        {playersLocked && players.length < 2 && (
+          <Text className="text-xs mt-1" style={{ color: colors.danger }}>
+            Cricket needs at least 2 players per team — add more players to this team in the tournament first.
+          </Text>
+        )}
         {players.length > 0 && (
           <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
             {players.map((p, i) => (
@@ -147,9 +164,11 @@ function TeamCard({
                 style={{ gap: 6 }}
               >
                 <Text className="text-primary text-sm font-medium">{p}</Text>
-                <Pressable onPress={() => onPlayersChange(players.filter((_, idx) => idx !== i))} hitSlop={6}>
-                  <Ionicons name="close-circle" size={16} color={colors.primary} />
-                </Pressable>
+                {!playersLocked && (
+                  <Pressable onPress={() => onPlayersChange(players.filter((_, idx) => idx !== i))} hitSlop={6}>
+                    <Ionicons name="close-circle" size={16} color={colors.primary} />
+                  </Pressable>
+                )}
               </View>
             ))}
           </View>
@@ -161,18 +180,22 @@ function TeamCard({
 
 export default function NewMatchScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
+  const prefill = params?.prefill;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateCricketMatch();
+  const linkCricketMatch = useLinkCricketMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
-  const [teamAPlayers, setTeamAPlayers] = useState<string[]>([]);
-  const [teamBPlayers, setTeamBPlayers] = useState<string[]>([]);
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  // Players come pre-filled from the tournament roster and are locked.
+  const [teamAPlayers, setTeamAPlayers] = useState<string[]>(prefill?.teamAPlayers ?? []);
+  const [teamBPlayers, setTeamBPlayers] = useState<string[]>(prefill?.teamBPlayers ?? []);
   const [oversLimit, setOversLimit] = useState<string | null>(null);
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(prefill?.venue ?? "");
 
   const isValid =
     teamAName.trim().length > 0 &&
@@ -199,7 +222,12 @@ export default function NewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => navigation.replace("LiveScoring", { matchId }),
+        onSuccess: ({ matchId }) => {
+          if (prefill) {
+            linkCricketMatch.mutate({ matchId: prefill.tournamentMatchId, cricketMatchId: matchId });
+          }
+          navigation.replace("LiveScoring", { matchId });
+        },
         onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not create match.")),
       }
     );
@@ -297,8 +325,17 @@ export default function NewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} />
-        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} />
+        {prefill && (
+          <View className="flex-row rounded-xl px-3 py-2.5 mb-4" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
+            <Ionicons name="information-circle" size={16} color={colors.primaryDark} style={{ marginTop: 1 }} />
+            <Text className="text-xs flex-1" style={{ color: colors.primaryDark }}>
+              Team names, players and venue come from the tournament match and can't be changed here — everything else is up to you.
+            </Text>
+          </View>
+        )}
+
+        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} nameLocked={!!prefill} playersLocked={!!prefill} />
+        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} nameLocked={!!prefill} playersLocked={!!prefill} />
 
         <CardSection icon="location-outline" title="Venue">
           <FieldInput
@@ -306,6 +343,8 @@ export default function NewMatchScreen() {
             onChangeText={setVenue}
             placeholder="e.g. Karachi Cricket Ground"
             maxLength={60}
+            editable={!prefill}
+            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
           />
         </CardSection>
 

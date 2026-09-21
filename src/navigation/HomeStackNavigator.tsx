@@ -19,6 +19,7 @@ import EditSquadScreen from "../screens/squads/EditSquadScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import NewMatchScreen from "../screens/scorecard/NewMatchScreen";
 import LiveScoringScreen from "../screens/scorecard/LiveScoringScreen";
 import FullScorecardScreen from "../screens/scorecard/FullScorecardScreen";
 import PadelNewMatchScreen from "../screens/scorecard/PadelNewMatchScreen";
@@ -59,6 +60,7 @@ export type HomeStackParamList = {
   TournamentMatches: { gameId: string };
   PlayersDashboard: undefined;
   PlayerProfile: { userId: string };
+  NewMatch: { prefill?: ScorecardPrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
   PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
@@ -103,6 +105,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
+      <Stack.Screen name="NewMatch" component={NewMatchScreen} />
       <Stack.Screen name="LiveScoring" component={LiveScoringScreen} />
       <Stack.Screen name="FullScorecard" component={FullScorecardScreen} />
       <Stack.Screen name="PadelNewMatch" component={PadelNewMatchScreen} />
