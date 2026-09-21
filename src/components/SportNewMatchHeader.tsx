@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, ClipPath, Defs, G, Line, Polygon } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 
@@ -165,6 +166,73 @@ function Paddle({
   );
 }
 
+// A real football (truncated-icosahedron pattern): a black pentagon in the
+// middle, a seam running out of each of its corners to five more pentagons
+// that sit on the rim (clipped by the ball's outline), and the seams joining
+// neighbouring rim pentagons.
+type Pt = { x: number; y: number };
+const polar = (cx: number, cy: number, r: number, deg: number): Pt => ({
+  x: cx + r * Math.sin((deg * Math.PI) / 180),
+  y: cy - r * Math.cos((deg * Math.PI) / 180),
+});
+const pentagon = (cx: number, cy: number, r: number, startDeg: number): Pt[] =>
+  Array.from({ length: 5 }, (_, k) => polar(cx, cy, r, startDeg + k * 72));
+const pointsAttr = (pts: Pt[]) => pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+const BALL_INK = "#111827";
+const CENTER_PENTAGON = pentagon(50, 50, 17, 0);
+const RIM_ANGLES = [0, 72, 144, 216, 288];
+const RIM_PENTAGONS = RIM_ANGLES.map((a) => {
+  const c = polar(50, 50, 46, a);
+  // One corner points straight back at the ball's centre.
+  return pentagon(c.x, c.y, 14, a + 180);
+});
+const SEAMS: [Pt, Pt][] = [
+  // Centre pentagon corner -> the tip of the rim pentagon in the same direction.
+  ...RIM_ANGLES.map((a, i): [Pt, Pt] => [CENTER_PENTAGON[i], RIM_PENTAGONS[i][0]]),
+  // Neighbouring rim pentagons: join their closest pair of corners.
+  ...RIM_PENTAGONS.map((p, i): [Pt, Pt] => {
+    const q = RIM_PENTAGONS[(i + 1) % 5];
+    let best: [Pt, Pt] = [p[0], q[0]];
+    let bestD = Infinity;
+    for (const a of p) {
+      for (const b of q) {
+        const d = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+        if (d < bestD) {
+          bestD = d;
+          best = [a, b];
+        }
+      }
+    }
+    return best;
+  }),
+];
+
+function FootballBall({ size, style }: { size: number; style?: object }) {
+  return (
+    <View style={[{ position: "absolute", width: size, height: size }, style]}>
+      <Svg width={size} height={size} viewBox="0 0 100 100">
+        <Defs>
+          <ClipPath id="footballClip">
+            <Circle cx={50} cy={50} r={48} />
+          </ClipPath>
+        </Defs>
+        <Circle cx={50} cy={50} r={48} fill="white" />
+        <G clipPath="url(#footballClip)">
+          {SEAMS.map(([a, b], i) => (
+            <Line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={BALL_INK} strokeWidth={2.2} strokeLinecap="round" />
+          ))}
+          {RIM_PENTAGONS.map((p, i) => (
+            <Polygon key={i} points={pointsAttr(p)} fill={BALL_INK} stroke={BALL_INK} strokeWidth={1.5} strokeLinejoin="round" />
+          ))}
+          <Polygon points={pointsAttr(CENTER_PENTAGON)} fill={BALL_INK} stroke={BALL_INK} strokeWidth={1.5} strokeLinejoin="round" />
+        </G>
+        <Circle cx={50} cy={50} r={48} fill="none" stroke={BALL_INK} strokeWidth={3} />
+      </Svg>
+    </View>
+  );
+}
+
 function FootballArt() {
   const post = "#F8FAFC";
   const edge = "rgba(15,23,42,0.18)";
@@ -184,11 +252,9 @@ function FootballArt() {
         <View style={{ position: "absolute", left: 0, top: 0, width: 5, height: 58, borderRadius: 2.5, backgroundColor: post, borderWidth: 0.5, borderColor: edge }} />
         <View style={{ position: "absolute", right: 0, top: 0, width: 5, height: 58, borderRadius: 2.5, backgroundColor: post, borderWidth: 0.5, borderColor: edge }} />
       </View>
-      {/* Ball resting beside the goal. */}
-      <Ball size={30} color="white" border="#94A3B8" seam={false} style={{ right: 0, bottom: 2 }} />
-      <View style={{ position: "absolute", right: 10, bottom: 12, width: 11, height: 11, borderRadius: 5.5, backgroundColor: "#1F2937" }} />
-      <View style={{ position: "absolute", right: 3, bottom: 5, width: 6, height: 6, borderRadius: 3, backgroundColor: "#1F2937" }} />
-      <View style={{ position: "absolute", right: 22, bottom: 20, width: 6, height: 6, borderRadius: 3, backgroundColor: "#1F2937" }} />
+      {/* Ball resting beside the goal, with a little ground shadow. */}
+      <View style={{ position: "absolute", right: 1, bottom: -1, width: 34, height: 6, borderRadius: 3, backgroundColor: "rgba(15,23,42,0.18)" }} />
+      <FootballBall size={36} style={{ right: 0, bottom: 2 }} />
     </>
   );
 }
