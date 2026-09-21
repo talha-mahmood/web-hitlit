@@ -234,7 +234,11 @@ export default function TennisHomeScreen() {
       ) : (
         <FlatList
           data={filteredMatches}
-          keyExtractor={(item) => item.id}
+          // Keyed by status too so a card that flips LIVE -> COMPLETED while this
+          // screen is covered by Live Scoring remounts fresh, and clipped-subview
+          // recycling is off — otherwise Android can leave that card drawn blank.
+          keyExtractor={(item) => `${item.id}:${item.status}`}
+          removeClippedSubviews={false}
           contentContainerStyle={{ padding: 20, paddingTop: 0, gap: 14 }}
           ListFooterComponent={
             <View className="items-center" style={{ gap: 4, marginTop: filteredMatches.length > 0 ? 24 : 64 }}>
