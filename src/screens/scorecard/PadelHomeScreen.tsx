@@ -21,7 +21,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-function computeMatchState(match: PadelMatchDetail) {
+export function computeMatchState(match: PadelMatchDetail) {
   const config: PadelMatchConfig = {
     format: match.format as PadelMatchConfig["format"],
     deuceType: match.deuce_type as PadelMatchConfig["deuceType"],

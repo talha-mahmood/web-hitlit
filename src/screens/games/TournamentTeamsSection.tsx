@@ -17,6 +17,7 @@ import {
   useGameSquadInvitesForGame,
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
+import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
@@ -394,6 +395,7 @@ function HeadToHeadMatchCard({
             {match.is_draw ? "Draw" : `${match.winner_team?.name} won`}
           </Text>
         ) : null}
+        {match ? <LinkedMatchScoreDetails match={match} /> : null}
         {canGoToScorecard && (
           <Pressable onPress={handleGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
             <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>

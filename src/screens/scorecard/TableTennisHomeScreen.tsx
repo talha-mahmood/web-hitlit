@@ -21,7 +21,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-function computeMatchState(match: TableTennisMatchDetail) {
+export function computeMatchState(match: TableTennisMatchDetail) {
   const config: TableTennisMatchConfig = {
     playMode: match.play_mode as TableTennisMatchConfig["playMode"],
     firstServingTeam: match.first_serving_team as Team,

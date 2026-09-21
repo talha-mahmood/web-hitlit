@@ -21,7 +21,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-function computeMatchState(match: PickleballMatchDetail) {
+export function computeMatchState(match: PickleballMatchDetail) {
   const config: PickleballMatchConfig = {
     scoringMode: match.scoring_mode as PickleballMatchConfig["scoringMode"],
     playMode: match.play_mode as PickleballMatchConfig["playMode"],

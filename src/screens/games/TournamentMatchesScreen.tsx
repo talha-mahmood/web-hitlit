@@ -19,6 +19,7 @@ import { ballRowToEvent } from "../../lib/api/cricket";
 import { computeRunRate } from "../../lib/cricketScoring";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
+import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -163,6 +164,7 @@ function MatchRow({
           )}
         </View>
         {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
+        <LinkedMatchScoreDetails match={match} />
       </View>
     );
   }
@@ -202,6 +204,7 @@ function MatchRow({
         </View>
       )}
       {match.cricket_match_id && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
+        <LinkedMatchScoreDetails match={match} />
       {showScorecardButton && match.team_a && match.team_b && (
         <Pressable
           onPress={onGoToScorecard}

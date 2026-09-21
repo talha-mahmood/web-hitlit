@@ -21,7 +21,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-function computeMatchState(match: BadmintonMatchDetail) {
+export function computeMatchState(match: BadmintonMatchDetail) {
   const config: BadmintonMatchConfig = {
     playMode: match.play_mode as BadmintonMatchConfig["playMode"],
     firstServingTeam: match.first_serving_team as Team,

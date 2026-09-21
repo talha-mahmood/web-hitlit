@@ -33,7 +33,7 @@ const PHASE_SHORT_LABEL: Partial<Record<Phase, string>> = {
   PENALTIES: "Penalties",
 };
 
-function computeCurrentScore(match: FootballMatchDetail) {
+export function computeCurrentScore(match: FootballMatchDetail) {
   const goals = [...match.football_goals].sort((a, b) => a.seq - b.seq).map(goalRowToEvent);
   const summary = computeScoreSummary(goals, match.phase as Phase, !!match.extra_time_first_kickoff_at);
   return summary.current;
