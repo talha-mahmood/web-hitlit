@@ -68,6 +68,7 @@ export default function BookingCheckoutScreen() {
         userId: session.user.id,
         date,
         slots,
+        gameId: forGameId,
       });
 
       // Launched from a tournament's "Book Venue" button — link the booking

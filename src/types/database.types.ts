@@ -202,6 +202,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           end_time: string
+          game_id: string | null
           id: string
           payment_status: Database["public"]["Enums"]["booking_payment_status_type"]
           start_time: string
@@ -216,6 +217,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           end_time: string
+          game_id?: string | null
           id?: string
           payment_status?: Database["public"]["Enums"]["booking_payment_status_type"]
           start_time: string
@@ -230,6 +232,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           end_time?: string
+          game_id?: string | null
           id?: string
           payment_status?: Database["public"]["Enums"]["booking_payment_status_type"]
           start_time?: string
@@ -244,6 +247,13 @@ export type Database = {
             columns: ["court_id"]
             isOneToOne: false
             referencedRelation: "court"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
             referencedColumns: ["id"]
           },
           {

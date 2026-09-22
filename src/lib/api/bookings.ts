@@ -28,6 +28,11 @@ export type CreateBookingsParams = {
   // or not) hours in one checkout, each still individually protected by the
   // bookings_no_overlap exclusion constraint.
   slots: { startTime: string; endTime: string; price: number }[];
+  // Set when this booking is for a game/tournament's venue (the "Book Venue"
+  // flow) — expire_past_games() uses the latest end_time across all of a
+  // game's booking rows so the game stays visible until the last booked
+  // slot has actually passed, not just the game's own declared end time.
+  gameId?: string;
 };
 
 /** Calls SECURITY DEFINER RPC — returns only start+end times, no personal data. */
@@ -41,7 +46,7 @@ export async function fetchBookedSlots(courtId: string, date: string) {
 }
 
 export async function createBookings(params: CreateBookingsParams) {
-  const { courtId, userId, date, slots } = params;
+  const { courtId, userId, date, slots, gameId } = params;
 
   // A single insert with multiple rows either all succeed or all fail
   // together — if any one slot was just taken by someone else, the whole
@@ -58,6 +63,7 @@ export async function createBookings(params: CreateBookingsParams) {
         total_amount: Math.round(slot.price),
         status: "CONFIRMED" as const,
         payment_status: "unpaid" as const,
+        game_id: gameId ?? null,
       }))
     )
     .select();
