@@ -217,6 +217,17 @@ export default function LiveScoringScreen() {
   const chaseComplete = !!(target && inningsState && inningsState.runs >= target);
   const inningsOver = !!inningsState?.isComplete || chaseComplete;
 
+  // "Start 2nd Innings" chains two mutations (mark innings 1 complete, then
+  // — in its onSuccess — insert the innings 2 row). In the network gap
+  // between them, innings 1 is already completed but innings 2 doesn't
+  // exist yet, so currentInnings (the not-yet-completed innings) is
+  // momentarily undefined — which used to make the button briefly flash to
+  // "View Final Scorecard" before snapping back. Looking at the full innings
+  // list instead of the transient currentInnings avoids that gap.
+  const innings1Row = match?.cricket_innings.find((i) => i.innings_number === 1);
+  const innings2Row = match?.cricket_innings.find((i) => i.innings_number === 2);
+  const isBetweenInnings = !!innings1Row?.is_completed && !innings2Row;
+
   const effectiveStriker = inningsState?.striker ?? pendingStriker;
   const effectiveNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
   const effectiveBowler = inningsState?.currentBowler ?? pendingBowler;
@@ -499,9 +510,9 @@ export default function LiveScoringScreen() {
           <View className="bg-white rounded-2xl border border-border p-5 items-center" style={cardShadow}>
             <Ionicons name="checkmark-circle" size={40} color={colors.primary} />
             <Text className="text-ink font-bold text-lg mt-2">
-              {currentInnings?.innings_number === 1 ? "Innings Complete" : "Match Complete"}
+              {currentInnings?.innings_number === 1 || isBetweenInnings ? "Innings Complete" : "Match Complete"}
             </Text>
-            {currentInnings?.innings_number === 1 ? (
+            {currentInnings?.innings_number === 1 || isBetweenInnings ? (
               <Pressable
                 onPress={handleStartSecondInnings}
                 disabled={markInningsComplete.isPending || startSecondInnings.isPending}

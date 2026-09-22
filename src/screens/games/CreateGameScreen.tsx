@@ -875,7 +875,7 @@ export default function CreateGameScreen() {
                     style={chipStyle(selected)}
                   >
                     <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {d === 1 ? "1 Day" : `${d} Days`}
+                      {d} day
                     </Text>
                   </Pressable>
                 );

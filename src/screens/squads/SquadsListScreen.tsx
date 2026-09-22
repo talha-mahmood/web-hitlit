@@ -329,7 +329,7 @@ export default function SquadsListScreen() {
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search squads, sport, location..."
+          placeholder="Search squads..."
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}

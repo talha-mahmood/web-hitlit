@@ -192,7 +192,7 @@ export default function VenuesListScreen() {
         <FieldInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search venues, sport, location..."
+          placeholder="Search venues..."
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}

@@ -331,7 +331,7 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         {isTournament ? (
           <PillRow
             options={TOURNAMENT_DURATIONS_DAYS.map((d) => ({
-              label: d === 1 ? "1 Day" : `${d} Days`,
+              label: `${d} day`,
               value: String(d),
             }))}
             value={String(durationDays)}

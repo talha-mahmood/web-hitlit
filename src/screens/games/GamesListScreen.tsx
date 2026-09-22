@@ -489,7 +489,7 @@ export default function GamesListScreen() {
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder={isTournamentList ? "Search tournaments, sport, location..." : "Search games, sport, location..."}
+          placeholder={isTournamentList ? "Search tournaments..." : "Search games, tournaments..."}
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}
