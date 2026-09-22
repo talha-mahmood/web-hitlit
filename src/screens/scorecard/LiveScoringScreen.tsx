@@ -50,12 +50,15 @@ const WICKET_TYPES: { label: string; value: WicketType }[] = [
   { label: "Retired Out", value: "RETIRED_OUT" },
 ];
 
-// A single continuous flow for the three questions needed before scoring
-// can start (opening striker, non-striker, opening bowler) — one modal that
-// steps through all three instead of three separate popups closing and
-// reopening one after another, with a progress stepper, already-picked
-// names kept visible as chips, and avatar-style rows for each player.
-const INNINGS_SETUP_STEPS = [
+// The three questions needed before scoring can start at the very beginning
+// of an innings (opening striker, non-striker, opening bowler) share one
+// continuous modal with a progress stepper instead of three separate popups
+// closing and reopening one after another. The same modal is reused
+// mid-innings — a wicket needs a replacement batsman, an over completing
+// needs a new bowler — but those are each a single standalone question, so
+// they get their own wording ("Select Next Batsman" / "Select Next Bowler")
+// and no stepper, since there's nothing else queued up after them.
+const OPENING_SETUP_STEPS = [
   { key: "striker", title: "Select Opening Striker", subtitle: "Who's facing the first ball?" },
   { key: "nonStriker", title: "Select Non-Striker", subtitle: "Who's at the other end?" },
   { key: "bowler", title: "Select Opening Bowler", subtitle: "Who's bowling this over?" },
@@ -75,74 +78,100 @@ function PlayerAvatar({ name }: { name: string }) {
 }
 
 function InningsSetupModal({
-  step,
+  kind,
+  isOpeningSetup,
   strikerName,
   nonStrikerName,
   battingNames,
   bowlingNames,
+  excludeForBatsman,
   excludeForBowler,
   onSelect,
   onBack,
 }: {
-  step: 0 | 1 | 2;
+  kind: "striker" | "nonStriker" | "bowler";
+  // True only for the very start of the innings, before the first ball —
+  // false for any later replacement (wicket, new over), even though it
+  // reuses the same "striker"/"nonStriker"/"bowler" kind.
+  isOpeningSetup: boolean;
   strikerName: string | null;
   nonStrikerName: string | null;
   battingNames: string[];
   bowlingNames: string[];
+  excludeForBatsman: string[];
   excludeForBowler?: string[];
   onSelect: (name: string) => void;
   onBack: () => void;
 }) {
-  const current = INNINGS_SETUP_STEPS[step];
+  const openingStepIndex = kind === "striker" ? 0 : kind === "nonStriker" ? 1 : 2;
+  const showStepper = isOpeningSetup;
+
+  const title = isOpeningSetup
+    ? OPENING_SETUP_STEPS[openingStepIndex].title
+    : kind === "bowler"
+      ? "Select Next Bowler"
+      : "Select Next Batsman";
+  const subtitle = isOpeningSetup
+    ? OPENING_SETUP_STEPS[openingStepIndex].subtitle
+    : kind === "bowler"
+      ? "Who's bowling the next over?"
+      : "Who's coming in to bat?";
+
   const names =
-    step === 0
-      ? battingNames
-      : step === 1
-        ? battingNames.filter((n) => n !== strikerName)
-        : bowlingNames.filter((n) => !excludeForBowler?.includes(n));
+    kind === "bowler"
+      ? bowlingNames.filter((n) => !excludeForBowler?.includes(n))
+      : battingNames.filter((n) => !excludeForBatsman.includes(n));
 
   return (
     <Modal visible animationType="slide" transparent>
       <View className="flex-1 bg-black/40 justify-end">
         <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32, maxHeight: "80%" }}>
-          {/* Step progress */}
-          <View className="flex-row items-center mb-4">
-            {INNINGS_SETUP_STEPS.map((s, i) => (
-              <View key={s.key} className="flex-1 flex-row items-center">
-                <View
-                  className="items-center justify-center rounded-full"
-                  style={{
-                    width: 26,
-                    height: 26,
-                    backgroundColor: i <= step ? colors.primary : "#F3F4F6",
-                  }}
-                >
-                  {i < step ? (
-                    <Ionicons name="checkmark" size={14} color="white" />
-                  ) : (
-                    <Text
-                      className="font-bold"
-                      style={{ fontSize: 11, color: i === step ? "white" : colors.muted }}
-                    >
-                      {i + 1}
-                    </Text>
+          {/* Step progress — only during the genuine opening sequence, not a
+              standalone mid-innings replacement. */}
+          {showStepper && (
+            <View className="flex-row items-center mb-4">
+              {OPENING_SETUP_STEPS.map((s, i) => (
+                <View key={s.key} className="flex-1 flex-row items-center">
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{
+                      width: 26,
+                      height: 26,
+                      backgroundColor: i <= openingStepIndex ? colors.primary : "#F3F4F6",
+                    }}
+                  >
+                    {i < openingStepIndex ? (
+                      <Ionicons name="checkmark" size={14} color="white" />
+                    ) : (
+                      <Text
+                        className="font-bold"
+                        style={{ fontSize: 11, color: i === openingStepIndex ? "white" : colors.muted }}
+                      >
+                        {i + 1}
+                      </Text>
+                    )}
+                  </View>
+                  {i < OPENING_SETUP_STEPS.length - 1 && (
+                    <View
+                      style={{
+                        flex: 1,
+                        height: 2,
+                        marginHorizontal: 4,
+                        backgroundColor: i < openingStepIndex ? colors.primary : "#F3F4F6",
+                      }}
+                    />
                   )}
                 </View>
-                {i < INNINGS_SETUP_STEPS.length - 1 && (
-                  <View
-                    style={{ flex: 1, height: 2, marginHorizontal: 4, backgroundColor: i < step ? colors.primary : "#F3F4F6" }}
-                  />
-                )}
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
 
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
-              <Text className="text-lg font-bold text-ink">{current.title}</Text>
-              <Text className="text-muted text-xs mt-0.5">{current.subtitle}</Text>
+              <Text className="text-lg font-bold text-ink">{title}</Text>
+              <Text className="text-muted text-xs mt-0.5">{subtitle}</Text>
             </View>
-            {step > 0 && (
+            {showStepper && openingStepIndex > 0 && (
               <Pressable onPress={onBack} hitSlop={8} className="flex-row items-center pt-0.5" style={{ gap: 2 }}>
                 <Ionicons name="chevron-back" size={16} color={colors.primaryDark} />
                 <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>Back</Text>
@@ -151,8 +180,9 @@ function InningsSetupModal({
           </View>
 
           {/* Already-picked names, kept visible for context instead of
-              disappearing once you move to the next question. */}
-          {step > 0 && (
+              disappearing once you move to the next question — only
+              relevant during the multi-step opening sequence. */}
+          {showStepper && openingStepIndex > 0 && (
             <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
               {strikerName && (
                 <View className="flex-row items-center bg-primary-light rounded-full px-3 py-1.5" style={{ gap: 5 }}>
@@ -162,7 +192,7 @@ function InningsSetupModal({
                   </Text>
                 </View>
               )}
-              {step > 1 && nonStrikerName && (
+              {openingStepIndex > 1 && nonStrikerName && (
                 <View className="flex-row items-center bg-primary-light rounded-full px-3 py-1.5" style={{ gap: 5 }}>
                   <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
                   <Text className="text-xs font-semibold" style={{ color: colors.primaryDark }}>
@@ -339,6 +369,18 @@ export default function LiveScoringScreen() {
   const needsNonStriker = hasActiveInnings && !inningsOver && !!effectiveStriker && !effectiveNonStriker;
   const needsBowler = hasActiveInnings && !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !effectiveBowler;
   const readyToScore = hasActiveInnings && !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !!effectiveBowler;
+
+  // True only before the innings' very first ball — once a ball has been
+  // recorded, any further striker/non-striker/bowler need is a mid-innings
+  // replacement (a wicket, or a new over), not the opening setup.
+  const isOpeningSetup = ballEvents.length === 0;
+  // A replacement batsman can't be someone already dismissed, or the
+  // batsman still in at the other end.
+  const outBatsmen = inningsState
+    ? Object.keys(inningsState.battingStats).filter((n) => inningsState.battingStats[n].isOut)
+    : [];
+  const otherEndBatsman = needsStriker ? effectiveNonStriker : needsNonStriker ? effectiveStriker : null;
+  const excludeForNextBatsman = otherEndBatsman ? [...outBatsmen, otherEndBatsman] : outBatsmen;
 
   if (isLoading || !match) {
     return (
@@ -901,11 +943,13 @@ export default function LiveScoringScreen() {
 
       {(needsStriker || needsNonStriker || needsBowler) && (
         <InningsSetupModal
-          step={needsStriker ? 0 : needsNonStriker ? 1 : 2}
+          kind={needsStriker ? "striker" : needsNonStriker ? "nonStriker" : "bowler"}
+          isOpeningSetup={isOpeningSetup}
           strikerName={effectiveStriker}
           nonStrikerName={effectiveNonStriker}
           battingNames={battingPlayers}
           bowlingNames={bowlingPlayers}
+          excludeForBatsman={excludeForNextBatsman}
           excludeForBowler={inningsState?.previousOverBowler ? [inningsState.previousOverBowler] : []}
           onSelect={(name) => {
             if (needsStriker) setPendingStriker(name);
