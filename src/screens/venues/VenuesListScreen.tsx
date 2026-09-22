@@ -164,11 +164,17 @@ export default function VenuesListScreen() {
     <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center px-5 mb-4" style={{ gap: 10 }}>
-        {navigation.canGoBack() && (
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color={colors.ink} />
-          </Pressable>
-        )}
+        <Pressable
+          onPress={() => {
+            // Venues is a bottom-tab root, so there's usually nothing to pop
+            // to — fall back to the Home tab in that case.
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.getParent()?.navigate("Home");
+          }}
+          hitSlop={8}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </Pressable>
         <View className="flex-1">
           <Text className="text-ink font-extrabold" style={{ fontSize: 26 }}>
             Venues
