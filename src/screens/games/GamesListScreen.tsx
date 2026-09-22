@@ -207,7 +207,6 @@ function GameCard({
                     )}
                   </Bouncy>
                 )}
-                <Ionicons name="ellipsis-vertical" size={20} color={colors.muted} />
               </View>
             </View>
 
