@@ -545,14 +545,28 @@ export default function GamesListScreen() {
               if (locationStatus !== "granted") requestLocation();
               setDistanceOpen((v) => !v);
             }}
-            className="flex-row items-center rounded-full bg-white"
-            style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 6, borderWidth: 1, borderColor: colors.border }}
+            className="flex-row items-center rounded-full"
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              gap: 6,
+              borderWidth: 1,
+              backgroundColor: distanceKmFilter != null ? colors.primary : "white",
+              borderColor: distanceKmFilter != null ? colors.primary : colors.border,
+            }}
           >
-            <Ionicons name="navigate-outline" size={14} color={colors.ink} />
-            <Text className="text-ink font-semibold" style={{ fontSize: 13.5 }}>
+            <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.ink} />
+            <Text
+              className="font-semibold"
+              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.ink }}
+            >
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
-            <Ionicons name={distanceOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.ink} />
+            <Ionicons
+              name={distanceOpen ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={distanceKmFilter != null ? "white" : colors.ink}
+            />
           </Pressable>
           {distanceOpen && (
             <View
