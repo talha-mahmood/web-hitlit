@@ -439,7 +439,7 @@ export default function GamesListScreen() {
             <Text className="text-ink font-extrabold" style={{ fontSize: 26 }}>
               {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
             </Text>
-            <Text className="text-muted" style={{ fontSize: 14, marginTop: 1 }} numberOfLines={1}>
+            <Text className="text-muted" style={{ fontSize: 12.5, marginTop: 1 }} numberOfLines={1}>
               {isTournamentList ? "Find and join exciting tournaments near you" : "Find and join exciting games near you"}
             </Text>
           </View>
