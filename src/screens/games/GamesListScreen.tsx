@@ -4,9 +4,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
+import FieldInput from "../../components/FieldInput";
 import SearchField from "../../components/SearchField";
 import SportFilterDropdown from "../../components/SportFilterDropdown";
 import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
@@ -19,6 +20,8 @@ import type { GameListItem } from "../../lib/api/games";
 import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
+import { getSportImage } from "../../lib/sportImages";
+import { getSportIcon } from "../../lib/sportIcons";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 import { matchesLocationQuery } from "../../lib/locationFilter";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -111,77 +114,93 @@ function GameCard({
     : [];
   const FIXTURES_PREVIEW_LIMIT = 2;
 
+  const sportName = game.sports?.name ?? "";
+  const sportPhoto = getSportImage(sportName);
+  const sportGlyph = getSportIcon(sportName);
+  // The title/location/teams rows keep clear of the sport picture on the right.
+  const rightGutter = { paddingRight: 92 };
+
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
-      {/* Shadow lives on this outer, non-clipping wrapper — a shadow doesn't
-          render on a view with overflow:hidden (needed below to clip the top
-          accent bar to the rounded corners), so it has to sit one level up. */}
       <Bouncy
         onPress={onPress}
-        className="mb-3"
-        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
+        className="mb-3.5"
+        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border rounded-2xl overflow-hidden bg-white mb-3">
-          {/* Top accent bar keyed to sport */}
-          <View className="bg-primary h-1" />
-          <View className="px-5 pt-4 pb-5">
-            {/* Row 1: time/date badge + Join CTA (top-right, sized/shaped like
-                the header's Create button) — hidden for the host, and once
-                full (the "Full" badge in Row 5 already says so). Nested
-                Bouncy so a tap here doesn't also trigger the card's own
-                onPress. */}
-            <View className="flex-row items-center justify-between mb-2.5">
-              <View style={{ backgroundColor: badgeColor, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{badgeLabel}</Text>
+        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24 }}>
+          {/* Sport picture in a soft green disc, tucked into the right edge */}
+          <View
+            pointerEvents="none"
+            className="items-center justify-center overflow-hidden"
+            style={{
+              position: "absolute",
+              right: -30,
+              top: 56,
+              width: 128,
+              height: 128,
+              borderRadius: 64,
+              backgroundColor: "#E4F7EA",
+            }}
+          >
+            {sportPhoto ? (
+              <View style={{ width: 132, height: 74, marginRight: 26, mixBlendMode: "multiply" }}>
+                <Image source={sportPhoto} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
               </View>
-              {!isMyGame && !isFull && (
-                <Bouncy onPress={isTeamBased ? onPress : onJoinPress} scaleTo={0.94}>
-                  {hasJoined ? (
-                    <View
-                      className="flex-row items-center justify-center bg-green-50 rounded-xl px-3 py-2"
-                      style={{ gap: 4, minWidth: JOIN_BUTTON_MIN_WIDTH }}
-                    >
-                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                      <Text className="text-primary font-semibold text-sm">Joined</Text>
-                    </View>
-                  ) : hasRequested ? (
-                    <View
-                      className="items-center justify-center bg-orange-50 rounded-xl px-3 py-2"
-                      style={{ minWidth: JOIN_BUTTON_MIN_WIDTH }}
-                    >
-                      <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
-                    </View>
-                  ) : (
-                    <View
-                      className="items-center justify-center bg-primary rounded-xl px-3 py-2"
-                      style={{ minWidth: JOIN_BUTTON_MIN_WIDTH, ...primaryButtonShadow }}
-                    >
-                      <Text className="text-white font-semibold text-sm">Join</Text>
-                    </View>
-                  )}
-                </Bouncy>
-              )}
+            ) : (
+              <MaterialCommunityIcons name={sportGlyph.icon} size={54} color={sportGlyph.fg} style={{ marginRight: 26, opacity: 0.8 }} />
+            )}
+          </View>
+
+          <View className="px-4 pt-4 pb-4">
+            {/* Row 1: time/date badge + Join CTA + menu dots. Nested Bouncy so a
+                tap on Join doesn't also trigger the card's own onPress. */}
+            <View className="flex-row items-center justify-between mb-3">
+              <View
+                className="flex-row items-center"
+                style={{ backgroundColor: badgeColor, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, gap: 6 }}
+              >
+                <Ionicons
+                  name={isTournament && game.end_date && game.end_date !== game.game_date ? "calendar-outline" : "time-outline"}
+                  size={15}
+                  color="white"
+                />
+                <Text style={{ color: "white", fontSize: 12.5, fontWeight: "700" }}>{badgeLabel}</Text>
+              </View>
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                {!isMyGame && !isFull && (
+                  <Bouncy onPress={isTeamBased ? onPress : onJoinPress} scaleTo={0.94}>
+                    {hasJoined ? (
+                      <View
+                        className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
+                        style={{ gap: 4, minWidth: 78 }}
+                      >
+                        <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                        <Text className="text-primary font-semibold text-sm">Joined</Text>
+                      </View>
+                    ) : hasRequested ? (
+                      <View
+                        className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2"
+                        style={{ minWidth: 78 }}
+                      >
+                        <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                      </View>
+                    ) : (
+                      <View
+                        className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
+                        style={{ minWidth: 78, ...primaryButtonShadow }}
+                      >
+                        <Text className="text-white font-bold text-sm">Join</Text>
+                      </View>
+                    )}
+                  </Bouncy>
+                )}
+                <Ionicons name="ellipsis-vertical" size={20} color={colors.muted} />
+              </View>
             </View>
 
-            {/* Row 2: avatar stack + going/teams count */}
-            <View className="flex-row items-center mb-2" style={{ gap: 8 }}>
-              <AvatarStack
-                people={joined.map((p) => ({
-                  avatar: p.profiles?.avatar ?? null,
-                  name: p.profiles?.full_name ?? null,
-                }))}
-                size={24}
-              />
-              <Text className="text-muted text-sm font-medium">
-                {isTeamBased
-                  ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""}`
-                  : `${joined.length} Going`}
-              </Text>
-            </View>
-
-            {/* Row 3: Icon (if the host set a custom one) + Title */}
-            <View className="flex-row items-center mb-1" style={{ gap: 8 }}>
+            {/* Row 2: Icon (if the host set a custom one) + Title */}
+            <View className="flex-row items-center mb-1.5" style={{ gap: 8, ...rightGutter }}>
               {game.icon_url && (
                 <Image
                   source={{ uri: game.icon_url }}
@@ -189,55 +208,74 @@ function GameCard({
                   resizeMode="cover"
                 />
               )}
-              <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>
+              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={2}>
                 {game.title}
               </Text>
             </View>
 
-            {/* Row 4: Location */}
+            {/* Row 3: Location */}
             {(game.venues || game.custom_venue_name) && (
-              <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
-                <Ionicons name="location-outline" size={13} color={colors.muted} />
-                <Text className="text-muted text-sm" numberOfLines={1}>
+              <View className="flex-row items-center mb-2.5" style={{ gap: 5, ...rightGutter }}>
+                <Ionicons name="location-outline" size={15} color={colors.muted} />
+                <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                   {game.venues ? game.venues.name : game.custom_venue_name}
                   {game.venues?.city ? ` · ${game.venues.city}` : ""}
                 </Text>
               </View>
             )}
 
-            {/* Row 4b: Entry fee — "Per Team Entry" for tournaments, "Per
-                Person Entry" for regular games. */}
-            <Text className="text-ink font-bold text-sm mb-2">
-              {isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"} :{" "}
-              {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
-            </Text>
+            {/* Row 4: avatar stack + going/teams count */}
+            <View className="flex-row items-center mb-2.5" style={{ gap: 8, ...rightGutter }}>
+              <AvatarStack
+                people={joined.map((p) => ({
+                  avatar: p.profiles?.avatar ?? null,
+                  name: p.profiles?.full_name ?? null,
+                }))}
+                size={30}
+              />
+              <Text className="text-muted font-medium" style={{ fontSize: 14 }}>
+                {isTeamBased
+                  ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""}`
+                  : `${joined.length} Going`}
+              </Text>
+            </View>
 
-            {/* Row 5: Sport + tournament + my-game + spots badges */}
-            <View className="flex-row items-center flex-wrap" style={{ gap: 6 }}>
-              <View className="bg-primary-light px-2 py-0.5 rounded-full">
-                <Text className="text-primary text-xs font-semibold">
-                  {game.sports?.name ?? "Sport"}
+            {/* Row 5: Entry fee — "Per Team" for tournaments, "Per Person" for
+                regular games. */}
+            <View className="flex-row items-center mb-3" style={{ gap: 8, ...rightGutter }}>
+              <Ionicons name="ticket-outline" size={18} color={colors.ink} />
+              <Text className="text-ink" style={{ fontSize: 14.5 }} numberOfLines={1}>
+                <Text className="font-bold">{isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"}: </Text>
+                <Text className="font-bold" style={{ color: colors.primary }}>
+                  {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
                 </Text>
+              </Text>
+            </View>
+
+            {/* Row 6: Sport + tournament + my-game + spots badges */}
+            <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
+              <View className="bg-primary-light px-3 py-1 rounded-full">
+                <Text className="text-primary text-xs font-bold">{game.sports?.name ?? "Sport"}</Text>
               </View>
               {isTournament && (
-                <View className="bg-purple-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+                <View className="bg-purple-50 px-3 py-1 rounded-full">
+                  <Text className="text-purple-700 text-xs font-semibold">🏆 Tournament</Text>
                 </View>
               )}
               {isMyGame && (
-                <View className="bg-blue-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-blue-600 text-xs font-medium">
+                <View className="bg-blue-50 px-3 py-1 rounded-full">
+                  <Text className="text-blue-600 text-xs font-semibold">
                     {isTournament ? "My Tournament" : "My Game"}
                   </Text>
                 </View>
               )}
               {isFull ? (
-                <View className="bg-red-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-red-600 text-xs font-medium">Full</Text>
+                <View className="bg-red-50 px-3 py-1 rounded-full">
+                  <Text className="text-red-600 text-xs font-semibold">Full</Text>
                 </View>
               ) : (
-                <View className="bg-green-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-primary text-xs font-medium">
+                <View className="bg-green-50 px-3 py-1 rounded-full">
+                  <Text className="text-primary text-xs font-semibold">
                     {isTeamBased
                       ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
                       : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
@@ -246,14 +284,14 @@ function GameCard({
               )}
             </View>
 
-            {/* Row 5b: fixtures preview (tournament only, once teams exist) */}
+            {/* Row 6b: fixtures preview (tournament only, once teams exist) */}
             {fixtures.length > 0 && (
-              <View className="bg-indigo-50/60 rounded-xl px-3 py-2 mt-2" style={{ gap: 2 }}>
-                <Text className="text-indigo-700 text-xs font-semibold mb-0.5">
+              <View className="rounded-2xl px-4 py-3 mt-3" style={{ backgroundColor: "#EEF0FF", gap: 3 }}>
+                <Text className="text-indigo-700 text-sm font-bold mb-0.5">
                   {TOURNAMENT_FORMAT_LABEL[game.tournament_format!]} Fixtures
                 </Text>
                 {fixtures.slice(0, FIXTURES_PREVIEW_LIMIT).map((f, i) => (
-                  <Text key={i} className="text-ink text-xs" numberOfLines={1}>
+                  <Text key={i} className="text-ink text-sm" numberOfLines={1}>
                     {f.teamA} vs {f.teamB ?? "Bye"}
                   </Text>
                 ))}
@@ -265,23 +303,28 @@ function GameCard({
               </View>
             )}
 
-            {/* Row 6: skill pill + creator */}
-            <View className="flex-row items-center mt-2.5">
+            {/* Row 7: skill pill + creator */}
+            <View className="flex-row items-center mt-3">
               {skillColor && skillLabel && (
                 <View
+                  className="flex-row items-center"
                   style={{
                     backgroundColor: skillColor,
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
                     borderRadius: 999,
-                    marginRight: 6,
+                    gap: 6,
                   }}
                 >
-                  <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>{skillLabel}</Text>
+                  <Ionicons name="stats-chart" size={13} color="white" />
+                  <Text style={{ color: "white", fontSize: 12.5, fontWeight: "700" }}>{skillLabel}</Text>
                 </View>
               )}
-              <Ionicons name="person-circle-outline" size={14} color={colors.muted} style={{ marginRight: 6 }} />
-              <Text className="text-muted text-sm flex-1" numberOfLines={1}>
+              {skillColor && skillLabel ? (
+                <View style={{ width: 1, height: 22, backgroundColor: colors.border, marginHorizontal: 12 }} />
+              ) : null}
+              <Ionicons name="person-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
+              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {game.profiles?.full_name ?? "Unknown"}
               </Text>
             </View>
@@ -305,7 +348,11 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
-  const [myOnly, setMyOnly] = useState(false);
+  // "All" / "My Games" / "Upcoming" pills, and the sort dropdown beside them.
+  const [listFilter, setListFilter] = useState<"all" | "mine" | "upcoming">("all");
+  const [sortBy, setSortBy] = useState<"latest" | "soonest">("latest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const myOnly = listFilter === "mine";
   const gameType = route.params?.gameType;
   const isTournamentList = gameType === "TOURNAMENT";
 
@@ -329,18 +376,35 @@ export default function GamesListScreen() {
   const { data: sports } = useSports();
   const { data: gamesData, isLoading, isRefetching, refetch } = useGames({
     sportId: selectedSportId,
-    search: debouncedSearch || undefined,
     gameType,
   });
-  const locationFiltered = debouncedLocation
+  // The search box matches a game's name/ID, its sport, and its venue/location.
+  const searched = debouncedSearch
     ? (gamesData ?? []).filter((g) =>
+        [g.title, g.game_code, g.sports?.name, g.venues?.name, g.venues?.city, g.venues?.address, g.custom_venue_name].some(
+          (v) => !!v && v.toLowerCase().includes(debouncedSearch.toLowerCase())
+        )
+      )
+    : gamesData;
+  const locationFiltered = debouncedLocation
+    ? (searched ?? []).filter((g) =>
         matchesLocationQuery(
           [g.venues?.name, g.venues?.city, g.venues?.address, g.custom_venue_name],
           debouncedLocation
         )
       )
-    : gamesData;
-  const games = myOnly ? (locationFiltered ?? []).filter((g) => g.creator_id === userId) : locationFiltered;
+    : searched;
+  const scoped = myOnly ? (locationFiltered ?? []).filter((g) => g.creator_id === userId) : locationFiltered;
+  // "Upcoming": only games that haven't started yet.
+  const upcomingOnly =
+    listFilter === "upcoming"
+      ? (scoped ?? []).filter((g) => new Date(`${g.game_date}T${g.start_time}`).getTime() > Date.now())
+      : scoped;
+  // "Latest" = most recently posted first; "Soonest" = earliest start first (server order).
+  const games =
+    sortBy === "latest"
+      ? [...(upcomingOnly ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at))
+      : upcomingOnly;
 
   // Join-request modal is a single shared instance (not one per card) —
   // this tracks which regular game (if any) it's currently open for.
@@ -365,76 +429,153 @@ export default function GamesListScreen() {
     <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 mb-4">
-        <View className="flex-row items-center" style={{ gap: 8 }}>
+        <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
           {navigation.canGoBack() && (
             <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
               <Ionicons name="arrow-back" size={22} color={colors.ink} />
             </Pressable>
           )}
-          <Text className="text-2xl font-bold text-ink">
-            {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
-          </Text>
+          <View className="flex-1">
+            <Text className="text-ink font-extrabold" style={{ fontSize: 26 }}>
+              {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
+            </Text>
+            <Text className="text-muted" style={{ fontSize: 14, marginTop: 1 }} numberOfLines={1}>
+              {isTournamentList ? "Find and join exciting tournaments near you" : "Find and join exciting games near you"}
+            </Text>
+          </View>
         </View>
         <Pressable
           onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
-          className="flex-row items-center bg-primary rounded-xl px-3 py-2"
-          style={{ gap: 4, ...primaryButtonShadow }}
+          className="flex-row items-center bg-primary rounded-full px-5 py-3"
+          style={{ gap: 6, ...primaryButtonShadow }}
         >
-          <Ionicons name="add" size={18} color="white" />
-          <Text className="text-white font-semibold text-sm">Create</Text>
+          <Ionicons name="add" size={20} color="white" />
+          <Text className="text-white font-bold" style={{ fontSize: 15 }}>
+            Create
+          </Text>
         </Pressable>
       </View>
 
-      {/* Search by name or ID */}
-      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 8 }}>
+      {/* Search */}
+      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 10 }}>
         <View className="flex-1">
-          <SearchField
+          <FieldInput
             value={searchInput}
             onChangeText={setSearchInput}
-            prefix="Search by "
-            variants={isTournamentList ? ["tournament name", "tournament ID"] : ["game name", "game ID"]}
+            placeholder={isTournamentList ? "Search tournaments, sport, location..." : "Search games, sport, location..."}
             autoCapitalize="none"
             autoCorrect={false}
+            containerStyle={{ borderRadius: 28, height: 52 }}
+            left={<Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />}
           />
         </View>
         <Pressable
           onPress={() => setShowFilters((v) => !v)}
-          className="w-11 h-11 rounded-2xl bg-primary items-center justify-center"
-          style={primaryButtonShadow}
+          className="items-center justify-center bg-white"
+          style={{ width: 52, height: 52, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
         >
-          <Ionicons name="filter" size={18} color="white" />
+          <Ionicons name="options-outline" size={22} color={colors.ink} />
           {(!!selectedSportId || !!debouncedLocation) && (
             <View
               style={{
                 position: "absolute",
                 top: 7,
                 right: 7,
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "white",
+                width: 9,
+                height: 9,
+                borderRadius: 5,
+                backgroundColor: colors.primary,
               }}
             />
           )}
         </Pressable>
       </View>
 
-      {/* All / My Games (or My Tournaments) toggle */}
-      <View className="px-5 mb-3 flex-row" style={{ gap: 8 }}>
-        <Pressable
-          onPress={() => setMyOnly(false)}
-          className={`px-4 py-2 rounded-full ${myOnly ? "bg-white border border-border" : "bg-primary"}`}
-        >
-          <Text className={`text-sm font-semibold ${myOnly ? "text-muted" : "text-white"}`}>All</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setMyOnly(true)}
-          className={`px-4 py-2 rounded-full ${myOnly ? "bg-primary" : "bg-white border border-border"}`}
-        >
-          <Text className={`text-sm font-semibold ${myOnly ? "text-white" : "text-muted"}`}>
-            {isTournamentList ? "My Tournaments" : "My Games"}
-          </Text>
-        </Pressable>
+      {/* All / My Games / Upcoming + sort */}
+      <View className="px-5 mb-3 flex-row items-center justify-between" style={{ zIndex: 20 }}>
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          {(
+            [
+              { key: "all", label: "All" },
+              { key: "mine", label: isTournamentList ? "My Tournaments" : "My Games" },
+              { key: "upcoming", label: "Upcoming" },
+            ] as const
+          ).map((p) => {
+            const active = listFilter === p.key;
+            return (
+              <Pressable
+                key={p.key}
+                onPress={() => setListFilter(p.key)}
+                className="rounded-full"
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  backgroundColor: active ? colors.primary : "white",
+                  borderWidth: 1,
+                  borderColor: active ? colors.primary : colors.border,
+                }}
+              >
+                <Text className="font-semibold" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
+                  {p.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <View>
+          <Pressable
+            onPress={() => setSortOpen((v) => !v)}
+            className="flex-row items-center rounded-full bg-white"
+            style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 6, borderWidth: 1, borderColor: colors.border }}
+          >
+            <Text className="text-ink font-semibold" style={{ fontSize: 13.5 }}>
+              {sortBy === "latest" ? "Latest" : "Soonest"}
+            </Text>
+            <Ionicons name={sortOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.ink} />
+          </Pressable>
+          {sortOpen && (
+            <View
+              className="bg-white"
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 46,
+                minWidth: 130,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                paddingVertical: 4,
+                zIndex: 30,
+                ...cardShadow,
+              }}
+            >
+              {(
+                [
+                  { key: "latest", label: "Latest" },
+                  { key: "soonest", label: "Soonest" },
+                ] as const
+              ).map((o) => (
+                <Pressable
+                  key={o.key}
+                  onPress={() => {
+                    setSortBy(o.key);
+                    setSortOpen(false);
+                  }}
+                  className="flex-row items-center justify-between"
+                  style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 10 }}
+                >
+                  <Text
+                    className={sortBy === o.key ? "font-bold" : "font-medium"}
+                    style={{ fontSize: 14, color: sortBy === o.key ? colors.primaryDark : colors.ink }}
+                  >
+                    {o.label}
+                  </Text>
+                  {sortBy === o.key ? <Ionicons name="checkmark" size={16} color={colors.primary} /> : null}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Location + sport filters — hidden behind the filter icon until tapped */}
@@ -472,7 +613,7 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation || myOnly ? (
+            debouncedSearch || debouncedLocation || listFilter !== "all" ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
