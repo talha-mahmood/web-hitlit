@@ -569,7 +569,15 @@ export default function GamesListScreen() {
                   : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`
                 : "Time"}
             </Text>
-            <Ionicons name="chevron-down" size={14} color={timeRange ? "white" : colors.muted} />
+            {timeRange ? (
+              // Separate tap target from the pill itself — clears the range
+              // without reopening the calendar.
+              <Pressable onPress={() => setTimeRange(null)} hitSlop={8}>
+                <Ionicons name="close-circle" size={16} color="white" />
+              </Pressable>
+            ) : (
+              <Ionicons name="chevron-down" size={14} color={colors.muted} />
+            )}
           </Pressable>
         </View>
         <View>
