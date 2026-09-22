@@ -24,6 +24,7 @@ import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 import { matchesLocationQuery } from "../../lib/locationFilter";
+import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm } from "../../lib/distance";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -56,6 +57,11 @@ function formatDateRange(gameDate: string, endDate: string): string {
     d.toLocaleDateString("en-PK", { month: "short", day: "numeric", year: withYear ? "numeric" : undefined });
   const sameYear = sy === ey;
   return `${fmt(start, !sameYear)} - ${fmt(end, true)}`;
+}
+
+// Short label for the "Time" pill, e.g. "Sep 21".
+function formatShortDate(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function GameCard({
@@ -350,8 +356,11 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
-  // "All" / "My Games" / "Upcoming" pills, and the distance dropdown beside them.
-  const [listFilter, setListFilter] = useState<"all" | "mine" | "upcoming">("all");
+  // "All" / "My Games" pills, the "Time" range pill, and the distance
+  // dropdown beside them.
+  const [listFilter, setListFilter] = useState<"all" | "mine">("all");
+  const [timeRange, setTimeRange] = useState<DateSelection | null>(null);
+  const [timeModalOpen, setTimeModalOpen] = useState(false);
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
   const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
   const [distanceOpen, setDistanceOpen] = useState(false);
@@ -399,11 +408,11 @@ export default function GamesListScreen() {
       )
     : searched;
   const scoped = myOnly ? (locationFiltered ?? []).filter((g) => g.creator_id === userId) : locationFiltered;
-  // "Upcoming": only games that haven't started yet.
-  const upcomingOnly =
-    listFilter === "upcoming"
-      ? (scoped ?? []).filter((g) => new Date(`${g.game_date}T${g.start_time}`).getTime() > Date.now())
-      : scoped;
+  // "Time": only games whose date falls inside the picked range (a
+  // multi-day tournament counts if any of its days overlap the range).
+  const upcomingOnly = timeRange
+    ? (scoped ?? []).filter((g) => (g.end_date ?? g.game_date) >= timeRange.start && g.game_date <= timeRange.end)
+    : scoped;
   // "Latest" = most recently posted first; "Soonest" = earliest start first (server order).
   const latestFirst = [...(upcomingOnly ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
   // A game with no venue coordinates (custom/text-only venue) has no known
@@ -505,14 +514,13 @@ export default function GamesListScreen() {
         </Pressable>
       </View>
 
-      {/* All / My Games / Upcoming + sort */}
+      {/* All / My Games / Time + sort */}
       <View className="px-5 mb-3 flex-row items-center justify-between" style={{ zIndex: 20 }}>
         <View className="flex-row items-center" style={{ gap: 8 }}>
           {(
             [
               { key: "all", label: "All" },
               { key: "mine", label: isTournamentList ? "My Tournaments" : "My Games" },
-              { key: "upcoming", label: "Upcoming" },
             ] as const
           ).map((p) => {
             const active = listFilter === p.key;
@@ -535,6 +543,34 @@ export default function GamesListScreen() {
               </Pressable>
             );
           })}
+          {/* "Time" — opens the same date-range calendar as the admin panel's
+              Bookings tab (BookingsDateRangeModal); results are limited to
+              games whose date falls inside the picked range. */}
+          <Pressable
+            onPress={() => setTimeModalOpen(true)}
+            className="flex-row items-center rounded-full"
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              gap: 5,
+              backgroundColor: timeRange ? colors.primary : "white",
+              borderWidth: 1,
+              borderColor: timeRange ? colors.primary : colors.border,
+            }}
+          >
+            <Text
+              className="font-semibold"
+              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted, maxWidth: 84 }}
+              numberOfLines={1}
+            >
+              {timeRange
+                ? timeRange.start === timeRange.end
+                  ? formatShortDate(timeRange.start)
+                  : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`
+                : "Time"}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color={timeRange ? "white" : colors.muted} />
+          </Pressable>
         </View>
         <View>
           <Pressable
@@ -642,6 +678,15 @@ export default function GamesListScreen() {
           setSportSheetOpen(false);
         }}
       />
+      <BookingsDateRangeModal
+        visible={timeModalOpen}
+        initialSelection={timeRange}
+        onClose={() => setTimeModalOpen(false)}
+        onSave={(selection) => {
+          setTimeRange(selection);
+          setTimeModalOpen(false);
+        }}
+      />
 
       {/* Games list */}
       {isLoading ? (
@@ -653,7 +698,7 @@ export default function GamesListScreen() {
           contentContainerStyle={{ padding: 20, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation || listFilter !== "all" ? (
+            debouncedSearch || debouncedLocation || listFilter !== "all" || timeRange ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
