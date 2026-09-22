@@ -50,45 +50,144 @@ const WICKET_TYPES: { label: string; value: WicketType }[] = [
   { label: "Retired Out", value: "RETIRED_OUT" },
 ];
 
-function NamePickerModal({
-  visible,
-  title,
-  names,
-  exclude,
-  onSelect,
-  onClose,
-}: {
-  visible: boolean;
-  title: string;
-  names: string[];
-  exclude?: string[];
-  onSelect: (name: string) => void;
-  onClose?: () => void;
-}) {
-  const options = names.filter((n) => !exclude?.includes(n));
+// A single continuous flow for the three questions needed before scoring
+// can start (opening striker, non-striker, opening bowler) — one modal that
+// steps through all three instead of three separate popups closing and
+// reopening one after another, with a progress stepper, already-picked
+// names kept visible as chips, and avatar-style rows for each player.
+const INNINGS_SETUP_STEPS = [
+  { key: "striker", title: "Select Opening Striker", subtitle: "Who's facing the first ball?" },
+  { key: "nonStriker", title: "Select Non-Striker", subtitle: "Who's at the other end?" },
+  { key: "bowler", title: "Select Opening Bowler", subtitle: "Who's bowling this over?" },
+] as const;
+
+function PlayerAvatar({ name }: { name: string }) {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <View
+      className="items-center justify-center rounded-full"
+      style={{ width: 38, height: 38, backgroundColor: colors.primaryLight }}
+    >
+      <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 15 }}>
+        {name.trim().charAt(0).toUpperCase() || "?"}
+      </Text>
+    </View>
+  );
+}
+
+function InningsSetupModal({
+  step,
+  strikerName,
+  nonStrikerName,
+  battingNames,
+  bowlingNames,
+  excludeForBowler,
+  onSelect,
+  onBack,
+}: {
+  step: 0 | 1 | 2;
+  strikerName: string | null;
+  nonStrikerName: string | null;
+  battingNames: string[];
+  bowlingNames: string[];
+  excludeForBowler?: string[];
+  onSelect: (name: string) => void;
+  onBack: () => void;
+}) {
+  const current = INNINGS_SETUP_STEPS[step];
+  const names =
+    step === 0
+      ? battingNames
+      : step === 1
+        ? battingNames.filter((n) => n !== strikerName)
+        : bowlingNames.filter((n) => !excludeForBowler?.includes(n));
+
+  return (
+    <Modal visible animationType="slide" transparent>
       <View className="flex-1 bg-black/40 justify-end">
-        <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32, maxHeight: "70%" }}>
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-lg font-bold text-ink">{title}</Text>
-            {onClose && (
-              <Pressable onPress={onClose} hitSlop={8}>
-                <Ionicons name="close" size={22} color={colors.muted} />
+        <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32, maxHeight: "80%" }}>
+          {/* Step progress */}
+          <View className="flex-row items-center mb-4">
+            {INNINGS_SETUP_STEPS.map((s, i) => (
+              <View key={s.key} className="flex-1 flex-row items-center">
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{
+                    width: 26,
+                    height: 26,
+                    backgroundColor: i <= step ? colors.primary : "#F3F4F6",
+                  }}
+                >
+                  {i < step ? (
+                    <Ionicons name="checkmark" size={14} color="white" />
+                  ) : (
+                    <Text
+                      className="font-bold"
+                      style={{ fontSize: 11, color: i === step ? "white" : colors.muted }}
+                    >
+                      {i + 1}
+                    </Text>
+                  )}
+                </View>
+                {i < INNINGS_SETUP_STEPS.length - 1 && (
+                  <View
+                    style={{ flex: 1, height: 2, marginHorizontal: 4, backgroundColor: i < step ? colors.primary : "#F3F4F6" }}
+                  />
+                )}
+              </View>
+            ))}
+          </View>
+
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-ink">{current.title}</Text>
+              <Text className="text-muted text-xs mt-0.5">{current.subtitle}</Text>
+            </View>
+            {step > 0 && (
+              <Pressable onPress={onBack} hitSlop={8} className="flex-row items-center pt-0.5" style={{ gap: 2 }}>
+                <Ionicons name="chevron-back" size={16} color={colors.primaryDark} />
+                <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>Back</Text>
               </Pressable>
             )}
           </View>
-          <ScrollView>
-            {options.map((name) => (
+
+          {/* Already-picked names, kept visible for context instead of
+              disappearing once you move to the next question. */}
+          {step > 0 && (
+            <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
+              {strikerName && (
+                <View className="flex-row items-center bg-primary-light rounded-full px-3 py-1.5" style={{ gap: 5 }}>
+                  <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
+                  <Text className="text-xs font-semibold" style={{ color: colors.primaryDark }}>
+                    Striker: {strikerName}
+                  </Text>
+                </View>
+              )}
+              {step > 1 && nonStrikerName && (
+                <View className="flex-row items-center bg-primary-light rounded-full px-3 py-1.5" style={{ gap: 5 }}>
+                  <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
+                  <Text className="text-xs font-semibold" style={{ color: colors.primaryDark }}>
+                    Non-Striker: {nonStrikerName}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          <ScrollView className="mt-4" showsVerticalScrollIndicator={false}>
+            {names.map((name) => (
               <Pressable
                 key={name}
                 onPress={() => onSelect(name)}
-                className="py-3.5 border-b border-border"
+                className="flex-row items-center rounded-2xl mb-2.5 px-3 py-2.5 border border-border bg-white"
               >
-                <Text className="text-ink text-base">{name}</Text>
+                <View className="mr-3">
+                  <PlayerAvatar name={name} />
+                </View>
+                <Text className="text-ink text-base font-medium flex-1">{name}</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
               </Pressable>
             ))}
-            {options.length === 0 && (
+            {names.length === 0 && (
               <Text className="text-muted text-sm text-center py-6">No players available.</Text>
             )}
           </ScrollView>
@@ -800,26 +899,25 @@ export default function LiveScoringScreen() {
         )}
       </ScrollView>
 
-      <NamePickerModal
-        visible={needsStriker}
-        title="Select Opening Striker"
-        names={battingPlayers}
-        onSelect={setPendingStriker}
-      />
-      <NamePickerModal
-        visible={needsNonStriker}
-        title="Select Non-Striker"
-        names={battingPlayers}
-        exclude={effectiveStriker ? [effectiveStriker] : []}
-        onSelect={setPendingNonStriker}
-      />
-      <NamePickerModal
-        visible={needsBowler}
-        title="Select Bowler"
-        names={bowlingPlayers}
-        exclude={inningsState?.previousOverBowler ? [inningsState.previousOverBowler] : []}
-        onSelect={setPendingBowler}
-      />
+      {(needsStriker || needsNonStriker || needsBowler) && (
+        <InningsSetupModal
+          step={needsStriker ? 0 : needsNonStriker ? 1 : 2}
+          strikerName={effectiveStriker}
+          nonStrikerName={effectiveNonStriker}
+          battingNames={battingPlayers}
+          bowlingNames={bowlingPlayers}
+          excludeForBowler={inningsState?.previousOverBowler ? [inningsState.previousOverBowler] : []}
+          onSelect={(name) => {
+            if (needsStriker) setPendingStriker(name);
+            else if (needsNonStriker) setPendingNonStriker(name);
+            else setPendingBowler(name);
+          }}
+          onBack={() => {
+            if (needsNonStriker) setPendingStriker(null);
+            else if (needsBowler) setPendingNonStriker(null);
+          }}
+        />
+      )}
     </View>
   );
 }
