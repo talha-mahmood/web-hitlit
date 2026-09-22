@@ -558,6 +558,7 @@ export default function GamesListScreen() {
               borderColor: timeRange ? colors.primary : colors.border,
             }}
           >
+            <Ionicons name="calendar-outline" size={14} color={timeRange ? "white" : colors.muted} />
             <Text
               className="font-semibold"
               style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted, maxWidth: 84 }}
@@ -575,9 +576,7 @@ export default function GamesListScreen() {
               <Pressable onPress={() => setTimeRange(null)} hitSlop={8}>
                 <Ionicons name="close-circle" size={16} color="white" />
               </Pressable>
-            ) : (
-              <Ionicons name="chevron-down" size={14} color={colors.muted} />
-            )}
+            ) : null}
           </Pressable>
         </View>
         <View>
