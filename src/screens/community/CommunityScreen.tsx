@@ -25,8 +25,43 @@ const GRID_SIDE_PADDING = 10;
 const CARD_WIDTH = (SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_GAP) / 2;
 
 // Every card uses a provided illustration that already has its own title +
-// subtitle baked into the image itself — no extra text/icon overlay needed.
-function ImageCard({ source, onPress }: { source: number; onPress: () => void }) {
+// subtitle baked into the image itself — no extra text/icon overlay needed,
+// except the Create Squad card, which gets a banner-image-then-title layout
+// copied from VenueListCard (VenuesListScreen.tsx): a top image, then a
+// padded title/subtitle block underneath.
+function ImageCard({
+  source,
+  onPress,
+  title,
+  subtitle,
+}: {
+  source: number;
+  onPress: () => void;
+  title?: string;
+  subtitle?: string;
+}) {
+  if (title) {
+    return (
+      <Bouncy
+        onPress={onPress}
+        scaleTo={0.97}
+        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24, width: CARD_WIDTH, overflow: "hidden" }}
+      >
+        <Image source={source} style={{ width: CARD_WIDTH, height: 150 }} resizeMode="cover" />
+        <View className="px-4 pt-4 pb-4">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text className="text-muted" style={{ fontSize: 13, marginTop: 4 }} numberOfLines={2}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
+      </Bouncy>
+    );
+  }
+
   return (
     <Bouncy
       onPress={onPress}
@@ -64,6 +99,8 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <ImageCard
           source={require("../../../assets/community-icons/create-squad.png")}
           onPress={() => navigation.navigate("CreateSquad")}
+          title="Create Squad"
+          subtitle="Create squad to chat with members"
         />
         <ImageCard
           source={require("../../../assets/community-icons/explore-squad.png")}
