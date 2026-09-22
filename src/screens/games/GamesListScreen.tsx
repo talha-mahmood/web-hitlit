@@ -514,9 +514,8 @@ export default function GamesListScreen() {
         </Pressable>
       </View>
 
-      {/* All / My Games / Time + sort */}
-      <View className="px-5 mb-3 flex-row items-center justify-between" style={{ zIndex: 20 }}>
-        <View className="flex-row items-center" style={{ gap: 8 }}>
+      {/* All / My Games / Time / Distance — one row, evenly spaced */}
+      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 8, zIndex: 20 }}>
           {(
             [
               { key: "all", label: "All" },
@@ -578,7 +577,6 @@ export default function GamesListScreen() {
               </Pressable>
             ) : null}
           </Pressable>
-        </View>
         <View>
           <Pressable
             onPress={() => {
