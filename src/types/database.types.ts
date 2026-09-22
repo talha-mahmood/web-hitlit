@@ -1403,6 +1403,60 @@ export type Database = {
           },
         ]
       }
+      match_results: {
+        Row: {
+          game_date: string | null
+          game_id: string
+          game_title: string | null
+          id: string
+          match_id: string
+          recorded_at: string
+          result: string
+          sport_id: string | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          game_date?: string | null
+          game_id: string
+          game_title?: string | null
+          id?: string
+          match_id: string
+          recorded_at?: string
+          result: string
+          sport_id?: string | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          game_date?: string | null
+          game_id?: string
+          game_title?: string | null
+          id?: string
+          match_id?: string
+          recorded_at?: string
+          result?: string
+          sport_id?: string | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1792,6 +1846,33 @@ export type Database = {
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -3053,11 +3134,6 @@ export type Database = {
         Returns: undefined
       }
       decline_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
-      register_push_token: {
-        Args: { p_platform: string; p_token: string }
-        Returns: undefined
-      }
-      unregister_push_token: { Args: { p_token: string }; Returns: undefined }
       decline_squad_invite: {
         Args: { p_invite_id: string }
         Returns: undefined
@@ -3118,6 +3194,10 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean }
       is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
       reject_pending_team: { Args: { p_team_id: string }; Returns: undefined }
       respond_to_venue_review: {
         Args: { response_text: string; target_review_id: string }
@@ -3153,6 +3233,7 @@ export type Database = {
             }
             Returns: undefined
           }
+      unregister_push_token: { Args: { p_token: string }; Returns: undefined }
     }
     Enums: {
       booking_payment_status_type: "paid" | "unpaid"

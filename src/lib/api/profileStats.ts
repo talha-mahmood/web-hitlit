@@ -28,6 +28,7 @@ export type ProfileStats = {
 };
 
 type HistoryRow = {
+  game_id: string;
   sport_id: string | null;
   game_type: Database["public"]["Enums"]["game_type_type"] | null;
   role: string;
@@ -59,7 +60,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
   const [historyRes, squadsRes, gamesRes, tournamentsRes, favoritesRes, skillLevelsRes] = await Promise.all([
     supabase
       .from("game_history")
-      .select("sport_id, game_type, role, start_time, end_time, sports(name)")
+      .select("game_id, sport_id, game_type, role, start_time, end_time, sports(name)")
       .eq("user_id", userId),
     supabase
       .from("squad_members")
@@ -149,36 +150,24 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
     }))
     .sort((a, b) => a.gameDate.localeCompare(b.gameDate) || a.startTime.localeCompare(b.startTime));
 
-  // Scored games live on tournament_matches (a regular 2-team game has one such
-  // row too), keyed by team — so find this user's approved teams first.
-  const teamIds = Array.from(
-    new Set(
-      (tournamentsRes.data ?? [])
-        .map((r) => r.tournament_teams)
-        .filter((t): t is NonNullable<typeof t> => !!t)
-        .map((t) => t.id)
-    )
-  );
-  let scoredGamesTotal = 0;
-  let scoredRegularGamesTotal = 0;
-  let scoredWinsTotal = 0;
-  if (teamIds.length > 0) {
-    const idList = teamIds.join(",");
-    const { data: matches, error: matchesError } = await supabase
-      .from("tournament_matches")
-      .select("id, winner_team_id, games(game_type)")
-      .eq("status", "COMPLETED")
-      .or(`team_a_id.in.(${idList}),team_b_id.in.(${idList})`);
-    if (matchesError) throw new Error(matchesError.message);
-    const rows = (matches ?? []) as unknown as {
-      id: string;
-      winner_team_id: string | null;
-      games: { game_type: string | null } | null;
-    }[];
-    scoredGamesTotal = rows.length;
-    scoredWinsTotal = rows.filter((m) => m.winner_team_id && teamIds.includes(m.winner_team_id)).length;
-    scoredRegularGamesTotal = rows.filter((m) => m.games?.game_type !== "TOURNAMENT").length;
-  }
+  // Scored games persist independently in match_results — one row per
+  // (user, match), written the moment a match is scored — so this survives
+  // the game itself being deleted once its time passes (expire_past_games
+  // cascade-deletes tournament_matches/tournament_teams/tournament_team_members
+  // along with the game, which a live query against those would lose).
+  const gameTypeByGameId = new Map<string, string | null>();
+  for (const row of history) gameTypeByGameId.set(row.game_id, row.game_type);
+
+  const { data: matchResultRows, error: matchResultsError } = await supabase
+    .from("match_results")
+    .select("game_id, result")
+    .eq("user_id", userId);
+  if (matchResultsError) throw new Error(matchResultsError.message);
+
+  const scoredRows = matchResultRows ?? [];
+  const scoredGamesTotal = scoredRows.length;
+  const scoredWinsTotal = scoredRows.filter((m) => m.result === "WON").length;
+  const scoredRegularGamesTotal = scoredRows.filter((m) => gameTypeByGameId.get(m.game_id) !== "TOURNAMENT").length;
 
   const computedSkillLevel = mostCommonSkillLevel(
     (skillLevelsRes.data ?? []).map((r) => r.skill_level)
