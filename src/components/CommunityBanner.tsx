@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // The "PlayOye Community" banner at the top of My Community. Laid out on a
 // 361 x 103 design canvas that is scaled down on narrower phones, so the
@@ -125,23 +125,8 @@ export default function CommunityBanner({ width }: { width: number }) {
           PlayOye Community
         </Text>
         <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#D3F6E0" }}>
-          Create Join Explore Squads & Games!
+          {"Create Join Explore\nSquads & Games!"}
         </Text>
-        <View
-          className="flex-row items-center bg-white"
-          style={{
-            position: "absolute",
-            left: 17,
-            top: 65,
-            height: 24,
-            borderRadius: 12,
-            paddingHorizontal: 13,
-            gap: 7,
-          }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: "700", color: "#0B6E3F" }}>Get Started</Text>
-          <Ionicons name="arrow-down" size={13} color="#0B6E3F" />
-        </View>
 
         {/* Sport badges */}
         <GlassBadge icon="soccer" size={34} right={innerW - 247} top={48} />
