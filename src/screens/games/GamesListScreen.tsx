@@ -559,7 +559,7 @@ export default function GamesListScreen() {
                   borderColor: active ? colors.primary : colors.border,
                 }}
               >
-                <Text className="font-semibold" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
+                <Text className="font-semibold" style={{ fontSize: 13.5, color: active ? "white" : colors.ink }}>
                   {p.label}
                 </Text>
               </Pressable>
@@ -583,10 +583,10 @@ export default function GamesListScreen() {
               borderColor: timeRange ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="calendar-outline" size={14} color={timeRange ? "white" : colors.muted} />
+            <Ionicons name="calendar-outline" size={14} color={timeRange ? "white" : colors.primary} />
             <Text
               className="font-semibold"
-              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted }}
+              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.ink }}
               numberOfLines={1}
             >
               {timeRange
