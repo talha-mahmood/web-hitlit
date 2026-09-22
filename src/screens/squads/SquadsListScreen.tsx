@@ -81,7 +81,47 @@ function SquadCard({
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24 }}>
+        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, position: "relative" }}>
+          {/* Join/Joined/Requested CTA — pinned to the card's top-right
+              corner. Nested Bouncy so a tap here doesn't also trigger the
+              card's own onPress. */}
+          <View style={{ position: "absolute", top: 16, right: 16, zIndex: 5 }}>
+            {isClosedToJoins && !hasJoined ? (
+              <View className="bg-red-50 rounded-2xl px-3 py-2">
+                <Text className="text-red-600 font-bold text-sm">Full</Text>
+              </View>
+            ) : !isMySquad && isGenderRestricted ? (
+              <View className="bg-gray-100 rounded-2xl px-3 py-2">
+                <Text className="text-muted font-bold text-sm">
+                  {squad.gender === "male" ? "Male Only" : "Female Only"}
+                </Text>
+              </View>
+            ) : (
+              <Bouncy onPress={hasJoined || isMySquad ? undefined : onJoinPress} scaleTo={0.94}>
+                {hasJoined || isMySquad ? (
+                  <View
+                    className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
+                    style={{ gap: 4, minWidth: 78 }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Text className="text-primary font-semibold text-sm">Joined</Text>
+                  </View>
+                ) : hasRequested ? (
+                  <View className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2" style={{ minWidth: 78 }}>
+                    <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                  </View>
+                ) : (
+                  <View
+                    className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
+                    style={{ minWidth: 78, ...primaryButtonShadow }}
+                  >
+                    <Text className="text-white font-bold text-sm">Join</Text>
+                  </View>
+                )}
+              </Bouncy>
+            )}
+          </View>
+
           {/* Sport picture in a soft green disc, tucked into the right edge */}
           <View
             pointerEvents="none"
@@ -108,53 +148,14 @@ function SquadCard({
           </View>
 
           <View className="px-4 pt-4 pb-4">
-            {/* Row 1: the Join/Joined/Requested CTA, right-aligned — squads
-                have no date/time badge to pair it with, unlike a game card.
-                Nested Bouncy so a tap here doesn't also trigger the card's
-                own onPress. */}
-            <View className="flex-row items-center justify-end mb-3">
-              {isClosedToJoins && !hasJoined ? (
-                <View className="bg-red-50 rounded-2xl px-3 py-2">
-                  <Text className="text-red-600 font-bold text-sm">Full</Text>
-                </View>
-              ) : !isMySquad && isGenderRestricted ? (
-                <View className="bg-gray-100 rounded-2xl px-3 py-2">
-                  <Text className="text-muted font-bold text-sm">
-                    {squad.gender === "male" ? "Male Only" : "Female Only"}
-                  </Text>
-                </View>
-              ) : (
-                <Bouncy onPress={hasJoined || isMySquad ? undefined : onJoinPress} scaleTo={0.94}>
-                  {hasJoined || isMySquad ? (
-                    <View
-                      className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
-                      style={{ gap: 4, minWidth: 78 }}
-                    >
-                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                      <Text className="text-primary font-semibold text-sm">Joined</Text>
-                    </View>
-                  ) : hasRequested ? (
-                    <View className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2" style={{ minWidth: 78 }}>
-                      <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
-                    </View>
-                  ) : (
-                    <View
-                      className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
-                      style={{ minWidth: 78, ...primaryButtonShadow }}
-                    >
-                      <Text className="text-white font-bold text-sm">Join</Text>
-                    </View>
-                  )}
-                </Bouncy>
-              )}
-            </View>
-
-            {/* Row 2: Icon (if the owner set a custom one) + Name */}
-            <View className="flex-row items-center mb-1.5" style={{ gap: 8, ...rightGutter }}>
+            {/* Row 2: Icon (if the owner set a custom one) + Name — kept
+                clear of the corner CTA above via a wider right gutter, and
+                truncates to one line if there isn't room. */}
+            <View className="flex-row items-center mb-1.5" style={{ gap: 8, paddingRight: 100 }}>
               {squad.icon_url && (
                 <Image source={{ uri: squad.icon_url }} style={{ width: 32, height: 32, borderRadius: 8 }} resizeMode="cover" />
               )}
-              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={2}>
+              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={1}>
                 {squad.name}
               </Text>
             </View>
