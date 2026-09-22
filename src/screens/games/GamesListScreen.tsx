@@ -132,7 +132,11 @@ function GameCard({
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
       <Bouncy
         onPress={onPress}
-        className="mb-3.5"
+        // Spacing between cards comes from the FlatList's own
+        // contentContainerStyle gap below, not a className margin here —
+        // Bouncy's explicit style prop (needed for the press animation)
+        // takes priority over a className-derived margin, so a margin set
+        // here never actually showed up.
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
@@ -783,7 +787,7 @@ export default function GamesListScreen() {
         <FlatList
           data={games ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 0 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             debouncedSearch || debouncedLocation || listFilter !== "all" || timeRange ? (
