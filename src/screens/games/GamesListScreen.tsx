@@ -604,14 +604,9 @@ export default function GamesListScreen() {
             ) : null}
           </Pressable>
         <View>
-          <Pressable
-            onPress={() => {
-              // Ask for location the first time this is opened, same as the
-              // Home screen's "near you" sections — a denied/pending permission
-              // just means the km options won't be able to filter anything yet.
-              if (locationStatus !== "granted") requestLocation();
-              setDistanceOpen((v) => !v);
-            }}
+          {/* The card itself no longer opens the dropdown — only the chevron
+              icon at the end does. */}
+          <View
             // Same paddingHorizontal/paddingVertical as the All / My Games /
             // Date pills next to it, so the card is the same size as them.
             className="flex-row items-center rounded-full"
@@ -640,12 +635,23 @@ export default function GamesListScreen() {
             >
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
-            <Ionicons
-              name={distanceOpen ? "chevron-up" : "chevron-down"}
-              size={16}
-              color={distanceKmFilter != null ? "white" : colors.muted}
-            />
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                // Ask for location the first time this is opened, same as the
+                // Home screen's "near you" sections — a denied/pending permission
+                // just means the km options won't be able to filter anything yet.
+                if (locationStatus !== "granted") requestLocation();
+                setDistanceOpen((v) => !v);
+              }}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={distanceOpen ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={distanceKmFilter != null ? "white" : colors.muted}
+              />
+            </Pressable>
+          </View>
         </View>
         </ScrollView>
 </View>
