@@ -23,7 +23,7 @@ const GRID_GAP = 8;
 // square, its height too — a bit bigger.
 const GRID_SIDE_PADDING = 10;
 const CARD_WIDTH = (SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_GAP) / 2;
-
+const CARD_TEXT_HEIGHT = 105;
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
 // except the Create Squad card, which gets a banner-image-then-title layout
@@ -37,60 +37,79 @@ function ImageCard({
 }: {
   source: number;
   onPress: () => void;
-  title?: string;
+  title: string;
   subtitle?: string;
 }) {
-  if (title) {
-    return (
-      <Bouncy
-        onPress={onPress}
-        scaleTo={0.97}
-        // Shadow lives on this outer layer only — putting overflow:"hidden"
-        // on the same view as the shadow can stop it (and the rounded-corner
-        // clipping below) from actually rendering, so the border/corner
-        // clipping is done on a separate inner View instead, same as
-        // VenueListCard.
-        style={{ ...cardShadow, backgroundColor: "white", width: CARD_WIDTH, borderRadius: 22 }}
-      >
-        <View
-          style={{
-            backgroundColor: "white",
-            borderRadius: 22,
-            borderWidth: 1,
-            borderColor: colors.border,
-            overflow: "hidden",
-          }}
-        >
-          {/* Square, same aspect ratio as the source illustration, so
-              "cover" shows the whole image instead of cropping its
-              top/bottom to fit a shorter, wider box. */}
-          <Image source={source} style={{ width: CARD_WIDTH, height: CARD_WIDTH }} resizeMode="cover" />
-          <View className="px-4 pt-4 pb-4">
-            <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
-              {title}
-            </Text>
-            {subtitle && (
-              <Text className="text-muted" style={{ fontSize: 11, lineHeight: 15, marginTop: 4 }}>
-                {subtitle}
-              </Text>
-            )}
-          </View>
-        </View>
-      </Bouncy>
-    );
-  }
-
   return (
     <Bouncy
       onPress={onPress}
       scaleTo={0.97}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 22, width: CARD_WIDTH }}
+      style={{
+        ...cardShadow,
+        backgroundColor: "white",
+        width: CARD_WIDTH,
+        borderRadius: 22,
+      }}
     >
-      <Image
-        source={source}
-        style={{ width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 22 }}
-        resizeMode="cover"
-      />
+      <View
+        style={{
+          backgroundColor: "white",
+          borderRadius: 22,
+          borderWidth: 1,
+          borderColor: colors.border,
+          overflow: "hidden",
+        }}
+      >
+        {/* IMAGE — stays the same size */}
+        <Image
+          source={source}
+          style={{
+            width: CARD_WIDTH,
+            height: CARD_WIDTH,
+          }}
+          resizeMode="cover"
+        />
+
+        {/* TEXT AREA — this is what gets bigger */}
+        <View
+          style={{
+            height: CARD_TEXT_HEIGHT,
+            paddingHorizontal: 14,
+            paddingTop: 12,
+            paddingBottom: 10,
+            justifyContent: "flex-start",
+          }}
+        >
+          <Text
+            className="text-ink font-extrabold"
+            style={{
+              fontSize: 17,
+              lineHeight: 21,
+              width: CARD_WIDTH - 28,
+            }}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </Text>
+
+          {subtitle && (
+            <Text
+              className="text-muted"
+              style={{
+                fontSize: 11,
+                lineHeight: 15,
+                marginTop: 5,
+                width: CARD_WIDTH - 28,
+              }}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {subtitle}
+            </Text>
+          )}
+        </View>
+      </View>
     </Bouncy>
   );
 }
@@ -109,10 +128,14 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <ImageCard
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
+          title="Host a Game/Tournament"
+          subtitle="Bring your squad together and compete"
         />
         <ImageCard
           source={require("../../../assets/community-icons/explore-games.png")}
           onPress={() => navigation.navigate("GamesList", undefined)}
+          title="Explore Games/Tournaments"
+          subtitle="Discover new games and join exciting tournaments"
         />
         <ImageCard
           source={require("../../../assets/community-icons/create-squad.png")}
@@ -123,6 +146,8 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <ImageCard
           source={require("../../../assets/community-icons/explore-squad.png")}
           onPress={() => navigation.navigate("SquadsList")}
+          title="Explore Squads"
+          subtitle="Explore & join squads in around you"
         />
       </View>
     </ScrollView>
