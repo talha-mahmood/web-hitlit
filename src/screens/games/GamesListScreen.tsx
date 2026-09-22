@@ -596,17 +596,17 @@ export default function GamesListScreen() {
               borderColor: distanceKmFilter != null ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.ink} />
+            <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
             <Text
               className="font-semibold"
-              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.ink }}
+              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
             >
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
             <Ionicons
               name={distanceOpen ? "chevron-up" : "chevron-down"}
               size={16}
-              color={distanceKmFilter != null ? "white" : colors.ink}
+              color={distanceKmFilter != null ? "white" : colors.muted}
             />
           </Pressable>
           {distanceOpen && (
