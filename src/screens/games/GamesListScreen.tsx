@@ -559,7 +559,7 @@ export default function GamesListScreen() {
                   borderColor: active ? colors.primary : colors.border,
                 }}
               >
-                <Text className="font-semibold" style={{ fontSize: 13.5, color: active ? "white" : colors.ink }}>
+                <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
                   {p.label}
                 </Text>
               </Pressable>
@@ -585,8 +585,8 @@ export default function GamesListScreen() {
           >
             <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.muted} />
             <Text
-              className="font-semibold"
-              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.ink }}
+              className="font-medium"
+              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted }}
               numberOfLines={1}
             >
               {timeRange
@@ -631,8 +631,8 @@ export default function GamesListScreen() {
               <Ionicons name="navigate" size={8} color={distanceKmFilter != null ? "white" : colors.muted} />
             </View>
             <Text
-              className="font-semibold"
-              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.ink }}
+              className="font-medium"
+              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
             >
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
