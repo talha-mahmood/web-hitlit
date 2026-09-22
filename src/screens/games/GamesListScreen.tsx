@@ -567,7 +567,7 @@ export default function GamesListScreen() {
                 ? timeRange.start === timeRange.end
                   ? formatShortDate(timeRange.start)
                   : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`
-                : "Time"}
+                : "Date"}
             </Text>
             {timeRange ? (
               // Separate tap target from the pill itself — clears the range
