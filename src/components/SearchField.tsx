@@ -100,11 +100,18 @@ export default function SearchField({
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
           keyboardType={keyboardType}
+          // With a single variant there's nothing to animate/swipe, so this
+          // uses a real native placeholder instead of the overlay below — a
+          // native TextInput positions its cursor correctly relative to its
+          // own placeholder; the overlay is a separate Text drawn on top and
+          // doesn't share the input's exact text metrics, which is what made
+          // the cursor look like it was sitting on top of the first letter.
+          placeholder={variants.length < 2 ? `${prefix}${variants[0] ?? ""}` : undefined}
           placeholderTextColor={colors.muted}
           className="text-ink text-sm"
           style={{ paddingVertical: 12 }}
         />
-        {value.length === 0 && (
+        {value.length === 0 && variants.length >= 2 && (
           <View
             pointerEvents="none"
             style={{
