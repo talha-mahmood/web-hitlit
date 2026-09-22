@@ -53,7 +53,7 @@ function ImageCard({
             {title}
           </Text>
           {subtitle && (
-            <Text className="text-muted" style={{ fontSize: 13, marginTop: 4 }} numberOfLines={2}>
+            <Text className="text-muted" style={{ fontSize: 11, lineHeight: 15, marginTop: 4 }}>
               {subtitle}
             </Text>
           )}
