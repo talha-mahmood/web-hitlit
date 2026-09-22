@@ -745,7 +745,7 @@ export default function GamesListScreen() {
 
       {/* Location filter — always visible. The filter icon opens the sport-select
           sheet below it instead of toggling this. */}
-      <View className="px-5 mb-3">
+      <View className="px-5 mb-2">
         <SearchField
           value={locationInput}
           onChangeText={setLocationInput}
@@ -783,7 +783,7 @@ export default function GamesListScreen() {
         <FlatList
           data={games ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, gap: 0 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 0 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             debouncedSearch || debouncedLocation || listFilter !== "all" || timeRange ? (
