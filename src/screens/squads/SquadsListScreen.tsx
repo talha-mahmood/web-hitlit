@@ -322,42 +322,18 @@ export default function SquadsListScreen() {
         </Pressable>
       </View>
 
-      {/* Search */}
-      <View className="px-5 mb-3 flex-row items-center" style={{ gap: 10 }}>
-        <View className="flex-1">
-          <FieldInput
-            value={searchInput}
-            onChangeText={setSearchInput}
-            placeholder="Search squads, sport, location..."
-            autoCapitalize="none"
-            autoCorrect={false}
-            containerStyle={{ borderRadius: 28, height: 52 }}
-            left={<Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />}
-          />
-        </View>
-        <Pressable
-          onPress={() => {
-            setDistanceOpen(false);
-            setSportSheetOpen(true);
-          }}
-          className="items-center justify-center bg-white"
-          style={{ width: 52, height: 52, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
-        >
-          <Ionicons name="options-outline" size={22} color={colors.ink} />
-          {(!!selectedSportId || !!debouncedLocation) && (
-            <View
-              style={{
-                position: "absolute",
-                top: 7,
-                right: 7,
-                width: 9,
-                height: 9,
-                borderRadius: 5,
-                backgroundColor: colors.primary,
-              }}
-            />
-          )}
-        </Pressable>
+      {/* Search — the sport filter used to sit as an icon button here; it's
+          now the "Sports" pill in the filter row below instead. */}
+      <View className="px-5 mb-3">
+        <FieldInput
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder="Search squads, sport, location..."
+          autoCapitalize="none"
+          autoCorrect={false}
+          containerStyle={{ borderRadius: 28, height: 52 }}
+          left={<Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />}
+        />
       </View>
 
       {/* All / My Squads / Distance — one row, evenly spaced. Wrapped in a
@@ -399,6 +375,32 @@ export default function SquadsListScreen() {
                 </Pressable>
               );
             })}
+            {/* "Sports" — opens the same sport-select sheet the filter icon
+                next to the search box used to open. */}
+            <Pressable
+              onPress={() => {
+                setDistanceOpen(false);
+                setSportSheetOpen(true);
+              }}
+              className="flex-row items-center rounded-full"
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                gap: 5,
+                backgroundColor: selectedSportId ? colors.primary : "white",
+                borderWidth: 1,
+                borderColor: selectedSportId ? colors.primary : colors.border,
+              }}
+            >
+              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                Sports
+              </Text>
+            </Pressable>
             <View>
               {/* The card itself no longer opens the dropdown — only the
                   chevron icon at the end does. */}
