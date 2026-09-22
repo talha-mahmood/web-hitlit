@@ -47,7 +47,10 @@ function ImageCard({
         scaleTo={0.97}
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24, width: CARD_WIDTH, overflow: "hidden" }}
       >
-        <Image source={source} style={{ width: CARD_WIDTH, height: 150 }} resizeMode="cover" />
+        {/* Square, same aspect ratio as the source illustration, so "cover"
+            shows the whole image instead of cropping its top/bottom to fit
+            a shorter, wider box. */}
+        <Image source={source} style={{ width: CARD_WIDTH, height: CARD_WIDTH }} resizeMode="cover" />
         <View className="px-4 pt-4 pb-4">
           <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
             {title}
