@@ -481,63 +481,6 @@ export default function ProfileScreen() {
               ))}
             </View>
 
-            {/* Active squads */}
-            {stats && stats.activeSquads.length > 0 ? (
-              <>
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <Ionicons name="people" size={16} color={colors.primaryDark} />
-                    <Text className="text-lg font-semibold text-ink">Active Squads</Text>
-                  </View>
-                  <Pressable onPress={() => navigation.navigate("Community", { screen: "SquadsList" })}>
-                    <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-                      See all
-                    </Text>
-                  </Pressable>
-                </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
-                  {stats.activeSquads.map((s) => (
-                    <SquadChip
-                      key={s.id}
-                      name={s.name}
-                      onPress={() => navigation.navigate("SquadDetail", { squadId: s.id })}
-                    />
-                  ))}
-                </ScrollView>
-              </>
-            ) : null}
-
-            {/* Upcoming tournaments */}
-            {stats && stats.upcomingTournaments.length > 0 ? (
-              <>
-                <Text className="text-lg font-semibold text-ink mb-3">Upcoming Tournaments</Text>
-                {stats.upcomingTournaments.slice(0, 3).map((t) => (
-                  <EnrolledRow
-                    key={t.id}
-                    title={t.title}
-                    subtitle={`${t.sportName ?? "Tournament"} · ${t.gameDate}`}
-                    onPress={() => navigation.navigate("GameDetail", { gameId: t.id })}
-                  />
-                ))}
-                <View className="h-3" />
-              </>
-            ) : null}
-
-            {/* Upcoming games */}
-            {stats && stats.upcomingGames.length > 0 ? (
-              <>
-                <Text className="text-lg font-semibold text-ink mb-3">Upcoming Games</Text>
-                {stats.upcomingGames.slice(0, 3).map((g) => (
-                  <EnrolledRow
-                    key={g.id}
-                    title={g.title}
-                    subtitle={`${g.sportName ?? "Game"} · ${g.gameDate}`}
-                    onPress={() => navigation.navigate("GameDetail", { gameId: g.id })}
-                  />
-                ))}
-                <View className="h-3" />
-              </>
-            ) : null}
           </>
         )}
 
