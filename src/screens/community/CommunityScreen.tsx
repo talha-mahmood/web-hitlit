@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import CommunityBanner from "../../components/CommunityBanner";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
@@ -17,7 +16,7 @@ type Segment = "community" | "players" | "chat";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_PADDING = 16;
-const GRID_GAP = 8;
+const GRID_GAP = 18;
 // The four cards sit a little wider than the rest of the page content (they
 // stretch out into the side margin), which makes each card — and, being
 // square, its height too — a bit bigger.
@@ -117,10 +116,6 @@ function ImageCard({
 function MyCommunityContent({ navigation }: { navigation: Nav }) {
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: SIDE_PADDING, paddingTop: 4, paddingBottom: 40 }}>
-      <View style={{ marginBottom: 14 }}>
-        <CommunityBanner width={SCREEN_WIDTH - SIDE_PADDING * 2} />
-      </View>
-
       <View
         className="flex-row flex-wrap justify-between"
         style={{ rowGap: GRID_GAP, marginHorizontal: GRID_SIDE_PADDING - SIDE_PADDING }}
@@ -128,7 +123,7 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <ImageCard
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
-          title="Host a Game/Tournament"
+          title="Host Game/Tournament"
           subtitle="Bring your squad together and compete"
         />
         <ImageCard
