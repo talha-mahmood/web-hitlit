@@ -45,21 +45,36 @@ function ImageCard({
       <Bouncy
         onPress={onPress}
         scaleTo={0.97}
-        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24, width: CARD_WIDTH, overflow: "hidden" }}
+        // Shadow lives on this outer layer only — putting overflow:"hidden"
+        // on the same view as the shadow can stop it (and the rounded-corner
+        // clipping below) from actually rendering, so the border/corner
+        // clipping is done on a separate inner View instead, same as
+        // VenueListCard.
+        style={{ ...cardShadow, backgroundColor: "white", width: CARD_WIDTH, borderRadius: 22 }}
       >
-        {/* Square, same aspect ratio as the source illustration, so "cover"
-            shows the whole image instead of cropping its top/bottom to fit
-            a shorter, wider box. */}
-        <Image source={source} style={{ width: CARD_WIDTH, height: CARD_WIDTH }} resizeMode="cover" />
-        <View className="px-4 pt-4 pb-4">
-          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
-            {title}
-          </Text>
-          {subtitle && (
-            <Text className="text-muted" style={{ fontSize: 11, lineHeight: 15, marginTop: 4 }}>
-              {subtitle}
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 22,
+            borderWidth: 1,
+            borderColor: colors.border,
+            overflow: "hidden",
+          }}
+        >
+          {/* Square, same aspect ratio as the source illustration, so
+              "cover" shows the whole image instead of cropping its
+              top/bottom to fit a shorter, wider box. */}
+          <Image source={source} style={{ width: CARD_WIDTH, height: CARD_WIDTH }} resizeMode="cover" />
+          <View className="px-4 pt-4 pb-4">
+            <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
+              {title}
             </Text>
-          )}
+            {subtitle && (
+              <Text className="text-muted" style={{ fontSize: 11, lineHeight: 15, marginTop: 4 }}>
+                {subtitle}
+              </Text>
+            )}
+          </View>
         </View>
       </Bouncy>
     );
