@@ -754,7 +754,6 @@ export default function GamesListScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           icon="location-outline"
-          right={<Ionicons name="chevron-forward" size={18} color={colors.muted} />}
         />
       </View>
       <SelectSportModal

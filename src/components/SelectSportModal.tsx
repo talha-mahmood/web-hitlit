@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, ScrollView } from "react-native";
+import { Modal, View, Text, Image, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
+import { getSportImage } from "../lib/sportImages";
 
 type Sport = { id: string; name: string };
 
@@ -67,6 +68,7 @@ export default function SelectSportModal({
               {sports.map((sport) => {
                 const selected = draft === sport.id;
                 const { icon, bg, fg } = getSportIcon(sport.name);
+                const photo = getSportImage(sport.name);
                 return (
                   <Pressable
                     key={sport.id}
@@ -84,10 +86,14 @@ export default function SelectSportModal({
                     }}
                   >
                     <View
-                      className="items-center justify-center rounded-full"
-                      style={{ width: 40, height: 40, backgroundColor: bg }}
+                      className="items-center justify-center overflow-hidden rounded-full"
+                      style={{ width: 40, height: 40, backgroundColor: photo ? colors.border : bg }}
                     >
-                      <MaterialCommunityIcons name={icon} size={20} color={fg} />
+                      {photo ? (
+                        <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                      ) : (
+                        <MaterialCommunityIcons name={icon} size={20} color={fg} />
+                      )}
                     </View>
                     <Text
                       className={selected ? "font-bold" : "font-semibold"}
