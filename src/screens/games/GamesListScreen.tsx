@@ -583,7 +583,7 @@ export default function GamesListScreen() {
               borderColor: timeRange ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="calendar-outline" size={14} color={timeRange ? "white" : colors.primary} />
+            <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.primary} />
             <Text
               className="font-semibold"
               style={{ fontSize: 13.5, color: timeRange ? "white" : colors.ink }}
@@ -607,13 +607,14 @@ export default function GamesListScreen() {
           {/* The card itself no longer opens the dropdown — only the chevron
               icon at the end does. */}
           <View
-            // Same paddingHorizontal/paddingVertical as the All / My Games /
-            // Date pills next to it, so the card is the same size as them.
+            // Same paddingHorizontal/paddingVertical/fontSize as the All /
+            // My Games / Date pills next to it, so every filter card is the
+            // same size.
             className="flex-row items-center rounded-full"
             style={{
               paddingHorizontal: 16,
               paddingVertical: 10,
-              gap: 6,
+              gap: 5,
               borderWidth: 1,
               backgroundColor: distanceKmFilter != null ? colors.primary : "white",
               borderColor: distanceKmFilter != null ? colors.primary : colors.border,
@@ -622,12 +623,12 @@ export default function GamesListScreen() {
             <View
               className="items-center justify-center rounded-full"
               style={{
-                width: 20,
-                height: 20,
+                width: 18,
+                height: 18,
                 backgroundColor: distanceKmFilter != null ? "rgba(255,255,255,0.25)" : colors.primaryLight,
               }}
             >
-              <Ionicons name="navigate" size={11} color={distanceKmFilter != null ? "white" : colors.primary} />
+              <Ionicons name="navigate" size={8} color={distanceKmFilter != null ? "white" : colors.primary} />
             </View>
             <Text
               className="font-semibold"
@@ -647,7 +648,7 @@ export default function GamesListScreen() {
             >
               <Ionicons
                 name={distanceOpen ? "chevron-up" : "chevron-down"}
-                size={16}
+                size={14}
                 color={distanceKmFilter != null ? "white" : colors.muted}
               />
             </Pressable>
