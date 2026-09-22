@@ -343,7 +343,7 @@ export default function GamesListScreen() {
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
     route.params?.sportId
   );
-  const [showFilters, setShowFilters] = useState(false);
+  const [sportSheetOpen, setSportSheetOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationInput, setLocationInput] = useState("");
@@ -470,7 +470,7 @@ export default function GamesListScreen() {
           />
         </View>
         <Pressable
-          onPress={() => setShowFilters((v) => !v)}
+          onPress={() => setSportSheetOpen(true)}
           className="items-center justify-center bg-white"
           style={{ width: 52, height: 52, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
         >
@@ -578,30 +578,28 @@ export default function GamesListScreen() {
         </View>
       </View>
 
-      {/* Location filter — hidden behind the filter icon until tapped. Tapping
-          the icon also opens the sport-select sheet below it. */}
-      {showFilters && (
-        <View className="px-5 mb-3">
-          <SearchField
-            value={locationInput}
-            onChangeText={setLocationInput}
-            prefix="Filter by "
-            variants={["location"]}
-            autoCapitalize="none"
-            autoCorrect={false}
-            icon="location-outline"
-            right={<Ionicons name="chevron-forward" size={18} color={colors.muted} />}
-          />
-        </View>
-      )}
+      {/* Location filter — always visible. The filter icon opens the sport-select
+          sheet below it instead of toggling this. */}
+      <View className="px-5 mb-3">
+        <SearchField
+          value={locationInput}
+          onChangeText={setLocationInput}
+          prefix="Filter by "
+          variants={["location"]}
+          autoCapitalize="none"
+          autoCorrect={false}
+          icon="location-outline"
+          right={<Ionicons name="chevron-forward" size={18} color={colors.muted} />}
+        />
+      </View>
       <SelectSportModal
-        visible={showFilters}
-        onClose={() => setShowFilters(false)}
+        visible={sportSheetOpen}
+        onClose={() => setSportSheetOpen(false)}
         sports={sports ?? []}
         selectedSportId={selectedSportId}
         onApply={(id) => {
           setSelectedSportId(id);
-          setShowFilters(false);
+          setSportSheetOpen(false);
         }}
       />
 
