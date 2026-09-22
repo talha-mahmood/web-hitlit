@@ -1,4 +1,4 @@
-import { View, Text, Image, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert, ScrollView, Modal } from "react-native";
+import { View, Text, Image, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert, ScrollView } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -10,6 +10,7 @@ import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
 import SearchField from "../../components/SearchField";
 import SelectSportModal from "../../components/SelectSportModal";
+import SelectDistanceModal from "../../components/SelectDistanceModal";
 import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
@@ -608,145 +609,50 @@ export default function GamesListScreen() {
               </Pressable>
             ) : null}
           </Pressable>
-        <View>
-          {/* The card itself no longer opens the dropdown — only the chevron
-              icon at the end does. */}
-          <View
-            // Same paddingHorizontal/paddingVertical/fontSize as the All /
-            // My Games / Date pills next to it, so every filter card is the
-            // same size.
+          {/* "Distance" — plain pill like Sports, opening a bottom sheet
+              instead of the small inline dropdown it used to expand into. */}
+          <Pressable
+            onPress={() => {
+              // Ask for location the first time this is opened, same as the
+              // Home screen's "near you" sections — a denied/pending permission
+              // just means the km options won't be able to filter anything yet.
+              if (locationStatus !== "granted") requestLocation();
+              setDistanceOpen(true);
+            }}
             className="flex-row items-center rounded-full"
             style={{
               paddingHorizontal: 16,
               paddingVertical: 10,
               gap: 5,
-              borderWidth: 1,
               backgroundColor: distanceKmFilter != null ? colors.primary : "white",
+              borderWidth: 1,
               borderColor: distanceKmFilter != null ? colors.primary : colors.border,
             }}
           >
-            <View
-              className="items-center justify-center rounded-full"
-              style={{
-                width: 18,
-                height: 18,
-                backgroundColor: distanceKmFilter != null ? "rgba(255,255,255,0.25)" : "#F3F4F6",
-              }}
-            >
-              <Ionicons name="navigate" size={8} color={distanceKmFilter != null ? "white" : colors.muted} />
-            </View>
+            <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
             <Text
               className="font-medium"
               style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
+              numberOfLines={1}
             >
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
-            <Pressable
-              onPress={() => {
-                // Ask for location the first time this is opened, same as the
-                // Home screen's "near you" sections — a denied/pending permission
-                // just means the km options won't be able to filter anything yet.
-                if (locationStatus !== "granted") requestLocation();
-                setDistanceOpen((v) => !v);
-              }}
-              hitSlop={8}
-            >
-              <Ionicons
-                name={distanceOpen ? "chevron-up" : "chevron-down"}
-                size={14}
-                color={distanceKmFilter != null ? "white" : colors.muted}
-              />
-            </Pressable>
-          </View>
-        </View>
+          </Pressable>
         </ScrollView>
 </View>
-
-      {/* Distance options — a transparent full-screen Modal rather than an
-          inline overlay, so a tap anywhere outside the card (including the
-          rest of the games list) closes it; a tap on the card itself is
-          swallowed by its own Pressable instead of reaching the backdrop. */}
-      <Modal visible={distanceOpen} transparent animationType="none" onRequestClose={() => setDistanceOpen(false)}>
-        <Pressable style={{ flex: 1 }} onPress={() => setDistanceOpen(false)}>
-          <View style={{ position: "absolute", top: insets.top + 200, right: 20 }}>
-            {/* Little speech-bubble tail pointing up at the button. */}
-            <View
-              style={{
-                width: 0,
-                height: 0,
-                marginLeft: 24,
-                borderLeftWidth: 9,
-                borderRightWidth: 9,
-                borderBottomWidth: 9,
-                borderLeftColor: "transparent",
-                borderRightColor: "transparent",
-                borderBottomColor: "white",
-              }}
-            />
-            <Pressable onPress={() => {}}>
-              <View
-                className="bg-white"
-                style={{
-                  minWidth: 250,
-                  marginTop: -1,
-                  borderRadius: 20,
-                  paddingVertical: 6,
-                  ...cardShadow,
-                  shadowOpacity: 0.15,
-                  shadowRadius: 16,
-                }}
-              >
-                {locationStatus === "denied" && (
-                  <Text className="text-muted" style={{ fontSize: 11.5, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 2 }}>
-                    Enable location to filter by distance.
-                  </Text>
-                )}
-                {DISTANCE_OPTIONS_KM.map((km, i) => {
-                  const selected = distanceKmFilter === km;
-                  return (
-                    <View key={km}>
-                      <Pressable
-                        onPress={() => {
-                          // Tapping the already-selected range clears the filter,
-                          // same toggle-off behavior as the sport tiles.
-                          setDistanceKmFilter(selected ? null : km);
-                          setDistanceOpen(false);
-                        }}
-                        className="flex-row items-center justify-between"
-                        style={{
-                          marginHorizontal: 6,
-                          marginVertical: 3,
-                          paddingLeft: 12,
-                          paddingRight: 20,
-                          paddingVertical: 12,
-                          gap: 10,
-                          borderRadius: 14,
-                          backgroundColor: selected ? colors.primaryLight : "transparent",
-                        }}
-                      >
-                        <View className="flex-row items-center" style={{ gap: 12 }}>
-                          <Ionicons name="location" size={20} color={selected ? colors.primary : "#4B5563"} />
-                          <Text
-                            className={selected ? "font-bold" : "font-semibold"}
-                            style={{ fontSize: 17, color: selected ? colors.primary : colors.ink }}
-                          >
-                            {km} km
-                          </Text>
-                        </View>
-                        {selected ? <Ionicons name="checkmark" size={20} color={colors.primary} /> : null}
-                      </Pressable>
-                      {i < DISTANCE_OPTIONS_KM.length - 1 ? (
-                        <View style={{ height: 1, backgroundColor: "#EEF0F1", marginHorizontal: 14 }} />
-                      ) : null}
-                    </View>
-                  );
-                })}
-              </View>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
       </View>
+
+      <SelectDistanceModal
+        visible={distanceOpen}
+        onClose={() => setDistanceOpen(false)}
+        options={DISTANCE_OPTIONS_KM}
+        selectedKm={distanceKmFilter}
+        locationDenied={locationStatus === "denied"}
+        onApply={(km) => {
+          setDistanceKmFilter(km);
+          setDistanceOpen(false);
+        }}
+      />
 
       {/* Location filter — always visible. The filter icon opens the sport-select
           sheet below it instead of toggling this. */}
