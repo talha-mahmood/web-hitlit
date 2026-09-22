@@ -24,6 +24,8 @@ import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 import { matchesLocationQuery } from "../../lib/locationFilter";
+import { useDeviceLocation } from "../../hooks/useDeviceLocation";
+import { distanceKm } from "../../lib/distance";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
@@ -348,10 +350,12 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
-  // "All" / "My Games" / "Upcoming" pills, and the sort dropdown beside them.
+  // "All" / "My Games" / "Upcoming" pills, and the distance dropdown beside them.
   const [listFilter, setListFilter] = useState<"all" | "mine" | "upcoming">("all");
-  const [sortBy, setSortBy] = useState<"latest" | "soonest">("latest");
-  const [sortOpen, setSortOpen] = useState(false);
+  const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
+  const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
+  const [distanceOpen, setDistanceOpen] = useState(false);
+  const { coords: myCoords, status: locationStatus, requestLocation } = useDeviceLocation();
   const myOnly = listFilter === "mine";
   const gameType = route.params?.gameType;
   const isTournamentList = gameType === "TOURNAMENT";
@@ -401,10 +405,20 @@ export default function GamesListScreen() {
       ? (scoped ?? []).filter((g) => new Date(`${g.game_date}T${g.start_time}`).getTime() > Date.now())
       : scoped;
   // "Latest" = most recently posted first; "Soonest" = earliest start first (server order).
+  const latestFirst = [...(upcomingOnly ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  // A game with no venue coordinates (custom/text-only venue) has no known
+  // distance, so it's left out once a distance filter is on — same "unknown
+  // distance is treated as not near you" rule the Home screen's distance
+  // sort already uses (see withDistance there).
   const games =
-    sortBy === "latest"
-      ? [...(upcomingOnly ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at))
-      : upcomingOnly;
+    distanceKmFilter != null && myCoords
+      ? latestFirst.filter((g) => {
+          const lat = g.venues?.latitude;
+          const lng = g.venues?.longitude;
+          if (lat == null || lng == null) return false;
+          return distanceKm(myCoords.latitude, myCoords.longitude, lat, lng) <= distanceKmFilter;
+        })
+      : latestFirst;
 
   // Join-request modal is a single shared instance (not one per card) —
   // this tracks which regular game (if any) it's currently open for.
@@ -524,23 +538,30 @@ export default function GamesListScreen() {
         </View>
         <View>
           <Pressable
-            onPress={() => setSortOpen((v) => !v)}
+            onPress={() => {
+              // Ask for location the first time this is opened, same as the
+              // Home screen's "near you" sections — a denied/pending permission
+              // just means the km options won't be able to filter anything yet.
+              if (locationStatus !== "granted") requestLocation();
+              setDistanceOpen((v) => !v);
+            }}
             className="flex-row items-center rounded-full bg-white"
             style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 6, borderWidth: 1, borderColor: colors.border }}
           >
+            <Ionicons name="navigate-outline" size={14} color={colors.ink} />
             <Text className="text-ink font-semibold" style={{ fontSize: 13.5 }}>
-              {sortBy === "latest" ? "Latest" : "Soonest"}
+              {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
-            <Ionicons name={sortOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.ink} />
+            <Ionicons name={distanceOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.ink} />
           </Pressable>
-          {sortOpen && (
+          {distanceOpen && (
             <View
               className="bg-white"
               style={{
                 position: "absolute",
                 right: 0,
                 top: 46,
-                minWidth: 130,
+                minWidth: 150,
                 borderRadius: 14,
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -549,30 +570,35 @@ export default function GamesListScreen() {
                 ...cardShadow,
               }}
             >
-              {(
-                [
-                  { key: "latest", label: "Latest" },
-                  { key: "soonest", label: "Soonest" },
-                ] as const
-              ).map((o) => (
-                <Pressable
-                  key={o.key}
-                  onPress={() => {
-                    setSortBy(o.key);
-                    setSortOpen(false);
-                  }}
-                  className="flex-row items-center justify-between"
-                  style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 10 }}
-                >
-                  <Text
-                    className={sortBy === o.key ? "font-bold" : "font-medium"}
-                    style={{ fontSize: 14, color: sortBy === o.key ? colors.primaryDark : colors.ink }}
+              {locationStatus === "denied" && (
+                <Text className="text-muted" style={{ fontSize: 11.5, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 2 }}>
+                  Enable location to filter by distance.
+                </Text>
+              )}
+              {DISTANCE_OPTIONS_KM.map((km) => {
+                const selected = distanceKmFilter === km;
+                return (
+                  <Pressable
+                    key={km}
+                    onPress={() => {
+                      // Tapping the already-selected range clears the filter,
+                      // same toggle-off behavior as the sport tiles.
+                      setDistanceKmFilter(selected ? null : km);
+                      setDistanceOpen(false);
+                    }}
+                    className="flex-row items-center justify-between"
+                    style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 10 }}
                   >
-                    {o.label}
-                  </Text>
-                  {sortBy === o.key ? <Ionicons name="checkmark" size={16} color={colors.primary} /> : null}
-                </Pressable>
-              ))}
+                    <Text
+                      className={selected ? "font-bold" : "font-medium"}
+                      style={{ fontSize: 14, color: selected ? colors.primaryDark : colors.ink }}
+                    >
+                      {km} km
+                    </Text>
+                    {selected ? <Ionicons name="checkmark" size={16} color={colors.primary} /> : null}
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         </View>
