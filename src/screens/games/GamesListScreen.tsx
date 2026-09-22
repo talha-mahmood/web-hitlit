@@ -9,7 +9,7 @@ import { useGames, useJoinGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
 import SearchField from "../../components/SearchField";
-import SportFilterDropdown from "../../components/SportFilterDropdown";
+import SelectSportModal from "../../components/SelectSportModal";
 import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
@@ -578,30 +578,32 @@ export default function GamesListScreen() {
         </View>
       </View>
 
-      {/* Location + sport filters — hidden behind the filter icon until tapped */}
+      {/* Location filter — hidden behind the filter icon until tapped. Tapping
+          the icon also opens the sport-select sheet below it. */}
       {showFilters && (
         <View className="px-5 mb-3">
           <SearchField
             value={locationInput}
             onChangeText={setLocationInput}
             prefix="Filter by "
-            variants={["location", "city", "area"]}
+            variants={["location"]}
             autoCapitalize="none"
             autoCorrect={false}
             icon="location-outline"
+            right={<Ionicons name="chevron-forward" size={18} color={colors.muted} />}
           />
         </View>
       )}
-      {showFilters && (
-        <SportFilterDropdown
-          sports={sports ?? []}
-          selectedSportId={selectedSportId}
-          onSelect={(id) => {
-            setSelectedSportId(id);
-            setShowFilters(false);
-          }}
-        />
-      )}
+      <SelectSportModal
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        sports={sports ?? []}
+        selectedSportId={selectedSportId}
+        onApply={(id) => {
+          setSelectedSportId(id);
+          setShowFilters(false);
+        }}
+      />
 
       {/* Games list */}
       {isLoading ? (

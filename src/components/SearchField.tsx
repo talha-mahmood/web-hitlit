@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ComponentProps } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
+import type { ReactNode } from "react";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
@@ -27,6 +28,7 @@ export default function SearchField({
   keyboardType,
   containerStyle,
   icon = "search-outline",
+  right,
 }: {
   value: string;
   onChangeText: (t: string) => void;
@@ -37,6 +39,9 @@ export default function SearchField({
   keyboardType?: ComponentProps<typeof TextInput>["keyboardType"];
   containerStyle?: object;
   icon?: ComponentProps<typeof Ionicons>["name"];
+  // Extra content after the text/clear button (e.g. a chevron) — optional,
+  // every existing caller keeps its plain trailing clear-button look.
+  right?: ReactNode;
 }) {
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
@@ -129,6 +134,7 @@ export default function SearchField({
           <Ionicons name="close-circle" size={18} color={colors.border} />
         </Pressable>
       )}
+      {right}
     </View>
   );
 }
