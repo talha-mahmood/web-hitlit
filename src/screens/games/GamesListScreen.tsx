@@ -583,7 +583,7 @@ export default function GamesListScreen() {
               borderColor: timeRange ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.primary} />
+            <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.muted} />
             <Text
               className="font-semibold"
               style={{ fontSize: 13.5, color: timeRange ? "white" : colors.ink }}
@@ -625,10 +625,10 @@ export default function GamesListScreen() {
               style={{
                 width: 18,
                 height: 18,
-                backgroundColor: distanceKmFilter != null ? "rgba(255,255,255,0.25)" : colors.primaryLight,
+                backgroundColor: distanceKmFilter != null ? "rgba(255,255,255,0.25)" : "#F3F4F6",
               }}
             >
-              <Ionicons name="navigate" size={8} color={distanceKmFilter != null ? "white" : colors.primary} />
+              <Ionicons name="navigate" size={8} color={distanceKmFilter != null ? "white" : colors.muted} />
             </View>
             <Text
               className="font-semibold"
