@@ -107,7 +107,7 @@ export default function PlayersDashboardContent({
       data={visiblePlayers}
       keyboardShouldPersistTaps="handled"
       keyExtractor={(item) => item.player.userId}
-      contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40 }}
       ListHeaderComponent={
         <View className="mb-1 flex-row items-center" style={{ gap: 10 }}>
           <View className="flex-1">
