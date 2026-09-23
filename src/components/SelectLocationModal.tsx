@@ -6,11 +6,11 @@ import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
 import { PAKISTAN_CITIES } from "../lib/pakistanCities";
 
 // Bottom sheet for a list screen's Location filter — same shape/interaction
-// as SelectSportModal/SelectDistanceModal (drag handle, title/subtitle, X, a
-// list of options, "Apply Filter" button, picked value staying local until
-// Apply is pressed). Unlike those two, the "options" here are just quick-pick
-// suggestions — a free-text field above them still lets you type any
-// location, same as the old always-visible field did.
+// as SelectSportModal/SelectDistanceModal (drag handle, title/subtitle, X,
+// "Apply Filter" button, picked values staying local until Apply is
+// pressed). Unlike those two, this is multi-select: any number of
+// suggested cities can be toggled on, and any number of free-text locations
+// can be typed in and added as their own tags — both feed the same list.
 export default function SelectLocationModal({
   visible,
   onClose,
@@ -19,22 +19,45 @@ export default function SelectLocationModal({
 }: {
   visible: boolean;
   onClose: () => void;
-  value: string;
-  onApply: (location: string) => void;
+  value: string[];
+  onApply: (locations: string[]) => void;
 }) {
   const insets = useSafeAreaInsets();
-  const [draft, setDraft] = useState(value);
+  const [draft, setDraft] = useState<string[]>(value);
+  const [typed, setTyped] = useState("");
 
   useEffect(() => {
-    if (visible) setDraft(value);
+    if (visible) {
+      setDraft(value);
+      setTyped("");
+    }
   }, [visible, value]);
+
+  const addTyped = () => {
+    const trimmed = typed.trim();
+    if (!trimmed) return;
+    setDraft((prev) => (prev.some((v) => v.toLowerCase() === trimmed.toLowerCase()) ? prev : [...prev, trimmed]));
+    setTyped("");
+  };
+
+  const toggleCity = (city: string) => {
+    setDraft((prev) =>
+      prev.some((v) => v.toLowerCase() === city.toLowerCase())
+        ? prev.filter((v) => v.toLowerCase() !== city.toLowerCase())
+        : [...prev, city]
+    );
+  };
+
+  const removeTag = (tag: string) => {
+    setDraft((prev) => prev.filter((v) => v !== tag));
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
           className="bg-white rounded-t-3xl"
-          style={{ paddingBottom: 20 + insets.bottom, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+          style={{ paddingBottom: 20 + insets.bottom, maxHeight: "85%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
@@ -46,7 +69,7 @@ export default function SelectLocationModal({
                 Filter by Location
               </Text>
               <Text className="text-muted" style={{ fontSize: 13.5, marginTop: 2 }}>
-                Pick a city or type any location
+                Pick any number of cities or type your own
               </Text>
             </View>
             <Pressable
@@ -62,38 +85,63 @@ export default function SelectLocationModal({
           <View className="px-5 pb-3">
             <View
               className="flex-row items-center rounded-2xl px-4"
-              style={{ borderWidth: 1.5, borderColor: draft ? colors.primary : colors.border, backgroundColor: draft ? colors.primaryLight : "white" }}
+              style={{ borderWidth: 1.5, borderColor: typed ? colors.primary : colors.border, backgroundColor: typed ? colors.primaryLight : "white" }}
             >
               <Ionicons name="location-outline" size={18} color={colors.muted} />
               <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="e.g. DHA Phase 6, Lahore"
+                value={typed}
+                onChangeText={setTyped}
+                onSubmitEditing={addTyped}
+                returnKeyType="done"
+                placeholder="Type a location and add it"
                 placeholderTextColor={colors.muted}
                 autoCapitalize="none"
                 autoCorrect={false}
                 className="flex-1 text-ink text-sm ml-2"
                 style={{ paddingVertical: 12 }}
               />
-              {draft.length > 0 && (
-                <Pressable onPress={() => setDraft("")} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color={colors.border} />
+              {typed.length > 0 && (
+                <Pressable onPress={addTyped} hitSlop={8} className="flex-row items-center px-2 py-1 rounded-lg bg-primary">
+                  <Text className="text-white font-bold text-xs">Add</Text>
                 </Pressable>
               )}
             </View>
           </View>
 
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 4 }} bounces={false}>
+            {draft.length > 0 && (
+              <>
+                <Text className="text-muted font-semibold" style={{ fontSize: 12, marginBottom: 10, letterSpacing: 0.3 }}>
+                  SELECTED ({draft.length})
+                </Text>
+                <View className="flex-row flex-wrap" style={{ gap: 8, marginBottom: 16 }}>
+                  {draft.map((tag) => (
+                    <Pressable
+                      key={tag}
+                      onPress={() => removeTag(tag)}
+                      className="flex-row items-center rounded-full bg-primary"
+                      style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6 }}
+                    >
+                      <Text className="text-white font-bold" style={{ fontSize: 13.5 }}>
+                        {tag}
+                      </Text>
+                      <Ionicons name="close" size={14} color="white" />
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            )}
+
             <Text className="text-muted font-semibold" style={{ fontSize: 12, marginBottom: 10, letterSpacing: 0.3 }}>
               SUGGESTED CITIES
             </Text>
             <View className="flex-row flex-wrap" style={{ gap: 8 }}>
               {PAKISTAN_CITIES.map((city) => {
-                const selected = draft.trim().toLowerCase() === city.toLowerCase();
+                const selected = draft.some((v) => v.toLowerCase() === city.toLowerCase());
                 return (
                   <Pressable
                     key={city}
-                    onPress={() => setDraft(selected ? "" : city)}
+                    onPress={() => toggleCity(city)}
                     className="flex-row items-center rounded-full"
                     style={{
                       paddingHorizontal: 14,
@@ -119,7 +167,7 @@ export default function SelectLocationModal({
 
           <View className="px-5 pt-3" style={{ gap: 8 }}>
             <Pressable
-              onPress={() => onApply(draft.trim())}
+              onPress={() => onApply(draft)}
               className="items-center rounded-2xl bg-primary py-4"
               style={primaryButtonShadow}
             >
@@ -127,8 +175,8 @@ export default function SelectLocationModal({
                 Apply Filter
               </Text>
             </Pressable>
-            {!!value && (
-              <Pressable onPress={() => onApply("")} className="items-center py-2">
+            {value.length > 0 && (
+              <Pressable onPress={() => onApply([])} className="items-center py-2">
                 <Text className="text-muted font-semibold" style={{ fontSize: 13.5 }}>
                   Clear location filter
                 </Text>

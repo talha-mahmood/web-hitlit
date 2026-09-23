@@ -26,7 +26,9 @@ export type VenueDetail = Venue & {
 export type VenueFilters = {
   search?: string;
   // Matches against city or address (e.g. "Lahore", "DHA Phase 6", "Gulberg").
-  location?: string;
+  // A venue matches if it matches ANY of these (multi-select cities +
+  // manual entries from SelectLocationModal).
+  locations?: string[];
   sportId?: string;
 };
 
@@ -50,9 +52,9 @@ export async function fetchVenues(filters: VenueFilters = {}): Promise<VenueList
   if (filters.sportId) {
     query = query.eq("court.sports_id", filters.sportId);
   }
-  const location = filters.location ? sanitizeSearchTerm(filters.location) : "";
-  if (location) {
-    query = query.or(`city.ilike.%${location}%,address.ilike.%${location}%`);
+  const locations = (filters.locations ?? []).map(sanitizeSearchTerm).filter(Boolean);
+  if (locations.length > 0) {
+    query = query.or(locations.flatMap((loc) => [`city.ilike.%${loc}%`, `address.ilike.%${loc}%`]).join(","));
   }
   if (filters.search) {
     query = query.ilike("name", `%${filters.search}%`);

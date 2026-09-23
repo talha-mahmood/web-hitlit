@@ -359,8 +359,7 @@ export default function GamesListScreen() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
-  const [locationInput, setLocationInput] = useState("");
-  const [debouncedLocation, setDebouncedLocation] = useState("");
+  const [locationTags, setLocationTags] = useState<string[]>([]);
   // "All" / "My Games" pills, the "Time" range pill, and the distance
   // dropdown beside them.
   const [listFilter, setListFilter] = useState<"all" | "mine">("all");
@@ -386,11 +385,6 @@ export default function GamesListScreen() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedLocation(locationInput.trim()), 300);
-    return () => clearTimeout(t);
-  }, [locationInput]);
-
   const { data: sports } = useSports();
   const { data: gamesData, isLoading, isRefetching, refetch } = useGames({
     sportId: selectedSportId,
@@ -404,11 +398,11 @@ export default function GamesListScreen() {
         )
       )
     : gamesData;
-  const locationFiltered = debouncedLocation
+  const locationFiltered = locationTags.length > 0
     ? (searched ?? []).filter((g) =>
         matchesLocationQuery(
           [g.venues?.name, g.venues?.city, g.venues?.address, g.custom_venue_name],
-          debouncedLocation
+          locationTags
         )
       )
     : searched;
@@ -546,6 +540,34 @@ export default function GamesListScreen() {
               </Pressable>
             );
           })}
+          {/* "Location" — opens a bottom sheet with a free-text field plus
+              city suggestions (multi-select), in place of the old
+              always-visible inline field. Right after All/My Games. */}
+          <Pressable
+            onPress={() => setLocationOpen(true)}
+            className="flex-row items-center rounded-full"
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              gap: 5,
+              backgroundColor: locationTags.length > 0 ? colors.primary : "white",
+              borderWidth: 1,
+              borderColor: locationTags.length > 0 ? colors.primary : colors.border,
+            }}
+          >
+            <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
+            <Text
+              className="font-medium"
+              style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
+              numberOfLines={1}
+            >
+              {locationTags.length > 0
+                ? locationTags.length === 1
+                  ? locationTags[0]
+                  : `${locationTags.length} locations`
+                : "Location"}
+            </Text>
+          </Pressable>
           {/* "Sports" — opens the same sport-select sheet the filter icon
               next to the search box used to open. */}
           <Pressable
@@ -639,30 +661,6 @@ export default function GamesListScreen() {
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
           </Pressable>
-          {/* "Location" — opens a bottom sheet with a free-text field plus
-              city suggestions, same shape as Sports/Distance, in place of
-              the old always-visible inline field. */}
-          <Pressable
-            onPress={() => setLocationOpen(true)}
-            className="flex-row items-center rounded-full"
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: locationInput ? colors.primary : "white",
-              borderWidth: 1,
-              borderColor: locationInput ? colors.primary : colors.border,
-            }}
-          >
-            <Ionicons name="location-outline" size={14} color={locationInput ? "white" : colors.muted} />
-            <Text
-              className="font-medium"
-              style={{ fontSize: 13.5, color: locationInput ? "white" : colors.muted }}
-              numberOfLines={1}
-            >
-              {locationInput || "Location"}
-            </Text>
-          </Pressable>
         </ScrollView>
 </View>
       </View>
@@ -682,9 +680,9 @@ export default function GamesListScreen() {
       <SelectLocationModal
         visible={locationOpen}
         onClose={() => setLocationOpen(false)}
-        value={locationInput}
-        onApply={(loc) => {
-          setLocationInput(loc);
+        value={locationTags}
+        onApply={(locs) => {
+          setLocationTags(locs);
           setLocationOpen(false);
         }}
       />
@@ -718,17 +716,17 @@ export default function GamesListScreen() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation || listFilter !== "all" || timeRange ? (
+            debouncedSearch || locationTags.length > 0 || listFilter !== "all" || timeRange ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">
                   No {isTournamentList ? "tournaments" : "games"} found
                 </Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  {debouncedSearch && debouncedLocation
-                    ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}" near "${debouncedLocation}".`
-                    : debouncedLocation
-                      ? `No ${isTournamentList ? "tournaments" : "games"} found near "${debouncedLocation}".`
+                  {debouncedSearch && locationTags.length > 0
+                    ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}" near "${locationTags.join(", ")}".`
+                    : locationTags.length > 0
+                      ? `No ${isTournamentList ? "tournaments" : "games"} found near "${locationTags.join(", ")}".`
                       : debouncedSearch
                         ? `No ${isTournamentList ? "tournaments" : "games"} match "${debouncedSearch}". Try a different name or ${isTournamentList ? "tournament" : "game"} ID.`
                         : `You haven't created any ${isTournamentList ? "tournaments" : "games"} yet.`}

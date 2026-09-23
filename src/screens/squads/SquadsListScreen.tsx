@@ -230,8 +230,7 @@ export default function SquadsListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sportSheetOpen, setSportSheetOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [locationInput, setLocationInput] = useState("");
-  const [debouncedLocation, setDebouncedLocation] = useState("");
+  const [locationTags, setLocationTags] = useState<string[]>([]);
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(undefined);
   // "All" / "My Squads" pills, and the Distance dropdown beside them — same
   // row as the Games list, minus its Date pill (squads aren't scheduled).
@@ -247,18 +246,13 @@ export default function SquadsListScreen() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedLocation(locationInput.trim()), 300);
-    return () => clearTimeout(t);
-  }, [locationInput]);
-
   const { data: sports } = useSports();
   const { data: squadsData, isLoading, isRefetching, refetch } = useSquads({
     search: debouncedSearch || undefined,
     sportId: selectedSportId,
   });
-  const locationFiltered = debouncedLocation
-    ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], debouncedLocation))
+  const locationFiltered = locationTags.length > 0
+    ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], locationTags))
     : squadsData;
   const scoped = myOnly ? (locationFiltered ?? []).filter((s) => s.squad_owner_id === userId) : locationFiltered;
   // Squads don't carry their own coordinates (just a typed-in location
@@ -377,6 +371,34 @@ export default function SquadsListScreen() {
                 </Pressable>
               );
             })}
+            {/* "Location" — opens a bottom sheet with a free-text field plus
+                city suggestions (multi-select), in place of the old
+                always-visible inline field. Right after All/My Squads. */}
+            <Pressable
+              onPress={() => setLocationOpen(true)}
+              className="flex-row items-center rounded-full"
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                gap: 5,
+                backgroundColor: locationTags.length > 0 ? colors.primary : "white",
+                borderWidth: 1,
+                borderColor: locationTags.length > 0 ? colors.primary : colors.border,
+              }}
+            >
+              <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                {locationTags.length > 0
+                  ? locationTags.length === 1
+                    ? locationTags[0]
+                    : `${locationTags.length} locations`
+                  : "Location"}
+              </Text>
+            </Pressable>
             {/* "Sports" — opens the same sport-select sheet the filter icon
                 next to the search box used to open. */}
             <Pressable
@@ -429,30 +451,6 @@ export default function SquadsListScreen() {
                 {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
               </Text>
             </Pressable>
-            {/* "Location" — opens a bottom sheet with a free-text field plus
-                city suggestions, same shape as Sports/Distance, in place of
-                the old always-visible inline field. */}
-            <Pressable
-              onPress={() => setLocationOpen(true)}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: locationInput ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: locationInput ? colors.primary : colors.border,
-              }}
-            >
-              <Ionicons name="location-outline" size={14} color={locationInput ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: locationInput ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                {locationInput || "Location"}
-              </Text>
-            </Pressable>
           </ScrollView>
         </View>
       </View>
@@ -472,9 +470,9 @@ export default function SquadsListScreen() {
       <SelectLocationModal
         visible={locationOpen}
         onClose={() => setLocationOpen(false)}
-        value={locationInput}
-        onApply={(loc) => {
-          setLocationInput(loc);
+        value={locationTags}
+        onApply={(locs) => {
+          setLocationTags(locs);
           setLocationOpen(false);
         }}
       />
@@ -500,15 +498,15 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || debouncedLocation || selectedSportId || myOnly || distanceKmFilter != null ? (
+            debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No squads found</Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  {debouncedSearch && debouncedLocation
-                    ? `No squads match "${debouncedSearch}" near "${debouncedLocation}".`
-                    : debouncedLocation
-                      ? `No squads found near "${debouncedLocation}".`
+                  {debouncedSearch && locationTags.length > 0
+                    ? `No squads match "${debouncedSearch}" near "${locationTags.join(", ")}".`
+                    : locationTags.length > 0
+                      ? `No squads found near "${locationTags.join(", ")}".`
                       : debouncedSearch
                         ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
                         : myOnly
