@@ -258,10 +258,10 @@ export default function ProfileScreen() {
             {profile?.avatar ? (
               <Image
                 source={{ uri: profile.avatar }}
-                className="w-20 h-20 rounded-full bg-primary-light border-2 border-primary"
+                className="w-20 h-20 rounded-full bg-primary-light border-[3px] border-[#AEE7C3]"
               />
             ) : (
-              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center border-2 border-primary">
+              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#AEE7C3]">
                 <Text className="text-3xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
