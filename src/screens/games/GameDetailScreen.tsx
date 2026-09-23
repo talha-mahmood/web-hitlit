@@ -537,7 +537,7 @@ export default function GameDetailScreen() {
             style={{
               width: 36,
               height: 36,
-              backgroundColor: colors.primaryLight,
+              backgroundColor: "white",
               shadowColor: "#0F172A",
               shadowOffset: { width: 0, height: 3 },
               shadowOpacity: 0.12,
