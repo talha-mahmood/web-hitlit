@@ -200,9 +200,6 @@ function TeamCard({
             <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
           </View>
         )}
-        {/* Purely visual for now — no per-team menu (rename/remove) exists
-            yet, so this doesn't open anything. */}
-        <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} style={{ marginLeft: 4 }} />
       </View>
 
       {canSeeTeamCode && (
