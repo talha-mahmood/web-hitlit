@@ -182,80 +182,51 @@ function TeamCard({
     setTimeout(() => setCodeCopied(false), 1500);
   };
 
-  // A claimed team (someone actually created/registered it) gets the bold
-  // gradient header + wave divider; a still-empty slot stays a plain pale
-  // card — there's nothing to "announce" about it yet.
   const chatButton = isJoinedMember ? (
     <Pressable
       onPress={onOpenChat}
       hitSlop={8}
       className="items-center justify-center rounded-full"
-      style={{ width: 32, height: 32, backgroundColor: isClaimed ? "rgba(255,255,255,0.22)" : colors.primaryLight, marginLeft: 8 }}
+      style={{ width: 32, height: 32, backgroundColor: "rgba(255,255,255,0.22)", marginLeft: 8 }}
     >
       <ChatIcon size={16} unreadCount={teamChatUnread} />
     </Pressable>
   ) : null;
 
   return (
-    <View
-      className="border border-border rounded-2xl"
-      style={{ ...cardShadow, overflow: "hidden", backgroundColor: isClaimed ? "white" : "#F0FDF4" }}
-    >
-      {isClaimed ? (
-        <View style={{ position: "relative" }}>
-          <LinearGradient
-            colors={["#0E5C34", "#1D9254"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 16, paddingBottom: 28 }}
-          >
-            <View className="flex-row items-center" style={{ gap: 10 }}>
-              <View
-                className="items-center justify-center rounded-xl bg-white"
-                style={{ width: 40, height: 40 }}
-              >
-                <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-bold text-base" numberOfLines={1}>{team.name}</Text>
-                <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {joinedMembers.length}/{requiredSize || "—"} players
-                </Text>
-              </View>
-              {badge && (
-                <View className="px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.22)" }}>
-                  <Text className="text-xs font-bold text-white">{badge.label}</Text>
-                </View>
-              )}
-              {chatButton}
+    <View className="border border-border rounded-2xl bg-white" style={{ ...cardShadow, overflow: "hidden" }}>
+      <View style={{ position: "relative" }}>
+        <LinearGradient
+          colors={["#0E5C34", "#1D9254"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ padding: 16, paddingBottom: 28 }}
+        >
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <View
+              className="items-center justify-center rounded-xl bg-white"
+              style={{ width: 40, height: 40 }}
+            >
+              <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
             </View>
-          </LinearGradient>
-          <WaveDivider color="white" height={22} />
-        </View>
-      ) : (
-        <View className="flex-row items-center p-4" style={{ gap: 10 }}>
-          <View
-            className="items-center justify-center rounded-xl"
-            style={{ width: 40, height: 40, backgroundColor: badge?.iconBg ?? colors.primaryLight }}
-          >
-            <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-ink font-bold text-base" numberOfLines={1}>{team.name}</Text>
-            <Text className="text-muted text-xs mt-0.5">
-              {joinedMembers.length}/{requiredSize || "—"} players
-            </Text>
-          </View>
-          {badge && (
-            <View className={`px-3 py-1 rounded-full ${badge.bg}`}>
-              <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
+            <View className="flex-1">
+              <Text className="text-white font-bold text-base" numberOfLines={1}>{team.name}</Text>
+              <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+                {joinedMembers.length}/{requiredSize || "—"} players
+              </Text>
             </View>
-          )}
-          {chatButton}
-        </View>
-      )}
+            {badge && (
+              <View className="px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.22)" }}>
+                <Text className="text-xs font-bold text-white">{badge.label}</Text>
+              </View>
+            )}
+            {chatButton}
+          </View>
+        </LinearGradient>
+        <WaveDivider color="white" height={22} />
+      </View>
 
-      <View className="p-4" style={{ paddingTop: isClaimed ? 4 : 0 }}>
+      <View className="p-4" style={{ paddingTop: 4 }}>
       {canSeeTeamCode && (
         <Pressable
           onPress={handleCopyCode}

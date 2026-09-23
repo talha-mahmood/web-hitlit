@@ -5,7 +5,6 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Path, Circle } from "react-native-svg";
 import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
@@ -482,14 +481,6 @@ export default function GameDetailScreen() {
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: insets.top + 16, paddingBottom: 44, paddingHorizontal: 16, overflow: "hidden" }}
         >
-          {/* Decorative ball */}
-          <View style={{ position: "absolute", right: 8, top: insets.top + 40 }}>
-            <Svg width={110} height={110} viewBox="0 0 110 110">
-              <Circle cx={55} cy={55} r={52} fill="#BBF7D0" opacity={0.9} />
-              <Path d="M10,55 A45,45 0 0,1 100,55" stroke="#166534" strokeWidth={2} fill="none" opacity={0.5} />
-              <Path d="M10,55 A45,45 0 0,0 100,55" stroke="#166534" strokeWidth={2} fill="none" opacity={0.5} />
-            </Svg>
-          </View>
           {/* Decorative sport-icon watermark, generic across sports */}
           {sportIconInfo && (
             <MaterialCommunityIcons
