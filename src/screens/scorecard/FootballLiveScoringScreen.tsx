@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { getSportImage } from "../../lib/sportImages";
 import {
   useFootballMatch,
   useAddFootballGoal,
@@ -51,6 +54,24 @@ const PHASE_LABEL: Partial<Record<Phase, string>> = {
   EXTRA_TIME_FULL_TIME: "EXTRA TIME — FULL-TIME",
   PENALTIES: "PENALTY SHOOTOUT",
 };
+
+// Generic shield-shaped team crest (ball + star) — the app doesn't have real
+// club badge art for these matches, so this is a drawn stand-in colored per
+// team instead of a specific club's actual logo.
+function TeamCrest({ color, size = 60 }: { color: string; size?: number }) {
+  return (
+    <View
+      className="items-center justify-center rounded-full bg-white"
+      style={{ width: size, height: size, ...cardShadow }}
+    >
+      <Svg width={size * 0.66} height={size * 0.74} viewBox="0 0 40 46">
+        <Path d="M20 0 L40 6 V22 C40 34 32 42 20 46 C8 42 0 34 0 22 V6 Z" fill={color} />
+      </Svg>
+      <Ionicons name="star" size={size * 0.17} color="#FACC15" style={{ position: "absolute", top: size * 0.2 }} />
+      <Ionicons name="football" size={size * 0.32} color="white" style={{ position: "absolute", bottom: size * 0.16 }} />
+    </View>
+  );
+}
 
 export default function FootballLiveScoringScreen() {
   const { params } = useRoute<Route>();
@@ -205,6 +226,8 @@ export default function FootballLiveScoringScreen() {
       </View>
     );
   }
+
+  const footballBgImage = getSportImage("football");
 
   const handleToggleClock = () => {
     if (isPaused && pausedAtMs !== null) {
@@ -402,30 +425,79 @@ export default function FootballLiveScoringScreen() {
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} />
           <Text className="text-white text-xs font-bold">LIVE</Text>
         </View>
-        <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
-          {match.team_a_name} vs {match.team_b_name}
-        </Text>
+        <View className="flex-1">
+          <Text className="text-ink font-extrabold text-base" numberOfLines={1}>
+            {match.team_a_name} vs {match.team_b_name}
+          </Text>
+          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Football</Text>
+        </View>
+        <Ionicons name="ellipsis-vertical" size={18} color={colors.muted} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
-        {/* Team headers + score */}
-        <View className="bg-white rounded-2xl p-5 mb-4 items-center" style={cardShadow}>
-          <View className="flex-row items-center justify-between w-full mb-3">
-            <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{match.team_a_name}</Text>
-            <Text className="text-ink font-bold text-base flex-1 text-right" numberOfLines={1}>{match.team_b_name}</Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: 28 }}>
-            <Text className="text-ink font-extrabold" style={{ fontSize: 40 }}>{scoreSummary.current.a}</Text>
-            <Text className="text-muted font-bold" style={{ fontSize: 22 }}>-</Text>
-            <Text className="text-ink font-extrabold" style={{ fontSize: 40 }}>{scoreSummary.current.b}</Text>
-          </View>
-          {isRunning ? (
-            <Text className="text-ink font-bold text-lg mt-2">{clock}</Text>
-          ) : null}
-          <View className="rounded-full px-3 py-1 mt-2" style={{ backgroundColor: colors.primaryLight }}>
-            <Text className="text-xs font-extrabold" style={{ color: colors.primaryDark }}>
-              {PHASE_LABEL[phase] ?? phase}
-            </Text>
+        {/* Team crests + score, over a pitch photo */}
+        <View className="rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          {footballBgImage && (
+            <>
+              <Image source={footballBgImage} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" />
+              <View style={{ position: "absolute", width: "100%", height: "100%", backgroundColor: "rgba(255,255,255,0.35)" }} />
+            </>
+          )}
+          {/* Corner accent triangles, team-colored */}
+          <View
+            style={{
+              position: "absolute", top: 0, left: 0, width: 0, height: 0,
+              borderTopWidth: 56, borderRightWidth: 56,
+              borderTopColor: colors.primary, borderRightColor: "transparent",
+            }}
+          />
+          <View
+            style={{
+              position: "absolute", top: 0, right: 0, width: 0, height: 0,
+              borderTopWidth: 56, borderLeftWidth: 56,
+              borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+            }}
+          />
+
+          <View className="p-5 items-center">
+            <View className="flex-row items-center justify-between w-full">
+              <View className="items-center" style={{ width: 92 }}>
+                <TeamCrest color={colors.primary} />
+                <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_a_name}</Text>
+              </View>
+
+              <View className="items-center" style={{ flex: 1 }}>
+                <View className="flex-row items-center" style={{ gap: 16 }}>
+                  <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{scoreSummary.current.a}</Text>
+                  <Text className="text-muted font-bold" style={{ fontSize: 22 }}>-</Text>
+                  <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{scoreSummary.current.b}</Text>
+                </View>
+                {isRunning && (
+                  <View className="bg-white rounded-full px-3 py-1.5 mt-2" style={cardShadow}>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 15 }}>{clock}</Text>
+                  </View>
+                )}
+                <View className="rounded-full px-3 py-1 mt-2" style={{ backgroundColor: colors.primaryLight }}>
+                  <Text className="text-xs font-extrabold" style={{ color: colors.primaryDark }}>
+                    {PHASE_LABEL[phase] ?? phase}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="items-center" style={{ width: 92 }}>
+                <TeamCrest color="#1D4ED8" />
+                <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_b_name}</Text>
+              </View>
+            </View>
+
+            {/* Pitch halfway line + ball, purely decorative */}
+            <View style={{ width: "100%", height: 1, backgroundColor: "rgba(255,255,255,0.7)", marginTop: 20 }} />
+            <Ionicons
+              name="football"
+              size={28}
+              color={colors.ink}
+              style={{ position: "absolute", right: 14, bottom: -8, opacity: 0.9 }}
+            />
           </View>
         </View>
 
@@ -446,12 +518,45 @@ export default function FootballLiveScoringScreen() {
         {/* Goal history */}
         {goals.length > 0 && phase !== "PENALTIES" && (
           <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
-            <Text className="text-muted text-xs font-semibold mb-2">GOAL HISTORY</Text>
-            {goals.map((g) => (
-              <Text key={g.seq} className="text-ink text-sm mt-1">
-                {g.minuteLabel} {g.team === "A" ? match.team_a_name : match.team_b_name}
-              </Text>
-            ))}
+            <View
+              className="flex-row items-center pb-3 mb-1"
+              style={{ gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}
+            >
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 26, height: 26, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="football" size={14} color={colors.primaryDark} />
+              </View>
+              <Text className="text-ink font-extrabold text-sm" style={{ letterSpacing: 0.5 }}>GOAL HISTORY</Text>
+            </View>
+            {goals.map((g, i) => {
+              const teamColor = g.team === "A" ? colors.primary : "#1D4ED8";
+              const teamBg = g.team === "A" ? colors.primaryLight : "#DBEAFE";
+              return (
+                <View key={g.seq} className="flex-row items-start" style={{ paddingVertical: 8 }}>
+                  <Text className="text-muted text-xs font-semibold" style={{ width: 44, marginTop: 8 }}>
+                    {g.minuteLabel}
+                  </Text>
+                  <View className="items-center" style={{ width: 12, marginTop: 8 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: teamColor }} />
+                    {i < goals.length - 1 && <View style={{ width: 1, height: 26, backgroundColor: colors.border, marginTop: 4 }} />}
+                  </View>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 30, height: 30, backgroundColor: teamBg, marginLeft: 8 }}
+                  >
+                    <Ionicons name="football" size={14} color={teamColor} />
+                  </View>
+                  <View className="flex-1 ml-2">
+                    <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                      {g.team === "A" ? match.team_a_name : match.team_b_name}
+                    </Text>
+                    <Text className="text-muted text-xs">Goal</Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -475,19 +580,37 @@ export default function FootballLiveScoringScreen() {
               pointerEvents={addGoal.isPending || isPaused || isRinging ? "none" : "auto"}
               style={{ opacity: addGoal.isPending || isPaused || isRinging ? 0.5 : 1, gap: 10 }}
             >
-              <Pressable
-                onPress={() => handleGoal("A")}
-                className="rounded-2xl py-4 items-center bg-primary"
-                style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}
-              >
-                <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Goal</Text>
+              <Pressable onPress={() => handleGoal("A")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 14 }}
+                >
+                  <View className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.25)" }}>
+                    <Ionicons name="football" size={18} color="white" />
+                  </View>
+                  <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
+                  <Text className="text-white font-bold text-base flex-1" numberOfLines={1}>{match.team_a_name} Goal</Text>
+                  <Ionicons name="football-outline" size={44} color="white" style={{ position: "absolute", right: 40, opacity: 0.15 }} />
+                  <Ionicons name="chevron-forward" size={20} color="white" />
+                </LinearGradient>
               </Pressable>
-              <Pressable
-                onPress={() => handleGoal("B")}
-                className="rounded-2xl py-4 items-center"
-                style={{ backgroundColor: "#1D4ED8", ...(addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow) }}
-              >
-                <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Goal</Text>
+              <Pressable onPress={() => handleGoal("B")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
+                <LinearGradient
+                  colors={["#2563EB", "#1D4ED8"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 14 }}
+                >
+                  <View className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.25)" }}>
+                    <Ionicons name="football" size={18} color="white" />
+                  </View>
+                  <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
+                  <Text className="text-white font-bold text-base flex-1" numberOfLines={1}>{match.team_b_name} Goal</Text>
+                  <Ionicons name="football-outline" size={44} color="white" style={{ position: "absolute", right: 40, opacity: 0.15 }} />
+                  <Ionicons name="chevron-forward" size={20} color="white" />
+                </LinearGradient>
               </Pressable>
             </View>
 
@@ -495,46 +618,57 @@ export default function FootballLiveScoringScreen() {
               <Pressable
                 onPress={handleEndPeriodPress}
                 disabled={endRunningPeriod.isPending}
-                className="flex-row items-center justify-center rounded-2xl py-3 mt-3"
-                style={{ gap: 8, backgroundColor: colors.danger, opacity: endRunningPeriod.isPending ? 0.5 : 1 }}
+                style={{ marginTop: 12, opacity: endRunningPeriod.isPending ? 0.5 : 1 }}
               >
-                <Ionicons name="stop-circle-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-semibold">
-                  {phase === "FIRST_HALF" && "End First Half"}
-                  {phase === "SECOND_HALF" && "End Second Half"}
-                  {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
-                  {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
-                </Text>
+                <LinearGradient
+                  colors={[colors.danger, "#B91C1C"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14 }}
+                >
+                  <Ionicons name="stop-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+                  <Text className="text-white text-base font-bold">
+                    {phase === "FIRST_HALF" && "End First Half"}
+                    {phase === "SECOND_HALF" && "End Second Half"}
+                    {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
+                    {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
+                  </Text>
+                </LinearGradient>
               </Pressable>
             ) : (
               <Pressable
                 onPress={handleToggleClock}
                 disabled={pauseMatch.isPending || resumeMatch.isPending}
-                className="flex-row items-center justify-center rounded-2xl py-3 mt-3"
-                style={{
-                  gap: 8,
-                  backgroundColor: isPaused ? colors.primary : colors.warning,
-                  opacity: pauseMatch.isPending || resumeMatch.isPending ? 0.5 : 1,
-                }}
+                style={{ marginTop: 12, opacity: pauseMatch.isPending || resumeMatch.isPending ? 0.5 : 1 }}
               >
-                <Ionicons name={isPaused ? "play-circle-outline" : "pause-circle-outline"} size={16} color="white" />
-                <Text className="text-white text-sm font-bold">{isPaused ? "Start Time" : "Stop Time"}</Text>
+                <LinearGradient
+                  colors={isPaused ? [colors.primary, colors.primaryDark] : ["#F59E0B", "#D97706"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 14 }}
+                >
+                  <View className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.25)" }}>
+                    <Ionicons name={isPaused ? "play" : "pause"} size={16} color="white" />
+                  </View>
+                  <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
+                  <Text className="text-white font-bold text-base flex-1">{isPaused ? "Start Time" : "Stop Time"}</Text>
+                  <Ionicons name="stopwatch-outline" size={40} color="white" style={{ position: "absolute", right: 18, opacity: 0.25 }} />
+                </LinearGradient>
               </Pressable>
             )}
 
             <Pressable
               onPress={handleUndo}
               disabled={goals.length === 0 || deleteLastGoal.isPending || isPaused || isRinging}
-              className="flex-row items-center justify-center rounded-2xl py-3 mt-2"
-              style={{
-                gap: 8,
-                borderWidth: 1,
-                borderColor: colors.warning,
-                opacity: goals.length === 0 || isPaused || isRinging ? 0.5 : 1,
-              }}
+              className="flex-row items-center rounded-2xl py-3.5 px-4 mt-2 bg-white"
+              style={{ borderWidth: 1.5, borderColor: colors.primary, opacity: goals.length === 0 || isPaused || isRinging ? 0.5 : 1 }}
             >
-              <Ionicons name="arrow-undo-outline" size={16} color={colors.warning} />
-              <Text className="text-sm font-semibold" style={{ color: colors.warning }}>Undo Last Goal</Text>
+              <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: colors.primaryLight }}>
+                <Ionicons name="refresh" size={15} color={colors.primaryDark} />
+              </View>
+              <View style={{ width: 1, height: 22, backgroundColor: colors.border, marginHorizontal: 12 }} />
+              <Text className="font-bold text-base flex-1" style={{ color: colors.primaryDark }}>Undo Last Goal</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
             </Pressable>
           </>
         )}
