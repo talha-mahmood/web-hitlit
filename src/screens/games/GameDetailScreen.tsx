@@ -535,8 +535,8 @@ export default function GameDetailScreen() {
             }
             className="ml-1 mr-2 items-center justify-center rounded-full"
             style={{
-              width: 36,
-              height: 36,
+              width: 42,
+              height: 42,
               backgroundColor: "white",
               shadowColor: "#0F172A",
               shadowOffset: { width: 0, height: 3 },
@@ -545,7 +545,7 @@ export default function GameDetailScreen() {
               elevation: 2,
             }}
           >
-            <ChatIcon size={19} unreadCount={chatUnreadCount} />
+            <ChatIcon size={23} unreadCount={chatUnreadCount} />
           </Pressable>
         )}
         {isCancelled && (
