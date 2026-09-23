@@ -187,7 +187,7 @@ function TeamCard({
       onPress={onOpenChat}
       hitSlop={8}
       className="items-center justify-center rounded-full"
-      style={{ width: 32, height: 32, backgroundColor: "rgba(255,255,255,0.22)", marginLeft: 8 }}
+      style={{ width: 32, height: 32, backgroundColor: "white", marginLeft: 8 }}
     >
       <ChatIcon size={16} unreadCount={teamChatUnread} />
     </Pressable>
