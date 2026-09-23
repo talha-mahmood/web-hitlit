@@ -49,9 +49,17 @@ function PlayerRow({
           <Text className="text-muted text-xs mt-1" numberOfLines={1}>
             {player.gamesPlayedTotal} games · {player.tournamentsPlayedTotal} tournaments
           </Text>
-          <Text className="text-muted text-xs mt-0.5" numberOfLines={1} style={{ opacity: 0.8 }}>
-            Rating {rating} · {tier.label}
-          </Text>
+          <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ width: 18, height: 18, backgroundColor: tier.bg }}
+            >
+              <Ionicons name="flame" size={11} color={tier.color} />
+            </View>
+            <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8 }}>
+              Rating {rating} · {tier.label}
+            </Text>
+          </View>
         </View>
         <Text className="text-muted font-semibold text-xs">
           # {rankLabel}
