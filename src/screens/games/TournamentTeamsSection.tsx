@@ -22,7 +22,7 @@ import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
-import { colors, cardShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
@@ -643,11 +643,11 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           {isHost && (
             <Pressable
               onPress={() => setShowInviteSquadModal(true)}
-              className="flex-row items-center rounded-full border border-primary px-3 py-1.5"
-              style={{ gap: 4 }}
+              className="flex-row items-center rounded-full bg-primary px-4 py-2.5"
+              style={{ gap: 6, ...primaryButtonShadow }}
             >
-              <Ionicons name="person-add-outline" size={14} color={colors.primary} />
-              <Text className="text-primary text-xs font-semibold">Invite a Squad</Text>
+              <Ionicons name="person-add-outline" size={16} color="white" />
+              <Text className="text-white text-sm font-bold">Invite a Squad</Text>
             </Pressable>
           )}
           {canCreateTeam && (
