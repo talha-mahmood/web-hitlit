@@ -177,12 +177,6 @@ export default function AccountSettingsScreen() {
             <Text className="text-xl font-extrabold text-ink">Account Settings</Text>
             <Text className="text-muted text-sm mt-0.5">Manage your account details</Text>
           </View>
-          <View
-            className="items-center justify-center bg-white rounded-full"
-            style={{ width: 38, height: 38, ...cardShadow }}
-          >
-            <Ionicons name="settings-outline" size={18} color={colors.primaryDark} />
-          </View>
         </View>
       </View>
 
