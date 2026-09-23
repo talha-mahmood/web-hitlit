@@ -10,3 +10,4 @@ While an iOS build is submitted and pending Apple App Review (or already live on
 
 For any UI change you must not change any app functionality it was just a UI change strickly do not change anything in my app just change UI
 
+Now i will give you updated UI screenshot of a screen of my app recognize which screen it is and make its UI exactly like in the attached image
