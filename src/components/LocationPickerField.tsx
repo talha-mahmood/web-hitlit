@@ -11,6 +11,7 @@ export default function LocationPickerField({
   onChange,
   placeholder,
   variant,
+  showPinIcon,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -18,6 +19,9 @@ export default function LocationPickerField({
   // "card": slightly larger "Use my current location" link with a
   // navigation-arrow icon (used on Create Squad). Default is unchanged.
   variant?: "card";
+  // Shows a small location-pin icon inside the field, left of the text —
+  // opt-in so existing callers keep their current look.
+  showPinIcon?: boolean;
 }) {
   const [detecting, setDetecting] = useState(false);
 
@@ -41,6 +45,7 @@ export default function LocationPickerField({
         placeholder={placeholder ?? "e.g. DHA Phase 6, Lahore"}
         maxLength={120}
         containerStyle={{ gap: 8 }}
+        left={showPinIcon ? <Ionicons name="location" size={18} color={colors.muted} /> : undefined}
         right={
           <Pressable onPress={handleDetect} disabled={detecting} hitSlop={8}>
             {detecting ? (
