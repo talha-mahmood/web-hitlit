@@ -1,5 +1,6 @@
 import "./global.css";
 import "./src/lib/alertPolyfill";
+import "./src/lib/activityIndicatorPolyfill";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
