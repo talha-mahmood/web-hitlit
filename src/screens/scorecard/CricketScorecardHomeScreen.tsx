@@ -10,6 +10,7 @@ import { useMyCricketMatches, useDeleteCricketMatch } from "../../hooks/useCrick
 import { friendlyCricketError, ballRowToEvent, type CricketMatchDetail } from "../../lib/api/cricket";
 import { replayInnings, formatOvers } from "../../lib/cricketScoring";
 import Bouncy from "../../components/Bouncy";
+import TeamCrest from "../../components/TeamCrest";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "CricketHome">;
@@ -51,19 +52,6 @@ function computeInningsScore(match: CricketMatchDetail) {
   return { runs: state.runs, wickets: state.wickets, oversLabel: formatOvers(state.legalBalls) };
 }
 
-function TeamAvatar({ initial }: { initial: string }) {
-  return (
-    <View
-      className="items-center justify-center rounded-full"
-      style={{ width: 56, height: 56, backgroundColor: colors.primaryLight }}
-    >
-      <Text className="font-extrabold text-xl" style={{ color: colors.primaryDark }}>
-        {initial}
-      </Text>
-    </View>
-  );
-}
-
 function MatchCard({
   match,
   onPress,
@@ -88,10 +76,23 @@ function MatchCard({
       scaleTo={0.98}
       style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20 }}
     >
-      <View
-        className="rounded-[20px] bg-white overflow-hidden"
-        style={isLive ? { borderLeftWidth: 3, borderLeftColor: "#EF4444" } : undefined}
-      >
+      <View className="rounded-[20px] bg-white overflow-hidden" style={{ position: "relative" }}>
+        {/* Corner accent triangles, team-colored — same as the football screens */}
+        <View
+          style={{
+            position: "absolute", top: 0, left: 0, width: 0, height: 0,
+            borderTopWidth: 34, borderRightWidth: 34,
+            borderTopColor: colors.primary, borderRightColor: "transparent",
+          }}
+        />
+        <View
+          style={{
+            position: "absolute", top: 0, right: 0, width: 0, height: 0,
+            borderTopWidth: 34, borderLeftWidth: 34,
+            borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+          }}
+        />
+
         <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
           <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
             {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} /> : null}
@@ -106,8 +107,8 @@ function MatchCard({
         </View>
 
         <View className="flex-row items-center justify-between px-6 pb-3">
-          <View className="items-center" style={{ width: 72 }}>
-            <TeamAvatar initial={match.team_a_name.charAt(0).toUpperCase() || "A"} />
+          <View className="items-center" style={{ width: 76 }}>
+            <TeamCrest color={colors.primary} size={52} icon="cricket" />
             <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
               {match.team_a_name}
             </Text>
@@ -125,8 +126,8 @@ function MatchCard({
             </View>
           </View>
 
-          <View className="items-center" style={{ width: 72 }}>
-            <TeamAvatar initial={match.team_b_name.charAt(0).toUpperCase() || "B"} />
+          <View className="items-center" style={{ width: 76 }}>
+            <TeamCrest color="#1D4ED8" size={52} icon="cricket" />
             <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
               {match.team_b_name}
             </Text>

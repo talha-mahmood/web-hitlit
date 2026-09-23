@@ -11,6 +11,9 @@ import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import { friendlyPadelError, pointRowToEvent } from "../../lib/api/padel";
 import { replayPadelMatch, formatSetScore, matchResultSummary, type PadelMatchConfig, type Team } from "../../lib/padelScoring";
 import { getSportImage } from "../../lib/sportImages";
+import TeamCrest from "../../components/TeamCrest";
+import GradientActionButton from "../../components/GradientActionButton";
+import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Route = RouteProp<ScorecardStackParamList, "PadelLiveScoring">;
@@ -187,49 +190,95 @@ export default function PadelLiveScoringScreen() {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
     return (
       <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-        <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
+        <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">Match Complete</Text>
+          <View className="flex-1">
+            <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
+            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Padel</Text>
+          </View>
         </View>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-          <View className="bg-white rounded-3xl items-center py-8 px-6" style={cardShadow}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+          {/* Team crests + final score, with a winner ribbon */}
+          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
-              className="items-center justify-center rounded-full mb-3"
-              style={{ width: 72, height: 72, backgroundColor: colors.primaryLight }}
-            >
-              <Ionicons name="trophy" size={36} color={colors.primaryDark} />
-            </View>
-            <Text className="text-muted text-xs font-semibold">MATCH COMPLETE</Text>
-            <Text className="text-ink font-extrabold text-xl mt-1 text-center">{winnerName} — Winner</Text>
+              style={{
+                position: "absolute", top: 0, left: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderRightWidth: 56,
+                borderTopColor: colors.primary, borderRightColor: "transparent",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute", top: 0, right: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderLeftWidth: 56,
+                borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+              }}
+            />
+            <View className="p-5 items-center">
+              <View
+                className="flex-row items-center rounded-full mb-4"
+                style={{ gap: 6, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="trophy" size={15} color={colors.primaryDark} />
+                <Text className="font-extrabold text-xs" style={{ color: colors.primaryDark, letterSpacing: 0.5 }}>
+                  {winnerName.toUpperCase()} WINS
+                </Text>
+              </View>
 
-            <View className="w-full mt-6" style={{ gap: 8 }}>
-              {state.sets.map((set, i) => (
-                <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                  <Text className="text-muted text-xs font-semibold">
-                    {set.isMatchTiebreak ? "MATCH TIEBREAK" : `SET ${i + 1}`}
-                  </Text>
-                  <Text className="text-ink font-bold text-sm">
-                    {formatSetScore(set, "A")} - {formatSetScore(set, "B")}
-                  </Text>
+              <View className="flex-row items-center justify-between w-full">
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color={colors.primary} icon="racquetball" />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_a_name}</Text>
                 </View>
-              ))}
-            </View>
 
-            <View className="w-full h-px bg-border my-5" />
-            <Text className="text-muted text-xs font-semibold">FINAL</Text>
-            <Text className="text-ink font-extrabold text-2xl mt-1">
-              {state.setsWonA} - {state.setsWonB}
-            </Text>
+                <View className="items-center" style={{ flex: 1 }}>
+                  <View className="flex-row items-center" style={{ gap: 16 }}>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{state.setsWonA}</Text>
+                    <Text className="text-muted font-bold" style={{ fontSize: 22 }}>-</Text>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{state.setsWonB}</Text>
+                  </View>
+                  <View className="rounded-full px-3 py-1 mt-2 bg-gray-100">
+                    <Text className="text-muted text-xs font-extrabold" style={{ letterSpacing: 0.5 }}>SETS</Text>
+                  </View>
+                </View>
+
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color="#1D4ED8" icon="racquetball" />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_b_name}</Text>
+                </View>
+              </View>
+            </View>
           </View>
 
-          <Pressable
-            onPress={() => leaveScorecard()}
-            className="rounded-2xl py-4 items-center mt-6 bg-primary"
-            style={primaryButtonShadow}
-          >
-            <Text className="text-white font-bold text-base">Back to Matches</Text>
+          {/* Per-set breakdown */}
+          <View className="bg-white rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
+            {state.sets.map((set, i) => (
+              <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <Ionicons name="time-outline" size={14} color={colors.muted} />
+                  <Text className="text-muted text-xs font-bold" style={{ letterSpacing: 0.5 }}>
+                    {set.isMatchTiebreak ? "MATCH TIEBREAK" : `SET ${i + 1}`}
+                  </Text>
+                </View>
+                <Text className="text-ink font-bold text-sm">
+                  {formatSetScore(set, "A")} - {formatSetScore(set, "B")}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16 }}
+            >
+              <Ionicons name="arrow-back-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+              <Text className="text-white font-bold text-base">Back to Matches</Text>
+            </LinearGradient>
           </Pressable>
         </ScrollView>
       </View>
@@ -479,55 +528,31 @@ export default function PadelLiveScoringScreen() {
             total score, same as the cricket scorer's run buttons. */}
         <View style={{ gap: 10 }}>
           <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ opacity: addPoint.isPending ? 0.5 : 1, gap: 10 }}>
-            <Pressable onPress={() => handlePoint("A")} style={addPoint.isPending ? undefined : primaryButtonShadow}>
-              <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 16, paddingVertical: 16, overflow: "hidden", position: "relative" }}
-              >
-                <View className="flex-row items-center justify-center">
-                  <Ionicons name="add" size={18} color="white" style={{ marginRight: 6 }} />
-                  <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_a_name} Point</Text>
-                </View>
-                <MaterialCommunityIcons
-                  name="racquetball"
-                  size={40}
-                  color="white"
-                  style={{ position: "absolute", right: 14, top: "50%", marginTop: -20, opacity: 0.25 }}
-                />
-              </LinearGradient>
-            </Pressable>
-            <Pressable onPress={() => handlePoint("B")} style={addPoint.isPending ? undefined : primaryButtonShadow}>
-              <LinearGradient
-                colors={["#2563EB", "#1D4ED8"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 16, paddingVertical: 16, overflow: "hidden", position: "relative" }}
-              >
-                <View className="flex-row items-center justify-center">
-                  <Ionicons name="add" size={18} color="white" style={{ marginRight: 6 }} />
-                  <Text className="text-white font-bold text-base" numberOfLines={1}>{match.team_b_name} Point</Text>
-                </View>
-                <MaterialCommunityIcons
-                  name="racquetball"
-                  size={40}
-                  color="white"
-                  style={{ position: "absolute", right: 14, top: "50%", marginTop: -20, opacity: 0.25 }}
-                />
-              </LinearGradient>
-            </Pressable>
+            <GradientActionButton
+              onPress={() => handlePoint("A")}
+              colors={[colors.primary, colors.primaryDark]}
+              icon="add"
+              label={`${match.team_a_name} Point`}
+              watermarkIcon="tennisball-outline"
+              style={addPoint.isPending ? undefined : primaryButtonShadow}
+            />
+            <GradientActionButton
+              onPress={() => handlePoint("B")}
+              colors={["#2563EB", "#1D4ED8"]}
+              icon="add"
+              label={`${match.team_b_name} Point`}
+              watermarkIcon="tennisball-outline"
+              style={addPoint.isPending ? undefined : primaryButtonShadow}
+            />
           </View>
 
-          <Pressable
+          <OutlineActionButton
             onPress={handleUndo}
             disabled={points.length === 0 || deleteLastPoint.isPending}
-            className="flex-row items-center justify-center rounded-full py-3 mt-2 border border-border"
-            style={{ gap: 8, opacity: points.length === 0 ? 0.5 : 1 }}
-          >
-            <Ionicons name="arrow-undo-outline" size={16} color={colors.muted} />
-            <Text className="text-muted text-sm font-semibold">Undo Last Point</Text>
-          </Pressable>
+            icon="arrow-undo-outline"
+            label="Undo Last Point"
+            style={{ marginTop: 2, opacity: points.length === 0 ? 0.5 : 1 }}
+          />
         </View>
       </ScrollView>
     </View>

@@ -1,14 +1,19 @@
 import { useEffect, useMemo } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useTennisMatch, useAddTennisPoint, useDeleteLastTennisPoint, useCompleteTennisMatch } from "../../hooks/useTennis";
 import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import { friendlyTennisError, pointRowToEvent } from "../../lib/api/tennis";
 import { replayTennisMatch, formatSetScore, matchResultSummary, type TennisMatchConfig, type Player, type Indicator } from "../../lib/tennisScoring";
+import { getSportImage } from "../../lib/sportImages";
+import TeamCrest from "../../components/TeamCrest";
+import GradientActionButton from "../../components/GradientActionButton";
+import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Route = RouteProp<ScorecardStackParamList, "TennisLiveScoring">;
@@ -20,6 +25,56 @@ const INDICATOR_LABEL: Record<Exclude<Indicator, null>, string> = {
   SET_POINT: "SET POINT",
   MATCH_POINT: "MATCH POINT",
 };
+
+// Small avatar circle (player initial) used on the player header cards — the
+// app only stores player names as free text for these matches (no linked
+// profile/avatar), so an initial-in-a-circle is the closest honest stand-in
+// for a photo.
+function PlayerAvatar({ name, color, bg }: { name: string; color: string; bg: string }) {
+  return (
+    <View className="items-center justify-center rounded-full" style={{ width: 22, height: 22, backgroundColor: bg }}>
+      <Text className="font-bold" style={{ fontSize: 10, color }}>
+        {(name.trim().charAt(0) || "?").toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+// Faint decorative dot grid for a card corner (SETS card background flair).
+function DotGridCorner({ side }: { side: "left" | "right" }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: 14,
+        ...(side === "left" ? { left: 14 } : { right: 14 }),
+        flexDirection: "row",
+        flexWrap: "wrap",
+        width: 32,
+      }}
+    >
+      {Array.from({ length: 16 }).map((_, i) => (
+        <View key={i} style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: colors.border, margin: 2 }} />
+      ))}
+    </View>
+  );
+}
+
+// A single player's live game-point value as a colored pill instead of
+// plain centered text.
+function ScorePill({ value, color, bg }: { value: string | number; color: string; bg: string }) {
+  return (
+    <View
+      className="items-center justify-center rounded-2xl"
+      style={{ minWidth: 84, paddingVertical: 14, paddingHorizontal: 18, backgroundColor: bg }}
+    >
+      <Text className="font-extrabold" style={{ fontSize: 32, color }}>
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 export default function TennisLiveScoringScreen() {
   const { params } = useRoute<Route>();
@@ -118,52 +173,103 @@ export default function TennisLiveScoringScreen() {
     : state.server.player === "A"
       ? match.player_a_name
       : match.player_b_name;
+  // The plain-number game score ("40 - 30") gets split into two colored
+  // pills; DEUCE/ADVANTAGE/etc. stay as a single centered label.
+  const plainScoreMatch = /^(\S+) - (\S+)$/.exec(state.currentGame.display);
+  const plainScoreParts = plainScoreMatch ? ([plainScoreMatch[1], plainScoreMatch[2]] as const) : null;
+  const tennisBgImage = getSportImage("tennis");
 
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.player_a_name : match.player_b_name;
     return (
       <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-        <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
+        <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">Match Complete</Text>
+          <View className="flex-1">
+            <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
+            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Tennis</Text>
+          </View>
         </View>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-          <View className="bg-white rounded-3xl items-center py-8 px-6" style={cardShadow}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+          {/* Player crests + final score, with a winner ribbon */}
+          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
-              className="items-center justify-center rounded-full mb-3"
-              style={{ width: 72, height: 72, backgroundColor: colors.primaryLight }}
-            >
-              <Ionicons name="trophy" size={36} color={colors.primaryDark} />
-            </View>
-            <Text className="text-muted text-xs font-semibold">MATCH COMPLETE</Text>
-            <Text className="text-ink font-extrabold text-xl mt-1 text-center">{winnerName} — Winner</Text>
+              style={{
+                position: "absolute", top: 0, left: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderRightWidth: 56,
+                borderTopColor: colors.primary, borderRightColor: "transparent",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute", top: 0, right: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderLeftWidth: 56,
+                borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+              }}
+            />
+            <View className="p-5 items-center">
+              <View
+                className="flex-row items-center rounded-full mb-4"
+                style={{ gap: 6, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="trophy" size={15} color={colors.primaryDark} />
+                <Text className="font-extrabold text-xs" style={{ color: colors.primaryDark, letterSpacing: 0.5 }}>
+                  {winnerName.toUpperCase()} WINS
+                </Text>
+              </View>
 
-            <View className="w-full mt-6" style={{ gap: 8 }}>
-              {state.sets.map((set, i) => (
-                <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                  <Text className="text-muted text-xs font-semibold">SET {i + 1}</Text>
-                  <Text className="text-ink font-bold text-sm">
-                    {formatSetScore(set, "A")} - {formatSetScore(set, "B")}
-                  </Text>
+              <View className="flex-row items-center justify-between w-full">
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color={colors.primary} icon="tennis" />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.player_a_name}</Text>
                 </View>
-              ))}
-            </View>
 
-            <View className="w-full h-px bg-border my-5" />
-            <Text className="text-muted text-xs font-semibold">FINAL</Text>
-            <Text className="text-ink font-extrabold text-2xl mt-1">
-              {state.setsWonA} - {state.setsWonB}
-            </Text>
+                <View className="items-center" style={{ flex: 1 }}>
+                  <View className="flex-row items-center" style={{ gap: 16 }}>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{state.setsWonA}</Text>
+                    <Text className="text-muted font-bold" style={{ fontSize: 22 }}>-</Text>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{state.setsWonB}</Text>
+                  </View>
+                  <View className="rounded-full px-3 py-1 mt-2 bg-gray-100">
+                    <Text className="text-muted text-xs font-extrabold" style={{ letterSpacing: 0.5 }}>SETS</Text>
+                  </View>
+                </View>
+
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color="#1D4ED8" icon="tennis" />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.player_b_name}</Text>
+                </View>
+              </View>
+            </View>
           </View>
 
-          <Pressable
-            onPress={() => leaveScorecard()}
-            className="rounded-2xl py-4 items-center mt-6 bg-primary"
-            style={primaryButtonShadow}
-          >
-            <Text className="text-white font-bold text-base">Back to Matches</Text>
+          {/* Per-set breakdown */}
+          <View className="bg-white rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
+            {state.sets.map((set, i) => (
+              <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <Ionicons name="time-outline" size={14} color={colors.muted} />
+                  <Text className="text-muted text-xs font-bold" style={{ letterSpacing: 0.5 }}>SET {i + 1}</Text>
+                </View>
+                <Text className="text-ink font-bold text-sm">
+                  {formatSetScore(set, "A")} - {formatSetScore(set, "B")}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16 }}
+            >
+              <Ionicons name="arrow-back-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+              <Text className="text-white font-bold text-base">Back to Matches</Text>
+            </LinearGradient>
           </Pressable>
         </ScrollView>
       </View>
@@ -180,54 +286,109 @@ export default function TennisLiveScoringScreen() {
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} />
           <Text className="text-white text-xs font-bold">LIVE</Text>
         </View>
-        <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
-          {match.player_a_name} vs {match.player_b_name}
-        </Text>
+        <View className="flex-1">
+          <Text className="text-ink font-extrabold text-base" numberOfLines={1}>
+            {match.player_a_name} vs {match.player_b_name}
+          </Text>
+          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+            {isDoubles ? "Doubles" : "Singles"} · Tennis
+          </Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
-        {/* Player headers */}
-        <View className="flex-row items-start justify-between px-2 mb-4">
-          <View className="flex-1">
-            <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.player_a_name}</Text>
-            {isDoubles && playerAPlayerNames.map((p, i) => (
-              <Text key={i} className="text-muted text-xs mt-0.5" numberOfLines={1}>{p}</Text>
-            ))}
+        {/* Player cards, with a "VS" badge overlapping both */}
+        <View style={{ position: "relative", marginBottom: 16 }}>
+          <View className="flex-row items-stretch" style={{ gap: 10 }}>
+            <View
+              className="flex-1 bg-white rounded-2xl overflow-hidden"
+              style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.primary }}
+            >
+              <View className="p-3">
+                <Text className="text-ink font-extrabold text-base" numberOfLines={1}>{match.player_a_name}</Text>
+                {isDoubles && (
+                  <View style={{ gap: 6, marginTop: 8 }}>
+                    {playerAPlayerNames.map((p, i) => (
+                      <View key={i} className="flex-row items-center" style={{ gap: 6 }}>
+                        <PlayerAvatar name={p} color={colors.primaryDark} bg={colors.primaryLight} />
+                        <Text className="text-ink text-xs font-medium flex-1" numberOfLines={1}>{p}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <View
+              className="flex-1 bg-white rounded-2xl overflow-hidden"
+              style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderRightWidth: 4, borderRightColor: "#1D4ED8" }}
+            >
+              <View className="p-3" style={{ alignItems: "flex-end" }}>
+                <Text className="text-ink font-extrabold text-base text-right" numberOfLines={1}>{match.player_b_name}</Text>
+                {isDoubles && (
+                  <View style={{ gap: 6, marginTop: 8, alignItems: "flex-end" }}>
+                    {playerBPlayerNames.map((p, i) => (
+                      <View key={i} className="flex-row items-center" style={{ gap: 6 }}>
+                        <Text className="text-ink text-xs font-medium" numberOfLines={1}>{p}</Text>
+                        <PlayerAvatar name={p} color="#1D4ED8" bg="#DBEAFE" />
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
           </View>
-          <View className="flex-1 items-end">
-            <Text className="text-ink font-bold text-base" numberOfLines={1}>{match.player_b_name}</Text>
-            {isDoubles && playerBPlayerNames.map((p, i) => (
-              <Text key={i} className="text-muted text-xs mt-0.5 text-right" numberOfLines={1}>{p}</Text>
-            ))}
+
+          <View
+            className="items-center justify-center rounded-full bg-white"
+            style={{ position: "absolute", width: 40, height: 40, left: "50%", top: "50%", marginLeft: -20, marginTop: -20, ...cardShadow }}
+          >
+            <Text className="text-ink font-extrabold" style={{ fontSize: 12 }}>VS</Text>
           </View>
         </View>
 
         {/* Sets won */}
-        <View className="bg-white rounded-2xl p-4 mb-4 items-center" style={cardShadow}>
-          <Text className="text-muted text-xs font-semibold mb-1">SETS</Text>
+        <View className="bg-white rounded-2xl p-4 mb-4 items-center" style={{ ...cardShadow, position: "relative", overflow: "hidden" }}>
+          <DotGridCorner side="left" />
+          <DotGridCorner side="right" />
+          <View className="flex-row items-center mb-1" style={{ gap: 5 }}>
+            <Ionicons name="trophy" size={14} color={colors.warning} />
+            <Text className="text-muted text-xs font-bold" style={{ letterSpacing: 0.5 }}>SETS</Text>
+          </View>
           <View className="flex-row items-center" style={{ gap: 24 }}>
-            <Text className="text-ink font-extrabold" style={{ fontSize: 28 }}>{state.setsWonA}</Text>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 30 }}>{state.setsWonA}</Text>
             <Text className="text-muted font-bold" style={{ fontSize: 18 }}>-</Text>
-            <Text className="text-ink font-extrabold" style={{ fontSize: 28 }}>{state.setsWonB}</Text>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 30 }}>{state.setsWonB}</Text>
+          </View>
+          <View className="rounded-full bg-gray-100 px-3 py-1 mt-2">
+            <Text className="text-muted text-xs font-medium">
+              First to {state.setsToWin} set{state.setsToWin === 1 ? "" : "s"}
+            </Text>
           </View>
         </View>
 
         {/* Per-set score table */}
         <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
-          <View className="flex-row items-center mb-2">
-            <View style={{ flex: 1.4 }} />
+          <View className="flex-row items-center mb-2 pb-2" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Text className="text-ink font-bold text-sm" style={{ flex: 1.4 }}>SET {state.sets.length}</Text>
             {state.sets.map((_, i) => (
-              <Text key={i} className="text-muted text-xs font-semibold flex-1 text-center">SET {i + 1}</Text>
+              <Text key={i} className="text-muted text-xs font-semibold flex-1 text-center">{i + 1}</Text>
             ))}
           </View>
           <View className="flex-row items-center mb-1.5">
-            <Text className="text-ink font-semibold text-sm" style={{ flex: 1.4 }} numberOfLines={1}>{match.player_a_name}</Text>
+            <View className="flex-row items-center" style={{ flex: 1.4, gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+              <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>{match.player_a_name}</Text>
+            </View>
             {state.sets.map((set, i) => (
               <Text key={i} className="text-ink font-bold text-sm flex-1 text-center">{formatSetScore(set, "A")}</Text>
             ))}
           </View>
           <View className="flex-row items-center">
-            <Text className="text-ink font-semibold text-sm" style={{ flex: 1.4 }} numberOfLines={1}>{match.player_b_name}</Text>
+            <View className="flex-row items-center" style={{ flex: 1.4, gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#1D4ED8" }} />
+              <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>{match.player_b_name}</Text>
+            </View>
             {state.sets.map((set, i) => (
               <Text key={i} className="text-ink font-bold text-sm flex-1 text-center">{formatSetScore(set, "B")}</Text>
             ))}
@@ -235,62 +396,71 @@ export default function TennisLiveScoringScreen() {
         </View>
 
         {/* Current game / tiebreak */}
-        <View className="bg-white rounded-2xl p-5 mb-4 items-center" style={cardShadow}>
-          <Text className="text-muted text-xs font-semibold mb-3">
-            {state.currentGame.isTiebreak ? "TIEBREAK" : "CURRENT GAME"}
-          </Text>
-          {state.currentGame.isTiebreak ? (
-            <View className="flex-row items-center" style={{ gap: 28 }}>
-              <View className="items-center">
-                <Text className="text-ink font-extrabold" style={{ fontSize: 36 }}>{state.currentGame.pointsA}</Text>
-                <Text className="text-muted text-xs mt-1" numberOfLines={1}>{match.player_a_name}</Text>
-              </View>
-              <Text className="text-muted font-bold" style={{ fontSize: 20 }}>-</Text>
-              <View className="items-center">
-                <Text className="text-ink font-extrabold" style={{ fontSize: 36 }}>{state.currentGame.pointsB}</Text>
-                <Text className="text-muted text-xs mt-1" numberOfLines={1}>{match.player_b_name}</Text>
-              </View>
-            </View>
-          ) : state.currentGame.display === "DEUCE" || state.currentGame.display.startsWith("ADVANTAGE") ? (
-            <Text className="font-extrabold text-center" style={{ fontSize: 22, color: colors.primaryDark }}>
-              {state.currentGame.display}
+        <View className="rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          {tennisBgImage && (
+            <>
+              <Image source={tennisBgImage} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" blurRadius={3} />
+              <View style={{ position: "absolute", width: "100%", height: "100%", backgroundColor: "rgba(255,255,255,0.86)" }} />
+            </>
+          )}
+          <View className="p-5 items-center">
+            <Text className="text-muted text-xs font-bold mb-3" style={{ letterSpacing: 0.5 }}>
+              {state.currentGame.isTiebreak ? "TIEBREAK" : "CURRENT GAME"}
             </Text>
-          ) : (
-            <Text className="text-ink font-extrabold" style={{ fontSize: 36 }}>{state.currentGame.display}</Text>
-          )}
-
-          {state.indicator && (
-            <View className="rounded-full px-3 py-1 mt-3" style={{ backgroundColor: colors.primaryLight }}>
-              <Text className="text-xs font-extrabold" style={{ color: colors.primaryDark }}>
-                {INDICATOR_LABEL[state.indicator]}
-                {state.indicatorFor ? ` — ${state.indicatorFor === "A" ? match.player_a_name : match.player_b_name}` : ""}
+            {state.currentGame.isTiebreak ? (
+              <View className="flex-row items-center" style={{ gap: 20 }}>
+                <ScorePill value={state.currentGame.pointsA} color={colors.primary} bg={colors.primaryLight} />
+                <Text className="text-muted font-bold" style={{ fontSize: 20 }}>-</Text>
+                <ScorePill value={state.currentGame.pointsB} color="#1D4ED8" bg="#DBEAFE" />
+              </View>
+            ) : plainScoreParts ? (
+              <View className="flex-row items-center" style={{ gap: 16 }}>
+                <ScorePill value={plainScoreParts[0]} color={colors.primary} bg={colors.primaryLight} />
+                <Text className="text-muted font-bold" style={{ fontSize: 20 }}>-</Text>
+                <ScorePill value={plainScoreParts[1]} color="#1D4ED8" bg="#DBEAFE" />
+              </View>
+            ) : state.currentGame.display === "DEUCE" || state.currentGame.display.startsWith("ADVANTAGE") ? (
+              <Text className="font-extrabold text-center" style={{ fontSize: 22, color: colors.primaryDark }}>
+                {state.currentGame.display}
               </Text>
-            </View>
-          )}
+            ) : (
+              <Text className="text-ink font-extrabold" style={{ fontSize: 36 }}>{state.currentGame.display}</Text>
+            )}
+
+            {state.indicator && (
+              <View className="rounded-full px-3 py-1 mt-3" style={{ backgroundColor: colors.primaryLight }}>
+                <Text className="text-xs font-extrabold" style={{ color: colors.primaryDark }}>
+                  {INDICATOR_LABEL[state.indicator]}
+                  {state.indicatorFor ? ` — ${state.indicatorFor === "A" ? match.player_a_name : match.player_b_name}` : ""}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Server */}
-        <View className="flex-row items-center bg-white rounded-2xl px-4 py-3 mb-4" style={{ ...cardShadow, gap: 8 }}>
+        <View className="flex-row items-center bg-white rounded-2xl px-4 py-3" style={{ ...cardShadow, gap: 8 }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
           <Text className="text-ink text-sm flex-1" numberOfLines={1}>
             <Text className="font-bold">SERVER: </Text>
             {serverName}
           </Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
         </View>
 
         {/* Point history */}
         {points.length > 0 && (
-          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
-            <Text className="text-muted text-xs font-semibold mb-2">POINT HISTORY</Text>
+          <View className="bg-white rounded-2xl p-4 mt-4 mb-4" style={cardShadow}>
+            <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>POINT HISTORY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row" style={{ gap: 6 }}>
+              <View className="flex-row" style={{ gap: 8 }}>
                 {points.map((p, i) => (
                   <View
                     key={i}
                     className="items-center justify-center rounded-full"
                     style={{
-                      width: 26,
-                      height: 26,
+                      width: 28,
+                      height: 28,
                       backgroundColor: p.winner === "A" ? colors.primaryLight : "#DBEAFE",
                     }}
                   >
@@ -304,39 +474,40 @@ export default function TennisLiveScoringScreen() {
                 ))}
               </View>
             </ScrollView>
+            <View className="rounded-full bg-gray-100" style={{ height: 3, width: "40%", alignSelf: "center", marginTop: 12 }} />
           </View>
         )}
 
         {/* Scoring buttons — both dim and stop accepting taps the instant
             one is pressed, until that point is actually reflected in the
             total score. */}
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 10, marginTop: points.length > 0 ? 0 : 16 }}>
           <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ opacity: addPoint.isPending ? 0.5 : 1, gap: 10 }}>
-            <Pressable
+            <GradientActionButton
               onPress={() => handlePoint("A")}
-              className="rounded-2xl py-4 items-center bg-primary"
+              colors={[colors.primary, colors.primaryDark]}
+              icon="add"
+              label={`${match.player_a_name} Point`}
+              watermarkIcon="tennisball-outline"
               style={addPoint.isPending ? undefined : primaryButtonShadow}
-            >
-              <Text className="text-white font-bold text-base" numberOfLines={1}>{match.player_a_name} Point</Text>
-            </Pressable>
-            <Pressable
+            />
+            <GradientActionButton
               onPress={() => handlePoint("B")}
-              className="rounded-2xl py-4 items-center"
-              style={{ backgroundColor: "#1D4ED8", ...(addPoint.isPending ? undefined : primaryButtonShadow) }}
-            >
-              <Text className="text-white font-bold text-base" numberOfLines={1}>{match.player_b_name} Point</Text>
-            </Pressable>
+              colors={["#2563EB", "#1D4ED8"]}
+              icon="add"
+              label={`${match.player_b_name} Point`}
+              watermarkIcon="tennisball-outline"
+              style={addPoint.isPending ? undefined : primaryButtonShadow}
+            />
           </View>
 
-          <Pressable
+          <OutlineActionButton
             onPress={handleUndo}
             disabled={points.length === 0 || deleteLastPoint.isPending}
-            className="flex-row items-center justify-center rounded-2xl py-3 mt-2 border border-border"
-            style={{ gap: 8, opacity: points.length === 0 ? 0.5 : 1 }}
-          >
-            <Ionicons name="arrow-undo-outline" size={16} color={colors.muted} />
-            <Text className="text-muted text-sm font-semibold">Undo Last Point</Text>
-          </Pressable>
+            icon="arrow-undo-outline"
+            label="Undo Last Point"
+            style={{ marginTop: 2, opacity: points.length === 0 ? 0.5 : 1 }}
+          />
         </View>
       </ScrollView>
     </View>

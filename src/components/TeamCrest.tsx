@@ -1,13 +1,26 @@
 import { View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
 import Svg, { Path } from "react-native-svg";
 import { cardShadow } from "../constants/theme";
 
-// Generic shield-shaped team crest (ball + star) — the app doesn't have real
-// club badge art for these matches, so this is a drawn stand-in colored per
-// team instead of a specific club's actual logo. Shared between the
-// football live-scoring screen and the football match-listing card.
-export default function TeamCrest({ color, size = 60 }: { color: string; size?: number }) {
+type MCIName = ComponentProps<typeof MaterialCommunityIcons>["name"];
+
+// Generic shield-shaped team crest (sport icon + star) — the app doesn't
+// have real club/team badge art for these matches, so this is a drawn
+// stand-in colored per team instead of an actual logo. `icon` is the same
+// per-sport MaterialCommunityIcons glyph getSportIcon() already uses
+// elsewhere in the app (defaults to football's ball for the football
+// screens, which predate the other sports adopting this crest).
+export default function TeamCrest({
+  color,
+  size = 60,
+  icon = "soccer",
+}: {
+  color: string;
+  size?: number;
+  icon?: MCIName;
+}) {
   return (
     <View
       className="items-center justify-center rounded-full bg-white"
@@ -17,7 +30,7 @@ export default function TeamCrest({ color, size = 60 }: { color: string; size?: 
         <Path d="M20 0 L40 6 V22 C40 34 32 42 20 46 C8 42 0 34 0 22 V6 Z" fill={color} />
       </Svg>
       <Ionicons name="star" size={size * 0.17} color="#FACC15" style={{ position: "absolute", top: size * 0.2 }} />
-      <Ionicons name="football" size={size * 0.32} color="white" style={{ position: "absolute", bottom: size * 0.16 }} />
+      <MaterialCommunityIcons name={icon} size={size * 0.32} color="white" style={{ position: "absolute", bottom: size * 0.16 }} />
     </View>
   );
 }

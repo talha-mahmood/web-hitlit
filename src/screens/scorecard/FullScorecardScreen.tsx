@@ -8,6 +8,7 @@ import { colors, cardShadow } from "../../constants/theme";
 import { useCricketMatch } from "../../hooks/useCricket";
 import { ballRowToEvent, type CricketInnings, type CricketBallRow } from "../../lib/api/cricket";
 import { replayInnings, formatOvers, computeRunRate, type InningsState } from "../../lib/cricketScoring";
+import TeamCrest from "../../components/TeamCrest";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Route = RouteProp<ScorecardStackParamList, "FullScorecard">;
@@ -156,24 +157,60 @@ export default function FullScorecardScreen() {
   }
 
   return (
-    <View className="flex-1 bg-green-50">
-      <View className="flex-row items-center bg-primary px-4 pb-4" style={{ paddingTop: insets.top + 16, gap: 10 }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color="white" />
+    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-1">
-          <Text className="text-white font-bold text-base" numberOfLines={1}>
-            {match.team_a_name} vs {match.team_b_name}
-          </Text>
-          {match.result_summary && (
-            <Text className="text-white text-xs mt-0.5" style={{ opacity: 0.9 }}>
-              {match.result_summary}
-            </Text>
-          )}
+          <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
+          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Cricket</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {/* Team crests + result, with a winner ribbon */}
+        <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          <View
+            style={{
+              position: "absolute", top: 0, left: 0, width: 0, height: 0,
+              borderTopWidth: 56, borderRightWidth: 56,
+              borderTopColor: colors.primary, borderRightColor: "transparent",
+            }}
+          />
+          <View
+            style={{
+              position: "absolute", top: 0, right: 0, width: 0, height: 0,
+              borderTopWidth: 56, borderLeftWidth: 56,
+              borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+            }}
+          />
+          <View className="p-5 items-center">
+            {match.result_summary && (
+              <View
+                className="flex-row items-center rounded-full mb-4"
+                style={{ gap: 6, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="trophy" size={15} color={colors.primaryDark} />
+                <Text className="font-extrabold text-xs text-center" style={{ color: colors.primaryDark, letterSpacing: 0.5 }}>
+                  {match.result_summary.toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View className="flex-row items-center justify-between w-full">
+              <View className="items-center" style={{ width: 92 }}>
+                <TeamCrest color={colors.primary} icon="cricket" />
+                <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_a_name}</Text>
+              </View>
+              <Ionicons name="baseball-outline" size={20} color={colors.muted} />
+              <View className="items-center" style={{ width: 92 }}>
+                <TeamCrest color="#1D4ED8" icon="cricket" />
+                <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_b_name}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {innings.length === 0 ? (
           <Text className="text-muted text-sm text-center mt-10">No balls bowled yet.</Text>
         ) : (
