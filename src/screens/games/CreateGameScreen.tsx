@@ -825,7 +825,7 @@ export default function CreateGameScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
         >
-          {DAYS.map((d) => (
+          {DAYS.filter((d) => TIME_SLOTS.some((t) => !isTimeSlotPast(d.iso, t.value))).map((d) => (
             <DateChipItem
               key={d.iso}
               day={d.day}
