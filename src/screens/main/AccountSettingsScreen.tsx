@@ -53,18 +53,32 @@ function splitPhone(phone: string | null): { dial: string; number: string } {
 
 function SectionCard({
   icon,
+  iconBg = colors.primaryLight,
+  iconFg = colors.primaryDark,
   title,
+  subtitle,
   children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
+  iconBg?: string;
+  iconFg?: string;
   title: string;
+  subtitle: string;
   children: React.ReactNode;
 }) {
   return (
     <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
-      <View className="flex-row items-center mb-3" style={{ gap: 8 }}>
-        <Ionicons name={icon} size={17} color={colors.primaryDark} />
-        <Text className="text-ink font-bold text-base">{title}</Text>
+      <View className="flex-row items-start mb-4" style={{ gap: 12 }}>
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 44, height: 44, backgroundColor: iconBg }}
+        >
+          <Ionicons name={icon} size={20} color={iconFg} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-ink font-bold text-base">{title}</Text>
+          <Text className="text-muted text-sm mt-0.5">{subtitle}</Text>
+        </View>
       </View>
       {children}
     </View>
@@ -153,17 +167,27 @@ export default function AccountSettingsScreen() {
   return (
     <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View
-        className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
-        style={{ paddingTop: insets.top + 16 }}
+        style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 22 }}
       >
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <Text className="text-base font-bold text-ink">Account Settings</Text>
+        <View className="flex-row items-center">
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="mr-3 p-1">
+            <Ionicons name="arrow-back" size={24} color={colors.ink} />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-xl font-extrabold text-ink">Account Settings</Text>
+            <Text className="text-muted text-sm mt-0.5">Manage your account details</Text>
+          </View>
+          <View
+            className="items-center justify-center bg-white rounded-full"
+            style={{ width: 38, height: 38, ...cardShadow }}
+          >
+            <Ionicons name="settings-outline" size={18} color={colors.primaryDark} />
+          </View>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <SectionCard icon="person-outline" title="Display Name">
+        <SectionCard icon="person-outline" title="Display Name" subtitle="This name will be visible to other players.">
           <FieldInput value={name} onChangeText={setName} placeholder="Your name" maxLength={60} />
           {!nameValid && name.length > 0 && (
             <Text className="text-red-500 text-xs mt-2">Name must be {NAME_REQUIREMENT_HINT}.</Text>
@@ -171,19 +195,25 @@ export default function AccountSettingsScreen() {
           <Pressable
             onPress={handleSaveName}
             disabled={!nameChanged || !nameValid || savingName}
-            className={`rounded-xl py-3 items-center mt-3 ${nameChanged && nameValid ? "bg-primary" : "bg-gray-200"}`}
+            className={`relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 ${
+              nameChanged && nameValid ? "bg-primary" : "bg-gray-200"
+            }`}
           >
             {savingName ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className={`font-semibold ${nameChanged && nameValid ? "text-white" : "text-muted"}`}>
+              <Text className={`font-bold ${nameChanged && nameValid ? "text-white" : "text-muted"}`}>
                 Save Name
               </Text>
             )}
           </Pressable>
         </SectionCard>
 
-        <SectionCard icon="call-outline" title="Phone Number">
+        <SectionCard
+          icon="call-outline"
+          title="Phone Number"
+          subtitle="Change your phone number"
+        >
           <PhoneNumberField
             dial={phoneDial}
             onChangeDial={handleChangeDial}
@@ -194,22 +224,27 @@ export default function AccountSettingsScreen() {
           <Pressable
             onPress={handleSavePhone}
             disabled={!phoneChanged || !phoneValid || savingPhone}
-            className={`rounded-xl py-3 items-center mt-3 ${phoneChanged && phoneValid ? "bg-primary" : "bg-gray-200"}`}
+            className={`relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 ${
+              phoneChanged && phoneValid ? "bg-primary" : "bg-gray-200"
+            }`}
           >
             {savingPhone ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className={`font-semibold ${phoneChanged && phoneValid ? "text-white" : "text-muted"}`}>
+              <Text className={`font-bold ${phoneChanged && phoneValid ? "text-white" : "text-muted"}`}>
                 Save Phone Number
               </Text>
             )}
           </Pressable>
         </SectionCard>
 
-        <SectionCard icon="warning-outline" title="Danger Zone">
-          <Text className="text-muted text-sm mb-3">
-            Permanently delete your account and everything tied to it. This can't be undone.
-          </Text>
+        <SectionCard
+          icon="warning-outline"
+          iconBg="#FEF2F2"
+          iconFg={colors.danger}
+          title="Danger Zone"
+          subtitle="Permanently delete your account and everything tied to it. This can't be undone."
+        >
           <Pressable
             onPress={() => setDeleteModalOpen(true)}
             className="flex-row items-center justify-center rounded-xl py-3"
