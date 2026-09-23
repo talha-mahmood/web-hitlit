@@ -200,6 +200,19 @@ function TeamCard({
             <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
           </View>
         )}
+        {/* Only this specific team's own joined members can see or open its
+            chat — not the whole tournament, and not anyone who hasn't
+            joined this team. */}
+        {isJoinedMember && (
+          <Pressable
+            onPress={onOpenChat}
+            hitSlop={8}
+            className="items-center justify-center rounded-full"
+            style={{ width: 32, height: 32, backgroundColor: colors.primaryLight, marginLeft: 8 }}
+          >
+            <ChatIcon size={16} unreadCount={teamChatUnread} />
+          </Pressable>
+        )}
       </View>
 
       {canSeeTeamCode && (
@@ -225,20 +238,6 @@ function TeamCard({
             />
           ))}
         </View>
-      )}
-
-      {/* Only this specific team's own joined members can see or open its
-          chat — not the whole tournament, and not anyone who hasn't joined
-          this team. */}
-      {isJoinedMember && (
-        <Pressable
-          onPress={onOpenChat}
-          className="flex-row items-center justify-center rounded-full border border-primary py-3 mt-4"
-          style={{ gap: 8 }}
-        >
-          <ChatIcon size={17} unreadCount={teamChatUnread} />
-          <Text className="text-primary font-bold text-sm">Team Chat</Text>
-        </Pressable>
       )}
 
       {team.status === "REJECTED" && (
