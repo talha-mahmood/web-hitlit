@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Path, Circle } from "react-native-svg";
 import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
@@ -26,6 +28,7 @@ import { getSportIcon } from "../../lib/sportIcons";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { addMinutesWithOverflow } from "../../lib/gameFormHelpers";
+import WaveDivider from "../../components/WaveDivider";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -470,96 +473,125 @@ export default function GameDetailScreen() {
 
   return (
     <View className="flex-1 bg-green-50">
-      {/* Header */}
-      <View className="flex-row items-center px-4 pb-4" style={{ paddingTop: insets.top + 16 }}>
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
-            {game.title}
-          </Text>
-          <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
-            {sportIconInfo && game.sports?.name && (
-              <View
-                className="flex-row items-center"
+      {/* Hero header — dark gradient with a decorative ball + sport-icon
+          watermark, and a wave divider fading into the page background. */}
+      <View style={{ position: "relative" }}>
+        <LinearGradient
+          colors={["#07301D", "#0E5C34", "#1D9254"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: insets.top + 16, paddingBottom: 44, paddingHorizontal: 16, overflow: "hidden" }}
+        >
+          {/* Decorative ball */}
+          <View style={{ position: "absolute", right: 8, top: insets.top + 40 }}>
+            <Svg width={110} height={110} viewBox="0 0 110 110">
+              <Circle cx={55} cy={55} r={52} fill="#BBF7D0" opacity={0.9} />
+              <Path d="M10,55 A45,45 0 0,1 100,55" stroke="#166534" strokeWidth={2} fill="none" opacity={0.5} />
+              <Path d="M10,55 A45,45 0 0,0 100,55" stroke="#166534" strokeWidth={2} fill="none" opacity={0.5} />
+            </Svg>
+          </View>
+          {/* Decorative sport-icon watermark, generic across sports */}
+          {sportIconInfo && (
+            <MaterialCommunityIcons
+              name={sportIconInfo.icon}
+              size={130}
+              color="white"
+              style={{ position: "absolute", right: -20, bottom: -16, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
+            />
+          )}
+
+          <View className="flex-row items-center">
+            <Pressable
+              onPress={() => navigation.goBack()}
+              className="items-center justify-center rounded-full mr-3"
+              style={{ width: 38, height: 38, backgroundColor: "rgba(255,255,255,0.16)", borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              <Ionicons name="arrow-back" size={20} color="white" />
+            </Pressable>
+            {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("GameChat", {
+                    gameId: game.id,
+                    gameTitle: game.title,
+                    isTournament,
+                  })
+                }
+                className="ml-auto items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: sportIconInfo.bg,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 999,
-                  gap: 4,
+                  width: 42,
+                  height: 42,
+                  backgroundColor: "white",
+                  shadowColor: "#0F172A",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 6,
+                  elevation: 2,
                 }}
               >
-                <MaterialCommunityIcons name={sportIconInfo.icon} size={12} color={sportIconInfo.fg} />
-                <Text
-                  style={{
-                    color: sportIconInfo.fg,
-                    fontSize: 11,
-                    fontWeight: "700",
-                  }}
-                >
-                  {game.sports.name}
-                </Text>
+                <ChatIcon size={23} unreadCount={chatUnreadCount} />
+              </Pressable>
+            )}
+          </View>
+
+          <Text className="text-white font-extrabold mt-3" style={{ fontSize: 26 }} numberOfLines={1}>
+            {game.title}
+          </Text>
+          <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
+            {sportIconInfo && game.sports?.name && (
+              <View
+                className="flex-row items-center bg-white"
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
+              >
+                <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
+                <Text style={{ color: sportIconInfo.fg, fontSize: 12, fontWeight: "700" }}>{game.sports.name}</Text>
               </View>
             )}
             {isTournament && (
-              <View className="flex-row items-center bg-purple-50 px-2 py-0.5 rounded-full" style={{ gap: 4 }}>
-                <Ionicons name="trophy" size={11} color="#7C3AED" />
-                <Text className="text-purple-700 text-xs font-medium">Tournament</Text>
+              <View
+                className="flex-row items-center"
+                style={{ backgroundColor: "rgba(0,0,0,0.22)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
+              >
+                <Ionicons name="trophy" size={12} color="white" />
+                <Text className="text-white font-semibold" style={{ fontSize: 12 }}>Tournament</Text>
+              </View>
+            )}
+            {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
+              <Pressable
+                onPress={() => setShowInviteModal(true)}
+                className="items-center justify-center rounded-full"
+                style={{ width: 28, height: 28, backgroundColor: "rgba(255,255,255,0.16)" }}
+              >
+                <Ionicons name="person-add-outline" size={14} color="white" />
+              </Pressable>
+            )}
+            {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
+              <Pressable
+                onPress={() => setShowInviteSquadModal(true)}
+                className="items-center justify-center rounded-full"
+                style={{ width: 28, height: 28, backgroundColor: "rgba(255,255,255,0.16)" }}
+              >
+                <Ionicons name="people-outline" size={14} color="white" />
+              </Pressable>
+            )}
+            {isCancelled && (
+              <View className="bg-white px-2 py-1 rounded-lg">
+                <Text className="text-red-600 text-xs font-semibold">Cancelled</Text>
+              </View>
+            )}
+            {!isCancelled && hasEnded && (
+              <View className="bg-white px-2 py-1 rounded-lg">
+                <Text className="text-muted text-xs font-semibold">Ended</Text>
+              </View>
+            )}
+            {!isCancelled && !hasEnded && isFull && (
+              <View className="bg-white px-2 py-1 rounded-lg">
+                <Text className="text-orange-600 text-xs font-semibold">Full</Text>
               </View>
             )}
           </View>
-        </View>
-        {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
-          <Pressable onPress={() => setShowInviteModal(true)} className="mr-2 p-1">
-            <Ionicons name="person-add-outline" size={22} color={colors.ink} />
-          </Pressable>
-        )}
-        {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
-          <Pressable onPress={() => setShowInviteSquadModal(true)} className="mr-2 p-1">
-            <Ionicons name="people-outline" size={22} color={colors.ink} />
-          </Pressable>
-        )}
-        {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
-          <Pressable
-            onPress={() =>
-              navigation.navigate("GameChat", {
-                gameId: game.id,
-                gameTitle: game.title,
-                isTournament,
-              })
-            }
-            className="ml-1 mr-2 items-center justify-center rounded-full"
-            style={{
-              width: 42,
-              height: 42,
-              backgroundColor: "white",
-              shadowColor: "#0F172A",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 2,
-            }}
-          >
-            <ChatIcon size={23} unreadCount={chatUnreadCount} />
-          </Pressable>
-        )}
-        {isCancelled && (
-          <View className="bg-red-50 px-2 py-1 rounded-lg">
-            <Text className="text-red-600 text-xs font-semibold">Cancelled</Text>
-          </View>
-        )}
-        {!isCancelled && hasEnded && (
-          <View className="bg-gray-100 px-2 py-1 rounded-lg">
-            <Text className="text-muted text-xs font-semibold">Ended</Text>
-          </View>
-        )}
-        {!isCancelled && !hasEnded && isFull && (
-          <View className="bg-orange-50 px-2 py-1 rounded-lg">
-            <Text className="text-orange-600 text-xs font-semibold">Full</Text>
-          </View>
-        )}
+        </LinearGradient>
+        <WaveDivider color={colors.background} height={30} />
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
@@ -587,10 +619,21 @@ export default function GameDetailScreen() {
             tapping the header reveals it. */}
         <View className="px-5 mt-5">
           <View className="bg-white rounded-2xl px-4" style={cardShadow}>
-          <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center justify-between py-4">
-            <View className="flex-row items-center" style={{ gap: 6 }}>
-              <Text className="text-ink font-bold text-base">{isTournament ? "Tournament Details" : "Game Details"}</Text>
-              <BlinkingEyeIcon size={16} />
+          <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+            >
+              <Ionicons name="document-text-outline" size={19} color={colors.primaryDark} />
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <Text className="text-ink font-bold text-base">{isTournament ? "Tournament Details" : "Game Details"}</Text>
+                <BlinkingEyeIcon size={16} />
+              </View>
+              <Text className="text-muted text-xs mt-0.5">
+                View {isTournament ? "complete tournament information" : "complete game information"}
+              </Text>
             </View>
             <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
           </Pressable>
@@ -663,17 +706,18 @@ export default function GameDetailScreen() {
         {/* Description */}
         {!!game.description && (
           <View className="px-5 mt-6">
-            <View className="flex-row bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
+            <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+                style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
               >
-                <Ionicons name="megaphone-outline" size={17} color={colors.primaryDark} />
+                <Ionicons name="megaphone-outline" size={19} color={colors.primaryDark} />
               </View>
               <View className="flex-1">
                 <Text className="text-ink font-bold text-base mb-1">About this {isTournament ? "tournament" : "game"}</Text>
                 <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
               </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </View>
           </View>
         )}

@@ -3,6 +3,8 @@ import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-na
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import WaveDivider from "../../components/WaveDivider";
 import * as Clipboard from "expo-clipboard";
 import {
   useTournamentTeams,
@@ -180,41 +182,80 @@ function TeamCard({
     setTimeout(() => setCodeCopied(false), 1500);
   };
 
-  return (
-    <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <View className="flex-row items-center mb-1" style={{ gap: 10 }}>
-        <View
-          className="items-center justify-center rounded-xl"
-          style={{ width: 40, height: 40, backgroundColor: badge?.iconBg ?? colors.primaryLight }}
-        >
-          <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
-        </View>
-        <View className="flex-1">
-          <Text className="text-ink font-bold text-base" numberOfLines={1}>{team.name}</Text>
-          <Text className="text-muted text-xs mt-0.5">
-            {joinedMembers.length}/{requiredSize || "—"} players
-          </Text>
-        </View>
-        {badge && (
-          <View className={`px-3 py-1 rounded-full ${badge.bg}`}>
-            <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
-          </View>
-        )}
-        {/* Only this specific team's own joined members can see or open its
-            chat — not the whole tournament, and not anyone who hasn't
-            joined this team. */}
-        {isJoinedMember && (
-          <Pressable
-            onPress={onOpenChat}
-            hitSlop={8}
-            className="items-center justify-center rounded-full"
-            style={{ width: 32, height: 32, backgroundColor: colors.primaryLight, marginLeft: 8 }}
-          >
-            <ChatIcon size={16} unreadCount={teamChatUnread} />
-          </Pressable>
-        )}
-      </View>
+  // A claimed team (someone actually created/registered it) gets the bold
+  // gradient header + wave divider; a still-empty slot stays a plain pale
+  // card — there's nothing to "announce" about it yet.
+  const chatButton = isJoinedMember ? (
+    <Pressable
+      onPress={onOpenChat}
+      hitSlop={8}
+      className="items-center justify-center rounded-full"
+      style={{ width: 32, height: 32, backgroundColor: isClaimed ? "rgba(255,255,255,0.22)" : colors.primaryLight, marginLeft: 8 }}
+    >
+      <ChatIcon size={16} unreadCount={teamChatUnread} />
+    </Pressable>
+  ) : null;
 
+  return (
+    <View
+      className="border border-border rounded-2xl"
+      style={{ ...cardShadow, overflow: "hidden", backgroundColor: isClaimed ? "white" : "#F0FDF4" }}
+    >
+      {isClaimed ? (
+        <View style={{ position: "relative" }}>
+          <LinearGradient
+            colors={["#0E5C34", "#1D9254"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 16, paddingBottom: 28 }}
+          >
+            <View className="flex-row items-center" style={{ gap: 10 }}>
+              <View
+                className="items-center justify-center rounded-xl bg-white"
+                style={{ width: 40, height: 40 }}
+              >
+                <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-bold text-base" numberOfLines={1}>{team.name}</Text>
+                <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+                  {joinedMembers.length}/{requiredSize || "—"} players
+                </Text>
+              </View>
+              {badge && (
+                <View className="px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.22)" }}>
+                  <Text className="text-xs font-bold text-white">{badge.label}</Text>
+                </View>
+              )}
+              {chatButton}
+            </View>
+          </LinearGradient>
+          <WaveDivider color="white" height={22} />
+        </View>
+      ) : (
+        <View className="flex-row items-center p-4" style={{ gap: 10 }}>
+          <View
+            className="items-center justify-center rounded-xl"
+            style={{ width: 40, height: 40, backgroundColor: badge?.iconBg ?? colors.primaryLight }}
+          >
+            <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-base" numberOfLines={1}>{team.name}</Text>
+            <Text className="text-muted text-xs mt-0.5">
+              {joinedMembers.length}/{requiredSize || "—"} players
+            </Text>
+          </View>
+          {badge && (
+            <View className={`px-3 py-1 rounded-full ${badge.bg}`}>
+              <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
+            </View>
+          )}
+          {chatButton}
+        </View>
+      )}
+
+      <View className="p-4" style={{ paddingTop: isClaimed ? 4 : 0 }}>
       {canSeeTeamCode && (
         <Pressable
           onPress={handleCopyCode}
@@ -345,6 +386,7 @@ function TeamCard({
           )}
         </View>
       )}
+      </View>
     </View>
   );
 }
@@ -608,19 +650,20 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         // links out to it rather than trying to fit all of that here.
         <Pressable
           onPress={() => navigation.navigate("TournamentMatches", { gameId: game.id })}
-          className="mx-4 mt-4 flex-row items-center justify-between border border-border rounded-2xl bg-white p-4"
-          style={cardShadow}
+          className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl bg-white p-4"
+          style={{ ...cardShadow, gap: 12 }}
         >
-          <View className="flex-row items-center" style={{ gap: 10 }}>
-            <View
-              className="items-center justify-center rounded-full"
-              style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
-            >
-              <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
-            </View>
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="list-outline" size={19} color={colors.primaryDark} />
+          </View>
+          <View className="flex-1">
             <Text className="text-ink font-bold text-base">
               {isPoolFormat ? "Groups & Matches List" : "Matches List"}
             </Text>
+            <Text className="text-muted text-xs mt-0.5">View all upcoming and past matches</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
@@ -637,13 +680,24 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         </Text>
         <View className="flex-row" style={{ gap: 8 }}>
           {isHost && (
-            <Pressable
-              onPress={() => setShowInviteSquadModal(true)}
-              className="flex-row items-center rounded-full bg-primary px-4 py-2.5"
-              style={{ gap: 6, ...primaryButtonShadow }}
-            >
-              <Ionicons name="person-add-outline" size={16} color="white" />
-              <Text className="text-white text-sm font-bold">Invite a Squad</Text>
+            <Pressable onPress={() => setShowInviteSquadModal(true)} style={primaryButtonShadow}>
+              <LinearGradient
+                colors={["#0E5C34", "#1D9254"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderRadius: 999,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  gap: 6,
+                }}
+              >
+                <Ionicons name="sparkles" size={14} color="white" />
+                <Ionicons name="person-add-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">Invite a Squad</Text>
+              </LinearGradient>
             </Pressable>
           )}
           {canCreateTeam && (
