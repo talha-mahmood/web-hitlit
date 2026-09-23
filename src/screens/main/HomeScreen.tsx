@@ -235,9 +235,12 @@ export default function HomeScreen() {
             style={{ gap: 12 }}
           >
             {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
+              <Image
+                source={{ uri: profile.avatar }}
+                className="w-12 h-12 rounded-full bg-primary-light border-2 border-primary"
+              />
             ) : (
-              <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
+              <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center border-2 border-primary">
                 <Text className="text-lg font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
