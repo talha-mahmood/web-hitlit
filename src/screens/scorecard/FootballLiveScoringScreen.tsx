@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,7 +8,6 @@ import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
-import { getSportImage } from "../../lib/sportImages";
 import {
   useFootballMatch,
   useAddFootballGoal,
@@ -227,8 +226,6 @@ export default function FootballLiveScoringScreen() {
     );
   }
 
-  const footballBgImage = getSportImage("football");
-
   const handleToggleClock = () => {
     if (isPaused && pausedAtMs !== null) {
       const kickoffAt =
@@ -435,14 +432,8 @@ export default function FootballLiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
-        {/* Team crests + score, over a pitch photo */}
-        <View className="rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
-          {footballBgImage && (
-            <>
-              <Image source={footballBgImage} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" />
-              <View style={{ position: "absolute", width: "100%", height: "100%", backgroundColor: "rgba(255,255,255,0.35)" }} />
-            </>
-          )}
+        {/* Team crests + score */}
+        <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
           {/* Corner accent triangles, team-colored */}
           <View
             style={{
@@ -624,15 +615,22 @@ export default function FootballLiveScoringScreen() {
                   colors={[colors.danger, "#B91C1C"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14 }}
+                  style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", paddingVertical: 14, paddingHorizontal: 14 }}
                 >
-                  <Ionicons name="stop-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
-                  <Text className="text-white text-base font-bold">
-                    {phase === "FIRST_HALF" && "End First Half"}
-                    {phase === "SECOND_HALF" && "End Second Half"}
-                    {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
-                    {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
-                  </Text>
+                  <View className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.25)" }}>
+                    <Ionicons name="notifications-off" size={17} color="white" />
+                  </View>
+                  <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text className="text-white font-bold text-base" numberOfLines={1}>
+                      {phase === "FIRST_HALF" && "End First Half"}
+                      {phase === "SECOND_HALF" && "End Second Half"}
+                      {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
+                      {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
+                    </Text>
+                    <Text className="text-white text-xs mt-0.5" style={{ opacity: 0.85 }}>Tap to stop the alarm</Text>
+                  </View>
+                  <Ionicons name="notifications" size={40} color="white" style={{ position: "absolute", right: 18, opacity: 0.2 }} />
                 </LinearGradient>
               </Pressable>
             ) : (
