@@ -333,6 +333,9 @@ export default function CreateGameScreen() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
   const [durationDays, setDurationDays] = useState<number>(1);
+  // Tournament-only: how many hours play runs each day.
+  const [hoursPerDay, setHoursPerDay] = useState<number>(1);
+  const HOURS_PER_DAY_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
   const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat | null>(null);
@@ -841,35 +844,15 @@ export default function CreateGameScreen() {
           ))}
         </ScrollView>
 
-        {/* Tournaments show Duration before Start Time (a tournament's
-            length in days matters before picking its daily start time);
-            regular games keep Start Time first, then Duration. */}
-        {isTournament && (
-          <>
-            <SectionLabel title="Duration" icon="timer-outline" compact />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {TOURNAMENT_DURATIONS_DAYS.map((d) => {
-                const value = String(d);
-                const selected = durationDays === d;
-                return (
-                  <Pressable
-                    key={value}
-                    onPress={() => setDurationDays(d)}
-                    className="px-4 py-2.5 rounded-2xl"
-                    style={chipStyle(selected)}
-                  >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {d} day
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </>
-        )}
-
-        {/* Start Time */}
-        <SectionLabel title="Start Time" required icon="time-outline" compact />
+        {/* Tournaments: Start Time (Each Day), then Hours (Each Day), then
+            Duration (in days). Regular games: Start Time, then Duration
+            (in hours). */}
+        <SectionLabel
+          title={isTournament ? "Start Time (Each Day)" : "Start Time"}
+          required
+          icon="time-outline"
+          compact
+        />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -887,12 +870,51 @@ export default function CreateGameScreen() {
           ))}
         </ScrollView>
 
-        {!isTournament && (
+        {isTournament && (
           <>
-            {/* Duration */}
-            <SectionLabel title="Duration" icon="timer-outline" compact />
+            {/* Hours (Each Day) — tournament only */}
+            <SectionLabel title="Hours (Each Day)" icon="hourglass-outline" compact />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {DURATIONS.map((d) => {
+              {HOURS_PER_DAY_OPTIONS.map((h) => {
+                const selected = hoursPerDay === h;
+                return (
+                  <Pressable
+                    key={h}
+                    onPress={() => setHoursPerDay(h)}
+                    className="px-4 py-2.5 rounded-2xl"
+                    style={chipStyle(selected)}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      {h === 1 ? "1 hr" : `${h} hrs`}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </>
+        )}
+
+        {/* Duration */}
+        <SectionLabel title="Duration" icon="timer-outline" compact />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {isTournament
+            ? TOURNAMENT_DURATIONS_DAYS.map((d) => {
+                const value = String(d);
+                const selected = durationDays === d;
+                return (
+                  <Pressable
+                    key={value}
+                    onPress={() => setDurationDays(d)}
+                    className="px-4 py-2.5 rounded-2xl"
+                    style={chipStyle(selected)}
+                  >
+                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      {d} day
+                    </Text>
+                  </Pressable>
+                );
+              })
+            : DURATIONS.map((d) => {
                 const selected = duration === d;
                 return (
                   <Pressable
@@ -907,9 +929,7 @@ export default function CreateGameScreen() {
                   </Pressable>
                 );
               })}
-            </ScrollView>
-          </>
-        )}
+        </ScrollView>
 
         {/* Max Players (regular) / Teams config (tournament) */}
         {isTournament ? (
