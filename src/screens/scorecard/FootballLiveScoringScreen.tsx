@@ -34,6 +34,7 @@ import {
   type MatchTimestamps,
   type Phase,
   type Team,
+  type GoalEvent,
 } from "../../lib/footballScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
@@ -68,6 +69,56 @@ function TeamCrest({ color, size = 60 }: { color: string; size?: number }) {
       </Svg>
       <Ionicons name="star" size={size * 0.17} color="#FACC15" style={{ position: "absolute", top: size * 0.2 }} />
       <Ionicons name="football" size={size * 0.32} color="white" style={{ position: "absolute", bottom: size * 0.16 }} />
+    </View>
+  );
+}
+
+// Timeline-style goal list — minute, a colored dot connected to the next
+// one, a team-colored ball badge, and the team name. Shared between the
+// live-scoring view and the Match Complete summary.
+function GoalHistoryCard({ goals, teamAName, teamBName }: { goals: GoalEvent[]; teamAName: string; teamBName: string }) {
+  if (goals.length === 0) return null;
+  return (
+    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+      <View
+        className="flex-row items-center pb-3 mb-1"
+        style={{ gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 26, height: 26, backgroundColor: colors.primaryLight }}
+        >
+          <Ionicons name="football" size={14} color={colors.primaryDark} />
+        </View>
+        <Text className="text-ink font-extrabold text-sm" style={{ letterSpacing: 0.5 }}>GOAL HISTORY</Text>
+      </View>
+      {goals.map((g, i) => {
+        const teamColor = g.team === "A" ? colors.primary : "#1D4ED8";
+        const teamBg = g.team === "A" ? colors.primaryLight : "#DBEAFE";
+        return (
+          <View key={g.seq} className="flex-row items-start" style={{ paddingVertical: 8 }}>
+            <Text className="text-muted text-xs font-semibold" style={{ width: 44, marginTop: 8 }}>
+              {g.minuteLabel}
+            </Text>
+            <View className="items-center" style={{ width: 12, marginTop: 8 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: teamColor }} />
+              {i < goals.length - 1 && <View style={{ width: 1, height: 26, backgroundColor: colors.border, marginTop: 4 }} />}
+            </View>
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ width: 30, height: 30, backgroundColor: teamBg, marginLeft: 8 }}
+            >
+              <Ionicons name="football" size={14} color={teamColor} />
+            </View>
+            <View className="flex-1 ml-2">
+              <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                {g.team === "A" ? teamAName : teamBName}
+              </Text>
+              <Text className="text-muted text-xs">Goal</Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -344,68 +395,101 @@ export default function FootballLiveScoringScreen() {
   // Match complete
   if (match.status === "COMPLETED") {
     const winnerName = match.winner_team === "A" ? match.team_a_name : match.winner_team === "B" ? match.team_b_name : null;
+    const periodRows: { label: string; a: number; b: number }[] = [
+      { label: "HALF-TIME", a: scoreSummary.halfTime.a, b: scoreSummary.halfTime.b },
+      { label: "FULL-TIME", a: scoreSummary.fullTime.a, b: scoreSummary.fullTime.b },
+      ...(scoreSummary.afterExtraTime ? [{ label: "EXTRA TIME", a: scoreSummary.afterExtraTime.a, b: scoreSummary.afterExtraTime.b }] : []),
+      ...(shootout ? [{ label: "PENALTIES", a: shootout.scoreA, b: shootout.scoreB }] : []),
+    ];
     return (
       <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-        <View className="flex-row items-center px-4 pb-4" style={{ gap: 6 }}>
+        <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">Match Complete</Text>
+          <View className="flex-1">
+            <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
+            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Football</Text>
+          </View>
         </View>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-          <View className="bg-white rounded-3xl items-center py-8 px-6" style={cardShadow}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+          {/* Team crests + final score, with a winner ribbon */}
+          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
-              className="items-center justify-center rounded-full mb-3"
-              style={{ width: 72, height: 72, backgroundColor: colors.primaryLight }}
-            >
-              <Ionicons name={winnerName ? "trophy" : "flag-outline"} size={36} color={colors.primaryDark} />
-            </View>
-            <Text className="text-muted text-xs font-semibold">MATCH COMPLETE</Text>
-            <Text className="text-ink font-extrabold text-xl mt-1 text-center">
-              {winnerName ? `${winnerName} — Winner` : "Draw"}
-            </Text>
+              style={{
+                position: "absolute", top: 0, left: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderRightWidth: 56,
+                borderTopColor: colors.primary, borderRightColor: "transparent",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute", top: 0, right: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderLeftWidth: 56,
+                borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+              }}
+            />
+            <View className="p-5 items-center">
+              <View
+                className="flex-row items-center rounded-full mb-4"
+                style={{ gap: 6, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name={winnerName ? "trophy" : "flag-outline"} size={15} color={colors.primaryDark} />
+                <Text className="font-extrabold text-xs" style={{ color: colors.primaryDark, letterSpacing: 0.5 }}>
+                  {winnerName ? `${winnerName.toUpperCase()} WINS` : "MATCH DRAWN"}
+                </Text>
+              </View>
 
-            <View className="w-full mt-6" style={{ gap: 8 }}>
-              <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                <Text className="text-muted text-xs font-semibold">HALF-TIME</Text>
-                <Text className="text-ink font-bold text-sm">{scoreSummary.halfTime.a} - {scoreSummary.halfTime.b}</Text>
-              </View>
-              <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                <Text className="text-muted text-xs font-semibold">FULL-TIME</Text>
-                <Text className="text-ink font-bold text-sm">{scoreSummary.fullTime.a} - {scoreSummary.fullTime.b}</Text>
-              </View>
-              {scoreSummary.afterExtraTime && (
-                <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                  <Text className="text-muted text-xs font-semibold">EXTRA TIME</Text>
-                  <Text className="text-ink font-bold text-sm">{scoreSummary.afterExtraTime.a} - {scoreSummary.afterExtraTime.b}</Text>
+              <View className="flex-row items-center justify-between w-full">
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color={colors.primary} />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_a_name}</Text>
                 </View>
-              )}
-              {shootout && (
-                <View className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                  <Text className="text-muted text-xs font-semibold">PENALTIES</Text>
-                  <Text className="text-ink font-bold text-sm">{shootout.scoreA} - {shootout.scoreB}</Text>
-                </View>
-              )}
-            </View>
 
-            {goals.length > 0 && (
-              <View className="w-full mt-5">
-                <Text className="text-muted text-xs font-semibold mb-2 text-center">GOALS</Text>
-                {goals.map((g) => (
-                  <Text key={g.seq} className="text-ink text-sm text-center mt-1">
-                    {g.minuteLabel} {g.team === "A" ? match.team_a_name : match.team_b_name}
-                  </Text>
-                ))}
+                <View className="items-center" style={{ flex: 1 }}>
+                  <View className="flex-row items-center" style={{ gap: 16 }}>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{scoreSummary.current.a}</Text>
+                    <Text className="text-muted font-bold" style={{ fontSize: 22 }}>-</Text>
+                    <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{scoreSummary.current.b}</Text>
+                  </View>
+                  <View className="rounded-full px-3 py-1 mt-2 bg-gray-100">
+                    <Text className="text-muted text-xs font-extrabold" style={{ letterSpacing: 0.5 }}>FULL-TIME</Text>
+                  </View>
+                </View>
+
+                <View className="items-center" style={{ width: 92 }}>
+                  <TeamCrest color="#1D4ED8" />
+                  <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_b_name}</Text>
+                </View>
               </View>
-            )}
+            </View>
           </View>
 
-          <Pressable
-            onPress={() => leaveScorecard()}
-            className="rounded-2xl py-4 items-center mt-6 bg-primary"
-            style={primaryButtonShadow}
-          >
-            <Text className="text-white font-bold text-base">Back to Matches</Text>
+          {/* Period-by-period breakdown */}
+          <View className="bg-white rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
+            {periodRows.map((row) => (
+              <View key={row.label} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <Ionicons name="time-outline" size={14} color={colors.muted} />
+                  <Text className="text-muted text-xs font-bold" style={{ letterSpacing: 0.5 }}>{row.label}</Text>
+                </View>
+                <Text className="text-ink font-bold text-sm">{row.a} - {row.b}</Text>
+              </View>
+            ))}
+          </View>
+
+          <GoalHistoryCard goals={goals} teamAName={match.team_a_name} teamBName={match.team_b_name} />
+
+          <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16 }}
+            >
+              <Ionicons name="arrow-back-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+              <Text className="text-white font-bold text-base">Back to Matches</Text>
+            </LinearGradient>
           </Pressable>
         </ScrollView>
       </View>
@@ -507,48 +591,8 @@ export default function FootballLiveScoringScreen() {
         )}
 
         {/* Goal history */}
-        {goals.length > 0 && phase !== "PENALTIES" && (
-          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
-            <View
-              className="flex-row items-center pb-3 mb-1"
-              style={{ gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}
-            >
-              <View
-                className="items-center justify-center rounded-full"
-                style={{ width: 26, height: 26, backgroundColor: colors.primaryLight }}
-              >
-                <Ionicons name="football" size={14} color={colors.primaryDark} />
-              </View>
-              <Text className="text-ink font-extrabold text-sm" style={{ letterSpacing: 0.5 }}>GOAL HISTORY</Text>
-            </View>
-            {goals.map((g, i) => {
-              const teamColor = g.team === "A" ? colors.primary : "#1D4ED8";
-              const teamBg = g.team === "A" ? colors.primaryLight : "#DBEAFE";
-              return (
-                <View key={g.seq} className="flex-row items-start" style={{ paddingVertical: 8 }}>
-                  <Text className="text-muted text-xs font-semibold" style={{ width: 44, marginTop: 8 }}>
-                    {g.minuteLabel}
-                  </Text>
-                  <View className="items-center" style={{ width: 12, marginTop: 8 }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: teamColor }} />
-                    {i < goals.length - 1 && <View style={{ width: 1, height: 26, backgroundColor: colors.border, marginTop: 4 }} />}
-                  </View>
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 30, height: 30, backgroundColor: teamBg, marginLeft: 8 }}
-                  >
-                    <Ionicons name="football" size={14} color={teamColor} />
-                  </View>
-                  <View className="flex-1 ml-2">
-                    <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-                      {g.team === "A" ? match.team_a_name : match.team_b_name}
-                    </Text>
-                    <Text className="text-muted text-xs">Goal</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
+        {phase !== "PENALTIES" && (
+          <GoalHistoryCard goals={goals} teamAName={match.team_a_name} teamBName={match.team_b_name} />
         )}
 
         {/* Penalty kick history */}
