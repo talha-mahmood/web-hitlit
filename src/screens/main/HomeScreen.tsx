@@ -25,7 +25,7 @@ import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
 import WavingHandIcon from "../../components/WavingHandIcon";
 import { useAuthStore } from "../../store/authStore";
-import { colors, cardShadow } from "../../constants/theme";
+import { colors } from "../../constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -254,14 +254,6 @@ export default function HomeScreen() {
             </View>
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10 }}>
-            <Pressable
-              onPress={() => navigation.navigate("Venues", { screen: "VenuesList" })}
-              hitSlop={8}
-              className="w-10 h-10 rounded-full bg-white items-center justify-center"
-              style={{ ...cardShadow }}
-            >
-              <Ionicons name="search" size={18} color={colors.ink} />
-            </Pressable>
             <NotificationBell
               unreadCount={unreadCount}
               onPress={() => navigation.navigate("Notifications")}
