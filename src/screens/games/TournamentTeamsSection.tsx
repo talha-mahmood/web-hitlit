@@ -636,7 +636,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
       )}
 
       <View className="mx-4 mt-4 flex-row items-center justify-between mb-3">
-        <Text className="text-ink font-semibold text-sm">
+        <Text className="text-ink font-bold text-base">
           Teams ({activeTeams.length}/{requiredTeams || "—"})
         </Text>
         <View className="flex-row" style={{ gap: 8 }}>
