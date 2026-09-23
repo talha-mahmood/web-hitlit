@@ -671,7 +671,7 @@ export default function GameDetailScreen() {
                 <Ionicons name="megaphone-outline" size={17} color={colors.primaryDark} />
               </View>
               <View className="flex-1">
-                <Text className="text-ink font-bold text-sm mb-1">About this {isTournament ? "tournament" : "game"}</Text>
+                <Text className="text-ink font-bold text-base mb-1">About this {isTournament ? "tournament" : "game"}</Text>
                 <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
               </View>
             </View>

@@ -618,7 +618,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             >
               <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
             </View>
-            <Text className="text-ink font-semibold text-sm">
+            <Text className="text-ink font-bold text-base">
               {isPoolFormat ? "Groups & Matches List" : "Matches List"}
             </Text>
           </View>
