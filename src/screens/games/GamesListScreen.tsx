@@ -8,9 +8,9 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
 import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
-import SearchField from "../../components/SearchField";
 import SelectSportModal from "../../components/SelectSportModal";
 import SelectDistanceModal from "../../components/SelectDistanceModal";
+import SelectLocationModal from "../../components/SelectLocationModal";
 import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
@@ -358,6 +358,7 @@ export default function GamesListScreen() {
   const [sportSheetOpen, setSportSheetOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [locationOpen, setLocationOpen] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
   // "All" / "My Games" pills, the "Time" range pill, and the distance
@@ -638,6 +639,30 @@ export default function GamesListScreen() {
               {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
             </Text>
           </Pressable>
+          {/* "Location" — opens a bottom sheet with a free-text field plus
+              city suggestions, same shape as Sports/Distance, in place of
+              the old always-visible inline field. */}
+          <Pressable
+            onPress={() => setLocationOpen(true)}
+            className="flex-row items-center rounded-full"
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              gap: 5,
+              backgroundColor: locationInput ? colors.primary : "white",
+              borderWidth: 1,
+              borderColor: locationInput ? colors.primary : colors.border,
+            }}
+          >
+            <Ionicons name="location-outline" size={14} color={locationInput ? "white" : colors.muted} />
+            <Text
+              className="font-medium"
+              style={{ fontSize: 13.5, color: locationInput ? "white" : colors.muted }}
+              numberOfLines={1}
+            >
+              {locationInput || "Location"}
+            </Text>
+          </Pressable>
         </ScrollView>
 </View>
       </View>
@@ -654,19 +679,15 @@ export default function GamesListScreen() {
         }}
       />
 
-      {/* Location filter — always visible. The filter icon opens the sport-select
-          sheet below it instead of toggling this. */}
-      <View className="px-5 mb-2">
-        <SearchField
-          value={locationInput}
-          onChangeText={setLocationInput}
-          prefix="Filter by "
-          variants={["location"]}
-          autoCapitalize="none"
-          autoCorrect={false}
-          icon="location-outline"
-        />
-      </View>
+      <SelectLocationModal
+        visible={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        value={locationInput}
+        onApply={(loc) => {
+          setLocationInput(loc);
+          setLocationOpen(false);
+        }}
+      />
       <SelectSportModal
         visible={sportSheetOpen}
         onClose={() => setSportSheetOpen(false)}

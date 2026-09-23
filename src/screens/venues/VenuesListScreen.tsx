@@ -13,9 +13,9 @@ import type { VenueListItem } from "../../lib/api/venues";
 import { getSportImage } from "../../lib/sportImages";
 import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
-import SearchField from "../../components/SearchField";
 import SelectSportModal from "../../components/SelectSportModal";
 import SelectDistanceModal from "../../components/SelectDistanceModal";
+import SelectLocationModal from "../../components/SelectLocationModal";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -119,6 +119,7 @@ export default function VenuesListScreen() {
     route.params?.sportId
   );
   const [sportSheetOpen, setSportSheetOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const [debouncedLocation, setDebouncedLocation] = useState("");
   // Distance dropdown — same row as the Games list, minus its Date pill
@@ -262,6 +263,30 @@ export default function VenuesListScreen() {
                 {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
               </Text>
             </Pressable>
+            {/* "Location" — opens a bottom sheet with a free-text field plus
+                city suggestions, same shape as Sports/Distance, in place of
+                the old always-visible inline field. */}
+            <Pressable
+              onPress={() => setLocationOpen(true)}
+              className="flex-row items-center rounded-full"
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                gap: 5,
+                backgroundColor: locationInput ? colors.primary : "white",
+                borderWidth: 1,
+                borderColor: locationInput ? colors.primary : colors.border,
+              }}
+            >
+              <Ionicons name="location-outline" size={14} color={locationInput ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: locationInput ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                {locationInput || "Location"}
+              </Text>
+            </Pressable>
           </ScrollView>
         </View>
       </View>
@@ -278,18 +303,16 @@ export default function VenuesListScreen() {
         }}
       />
 
-      {/* Location filter — always visible. */}
-      <View className="px-5 mb-2">
-        <SearchField
-          value={locationInput}
-          onChangeText={setLocationInput}
-          prefix="Filter by "
-          variants={["location"]}
-          autoCapitalize="none"
-          autoCorrect={false}
-          icon="location-outline"
-        />
-      </View>
+      <SelectLocationModal
+        visible={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        value={locationInput}
+        onApply={(loc) => {
+          setLocationInput(loc);
+          setLocationOpen(false);
+        }}
+      />
+
       <SelectSportModal
         visible={sportSheetOpen}
         onClose={() => setSportSheetOpen(false)}
