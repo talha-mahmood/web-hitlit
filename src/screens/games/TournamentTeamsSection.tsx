@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import {
   useTournamentTeams,
@@ -18,7 +18,6 @@ import {
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
-import { getSportIcon } from "../../lib/sportIcons";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
@@ -116,7 +115,6 @@ function TeamCard({
   genderMismatch,
   gameGenderLabel,
   noun,
-  sportName,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -141,8 +139,6 @@ function TeamCard({
   // default to 2 teams — copy that mentions "the tournament" needs to say
   // "the game" there instead.
   noun: "tournament" | "game";
-  // Decorative watermark icon only — the sport this game/tournament is for.
-  sportName: string | null | undefined;
 }) {
   const [codeCopied, setCodeCopied] = useState(false);
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
@@ -167,7 +163,6 @@ function TeamCard({
         : team.status === "REJECTED"
           ? "close-circle"
           : "person";
-  const watermarkIcon = sportName ? getSportIcon(sportName).icon : "trophy-outline";
   // The "Create Team" squad-registration CTA only makes sense on a genuinely
   // empty team — the server only allows it there too.
   const isEmpty = joinedMembers.length === 0;
@@ -186,19 +181,7 @@ function TeamCard({
   };
 
   return (
-    <View
-      className="border border-border rounded-2xl bg-white p-4"
-      style={{ ...cardShadow, overflow: "hidden", position: "relative" }}
-    >
-      {/* Decorative watermark — purely visual, same language as the
-          sport-icon backdrops used elsewhere on this screen. */}
-      <MaterialCommunityIcons
-        name={watermarkIcon}
-        size={110}
-        color={colors.primary}
-        style={{ position: "absolute", right: -20, bottom: -20, opacity: 0.06 }}
-      />
-
+    <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
       <View className="flex-row items-center mb-1" style={{ gap: 10 }}>
         <View
           className="items-center justify-center rounded-xl"
@@ -712,7 +695,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               genderMismatch={genderMismatch}
               gameGenderLabel={gameGenderLabel}
               noun={noun}
-              sportName={game.sports?.name}
             />
           ))
         )}

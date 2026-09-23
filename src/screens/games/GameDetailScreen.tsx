@@ -20,7 +20,6 @@ import SquadFillModal from "../../components/SquadFillModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
-import DetailSportBackdrop from "../../components/DetailSportBackdrop";
 import TournamentTeamsSection from "./TournamentTeamsSection";
 import type { Database } from "../../types/database.types";
 import { getSportIcon } from "../../lib/sportIcons";
@@ -471,8 +470,6 @@ export default function GameDetailScreen() {
 
   return (
     <View className="flex-1 bg-green-50">
-      <DetailSportBackdrop sportName={game.sports?.name} />
-
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
