@@ -29,6 +29,7 @@ export default function SearchField({
   containerStyle,
   icon = "search-outline",
   right,
+  autoFocus,
 }: {
   value: string;
   onChangeText: (t: string) => void;
@@ -42,6 +43,8 @@ export default function SearchField({
   // Extra content after the text/clear button (e.g. a chevron) — optional,
   // every existing caller keeps its plain trailing clear-button look.
   right?: ReactNode;
+  // Opt-in — existing callers keep their current (no auto-focus) behavior.
+  autoFocus?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
@@ -100,6 +103,7 @@ export default function SearchField({
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
           keyboardType={keyboardType}
+          autoFocus={autoFocus}
           // With a single variant there's nothing to animate/swipe, so this
           // uses a real native placeholder instead of the overlay below — a
           // native TextInput positions its cursor correctly relative to its
