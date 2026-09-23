@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Image } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Image, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useTopPlayers } from "../../hooks/usePlayers";
 import type { TopPlayer } from "../../lib/api/players";
 import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { colors, cardShadow } from "../../constants/theme";
-import { SectionLabel } from "../../components/GameFormControls";
-import SportsBySportSection from "../../components/SportsBySportSection";
+import SelectSportModal from "../../components/SelectSportModal";
 import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
 
@@ -73,6 +72,7 @@ export default function PlayersDashboardContent({
 }) {
   const [sportId, setSportId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [sportSheetOpen, setSportSheetOpen] = useState(false);
   const { data: sports } = useSports();
   const { data: players, isLoading } = useTopPlayers(sportId ?? undefined);
 
@@ -102,20 +102,15 @@ export default function PlayersDashboardContent({
   }, [rankedPlayers, search]);
 
   return (
+    <>
     <FlatList
       data={visiblePlayers}
       keyboardShouldPersistTaps="handled"
       keyExtractor={(item) => item.player.userId}
       contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       ListHeaderComponent={
-        <View className="mb-1">
-          <SectionLabel title="Filter by Sport" />
-          <SportsBySportSection
-            sports={sports ?? []}
-            selectedSportId={sportId}
-            onSelectSport={(id) => setSportId((prev) => (prev === id ? null : id))}
-          />
-          <View className="mt-3 mb-1">
+        <View className="mb-1 flex-row items-center" style={{ gap: 10 }}>
+          <View className="flex-1">
             <FieldInput
               value={search}
               onChangeText={setSearch}
@@ -130,6 +125,22 @@ export default function PlayersDashboardContent({
               }
             />
           </View>
+          <Pressable
+            onPress={() => setSportSheetOpen(true)}
+            className="items-center justify-center bg-white"
+            style={{ width: 48, height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+          >
+            <Ionicons name="options-outline" size={20} color={colors.ink} />
+            {sportId && (
+              <View
+                style={{
+                  position: "absolute", top: 6, right: 6,
+                  width: 8, height: 8, borderRadius: 4,
+                  backgroundColor: colors.primary,
+                }}
+              />
+            )}
+          </Pressable>
         </View>
       }
       ListEmptyComponent={
@@ -159,5 +170,16 @@ export default function PlayersDashboardContent({
         />
       )}
     />
+    <SelectSportModal
+      visible={sportSheetOpen}
+      onClose={() => setSportSheetOpen(false)}
+      sports={sports ?? []}
+      selectedSportId={sportId ?? undefined}
+      onApply={(id) => {
+        setSportId(id ?? null);
+        setSportSheetOpen(false);
+      }}
+    />
+    </>
   );
 }
