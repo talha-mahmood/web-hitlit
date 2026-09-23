@@ -708,7 +708,6 @@ export default function GameDetailScreen() {
                 <Text className="text-ink font-bold text-base mb-1">About this {isTournament ? "tournament" : "game"}</Text>
                 <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </View>
           </View>
         )}
