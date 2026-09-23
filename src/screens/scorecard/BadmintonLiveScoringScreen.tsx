@@ -154,7 +154,7 @@ export default function BadmintonLiveScoringScreen() {
   const handleUndo = () => {
     if (rallies.length === 0) return;
     const last = rallies[rallies.length - 1];
-    Alert.alert("Undo Last Rally", "Remove the most recent rally?", [
+    Alert.alert("Undo Last Point", "Remove the most recent point?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Undo",
@@ -491,7 +491,7 @@ export default function BadmintonLiveScoringScreen() {
             onPress={handleUndo}
             disabled={rallies.length === 0 || deleteLastRally.isPending}
             icon="arrow-undo-outline"
-            label="Undo Last Rally"
+            label="Undo Last Point"
             style={{ marginTop: 2, opacity: rallies.length === 0 ? 0.5 : 1 }}
           />
         </View>

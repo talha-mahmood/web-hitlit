@@ -3,7 +3,7 @@ import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { usePadelMatch, useAddPadelPoint, useDeleteLastPadelPoint, useCompletePadelMatch } from "../../hooks/usePadel";
@@ -313,7 +313,7 @@ export default function PadelLiveScoringScreen() {
               className="flex-1 bg-white rounded-2xl overflow-hidden"
               style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.primary }}
             >
-              <View className="p-3" style={{ position: "relative" }}>
+              <View className="p-3">
                 <Text className="text-ink font-extrabold text-base" numberOfLines={1}>{match.team_a_name}</Text>
                 {isDoubles && (
                   <View style={{ gap: 6, marginTop: 8 }}>
@@ -325,12 +325,6 @@ export default function PadelLiveScoringScreen() {
                     ))}
                   </View>
                 )}
-                <MaterialCommunityIcons
-                  name="racquetball"
-                  size={56}
-                  color={colors.primary}
-                  style={{ position: "absolute", right: -10, bottom: -10, opacity: 0.1 }}
-                />
               </View>
             </View>
 
@@ -338,7 +332,7 @@ export default function PadelLiveScoringScreen() {
               className="flex-1 bg-white rounded-2xl overflow-hidden"
               style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderRightWidth: 4, borderRightColor: "#1D4ED8" }}
             >
-              <View className="p-3" style={{ position: "relative", alignItems: "flex-end" }}>
+              <View className="p-3" style={{ alignItems: "flex-end" }}>
                 <Text className="text-ink font-extrabold text-base text-right" numberOfLines={1}>{match.team_b_name}</Text>
                 {isDoubles && (
                   <View style={{ gap: 6, marginTop: 8, alignItems: "flex-end" }}>
@@ -350,12 +344,6 @@ export default function PadelLiveScoringScreen() {
                     ))}
                   </View>
                 )}
-                <MaterialCommunityIcons
-                  name="racquetball"
-                  size={56}
-                  color="#1D4ED8"
-                  style={{ position: "absolute", left: -10, bottom: -10, opacity: 0.1 }}
-                />
               </View>
             </View>
           </View>
