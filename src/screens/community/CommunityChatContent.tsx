@@ -146,7 +146,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder="Write a comment..."
+          placeholder="Start a conversation... "
           className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
           maxLength={1000}
           multiline
