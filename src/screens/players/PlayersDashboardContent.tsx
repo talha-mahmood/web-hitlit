@@ -22,6 +22,7 @@ function PlayerRow({
   const rating = computeRankingRating(player);
   const tier = getRatingTierInfo(rating);
   const initials = (player.fullName ?? "?").charAt(0).toUpperCase();
+  const rankLabel = rank < 10 ? `0${rank}` : `${rank}`;
 
   return (
     <Bouncy
@@ -31,9 +32,6 @@ function PlayerRow({
       className="mb-3"
     >
       <View className="flex-row items-center border border-border rounded-2xl bg-white px-4 py-3">
-        <Text className="text-muted font-bold text-sm mr-3" style={{ width: 20 }}>
-          {rank}
-        </Text>
         {player.avatar ? (
           <Image source={{ uri: player.avatar }} className="w-12 h-12 rounded-full bg-primary-light mr-3" />
         ) : (
@@ -42,21 +40,22 @@ function PlayerRow({
           </View>
         )}
         <View className="flex-1 mr-2">
-          <Text className="text-ink font-semibold text-sm" numberOfLines={1}>
-            {player.fullName ?? "Player"}
-          </Text>
-          <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-            {player.gamesPlayedTotal} games · {player.tournamentsPlayedTotal} tournaments
-          </Text>
-        </View>
-        <View className="items-end">
-          <View className="rounded-full px-2.5 py-1 mb-1" style={{ backgroundColor: tier.bg }}>
-            <Text className="text-xs font-bold" style={{ color: tier.color }}>
-              {tier.label}
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.primary }} />
+            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+              {player.fullName ?? "Player"}
             </Text>
           </View>
-          <Text className="text-ink font-extrabold text-base">{rating}</Text>
+          <Text className="text-muted text-xs mt-1" numberOfLines={1}>
+            {player.gamesPlayedTotal} games · {player.tournamentsPlayedTotal} tournaments
+          </Text>
+          <Text className="text-muted text-xs mt-0.5" numberOfLines={1} style={{ opacity: 0.8 }}>
+            Rating {rating} · {tier.label}
+          </Text>
         </View>
+        <Text className="text-muted font-semibold text-xs">
+          # {rankLabel}
+        </Text>
       </View>
     </Bouncy>
   );
