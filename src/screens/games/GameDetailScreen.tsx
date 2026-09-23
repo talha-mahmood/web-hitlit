@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
@@ -11,7 +11,7 @@ import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import { useMyPendingGameInvite, useCreateGameInvite, useAcceptGameInvite, useDeclineGameInvite } from "../../hooks/useInvites";
 import { useSquadFillGameSlots, useSendGameSquadInvite, useGameSquadInvitesForGame } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
-import { colors, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow, cardShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
@@ -74,6 +74,7 @@ function InfoRow({
   action,
   pillColor,
   badge,
+  divider = true,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
@@ -86,10 +87,21 @@ function InfoRow({
   // A small colored tag shown next to the label (e.g. "Today") — distinct
   // from `pillColor`, which recolors the value itself.
   badge?: { label: string; color: string };
+  // Thin separator under the row — every row has one except the last in a
+  // given section (pass divider={false} there).
+  divider?: boolean;
 }) {
   return (
-    <View className="flex-row items-start py-2.5" style={{ gap: 12 }}>
-      <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
+    <View
+      className="flex-row items-center py-3"
+      style={{ gap: 12, borderBottomWidth: divider ? 1 : 0, borderBottomColor: colors.border }}
+    >
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+      >
+        <Ionicons name={icon} size={17} color={colors.primaryDark} />
+      </View>
       <View className="flex-1">
         <View className="flex-row items-center" style={{ gap: 6 }}>
           <Text className="text-muted text-xs">{label}</Text>
@@ -462,24 +474,27 @@ export default function GameDetailScreen() {
       <DetailSportBackdrop sportName={game.sports?.name} />
 
       {/* Header */}
-      <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-row items-center px-4 pb-4" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-1">
-          <Text className="text-base font-bold text-ink" numberOfLines={1}>
+          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }} numberOfLines={1}>
             {game.title}
           </Text>
-          <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+          <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
             {sportIconInfo && game.sports?.name && (
               <View
+                className="flex-row items-center"
                 style={{
                   backgroundColor: sportIconInfo.bg,
                   paddingHorizontal: 8,
-                  paddingVertical: 2,
+                  paddingVertical: 3,
                   borderRadius: 999,
+                  gap: 4,
                 }}
               >
+                <MaterialCommunityIcons name={sportIconInfo.icon} size={12} color={sportIconInfo.fg} />
                 <Text
                   style={{
                     color: sportIconInfo.fg,
@@ -492,8 +507,9 @@ export default function GameDetailScreen() {
               </View>
             )}
             {isTournament && (
-              <View className="bg-purple-50 px-2 py-0.5 rounded-full">
-                <Text className="text-purple-700 text-xs font-medium">🏆 Tournament</Text>
+              <View className="flex-row items-center bg-purple-50 px-2 py-0.5 rounded-full" style={{ gap: 4 }}>
+                <Ionicons name="trophy" size={11} color="#7C3AED" />
+                <Text className="text-purple-700 text-xs font-medium">Tournament</Text>
               </View>
             )}
           </View>
@@ -570,10 +586,11 @@ export default function GameDetailScreen() {
           </View>
         )}
 
-        {/* Game info — plain rows, no card chrome. Collapsed behind a
-            dropdown by default; tapping the header reveals it. */}
+        {/* Game info — card, collapsed behind a dropdown by default;
+            tapping the header reveals it. */}
         <View className="px-5 mt-5">
-          <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center justify-between">
+          <View className="bg-white rounded-2xl px-4" style={cardShadow}>
+          <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center justify-between py-4">
             <View className="flex-row items-center" style={{ gap: 6 }}>
               <Text className="text-ink font-bold text-base">{isTournament ? "Tournament Details" : "Game Details"}</Text>
               <BlinkingEyeIcon size={16} />
@@ -581,7 +598,7 @@ export default function GameDetailScreen() {
             <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
           </Pressable>
           {detailsExpanded && (
-            <View className="mt-1">
+            <View className="pb-1" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
               {/* The ID/code is only meaningful (and only shown) to people
                   already in the game/tournament — an unjoined visitor has
                   nothing to do with it and shouldn't see it at all. */}
@@ -591,7 +608,12 @@ export default function GameDetailScreen() {
                   label={isTournament ? "Tournament ID" : "Game ID"}
                   value={game.game_code}
                   action={
-                    <Pressable onPress={handleCopyGameCode} hitSlop={8} className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50" style={{ gap: 4 }}>
+                    <Pressable
+                      onPress={handleCopyGameCode}
+                      hitSlop={8}
+                      className="flex-row items-center px-3 py-1.5 rounded-lg bg-white"
+                      style={{ gap: 4, borderWidth: 1, borderColor: colors.border }}
+                    >
                       <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={14} color={codeCopied ? colors.primary : colors.muted} />
                       <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>{codeCopied ? "Copied" : "Copy"}</Text>
                     </Pressable>
@@ -629,16 +651,33 @@ export default function GameDetailScreen() {
               <InfoRow icon="speedometer-outline" label="Skill Level" value={skillLabel} pillColor={skillPillColor} />
               <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
               {!isTeamBased && <InfoRow icon="person-outline" label="Team Size" value={`${Math.floor(game.max_players / 2)} players per team (2 teams)`} />}
-              <InfoRow icon="cash-outline" label={isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"} value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"} pillColor={game.entry_fee > 0 ? undefined : colors.primary} />
+              <InfoRow
+                icon="cash-outline"
+                label={isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"}
+                value={game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()} (pay at venue)` : "Free"}
+                pillColor={game.entry_fee > 0 ? undefined : colors.primary}
+                divider={false}
+              />
             </View>
           )}
+          </View>
         </View>
 
         {/* Description */}
         {!!game.description && (
           <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-2">About this {isTournament ? "tournament" : "game"}</Text>
-            <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
+            <View className="flex-row bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="megaphone-outline" size={17} color={colors.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink font-bold text-sm mb-1">About this {isTournament ? "tournament" : "game"}</Text>
+                <Text className="text-muted text-sm leading-relaxed">{game.description}</Text>
+              </View>
+            </View>
           </View>
         )}
 
@@ -735,8 +774,16 @@ export default function GameDetailScreen() {
                 </Pressable>
               )}
               {!(showBookVenue && isVenueBooked) && (
-                <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
-                  <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
+                <Pressable
+                  onPress={handleCancel}
+                  className="flex-row items-center justify-between rounded-xl px-4 py-4"
+                  style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
+                >
+                  <View className="flex-row items-center" style={{ gap: 10 }}>
+                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.danger} />
                 </Pressable>
               )}
             </>

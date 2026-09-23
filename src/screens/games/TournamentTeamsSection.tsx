@@ -574,17 +574,17 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           {isHost && (
             <Pressable
               onPress={() => setShowInviteSquadModal(true)}
-              className="flex-row items-center border border-primary rounded-lg px-3 py-1.5"
+              className="flex-row items-center rounded-full border border-primary px-3 py-1.5"
               style={{ gap: 4 }}
             >
-              <Ionicons name="people-outline" size={14} color={colors.primary} />
+              <Ionicons name="person-add-outline" size={14} color={colors.primary} />
               <Text className="text-primary text-xs font-semibold">Invite a Squad</Text>
             </Pressable>
           )}
           {canCreateTeam && (
             <Pressable
               onPress={() => setShowCreateModal(true)}
-              className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
+              className="flex-row items-center rounded-full bg-primary px-3 py-1.5"
               style={{ gap: 4 }}
             >
               <Ionicons name="add" size={14} color="white" />
