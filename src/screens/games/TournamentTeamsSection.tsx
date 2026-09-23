@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import {
   useTournamentTeams,
@@ -18,6 +18,7 @@ import {
 } from "../../hooks/useSquadTeamFill";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
+import { getSportIcon } from "../../lib/sportIcons";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
@@ -35,31 +36,65 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList>;
 
-const TEAM_STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting" },
-  PENDING_HOST_APPROVAL: { bg: "bg-amber-50", text: "text-amber-700", label: "Awaiting Approval" },
-  APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Full" },
-  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed" },
+const TEAM_STATUS_META: Record<
+  string,
+  { bg: string; text: string; label: string; iconBg: string; iconColor: string }
+> = {
+  FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting", iconBg: "#DBEAFE", iconColor: "#2563EB" },
+  PENDING_HOST_APPROVAL: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    label: "Awaiting Approval",
+    iconBg: "#FEF3C7",
+    iconColor: "#D97706",
+  },
+  APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Full", iconBg: colors.primaryLight, iconColor: colors.primaryDark },
+  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed", iconBg: "#FEE2E2", iconColor: colors.danger },
 };
+
+// A rotating palette so a team's member circles aren't all the same flat
+// green — purely cosmetic (index-based, not tied to any real per-user color).
+const MEMBER_COLORS = ["#7C3AED", "#16A34A", "#D97706", "#DB2777", "#0891B2", "#4F46E5", "#65A30D", "#DC2626"];
 
 function MemberAvatar({
   name,
   avatar,
+  colorIndex,
 }: {
   name: string | null;
   avatar: string | null;
+  colorIndex: number;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
+  const color = MEMBER_COLORS[colorIndex % MEMBER_COLORS.length];
   return (
     <View className="items-center" style={{ width: 56 }}>
-      {avatar ? (
-        <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-      ) : (
-        <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-          <Text className="text-primary font-bold text-sm">{initials}</Text>
-        </View>
-      )}
-      <Text className="text-muted text-xs mt-0.5 text-center" numberOfLines={1}>
+      <View style={{ position: "relative" }}>
+        {avatar ? (
+          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+        ) : (
+          <View
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: color }}
+          >
+            <Text className="text-white font-bold text-sm">{initials}</Text>
+          </View>
+        )}
+        <View
+          style={{
+            position: "absolute",
+            bottom: -1,
+            right: -1,
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: "#22C55E",
+            borderWidth: 2,
+            borderColor: "white",
+          }}
+        />
+      </View>
+      <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Player").split(" ")[0]}
       </Text>
     </View>
@@ -81,6 +116,7 @@ function TeamCard({
   genderMismatch,
   gameGenderLabel,
   noun,
+  sportName,
 }: {
   team: TournamentTeam;
   requiredSize: number;
@@ -105,6 +141,8 @@ function TeamCard({
   // default to 2 teams — copy that mentions "the tournament" needs to say
   // "the game" there instead.
   noun: "tournament" | "game";
+  // Decorative watermark icon only — the sport this game/tournament is for.
+  sportName: string | null | undefined;
 }) {
   const [codeCopied, setCodeCopied] = useState(false);
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
@@ -120,7 +158,16 @@ function TeamCard({
   const isRosterEditable = team.status === "FORMING";
   const isPendingApproval = team.status === "PENDING_HOST_APPROVAL";
   const playersNeeded = Math.max(requiredSize - joinedMembers.length, 0);
-  const badge = TEAM_STATUS_BADGE[team.status];
+  const badge = TEAM_STATUS_META[team.status];
+  const statusIcon: keyof typeof Ionicons.glyphMap =
+    team.status === "APPROVED"
+      ? "trophy"
+      : team.status === "PENDING_HOST_APPROVAL"
+        ? "hourglass"
+        : team.status === "REJECTED"
+          ? "close-circle"
+          : "person";
+  const watermarkIcon = sportName ? getSportIcon(sportName).icon : "trophy-outline";
   // The "Create Team" squad-registration CTA only makes sense on a genuinely
   // empty team — the server only allows it there too.
   const isEmpty = joinedMembers.length === 0;
@@ -139,40 +186,66 @@ function TeamCard({
   };
 
   return (
-    <View className="border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <View className="flex-row items-center justify-between mb-1">
-        <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>{team.name}</Text>
+    <View
+      className="border border-border rounded-2xl bg-white p-4"
+      style={{ ...cardShadow, overflow: "hidden", position: "relative" }}
+    >
+      {/* Decorative watermark — purely visual, same language as the
+          sport-icon backdrops used elsewhere on this screen. */}
+      <MaterialCommunityIcons
+        name={watermarkIcon}
+        size={110}
+        color={colors.primary}
+        style={{ position: "absolute", right: -20, bottom: -20, opacity: 0.06 }}
+      />
+
+      <View className="flex-row items-center mb-1" style={{ gap: 10 }}>
+        <View
+          className="items-center justify-center rounded-xl"
+          style={{ width: 40, height: 40, backgroundColor: badge?.iconBg ?? colors.primaryLight }}
+        >
+          <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-ink font-bold text-base" numberOfLines={1}>{team.name}</Text>
+          <Text className="text-muted text-xs mt-0.5">
+            {joinedMembers.length}/{requiredSize || "—"} players
+          </Text>
+        </View>
         {badge && (
-          <View className={`px-2 py-0.5 rounded-full ${badge.bg}`}>
-            <Text className={`text-xs font-medium ${badge.text}`}>{badge.label}</Text>
+          <View className={`px-3 py-1 rounded-full ${badge.bg}`}>
+            <Text className={`text-xs font-bold ${badge.text}`}>{badge.label}</Text>
           </View>
         )}
+        {/* Purely visual for now — no per-team menu (rename/remove) exists
+            yet, so this doesn't open anything. */}
+        <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} style={{ marginLeft: 4 }} />
       </View>
-      <Text className="text-muted text-xs mb-3">
-        {joinedMembers.length}/{requiredSize || "—"} players
-      </Text>
 
       {canSeeTeamCode && (
         <Pressable
           onPress={handleCopyCode}
           hitSlop={8}
-          className="flex-row items-center self-start px-2 py-1 rounded-lg bg-gray-50 mb-3"
-          style={{ gap: 4 }}
+          className="flex-row items-center self-start px-3 py-1.5 rounded-lg bg-gray-100 mt-2 mb-3"
+          style={{ gap: 6 }}
         >
           <Text className="text-muted text-xs font-medium">Team ID: {team.team_code}</Text>
-          <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={12} color={codeCopied ? colors.primary : colors.muted} />
+          <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={13} color={codeCopied ? colors.primary : colors.muted} />
         </Pressable>
       )}
 
-      <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-        {joinedMembers.map((m) => (
-          <MemberAvatar
-            key={m.id}
-            name={m.profiles?.full_name ?? null}
-            avatar={m.profiles?.avatar ?? null}
-          />
-        ))}
-      </View>
+      {joinedMembers.length > 0 && (
+        <View className="flex-row flex-wrap mt-1" style={{ gap: 10 }}>
+          {joinedMembers.map((m, i) => (
+            <MemberAvatar
+              key={m.id}
+              name={m.profiles?.full_name ?? null}
+              avatar={m.profiles?.avatar ?? null}
+              colorIndex={i}
+            />
+          ))}
+        </View>
+      )}
 
       {/* Only this specific team's own joined members can see or open its
           chat — not the whole tournament, and not anyone who hasn't joined
@@ -180,11 +253,11 @@ function TeamCard({
       {isJoinedMember && (
         <Pressable
           onPress={onOpenChat}
-          className="flex-row items-center justify-center border border-primary rounded-lg py-2 mt-3"
-          style={{ gap: 6 }}
+          className="flex-row items-center justify-center rounded-full border border-primary py-3 mt-4"
+          style={{ gap: 8 }}
         >
-          <ChatIcon size={16} unreadCount={teamChatUnread} />
-          <Text className="text-primary text-xs font-semibold">Team Chat</Text>
+          <ChatIcon size={17} unreadCount={teamChatUnread} />
+          <Text className="text-primary font-bold text-sm">Team Chat</Text>
         </Pressable>
       )}
 
@@ -197,31 +270,41 @@ function TeamCard({
           tournament. The host sees Approve/Reject right here; everyone
           else just sees where things stand. */}
       {isPendingApproval && (
-        <View className="mt-3">
+        <View className="mt-4">
           {isHost ? (
             <>
-              <View className="rounded-lg py-2.5 items-center bg-amber-50">
-                <Text className="text-amber-700 text-xs font-semibold">Awaiting your approval</Text>
+              <View
+                className="flex-row items-center rounded-xl px-3 py-2.5"
+                style={{ backgroundColor: "#FEF3C7", gap: 8 }}
+              >
+                <Ionicons name="information-circle" size={16} color="#D97706" />
+                <Text className="text-xs font-semibold flex-1" style={{ color: "#92400E" }}>
+                  Waiting for your approval to join this team.
+                </Text>
               </View>
-              <View className="flex-row mt-2" style={{ gap: 8 }}>
+              <View className="flex-row mt-3" style={{ gap: 10 }}>
                 <Pressable
                   onPress={onReject}
                   disabled={disabled}
-                  className="flex-1 border border-danger rounded-lg py-2 items-center"
+                  className="flex-1 flex-row items-center justify-center rounded-full border border-danger py-3"
+                  style={{ gap: 6 }}
                 >
-                  <Text className="text-danger text-xs font-semibold">Reject</Text>
+                  <Ionicons name="close" size={16} color={colors.danger} />
+                  <Text className="text-danger font-bold text-sm">Reject</Text>
                 </Pressable>
                 <Pressable
                   onPress={onApprove}
                   disabled={disabled}
-                  className="flex-1 bg-primary rounded-lg py-2 items-center"
+                  className="flex-1 flex-row items-center justify-center rounded-full bg-primary py-3"
+                  style={{ gap: 6 }}
                 >
-                  <Text className="text-white text-xs font-semibold">Approve</Text>
+                  <Ionicons name="checkmark" size={16} color="white" />
+                  <Text className="text-white font-bold text-sm">Approve</Text>
                 </Pressable>
               </View>
             </>
           ) : (
-            <View className="rounded-lg py-2.5 items-center bg-amber-50">
+            <View className="rounded-xl py-2.5 items-center bg-amber-50">
               <Text className="text-amber-700 text-xs font-semibold text-center">
                 Sent to the host for approval
               </Text>
@@ -237,10 +320,10 @@ function TeamCard({
           moves on automatically the instant it's full (see
           auto_approve_full_team). */}
       {isRosterEditable && (
-        <View className="mt-3">
+        <View className="mt-4">
           {isJoinedMember ? (
             <>
-              <View className={`rounded-lg py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
+              <View className={`rounded-xl py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
                 <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
                   {isTeamFull
                     ? `Team full — joining ${noun}…`
@@ -250,15 +333,21 @@ function TeamCard({
               <Pressable
                 onPress={onLeave}
                 disabled={disabled}
-                className="border border-danger rounded-lg py-2 items-center mt-2"
+                className="rounded-full border border-danger py-3 items-center mt-2"
               >
-                <Text className="text-danger text-xs font-semibold">Leave Team</Text>
+                <Text className="text-danger font-bold text-sm">Leave Team</Text>
               </Pressable>
             </>
           ) : hasActiveTeamElsewhere ? (
-            <Text className="text-muted text-xs text-center">
-              You already have a spot on another team in this {noun}.
-            </Text>
+            <View
+              className="items-center rounded-2xl px-4 py-5"
+              style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.border }}
+            >
+              <Ionicons name="person-add-outline" size={26} color={colors.muted} />
+              <Text className="text-muted text-xs text-center mt-2" style={{ lineHeight: 18 }}>
+                You already have a spot on another team in this {noun}.
+              </Text>
+            </View>
           ) : null}
           {/* Registers a whole squad into this slot in one go — independent
               of the individual-join flow above, and not gated on
@@ -268,9 +357,16 @@ function TeamCard({
             <Pressable
               onPress={onFillWithSquad}
               disabled={disabled}
-              className="bg-primary rounded-lg py-2 items-center mt-2"
+              className="flex-row items-center justify-center rounded-full bg-primary py-3.5 mt-3"
+              style={{ gap: 8 }}
             >
-              <Text className="text-white text-xs font-semibold">Create Team</Text>
+              <View
+                className="items-center justify-center rounded-full bg-white"
+                style={{ width: 22, height: 22 }}
+              >
+                <Ionicons name="add" size={16} color={colors.primary} />
+              </View>
+              <Text className="text-white font-bold text-sm">Create Team</Text>
             </Pressable>
           )}
           {isEmpty && genderMismatch && (
@@ -626,6 +722,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               genderMismatch={genderMismatch}
               gameGenderLabel={gameGenderLabel}
               noun={noun}
+              sportName={game.sports?.name}
             />
           ))
         )}
