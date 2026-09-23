@@ -15,9 +15,15 @@ export function getNext14Days(): { iso: string; label: string; day: string }[] {
   });
 }
 
-// Hour slots from 06:00 to 23:00
+// Hour slots from 01:00-05:00 (early-morning games/tournaments — venues
+// open that late do exist, futsal/padel courts especially), then 06:00 to
+// 23:00.
 export function buildTimeSlots(): { label: string; value: string }[] {
   const slots: { label: string; value: string }[] = [];
+  for (let h = 1; h <= 5; h++) {
+    const hh = String(h).padStart(2, "0");
+    slots.push({ label: `${h}:00 AM`, value: `${hh}:00` });
+  }
   for (let h = 6; h <= 23; h++) {
     const hh = String(h).padStart(2, "0");
     const suffix = h < 12 ? "AM" : h === 12 ? "PM" : "PM";
