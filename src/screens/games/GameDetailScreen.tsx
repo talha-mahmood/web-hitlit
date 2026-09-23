@@ -26,6 +26,7 @@ import type { Database } from "../../types/database.types";
 import { getSportIcon } from "../../lib/sportIcons";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { addMinutesWithOverflow } from "../../lib/gameFormHelpers";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -600,7 +601,15 @@ export default function GameDetailScreen() {
               {isTournament && game.end_date && game.end_date !== game.game_date ? (
                 <>
                   <InfoRow icon="calendar-outline" label="Dates" value={formatDateRangeFull(game.game_date, game.end_date)} />
-                  <InfoRow icon="time-outline" label="Daily Start Time" value={formatTime(game.game_date, game.start_time)} />
+                  {game.daily_hours ? (
+                    <InfoRow
+                      icon="time-outline"
+                      label="Daily Time"
+                      value={`${formatTime(game.game_date, game.start_time)} – ${formatTime(game.game_date, `${addMinutesWithOverflow(game.start_time.slice(0, 5), game.daily_hours * 60).time}:00`)}`}
+                    />
+                  ) : (
+                    <InfoRow icon="time-outline" label="Daily Start Time" value={formatTime(game.game_date, game.start_time)} />
+                  )}
                 </>
               ) : (
                 <>

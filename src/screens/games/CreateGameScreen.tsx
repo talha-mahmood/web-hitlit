@@ -586,6 +586,7 @@ export default function CreateGameScreen() {
         numberOfTeams: isTournament ? teams : 2,
         playersPerTeam: perTeam,
         tournamentFormat: isTournament ? tournamentFormat : null,
+        dailyHours: isTournament ? hoursPerDay : null,
       });
       if (isTournament) {
         await createTournamentTeamPlaceholders(game.id, teamNames);

@@ -71,6 +71,8 @@ export type CreateGameParams = {
   playersPerTeam: number | null;
   tournamentFormat: Database["public"]["Enums"]["tournament_format_type"] | null;
   endDate: string | null;
+  // Tournament-only: hours of play each day, starting from startTime.
+  dailyHours: number | null;
 };
 
 // Sport is intentionally excluded — changing it post-creation would strand
@@ -200,6 +202,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       number_of_teams: params.numberOfTeams,
       players_per_team: params.playersPerTeam,
       tournament_format: params.tournamentFormat,
+      daily_hours: params.dailyHours,
       bring_equipment: false,
       cost_shared: false,
       pay_and_join: params.entryFee > 0,
