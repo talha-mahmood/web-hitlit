@@ -338,16 +338,6 @@ function TeamCard({
                 <Text className="text-danger font-bold text-sm">Leave Team</Text>
               </Pressable>
             </>
-          ) : hasActiveTeamElsewhere ? (
-            <View
-              className="items-center rounded-2xl px-4 py-5"
-              style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.border }}
-            >
-              <Ionicons name="person-add-outline" size={26} color={colors.muted} />
-              <Text className="text-muted text-xs text-center mt-2" style={{ lineHeight: 18 }}>
-                You already have a spot on another team in this {noun}.
-              </Text>
-            </View>
           ) : null}
           {/* Registers a whole squad into this slot in one go — independent
               of the individual-join flow above, and not gated on
