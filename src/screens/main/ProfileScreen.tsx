@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
@@ -76,18 +77,26 @@ function StatCard({
   label: string;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-3" style={{ width: "31%", ...CARD_SHADOW }}>
-      <View
-        className="items-center justify-center rounded-full mb-2"
-        style={{ width: 34, height: 34, backgroundColor: bg }}
-      >
-        <Ionicons name={icon} size={17} color={fg} />
+    <LinearGradient
+      colors={["#0E5C34", "#1D9254"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ width: "31%", borderRadius: 16, padding: 12, overflow: "hidden" }}
+    >
+      <View className="flex-row items-center justify-between mb-2">
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 34, height: 34, backgroundColor: bg }}
+        >
+          <Ionicons name={icon} size={17} color={fg} />
+        </View>
+        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
       </View>
-      <Text className="text-ink font-extrabold text-xl">{value}</Text>
-      <Text className="text-muted text-[11px] mt-0.5" numberOfLines={2}>
+      <Text className="text-white font-extrabold text-xl">{value}</Text>
+      <Text className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }} numberOfLines={2}>
         {label}
       </Text>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -118,15 +127,55 @@ function EnrolledRow({
   );
 }
 
-function ActivityBarRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+function ActivityBarRow({
+  icon,
+  iconBg,
+  label,
+  value,
+  max,
+  color,
+  light,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  // On a dark/gradient card the label+value need light text and a
+  // translucent track instead of the default dark-on-white styling.
+  light?: boolean;
+}) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <View className="mb-3">
-      <View className="flex-row justify-between mb-1">
-        <Text className="text-ink text-sm font-medium">{label}</Text>
-        <Text className="text-muted text-sm">{value}</Text>
+      <View className="flex-row items-center justify-between mb-1.5">
+        <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 24, height: 24, backgroundColor: iconBg }}
+          >
+            <Ionicons name={icon} size={12} color={color} />
+          </View>
+          <Text
+            className="text-sm font-medium"
+            style={{ color: light ? "rgba(255,255,255,0.9)" : colors.ink }}
+          >
+            {label}
+          </Text>
+        </View>
+        <Text className="text-sm font-bold" style={{ color: light ? "white" : colors.ink }}>
+          {value}
+        </Text>
       </View>
-      <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+      <View
+        style={{
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: light ? "rgba(255,255,255,0.18)" : "#F3F4F6",
+          overflow: "hidden",
+        }}
+      >
         <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: color }} />
       </View>
     </View>
@@ -252,7 +301,7 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View className="px-6">
-        {/* Header */}
+        {/* Header — plain, on the page's own light green background. */}
         <View className="flex-row items-center mb-6">
           <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
             {profile?.avatar ? (
@@ -281,10 +330,13 @@ export default function ProfileScreen() {
             )}
           </Pressable>
           <View className="flex-1 mr-2">
-            <Text className="text-2xl font-bold text-ink" numberOfLines={1}>
-              {profile?.full_name ?? "Profile"}
-            </Text>
-            <Text className="text-muted text-sm" numberOfLines={1}>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Text className="text-2xl font-bold text-ink" numberOfLines={1}>
+                {profile?.full_name ?? "Profile"}
+              </Text>
+              <Ionicons name="checkmark-circle" size={17} color={colors.primary} />
+            </View>
+            <Text className="text-muted text-sm mt-1" numberOfLines={1}>
               {profile?.email}
             </Text>
             {profile?.created_at ? (
@@ -304,55 +356,63 @@ export default function ProfileScreen() {
         </View>
 
         {/* Rating card */}
-        <View className="rounded-2xl p-4 mb-4 overflow-hidden" style={{ backgroundColor: "#0E4429" }}>
-          <Ionicons
-            name="stats-chart"
-            size={90}
-            color="white"
-            style={{ position: "absolute", right: -10, bottom: -16, opacity: 0.1 }}
-          />
+        <LinearGradient
+          colors={["#0E5C34", "#1D9254"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ borderRadius: 16, padding: 16, marginBottom: 16, overflow: "hidden", position: "relative" }}
+        >
           <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
-            <Text
-              numberOfLines={2}
+            <View
               style={{
-                color: "white",
-                fontSize: 11,
-                fontWeight: "700",
-                fontStyle: "italic",
-                textAlign: "right",
-                opacity: 0.55,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.25)",
+                borderRadius: 10,
+                paddingHorizontal: 8,
+                paddingVertical: 6,
               }}
             >
-              {"Play More\nGet Better"}
-            </Text>
-            <Ionicons name="trending-up" size={14} color="white" style={{ marginTop: 4, opacity: 0.55 }} />
+              <Text
+                numberOfLines={2}
+                style={{
+                  color: "white",
+                  fontSize: 11,
+                  fontWeight: "700",
+                  fontStyle: "italic",
+                  textAlign: "right",
+                  opacity: 0.75,
+                }}
+              >
+                {"Play More\nGet Better"}
+              </Text>
+              <Ionicons name="trending-up" size={14} color="white" style={{ marginTop: 4, opacity: 0.75, alignSelf: "flex-end" }} />
+            </View>
           </View>
           <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: "rgba(255,255,255,0.75)" }}>
             Your Rating
           </Text>
           <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
             <View className="flex-row items-center" style={{ gap: 10 }}>
-              <View
-                className="items-center justify-center rounded-full"
-                style={{ width: 44, height: 44, backgroundColor: ratingTier.bg }}
-              >
-                <Ionicons name="flame" size={22} color={ratingTier.color} />
+              <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>
+                <MaterialCommunityIcons
+                  name="hexagon"
+                  size={52}
+                  color={ratingTier.bg}
+                  style={{ position: "absolute" }}
+                />
+                <Ionicons name="trophy" size={22} color={ratingTier.color} />
               </View>
               <Text className="text-white font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
                 {rating}
               </Text>
+              <Ionicons name="star" size={16} color="#FACC15" style={{ marginTop: -18 }} />
             </View>
           </View>
-          <View className="flex-row items-center justify-between mb-2">
+          <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
             <Text className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
               {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
             </Text>
-            <View className="flex-row items-center rounded-full pl-2.5 pr-1.5 py-1" style={{ backgroundColor: ratingTier.bg, gap: 2 }}>
-              <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
-                {ratingTier.label}
-              </Text>
-              <Ionicons name="chevron-forward" size={12} color={ratingTier.color} />
-            </View>
+            <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.6)" />
           </View>
           <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
             <View
@@ -364,29 +424,38 @@ export default function ProfileScreen() {
               }}
             />
           </View>
-        </View>
+          <View
+            className="flex-row items-center self-end rounded-full pl-3 pr-2 py-1.5 mt-3"
+            style={{ backgroundColor: "white", gap: 2 }}
+          >
+            <Text className="text-xs font-bold" style={{ color: colors.ink }}>
+              {ratingTier.label}
+            </Text>
+            <Ionicons name="chevron-forward" size={12} color={colors.ink} />
+          </View>
+        </LinearGradient>
 
         {/* Skill level card */}
         <Pressable
           onPress={() => setSkillPickerOpen(true)}
-          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-6"
-          style={{ backgroundColor: colors.primaryLight }}
+          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-6 overflow-hidden"
+          style={{ backgroundColor: "white", position: "relative", ...CARD_SHADOW }}
         >
           <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
             <View
               className="items-center justify-center rounded-2xl"
-              style={{ width: 44, height: 44, backgroundColor: colors.primaryDark }}
+              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
             >
-              <Ionicons name="medal-outline" size={22} color="white" />
+              <Ionicons name="locate" size={24} color="white" />
             </View>
             <View className="flex-1">
               <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.75 }}>
                 Skill Level
               </Text>
-              <Text className="font-extrabold text-lg" style={{ color: colors.primaryDark }}>
+              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 22 }}>
                 {effectiveSkillLevel ? capitalize(effectiveSkillLevel) : "Not set"}
               </Text>
-              <Text className="text-xs" style={{ color: colors.primaryDark, opacity: 0.6 }}>
+              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
                 Tap to update
               </Text>
             </View>
@@ -409,50 +478,84 @@ export default function ProfileScreen() {
             </View>
 
             {/* Sport breakdown + activity, side by side */}
-            <View className="flex-row mb-6" style={{ gap: 12 }}>
-              <View className="bg-white rounded-2xl p-3.5 flex-1" style={CARD_SHADOW}>
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="star" size={15} color={colors.primaryDark} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Sports You Play
-                  </Text>
+            <View className="flex-row mb-6 items-stretch" style={{ gap: 12 }}>
+              <LinearGradient
+                colors={["#0E5C34", "#1D9254"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden", position: "relative" }}
+              >
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Ionicons name="pie-chart" size={15} color="#4ADE80" />
+                    <Text className="text-white font-semibold" numberOfLines={1}>
+                      Sports You Play
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
                 </View>
                 {sportSegments.length === 0 ? (
                   <View className="items-center py-4">
-                    <Ionicons name="bar-chart-outline" size={24} color={colors.muted} />
-                    <Text className="text-muted text-xs mt-2 text-center">
+                    <Ionicons name="bar-chart-outline" size={24} color="rgba(255,255,255,0.4)" />
+                    <Text className="text-xs mt-2 text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
                       Play your first game to see this here.
                     </Text>
                   </View>
                 ) : (
                   <View className="items-center">
-                    <PieChart segments={sportSegments} size={110} />
+                    <View style={{ width: 110, height: 110 }}>
+                      <PieChart segments={sportSegments} size={110} gapColor="#0E5C34" />
+                      <View
+                        pointerEvents="none"
+                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
+                      >
+                        <View
+                          className="items-center justify-center rounded-full"
+                          style={{ width: 60, height: 60, backgroundColor: "#0E5C34" }}
+                        >
+                          <Text className="text-white font-extrabold" style={{ fontSize: 20 }}>
+                            {sportSegments.length}
+                          </Text>
+                          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>Sports</Text>
+                        </View>
+                      </View>
+                    </View>
                     <View className="w-full mt-3" style={{ gap: 6 }}>
                       {sportSegments.map((s) => (
                         <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
                           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
-                          <Text className="text-ink text-xs flex-1" numberOfLines={1}>
+                          <Text className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.85)" }} numberOfLines={1}>
                             {s.label}
                           </Text>
-                          <Text className="text-muted text-[11px]">{Math.round((s.value / sportTotal) * 100)}%</Text>
+                          <Text className="text-[11px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                            {Math.round((s.value / sportTotal) * 100)}%
+                          </Text>
                         </View>
                       ))}
                     </View>
                   </View>
                 )}
-              </View>
+              </LinearGradient>
 
-              <View className="bg-white rounded-2xl p-3.5 flex-1" style={CARD_SHADOW}>
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="bar-chart" size={15} color={colors.primaryDark} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Your Activity
-                  </Text>
+              <LinearGradient
+                colors={["#0E5C34", "#1D9254"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden" }}
+              >
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Ionicons name="bar-chart" size={15} color="#4ADE80" />
+                    <Text className="text-white font-semibold" numberOfLines={1}>
+                      Your Activity
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
                 </View>
-                <ActivityBarRow label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#2563EB" />
-                <ActivityBarRow label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#D97706" />
-                <ActivityBarRow label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#A21CAF" />
-              </View>
+                <ActivityBarRow light icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
+                <ActivityBarRow light icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
+                <ActivityBarRow light icon="people" iconBg="#FAF5FF" label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#C084FC" />
+              </LinearGradient>
             </View>
 
             {/* Achievements */}
@@ -488,25 +591,47 @@ export default function ProfileScreen() {
         )}
 
         {/* My Bookings */}
-        <Pressable
-          onPress={() => navigation.navigate("MyBookings")}
-          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-3 mt-2"
-        >
-          <View className="flex-row items-center" style={{ gap: 12 }}>
-            <Ionicons name="calendar-outline" size={20} color={colors.ink} />
-            <Text className="text-ink font-medium">My Bookings</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+        <Pressable onPress={() => navigation.navigate("MyBookings")} className="mb-3 mt-2">
+          <LinearGradient
+            colors={["#0E5C34", "#1D9254"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, overflow: "hidden", position: "relative" }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center" style={{ gap: 12 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.16)" }}
+                >
+                  <Ionicons name="calendar-outline" size={17} color="white" />
+                </View>
+                <Text className="text-white font-semibold">My Bookings</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.8)" />
+            </View>
+          </LinearGradient>
         </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate("BlockedUsers")}
-          className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-3"
-        >
-          <View className="flex-row items-center" style={{ gap: 12 }}>
-            <Ionicons name="hand-left-outline" size={20} color={colors.ink} />
-            <Text className="text-ink font-medium">Blocked Users</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+        <Pressable onPress={() => navigation.navigate("BlockedUsers")} className="mb-3">
+          <LinearGradient
+            colors={["#0E5C34", "#1D9254"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, overflow: "hidden", position: "relative" }}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center" style={{ gap: 12 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.16)" }}
+                >
+                  <Ionicons name="hand-left-outline" size={17} color="white" />
+                </View>
+                <Text className="text-white font-semibold">Blocked Users</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.8)" />
+            </View>
+          </LinearGradient>
         </Pressable>
         <Pressable
           onPress={async () => {
