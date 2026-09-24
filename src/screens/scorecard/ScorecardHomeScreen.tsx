@@ -3,7 +3,8 @@ import { View, Text, Image, ScrollView, Pressable } from "react-native";
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -137,12 +138,12 @@ function HeaderArt() {
       </Svg>
       <View>
         <Text
-          style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: colors.primary }}
+          style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#BBF7D0" }}
         >
           {"Keep\nScore\nKeep Playing"}
         </Text>
         <Svg width={70} height={8} viewBox="0 0 70 8">
-          <Path d="M2 5c14-4 34-4 60-1" fill="none" stroke={colors.primary} strokeWidth={2} strokeLinecap="round" />
+          <Path d="M2 5c14-4 34-4 60-1" fill="none" stroke="#BBF7D0" strokeWidth={2} strokeLinecap="round" />
         </Svg>
       </View>
     </View>
@@ -152,43 +153,45 @@ function HeaderArt() {
 export default function ScorecardHomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
   return (
-    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-      {/* Soft green wash behind the top-right corner. */}
+    <View className="flex-1 bg-green-50">
+      {isFocused ? <StatusBar style="light" /> : null}
+      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
       <View
-        pointerEvents="none"
         style={{
-          position: "absolute",
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: "#DCFCE7",
-          opacity: 0.6,
-          top: insets.top - 110,
-          right: -110,
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 40,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+          position: "relative",
         }}
-      />
-      <View pointerEvents="none" style={{ position: "absolute", right: 12, top: insets.top + 6 }}>
-        <HeaderArt />
-      </View>
+      >
+        <View pointerEvents="none" style={{ position: "absolute", right: 12, top: 0 }}>
+          <HeaderArt />
+        </View>
 
-      <View className="flex-row items-center px-5 mb-5" style={{ gap: 8 }}>
-        <Pressable
-          onPress={() => navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home")}
-          hitSlop={8}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1" style={{ paddingRight: 130 }}>
-          <Text className="text-2xl font-bold text-ink">Scorecard</Text>
-          <Text className="text-muted mt-0.5" style={{ fontSize: 13 }}>
-            Choose a sport to start or view a match
-          </Text>
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Pressable
+            onPress={() => navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home")}
+            hitSlop={8}
+          >
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
+          <View className="flex-1" style={{ paddingRight: 130 }}>
+            <Text className="text-white font-bold" style={{ fontSize: 24 }}>Scorecard</Text>
+            <Text style={{ fontSize: 13, marginTop: 2, color: "#BBF7D0" }}>
+              Choose a sport to start or view a match
+            </Text>
+          </View>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 14 }} style={{ marginTop: -24 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"

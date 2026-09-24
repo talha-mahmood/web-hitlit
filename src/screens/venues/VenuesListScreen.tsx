@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
@@ -113,6 +114,7 @@ export default function VenuesListScreen() {
   const route = useRoute<VenuesListRouteProp>();
   const navigation = useNavigation<VenuesListNavigationProp>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
   const [search, setSearch] = useState("");
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
@@ -157,30 +159,44 @@ export default function VenuesListScreen() {
       : venuesData;
 
   return (
-    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-      {/* Header */}
-      <View className="flex-row items-center px-5 mb-4" style={{ gap: 10 }}>
-        <Pressable
-          onPress={() => {
-            // Venues is a bottom-tab root, so there's usually nothing to pop
-            // to — fall back to the Home tab in that case.
-            if (navigation.canGoBack()) navigation.goBack();
-            else navigation.getParent()?.navigate("Home");
-          }}
-          hitSlop={8}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-ink font-extrabold" style={{ fontSize: 26 }}>
-            Venues
-          </Text>
-          <Text className="text-muted" style={{ fontSize: 12.5, marginTop: 1 }} numberOfLines={1}>
-            Find and book great venues near you
-          </Text>
+    <View className="flex-1 bg-green-50">
+      {isFocused ? <StatusBar style="light" /> : null}
+      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
+      <View
+        style={{
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 40,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
+      >
+        <View className="flex-row items-center" style={{ gap: 10 }}>
+          <Pressable
+            onPress={() => {
+              // Venues is a bottom-tab root, so there's usually nothing to pop
+              // to — fall back to the Home tab in that case.
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.getParent()?.navigate("Home");
+            }}
+            hitSlop={8}
+          >
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
+              Venues
+            </Text>
+            <Text style={{ fontSize: 12.5, marginTop: 1, color: "#BBF7D0" }} numberOfLines={1}>
+              Find and book great venues near you
+            </Text>
+          </View>
         </View>
       </View>
 
+      <View style={{ marginTop: -24 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
           now the "Sports" pill in the filter row below instead. */}
       <View className="px-5 mb-3">
@@ -288,6 +304,7 @@ export default function VenuesListScreen() {
             </Pressable>
           </ScrollView>
         </View>
+      </View>
       </View>
 
       <SelectDistanceModal

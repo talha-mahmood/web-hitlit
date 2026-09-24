@@ -2,7 +2,8 @@ import { useMemo, useState, type ComponentProps, type ReactElement } from "react
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
@@ -128,6 +129,7 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const userId = useAuthStore((s) => s.session?.user.id);
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
 
   const [selectedSportId, setSelectedSportId] = useState<string | null>(null);
 
@@ -226,9 +228,21 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-green-50" contentContainerStyle={{ paddingBottom: 24 }}>
-      <View className="px-5" style={{ paddingTop: insets.top + 16 }}>
-        <View className="flex-row items-center mb-5" style={{ gap: 12 }}>
+    <View className="flex-1 bg-green-50">
+      {isFocused ? <StatusBar style="light" /> : null}
+      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
+      <View
+        style={{
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 40,
+          paddingHorizontal: 22,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
+      >
+        <View className="flex-row items-center" style={{ gap: 12 }}>
           <Pressable
             onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
             className="flex-row items-center flex-1"
@@ -248,23 +262,27 @@ export default function HomeScreen() {
             )}
             <View className="flex-1">
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Text className="text-2xl font-bold text-ink">
+                <Text className="text-white font-bold" style={{ fontSize: 23 }}>
                   Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
                 </Text>
                 <WavingHandIcon size={22} />
               </View>
-              <Text className="text-muted mt-1">What are you playing today?</Text>
+              <Text style={{ fontSize: 14, color: "#BBF7D0", marginTop: 2 }}>What are you playing today?</Text>
             </View>
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <NotificationBell
               size={28}
+              color="white"
               unreadCount={unreadCount}
               onPress={() => navigation.navigate("Notifications")}
             />
           </View>
         </View>
+      </View>
 
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+      <View className="px-5" style={{ paddingTop: 20 }}>
         <PromoCarousel slides={promoSlides} />
 
         <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
@@ -369,6 +387,7 @@ export default function HomeScreen() {
           onSeeAll={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
         />
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

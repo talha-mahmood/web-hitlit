@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -203,6 +204,7 @@ export default function ProfileScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const { data: stats, isLoading } = useProfileStats(userId);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
@@ -253,14 +255,21 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-green-50"
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View className="px-6">
-        {/* Header — plain, on the page's own light green background. */}
-        <View className="flex-row items-center mb-6">
+    <View className="flex-1 bg-green-50">
+      {isFocused ? <StatusBar style="light" /> : null}
+      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
+      <View
+        style={{
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 44,
+          paddingHorizontal: 24,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
+      >
+        <View className="flex-row items-center">
           <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
             {profile?.avatar ? (
               <Image
@@ -289,18 +298,18 @@ export default function ProfileScreen() {
           </Pressable>
           <View className="flex-1 mr-2">
             <View className="flex-row items-center" style={{ gap: 6 }}>
-              <Text className="text-2xl font-bold text-ink" numberOfLines={1}>
+              <Text className="text-white font-bold text-2xl" numberOfLines={1}>
                 {profile?.full_name ?? "Profile"}
               </Text>
-              <Ionicons name="checkmark-circle" size={17} color={colors.primary} />
+              <Ionicons name="checkmark-circle" size={17} color="#4ADE80" />
             </View>
-            <Text className="text-muted text-sm mt-1" numberOfLines={1}>
+            <Text style={{ color: "#BBF7D0" }} className="text-sm mt-1" numberOfLines={1}>
               {profile?.email}
             </Text>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="calendar-outline" size={12} color={colors.muted} />
-                <Text className="text-muted text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
+                <Ionicons name="calendar-outline" size={12} color="#BBF7D0" />
+                <Text style={{ color: "#BBF7D0" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
           </View>
@@ -312,7 +321,14 @@ export default function ProfileScreen() {
             <Ionicons name="settings-outline" size={24} color={colors.primaryDark} />
           </Pressable>
         </View>
+      </View>
 
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+      <View className="px-6" style={{ paddingTop: 20 }}>
         {/* Rating card */}
         <LinearGradient
           colors={["#0E5C34", "#1D9254"]}
@@ -599,6 +615,7 @@ export default function ProfileScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

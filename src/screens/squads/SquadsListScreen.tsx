@@ -1,7 +1,8 @@
 import { View, Text, Image, FlatList, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -224,6 +225,7 @@ function SquadCard({
 export default function SquadsListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const userId = useAuthStore((s) => s.session?.user.id);
   const myGender = useProfileStore((s) => s.profile?.gender);
   const [searchInput, setSearchInput] = useState("");
@@ -288,36 +290,50 @@ export default function SquadsListScreen() {
   };
 
   return (
-    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 mb-4">
-        <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
-          {navigation.canGoBack() && (
-            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-              <Ionicons name="arrow-back" size={22} color={colors.ink} />
-            </Pressable>
-          )}
-          <View className="flex-1">
-            <Text className="text-ink font-extrabold" style={{ fontSize: 26 }}>
-              Squads
-            </Text>
-            <Text className="text-muted" style={{ fontSize: 12.5, marginTop: 1 }} numberOfLines={1}>
-              Find and join exciting squads near you
-            </Text>
+    <View className="flex-1 bg-green-50">
+      {isFocused ? <StatusBar style="light" /> : null}
+      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
+      <View
+        style={{
+          backgroundColor: "#14532D",
+          paddingTop: insets.top + 12,
+          paddingBottom: 40,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+            {navigation.canGoBack() && (
+              <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+                <Ionicons name="arrow-back" size={22} color="white" />
+              </Pressable>
+            )}
+            <View className="flex-1">
+              <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
+                Squads
+              </Text>
+              <Text style={{ fontSize: 12.5, marginTop: 1, color: "#BBF7D0" }} numberOfLines={1}>
+                Find and join exciting squads near you
+              </Text>
+            </View>
           </View>
+          <Pressable
+            onPress={() => navigation.navigate("CreateSquad")}
+            className="flex-row items-center bg-white rounded-full px-5 py-3"
+            style={{ gap: 6, ...cardShadow }}
+          >
+            <Ionicons name="add" size={20} color={colors.primaryDark} />
+            <Text className="font-bold" style={{ fontSize: 15, color: colors.primaryDark }}>
+              Create
+            </Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => navigation.navigate("CreateSquad")}
-          className="flex-row items-center bg-primary rounded-full px-5 py-3"
-          style={{ gap: 6, ...primaryButtonShadow }}
-        >
-          <Ionicons name="add" size={20} color="white" />
-          <Text className="text-white font-bold" style={{ fontSize: 15 }}>
-            Create
-          </Text>
-        </Pressable>
       </View>
 
+      <View style={{ marginTop: -24 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
           now the "Sports" pill in the filter row below instead. */}
       <View className="px-5 mb-3">
@@ -453,6 +469,7 @@ export default function SquadsListScreen() {
             </Pressable>
           </ScrollView>
         </View>
+      </View>
       </View>
 
       <SelectDistanceModal
