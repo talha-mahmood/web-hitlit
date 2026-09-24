@@ -14,10 +14,12 @@ import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVenueDetail } from "../../hooks/useVenueDetail";
+import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { getAmenityIcon } from "../../lib/amenities";
 import { getSportImage } from "../../lib/sportImages";
+import { getSportIcon } from "../../lib/sportIcons";
 import { getVenuePhoto } from "../../lib/venuePhotos";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type VenueDetailParams = { VenueDetail: { venueId: string; forGameId?: string } };
@@ -30,6 +32,9 @@ export default function VenueDetailScreen() {
   const [activeImage, setActiveImage] = useState(0);
 
   const { data: venue, isLoading } = useVenueDetail(params.venueId);
+  const { data: favoriteIds } = useFavoriteVenueIds();
+  const toggleFavorite = useToggleFavoriteVenue();
+  const isFavorite = favoriteIds?.has(params.venueId) ?? false;
 
   const onScrollImages = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -69,60 +74,78 @@ export default function VenueDetailScreen() {
               <Image
                 key={img.id}
                 source={{ uri: img.image_url }}
-                style={{ width, height: 240 }}
+                style={{ width, height: 260 }}
                 resizeMode="cover"
               />
             ))}
           </ScrollView>
         ) : sportFallbackImage ? (
-          <Image source={sportFallbackImage} style={{ width, height: 240 }} resizeMode="cover" />
+          <Image source={sportFallbackImage} style={{ width, height: 260 }} resizeMode="cover" />
         ) : (
-          <View style={{ width, height: 240 }} className="bg-primary-light" />
+          <View style={{ width, height: 260 }} className="bg-primary-light" />
         )}
 
         <Pressable
           onPress={() => navigation.goBack()}
           className="absolute top-12 left-4 w-10 h-10 rounded-full bg-white/90 items-center justify-center"
+          style={cardShadow}
         >
           <Ionicons name="arrow-back" size={20} color={colors.ink} />
         </Pressable>
+        <Pressable
+          onPress={() => toggleFavorite.mutate({ venueId: venue.id, isFavorite: !isFavorite })}
+          className="absolute top-12 right-4 w-10 h-10 rounded-full bg-white/90 items-center justify-center"
+          style={cardShadow}
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite ? colors.danger : colors.ink}
+          />
+        </Pressable>
 
         {images.length > 1 && (
-          <View className="absolute bottom-3 w-full flex-row justify-center gap-1.5">
+          <View className="absolute bottom-6 w-full flex-row justify-center gap-1.5">
             {images.map((img, i) => (
               <View
                 key={img.id}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  i === activeImage ? "bg-white" : "bg-white/50"
-                }`}
+                className={`h-1.5 rounded-full ${i === activeImage ? "bg-white w-5" : "bg-white/50 w-1.5"}`}
               />
             ))}
           </View>
         )}
       </View>
 
-      <View className="px-5 pt-4 pb-8">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-ink flex-1">{venue.name}</Text>
-          <View className="flex-row items-center ml-2">
-            <Ionicons name="star" size={16} color={colors.warning} />
-            <Text className="text-ink font-semibold ml-1">
+      {/* Sheet overlapping the header photo, matching the rounded-card
+          language used across the rest of the app. */}
+      <View
+        className="bg-white px-5 pt-5 pb-8"
+        style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26, ...cardShadow }}
+      >
+        <View className="flex-row items-start justify-between">
+          <Text className="text-xl font-extrabold text-ink flex-1 mr-3">{venue.name}</Text>
+          <View
+            className="flex-row items-center rounded-full px-2.5 py-1"
+            style={{ backgroundColor: "#FEF9E7", gap: 4 }}
+          >
+            <Ionicons name="star" size={14} color={colors.warning} />
+            <Text className="text-ink font-bold text-sm">
               {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
             </Text>
           </View>
         </View>
 
-        <View className="flex-row items-center mt-2">
-          <Ionicons name="location-outline" size={16} color={colors.muted} />
-          <Text className="text-muted ml-1 flex-1">
+        <View className="flex-row items-center mt-2.5" style={{ gap: 6 }}>
+          <Ionicons name="location-outline" size={15} color={colors.muted} />
+          <Text className="text-muted flex-1" numberOfLines={1}>
             {venue.address ? `${venue.address}, ${venue.city}` : venue.city}
           </Text>
         </View>
 
         {(venue.start_time || venue.end_time) && (
-          <View className="flex-row items-center mt-1">
-            <Ionicons name="time-outline" size={16} color={colors.muted} />
-            <Text className="text-muted ml-1">
+          <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
+            <Ionicons name="time-outline" size={15} color={colors.muted} />
+            <Text className="text-muted">
               {venue.start_time} - {venue.end_time}
             </Text>
           </View>
@@ -134,14 +157,18 @@ export default function VenueDetailScreen() {
 
         {venue.venue_facilities.length > 0 && (
           <View className="mt-6">
-            <Text className="text-ink font-semibold text-base mb-2">Facilities</Text>
+            <Text className="text-ink font-bold text-base mb-3">Facilities</Text>
             <View className="flex-row flex-wrap gap-2">
               {venue.venue_facilities.map((facility) => (
                 <View
                   key={facility.id}
-                  className="bg-primary-light px-3 py-1.5 rounded-full"
+                  className="flex-row items-center rounded-full px-3 py-1.5"
+                  style={{ backgroundColor: colors.primaryLight, gap: 6 }}
                 >
-                  <Text className="text-primary-dark text-sm">{facility.name}</Text>
+                  <MaterialCommunityIcons name={getAmenityIcon(facility.name)} size={15} color={colors.primaryDark} />
+                  <Text className="font-semibold text-sm" style={{ color: colors.primaryDark }}>
+                    {facility.name}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -150,12 +177,21 @@ export default function VenueDetailScreen() {
 
         {amenities.length > 0 && (
           <View className="mt-6">
-            <Text className="text-ink font-semibold text-base mb-3">Amenities</Text>
-            <View className="flex-row flex-wrap" style={{ rowGap: 14, columnGap: 12 }}>
+            <Text className="text-ink font-bold text-base mb-3">Amenities</Text>
+            <View className="flex-row flex-wrap" style={{ rowGap: 12, columnGap: 10 }}>
               {amenities.map((label) => (
-                <View key={label} className="flex-row items-center" style={{ width: "47%", gap: 10 }}>
-                  <MaterialCommunityIcons name={getAmenityIcon(label)} size={20} color={colors.ink} />
-                  <Text className="text-ink text-sm flex-1" numberOfLines={1}>
+                <View
+                  key={label}
+                  className="flex-row items-center bg-white rounded-2xl px-3 py-2.5"
+                  style={{ width: "31%", gap: 8, borderWidth: 1, borderColor: colors.border }}
+                >
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 30, height: 30, backgroundColor: colors.primaryLight }}
+                  >
+                    <MaterialCommunityIcons name={getAmenityIcon(label)} size={15} color={colors.primaryDark} />
+                  </View>
+                  <Text className="text-ink text-xs font-medium flex-1" numberOfLines={2}>
                     {label}
                   </Text>
                 </View>
@@ -165,37 +201,63 @@ export default function VenueDetailScreen() {
         )}
 
         <View className="mt-6">
-          <Text className="text-ink font-semibold text-base mb-2">Courts</Text>
-          {venue.court.filter((c) => c.isactive).map((court) => (
-            <Pressable
-              key={court.id}
-              onPress={() =>
-                navigation.navigate("SlotPicker", {
-                  courtId: court.id,
-                  courtName: court.name,
-                  pricePerHour: court.price_per_hour,
-                  venueName: venue.name,
-                  venueId: venue.id,
-                  venueStartTime: venue.start_time ?? "06:00:00",
-                  venueEndTime: venue.end_time ?? "23:00:00",
-                  forGameId: params.forGameId,
-                })
-              }
-              className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3 mb-2 active:bg-primary-light"
-            >
-              <View className="flex-1">
-                <Text className="text-ink font-medium">{court.name}</Text>
-                <Text className="text-muted text-sm mt-0.5">
-                  {court.sports?.name}
-                  {court.surface_type ? ` \u00b7 ${court.surface_type}` : ""}
+          <Text className="text-ink font-bold text-base mb-3">Courts</Text>
+          {venue.court.filter((c) => c.isactive).map((court) => {
+            const sportName = court.sports?.name ?? "";
+            const courtPhoto = [...(court.court_images ?? [])].sort((a, b) => a.display_order - b.display_order)[0]
+              ?.image_url;
+            // A court with no uploaded photo of its own falls back to the
+            // same bundled real sport photo used elsewhere (e.g. the venue
+            // header) — only if that sport has no bundled photo either does
+            // this drop back to a plain icon tile.
+            const fallbackImage = getSportImage(sportName);
+            const { icon, bg, fg } = getSportIcon(sportName);
+            return (
+              <Pressable
+                key={court.id}
+                onPress={() =>
+                  navigation.navigate("SlotPicker", {
+                    courtId: court.id,
+                    courtName: court.name,
+                    pricePerHour: court.price_per_hour,
+                    venueName: venue.name,
+                    venueId: venue.id,
+                    venueStartTime: venue.start_time ?? "06:00:00",
+                    venueEndTime: venue.end_time ?? "23:00:00",
+                    forGameId: params.forGameId,
+                  })
+                }
+                className="flex-row items-center bg-white rounded-2xl px-3 py-3 mb-2.5"
+                style={{ borderWidth: 1, borderColor: colors.border, ...cardShadow }}
+              >
+                {courtPhoto || fallbackImage ? (
+                  <Image
+                    source={courtPhoto ? { uri: courtPhoto } : fallbackImage!}
+                    style={{ width: 56, height: 56, borderRadius: 14 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    className="items-center justify-center rounded-2xl"
+                    style={{ width: 56, height: 56, backgroundColor: bg }}
+                  >
+                    <MaterialCommunityIcons name={icon} size={24} color={fg} />
+                  </View>
+                )}
+                <View className="flex-1 ml-3 mr-2">
+                  <Text className="text-ink font-bold">{court.name}</Text>
+                  <Text className="text-muted text-sm mt-0.5">
+                    {sportName}
+                    {court.surface_type ? ` · ${court.surface_type}` : ""}
+                  </Text>
+                </View>
+                <Text className="font-extrabold text-sm" style={{ color: colors.primaryDark }} numberOfLines={1}>
+                  Rs {court.price_per_hour}/hr
                 </Text>
-              </View>
-              <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Text className="text-primary font-semibold">Rs {court.price_per_hour}/hr</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-              </View>
-            </Pressable>
-          ))}
+                <Ionicons name="chevron-forward" size={16} color={colors.muted} style={{ marginLeft: 6 }} />
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     </ScrollView>
