@@ -71,10 +71,6 @@ function BookingCard({
   onCancel: (id: string) => void;
   isCancelling: boolean;
 }) {
-  const isFuture = new Date(booking.start_time) > new Date();
-  const canCancel =
-    isFuture && (booking.status === "CONFIRMED" || booking.status === "PENDING");
-
   return (
     <View className="border border-border rounded-2xl bg-white mb-3" style={cardShadow}>
       <View className="px-4 py-4">
@@ -106,19 +102,6 @@ function BookingCard({
 
         <View className="flex-row items-center justify-between mt-3">
           <StatusBadge status={booking.status} payment={booking.payment_status} />
-          {canCancel && (
-            <Pressable
-              onPress={() => onCancel(booking.id)}
-              disabled={isCancelling}
-              className="px-3 py-1 border border-danger rounded-lg"
-            >
-              {isCancelling ? (
-                <ActivityIndicator size="small" color={colors.danger} />
-              ) : (
-                <Text className="text-danger text-xs font-medium">Cancel</Text>
-              )}
-            </Pressable>
-          )}
         </View>
       </View>
     </View>
