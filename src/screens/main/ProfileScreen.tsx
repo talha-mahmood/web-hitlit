@@ -590,48 +590,52 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {/* My Bookings */}
-        <Pressable onPress={() => navigation.navigate("MyBookings")} className="mb-3 mt-2">
-          <LinearGradient
-            colors={["#0E5C34", "#1D9254"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, overflow: "hidden", position: "relative" }}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center" style={{ gap: 12 }}>
-                <View
-                  className="items-center justify-center rounded-full"
-                  style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.16)" }}
-                >
-                  <Ionicons name="calendar-outline" size={17} color="white" />
-                </View>
-                <Text className="text-white font-semibold">My Bookings</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.8)" />
+        {/* My Bookings — same shell as the Skill Level card. */}
+        <Pressable
+          onPress={() => navigation.navigate("MyBookings")}
+          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-3 mt-2"
+          style={{ backgroundColor: "white", ...CARD_SHADOW }}
+        >
+          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
+            <View
+              className="items-center justify-center rounded-2xl"
+              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
+            >
+              <Ionicons name="calendar-outline" size={22} color="white" />
             </View>
-          </LinearGradient>
+            <View className="flex-1">
+              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 18 }}>
+                My Bookings
+              </Text>
+              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
+                View your court bookings
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
         </Pressable>
-        <Pressable onPress={() => navigation.navigate("BlockedUsers")} className="mb-3">
-          <LinearGradient
-            colors={["#0E5C34", "#1D9254"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, overflow: "hidden", position: "relative" }}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center" style={{ gap: 12 }}>
-                <View
-                  className="items-center justify-center rounded-full"
-                  style={{ width: 34, height: 34, backgroundColor: "rgba(255,255,255,0.16)" }}
-                >
-                  <Ionicons name="hand-left-outline" size={17} color="white" />
-                </View>
-                <Text className="text-white font-semibold">Blocked Users</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.8)" />
+        <Pressable
+          onPress={() => navigation.navigate("BlockedUsers")}
+          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-3"
+          style={{ backgroundColor: "white", ...CARD_SHADOW }}
+        >
+          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
+            <View
+              className="items-center justify-center rounded-2xl"
+              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
+            >
+              <Ionicons name="hand-left-outline" size={22} color="white" />
             </View>
-          </LinearGradient>
+            <View className="flex-1">
+              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 18 }}>
+                Blocked Users
+              </Text>
+              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
+                Manage who you've blocked
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
         </Pressable>
         <Pressable
           onPress={async () => {
