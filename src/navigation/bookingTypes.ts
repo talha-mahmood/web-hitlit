@@ -11,6 +11,9 @@ export type SlotPickerParams = {
   // booking there can be linked back to that game and redirect to it
   // instead of the normal BookingConfirmation screen.
   forGameId?: string;
+  // Decorative only (the header's watermark icon) — omitted falls back to a
+  // generic icon.
+  sportName?: string;
 };
 
 // One or more slots picked in one visit — price is per-slot since a price

@@ -233,6 +233,7 @@ export default function VenueDetailScreen() {
                     venueStartTime: venue.start_time ?? "06:00:00",
                     venueEndTime: venue.end_time ?? "23:00:00",
                     forGameId: params.forGameId,
+                    sportName,
                   })
                 }
                 className="flex-row items-center bg-white rounded-2xl px-3 py-3 mb-2.5"
