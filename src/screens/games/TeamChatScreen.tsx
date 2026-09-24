@@ -278,10 +278,15 @@ export default function TeamChatScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-1">
-          <Text className="text-base font-bold text-ink" numberOfLines={1}>
-            {params.teamName ?? "Team Chat"}
+          <Text className="font-extrabold text-ink" style={{ fontSize: 20 }} numberOfLines={1}>
+            Team Chat
           </Text>
-          <Text className="text-muted text-xs">Messages disappear after 24 hours</Text>
+          {params.teamName ? (
+            <Text className="text-ink text-sm font-medium mt-0.5" numberOfLines={1}>
+              {params.teamName}
+            </Text>
+          ) : null}
+          <Text className="text-muted text-xs mt-0.5">Messages disappear after 24 hours</Text>
         </View>
       </View>
 
