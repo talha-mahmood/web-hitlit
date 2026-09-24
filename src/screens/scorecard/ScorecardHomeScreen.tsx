@@ -171,7 +171,7 @@ export default function ScorecardHomeScreen() {
           position: "relative",
         }}
       >
-        <View pointerEvents="none" style={{ position: "absolute", right: 12, top: 0 }}>
+        <View pointerEvents="none" style={{ position: "absolute", right: 12, top: 0, bottom: 0, justifyContent: "center" }}>
           <HeaderArt />
         </View>
 
