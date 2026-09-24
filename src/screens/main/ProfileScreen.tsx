@@ -262,8 +262,8 @@ export default function ProfileScreen() {
         style={{
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
-          paddingBottom: 44,
-          paddingHorizontal: 24,
+          paddingBottom: 20,
+          paddingHorizontal: 20,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -274,11 +274,11 @@ export default function ProfileScreen() {
             {profile?.avatar ? (
               <Image
                 source={{ uri: profile.avatar }}
-                className="w-20 h-20 rounded-full bg-primary-light border-[3px] border-[#AEE7C3]"
+                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#AEE7C3]"
               />
             ) : (
-              <View className="w-20 h-20 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#AEE7C3]">
-                <Text className="text-3xl font-bold text-primary">
+              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#AEE7C3]">
+                <Text className="text-xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
               </View>

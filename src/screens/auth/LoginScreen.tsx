@@ -29,7 +29,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.primary }}>
+    <View className="flex-1" style={{ backgroundColor: "#14532D" }}>
       <View className="flex-1 items-center justify-center px-6">
         <View
           className="w-full items-center rounded-3xl px-6 py-8"

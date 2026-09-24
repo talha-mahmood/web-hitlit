@@ -297,7 +297,7 @@ export default function SquadsListScreen() {
         style={{
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
-          paddingBottom: 40,
+          paddingBottom: 20,
           paddingHorizontal: 20,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
@@ -333,7 +333,7 @@ export default function SquadsListScreen() {
         </View>
       </View>
 
-      <View style={{ marginTop: -24 }}>
+      <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
           now the "Sports" pill in the filter row below instead. */}
       <View className="px-5 mb-3">

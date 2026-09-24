@@ -202,8 +202,8 @@ export default function CommunityScreen() {
         style={{
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
-          paddingBottom: 40,
-          paddingHorizontal: SIDE_PADDING + 2,
+          paddingBottom: 20,
+          paddingHorizontal: 20,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -227,7 +227,7 @@ export default function CommunityScreen() {
         </View>
       </View>
 
-      <View style={{ marginTop: -24, paddingHorizontal: SIDE_PADDING, marginBottom: 12 }}>
+      <View style={{ paddingTop: 16, paddingHorizontal: SIDE_PADDING, marginBottom: 12 }}>
         <View className="flex-row items-center bg-white" style={{ borderRadius: 30, padding: 4, ...cardShadow }}>
           <SegmentButton label="My Community" icon="account-group" active={segment === "community"} onPress={() => setSegment("community")} />
           <SegmentButton label="Top Players" icon="trophy-outline" active={segment === "players"} onPress={() => setSegment("players")} />

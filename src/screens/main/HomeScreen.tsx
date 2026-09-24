@@ -235,8 +235,8 @@ export default function HomeScreen() {
         style={{
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
-          paddingBottom: 40,
-          paddingHorizontal: 22,
+          paddingBottom: 20,
+          paddingHorizontal: 20,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",

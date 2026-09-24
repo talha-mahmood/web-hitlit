@@ -171,7 +171,7 @@ export default function ScorecardHomeScreen() {
           position: "relative",
         }}
       >
-        <View pointerEvents="none" style={{ position: "absolute", right: 12, top: 0, bottom: 0, justifyContent: "center" }}>
+        <View pointerEvents="none" style={{ position: "absolute", right: 12, top: insets.top + 12, bottom: 20, justifyContent: "center" }}>
           <HeaderArt />
         </View>
 
@@ -183,9 +183,9 @@ export default function ScorecardHomeScreen() {
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
-            <Text className="text-white font-bold" style={{ fontSize: 24 }}>Scorecard</Text>
-            <Text style={{ fontSize: 13, marginTop: 2, color: "#BBF7D0" }}>
-              Choose a sport to start or view a match
+            <Text className="text-white font-bold" style={{ fontSize: 24 }} numberOfLines={1}>Scorecard</Text>
+            <Text style={{ fontSize: 13, marginTop: 2, color: "#BBF7D0" }} numberOfLines={1}>
+              Live score your game
             </Text>
           </View>
         </View>
