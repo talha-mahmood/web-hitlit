@@ -14,7 +14,6 @@ import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVenueDetail } from "../../hooks/useVenueDetail";
-import { useFavoriteVenueIds, useToggleFavoriteVenue } from "../../hooks/useFavoriteVenues";
 import { getAmenityIcon } from "../../lib/amenities";
 import { getSportImage } from "../../lib/sportImages";
 import { getVenuePhoto } from "../../lib/venuePhotos";
@@ -31,9 +30,6 @@ export default function VenueDetailScreen() {
   const [activeImage, setActiveImage] = useState(0);
 
   const { data: venue, isLoading } = useVenueDetail(params.venueId);
-  const { data: favoriteIds } = useFavoriteVenueIds();
-  const toggleFavorite = useToggleFavoriteVenue();
-  const isFavorite = favoriteIds?.has(params.venueId) ?? false;
 
   const onScrollImages = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -89,16 +85,6 @@ export default function VenueDetailScreen() {
           className="absolute top-12 left-4 w-10 h-10 rounded-full bg-white/90 items-center justify-center"
         >
           <Ionicons name="arrow-back" size={20} color={colors.ink} />
-        </Pressable>
-        <Pressable
-          onPress={() => toggleFavorite.mutate({ venueId: venue.id, isFavorite: !isFavorite })}
-          className="absolute top-12 right-4 w-10 h-10 rounded-full bg-white/90 items-center justify-center"
-        >
-          <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={20}
-            color={isFavorite ? colors.danger : colors.ink}
-          />
         </Pressable>
 
         {images.length > 1 && (
