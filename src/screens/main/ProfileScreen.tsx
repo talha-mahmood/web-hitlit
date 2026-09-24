@@ -83,14 +83,13 @@ function StatCard({
       end={{ x: 1, y: 1 }}
       style={{ width: "31%", borderRadius: 16, padding: 12, overflow: "hidden" }}
     >
-      <View className="flex-row items-center justify-between mb-2">
+      <View className="mb-2">
         <View
           className="items-center justify-center rounded-full"
           style={{ width: 34, height: 34, backgroundColor: bg }}
         >
           <Ionicons name={icon} size={17} color={fg} />
         </View>
-        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
       </View>
       <Text className="text-white font-extrabold text-xl">{value}</Text>
       <Text className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }} numberOfLines={2}>
@@ -349,9 +348,9 @@ export default function ProfileScreen() {
           <Pressable
             onPress={() => navigation.navigate("AccountSettings")}
             className="items-center justify-center bg-white rounded-full"
-            style={{ width: 38, height: 38, ...CARD_SHADOW }}
+            style={{ width: 50, height: 50, ...CARD_SHADOW }}
           >
-            <Ionicons name="settings-outline" size={18} color={colors.primaryDark} />
+            <Ionicons name="settings-outline" size={24} color={colors.primaryDark} />
           </Pressable>
         </View>
 
@@ -485,14 +484,11 @@ export default function ProfileScreen() {
                 end={{ x: 1, y: 1 }}
                 style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden", position: "relative" }}
               >
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <Ionicons name="pie-chart" size={15} color="#4ADE80" />
-                    <Text className="text-white font-semibold" numberOfLines={1}>
-                      Sports You Play
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
+                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                  <Ionicons name="pie-chart" size={15} color="#4ADE80" />
+                  <Text className="text-white font-semibold" numberOfLines={1}>
+                    Sports You Play
+                  </Text>
                 </View>
                 {sportSegments.length === 0 ? (
                   <View className="items-center py-4">
@@ -543,14 +539,11 @@ export default function ProfileScreen() {
                 end={{ x: 1, y: 1 }}
                 style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden" }}
               >
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <Ionicons name="bar-chart" size={15} color="#4ADE80" />
-                    <Text className="text-white font-semibold" numberOfLines={1}>
-                      Your Activity
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
+                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                  <Ionicons name="bar-chart" size={15} color="#4ADE80" />
+                  <Text className="text-white font-semibold" numberOfLines={1}>
+                    Your Activity
+                  </Text>
                 </View>
                 <ActivityBarRow light icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
                 <ActivityBarRow light icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
@@ -642,9 +635,9 @@ export default function ProfileScreen() {
             await signOutGoogle();
             signOutWithPushCleanup();
           }}
-          className="bg-primary rounded-xl py-3 items-center"
+          className="bg-primary rounded-xl py-4 items-center"
         >
-          <Text className="text-white font-semibold">Sign out</Text>
+          <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
         </Pressable>
       </View>
 
