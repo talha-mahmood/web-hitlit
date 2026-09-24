@@ -12,6 +12,7 @@ export type BookingWithCourt = {
   court: {
     id: string;
     name: string;
+    sports: { name: string } | null;
     venues: {
       id: string;
       name: string;
@@ -99,6 +100,7 @@ export async function fetchMyBookings(userId: string): Promise<BookingWithCourt[
       court(
         id,
         name,
+        sports(name),
         venues(id, name, city)
       )
     `)
