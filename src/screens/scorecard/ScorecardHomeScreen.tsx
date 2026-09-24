@@ -163,7 +163,7 @@ export default function ScorecardHomeScreen() {
         style={{
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
-          paddingBottom: 40,
+          paddingBottom: 20,
           paddingHorizontal: 20,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
@@ -191,7 +191,7 @@ export default function ScorecardHomeScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 14 }} style={{ marginTop: -24 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 14 }} style={{ marginTop: 0 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"
