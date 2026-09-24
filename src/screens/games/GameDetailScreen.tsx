@@ -784,7 +784,7 @@ export default function GameDetailScreen() {
           with the team flow), non-host actions (create/join a team) live
           inline in TournamentTeamsSection instead of a single bottom button */}
       {isOpen && (isCreator || !isTeamBased) && (
-        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-6">
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-3">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
           ) : isCreator ? (
