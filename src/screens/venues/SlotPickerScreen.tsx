@@ -225,13 +225,6 @@ export default function SlotPickerScreen() {
                         </Text>
                       )}
                     </View>
-                    {!booked && (
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color={isSelected ? "white" : colors.muted}
-                      />
-                    )}
                   </Pressable>
                 );
               })}
