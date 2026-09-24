@@ -37,8 +37,8 @@ export type GamesStackParamList = {
     | undefined;
   CreateGame: { gameType?: Database["public"]["Enums"]["game_type_type"] } | undefined;
   GameDetail: { gameId: string };
-  GameChat: { gameId: string; gameTitle?: string; isTournament?: boolean };
-  TeamChat: { teamId: string; teamName?: string };
+  GameChat: { gameId: string; gameTitle?: string; isTournament?: boolean; sportName?: string };
+  TeamChat: { teamId: string; teamName?: string; sportName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
   VenueDetail: { venueId: string; forGameId?: string };

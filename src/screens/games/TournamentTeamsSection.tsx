@@ -712,7 +712,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
               onApprove={() => handleApprove(team.id)}
               onReject={() => handleReject(team.id)}
-              onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name })}
+              onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name, sportName: game.sports?.name })}
               genderMismatch={genderMismatch}
               gameGenderLabel={gameGenderLabel}
               noun={noun}

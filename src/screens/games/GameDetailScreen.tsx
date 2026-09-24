@@ -506,6 +506,7 @@ export default function GameDetailScreen() {
                     gameId: game.id,
                     gameTitle: game.title,
                     isTournament,
+                    sportName: game.sports?.name,
                   })
                 }
                 className="ml-auto items-center justify-center rounded-full"

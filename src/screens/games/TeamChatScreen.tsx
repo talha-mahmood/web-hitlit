@@ -13,19 +13,20 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTeamMessages, useSendTeamMessage } from "../../hooks/useTeamMessages";
 import { useDeleteChatMessage } from "../../hooks/useChatThread";
 import { useSeenBy } from "../../hooks/useChatReads";
 import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { markTeamChatRead, type TeamMessage } from "../../lib/api/teamMessages";
 import ChatIcon from "../../components/ChatIcon";
 import SeenByModal from "../../components/SeenByModal";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { getSportIcon } from "../../lib/sportIcons";
 
 const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
 
@@ -126,32 +127,58 @@ function MessageBubble({
       className={`flex-row px-4 py-1.5 ${isOwn ? "justify-end" : "justify-start"}`}
       style={{ gap: 8 }}
     >
-      {!isOwn &&
-        (message.profiles?.avatar ? (
-          <Image source={{ uri: message.profiles.avatar }} className="w-7 h-7 rounded-full bg-primary-light" />
-        ) : (
-          <View className="w-7 h-7 rounded-full bg-primary-light items-center justify-center">
-            <Text className="text-primary font-bold text-xs">{initials}</Text>
-          </View>
-        ))}
-      <View style={{ maxWidth: "75%" }}>
-        {!isOwn && <Text className="text-muted text-xs mb-0.5 ml-1">{name}</Text>}
-        <View
-          className={`px-3 py-2 rounded-2xl ${isOwn ? "bg-primary rounded-br-sm" : "bg-gray-100 rounded-bl-sm"}`}
-          style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
-        >
-          {isDeleted ? (
-            <Text
-              className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
-              style={{ fontStyle: "italic" }}
-            >
-              This message was deleted
-            </Text>
+      {!isOwn && (
+        <View style={{ position: "relative" }}>
+          {message.profiles?.avatar ? (
+            <Image source={{ uri: message.profiles.avatar }} className="w-11 h-11 rounded-full bg-primary-light" />
           ) : (
-            <>
-              {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
-              <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
-            </>
+            <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center">
+              <Text className="text-primary font-bold text-sm">{initials}</Text>
+            </View>
+          )}
+          <View
+            style={{
+              position: "absolute",
+              right: -1,
+              bottom: -1,
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              backgroundColor: "#22C55E",
+              borderWidth: 2,
+              borderColor: "white",
+            }}
+          />
+        </View>
+      )}
+      <View style={{ maxWidth: "75%" }}>
+        {!isOwn && <Text className="text-ink text-sm font-bold mb-1 ml-1">{name}</Text>}
+        <View style={{ position: "relative" }}>
+          <View
+            className={`px-3 py-2 rounded-2xl ${isOwn ? "bg-primary" : "bg-gray-100"}`}
+            style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
+          >
+            {isDeleted ? (
+              <Text
+                className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
+                style={{ fontStyle: "italic" }}
+              >
+                This message was deleted
+              </Text>
+            ) : (
+              <>
+                {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
+                <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
+              </>
+            )}
+          </View>
+          {isOwn && !isDeleted && (
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ position: "absolute", right: -6, bottom: -6, width: 20, height: 20, backgroundColor: "white", ...cardShadow }}
+            >
+              <Ionicons name="checkmark-done" size={12} color={colors.primary} />
+            </View>
           )}
         </View>
         {!isDeleted && (
@@ -175,6 +202,7 @@ function MessageBubble({
 export default function TeamChatScreen() {
   const { params } = useRoute<ChatRoute>();
   const navigation = useNavigation<Nav>();
+  const sportIconInfo = getSportIcon(params.sportName ?? "");
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const listRef = useRef<FlatList>(null);
@@ -265,29 +293,60 @@ export default function TeamChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-green-50"
+      className="flex-1"
+      style={{ backgroundColor: colors.background, position: "relative" }}
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
+      {/* Decorative sport watermark, behind header + message list */}
+      <MaterialCommunityIcons
+        name={sportIconInfo.icon}
+        size={220}
+        color={colors.primary}
+        style={{ position: "absolute", right: -50, top: -10, opacity: 0.08, transform: [{ rotate: "12deg" }] }}
+        pointerEvents="none"
+      />
+      <MaterialCommunityIcons
+        name={sportIconInfo.icon}
+        size={130}
+        color={colors.primary}
+        style={{ position: "absolute", right: 10, bottom: 130, opacity: 0.07, transform: [{ rotate: "-18deg" }] }}
+        pointerEvents="none"
+      />
+
       {/* Header */}
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
-      >
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+      <View className="flex-row items-center px-4 pb-4" style={{ paddingTop: insets.top + 16 }}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          className="items-center justify-center bg-white rounded-full mr-3"
+          style={{ width: 44, height: 44, ...cardShadow }}
+        >
+          <Ionicons name="arrow-back" size={20} color={colors.ink} />
         </Pressable>
         <View className="flex-1">
-          <Text className="font-extrabold text-ink" style={{ fontSize: 20 }} numberOfLines={1}>
+          <Text className="font-extrabold text-ink" style={{ fontSize: 21 }} numberOfLines={1}>
             Team Chat
           </Text>
           {params.teamName ? (
-            <Text className="text-ink text-sm font-medium mt-0.5" numberOfLines={1}>
-              {params.teamName}
-            </Text>
+            <View className="flex-row items-center mt-1" style={{ gap: 5 }}>
+              <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
+              <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+                {params.teamName}
+              </Text>
+            </View>
           ) : null}
-          <Text className="text-muted text-xs mt-0.5">Messages disappear after 24 hours</Text>
+          <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+            <Ionicons name="time-outline" size={12} color={colors.muted} />
+            <Text className="text-muted text-xs">Messages disappear after 24 hours</Text>
+          </View>
         </View>
+        <Pressable
+          onPress={() => {}}
+          className="items-center justify-center bg-white rounded-full ml-2"
+          style={{ width: 44, height: 44, ...cardShadow }}
+        >
+          <Ionicons name="ellipsis-vertical" size={18} color={colors.ink} />
+        </Pressable>
       </View>
 
       {isLoading ? (
@@ -392,8 +451,15 @@ export default function TeamChatScreen() {
 
       {/* Composer */}
       <View
-        className="flex-row items-center border-t border-border px-3 py-2"
-        style={{ paddingBottom: insets.bottom + 8, gap: 8 }}
+        className="flex-row items-center px-3 py-2.5"
+        style={{
+          paddingBottom: insets.bottom,
+          gap: 8,
+          backgroundColor: "white",
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
+          ...cardShadow,
+        }}
       >
         <TextInput
           value={draft}
@@ -406,9 +472,10 @@ export default function TeamChatScreen() {
         <Pressable
           onPress={handleSend}
           disabled={!draft.trim() || sendMessage.isPending}
-          className={`w-10 h-10 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
+          className={`w-11 h-11 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
+          style={draft.trim() ? cardShadow : undefined}
         >
-          <Ionicons name="send" size={16} color="white" />
+          <Ionicons name="send" size={17} color="white" />
         </Pressable>
       </View>
 
