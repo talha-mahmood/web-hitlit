@@ -804,7 +804,7 @@ export default function GameDetailScreen() {
                   </Text>
                 </Pressable>
               )}
-              {!(showBookVenue && isVenueBooked) && (
+              {!showBookVenue && (
                 <Pressable
                   onPress={handleCancel}
                   className="flex-row items-center justify-between rounded-xl px-4 py-4"
