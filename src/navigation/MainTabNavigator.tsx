@@ -9,6 +9,7 @@ import CommunityStackNavigator, { type CommunityStackParamList } from "./Communi
 import ScorecardStackNavigator, { type ScorecardStackParamList } from "./ScorecardStackNavigator";
 import { colors } from "../constants/theme";
 import ScorecardTabIcon from "../components/ScorecardTabIcon";
+import ProfileTabIcon from "../components/ProfileTabIcon";
 
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
@@ -45,7 +46,6 @@ function resetTabOnBlur({ navigation, route }: { navigation: any; route: { key: 
 const ICONS: Partial<Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap>> = {
   Home: "home",
   Venues: "location",
-  Profile: "person",
 };
 // Ionicons only has a two-person "people" glyph — MaterialCommunityIcons'
 // "account-group" is the same idea with a third figure, which is what
@@ -84,6 +84,8 @@ export default function MainTabNavigator() {
               <MaterialCommunityIcons name={COMMUNITY_ICON} color={color} size={size} />
             ) : route.name === "Scorecard" ? (
               <ScorecardTabIcon color={color} size={size} />
+            ) : route.name === "Profile" ? (
+              <ProfileTabIcon focused={focused} size={size} />
             ) : (
               <Ionicons
                 name={ICONS[route.name as keyof MainTabParamList]!}
