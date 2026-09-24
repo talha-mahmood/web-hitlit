@@ -101,6 +101,7 @@ export default function BookingCheckoutScreen() {
         date,
         slots: sortedSlots.map((s) => ({ startTime: s.startTime, endTime: s.endTime })),
         totalAmount: bookings.reduce((sum, b) => sum + b.total_amount, 0),
+        sportName: params.sportName,
       });
     } catch (err) {
       Alert.alert(

@@ -39,4 +39,7 @@ export type BookingConfirmationParams = {
   date: string;
   slots: { startTime: string; endTime: string }[];
   totalAmount: number;
+  // Decorative only (the header's watermark icon) — omitted falls back to a
+  // generic icon.
+  sportName?: string;
 };
