@@ -27,6 +27,9 @@ export type BookingCheckoutParams = {
   date: string; // YYYY-MM-DD
   slots: BookingSlotSelection[];
   forGameId?: string;
+  // Decorative only (the header's watermark icon) — omitted falls back to a
+  // generic icon.
+  sportName?: string;
 };
 
 export type BookingConfirmationParams = {

@@ -255,6 +255,7 @@ export default function SlotPickerScreen() {
                 price: slotPrice(s),
               })),
               forGameId: params.forGameId,
+              sportName: params.sportName,
             });
           }}
           disabled={selectedSlots.length === 0}

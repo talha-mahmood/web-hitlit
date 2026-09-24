@@ -2,10 +2,11 @@ import { View, Text, Pressable, ActivityIndicator, Alert, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCreateBooking } from "../../hooks/useBookings";
 import { useLinkGameBooking } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
+import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -34,15 +35,24 @@ type RowProps = {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   value: string;
+  divider?: boolean;
 };
 
-function SummaryRow({ icon, label, value }: RowProps) {
+function SummaryRow({ icon, label, value, divider = true }: RowProps) {
   return (
-    <View className="flex-row items-start" style={{ gap: 12 }}>
-      <Ionicons name={icon} size={16} color={colors.muted} style={{ marginTop: 2 }} />
+    <View
+      className="flex-row items-center py-3"
+      style={{ gap: 12, borderBottomWidth: divider ? 1 : 0, borderBottomColor: colors.border }}
+    >
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+      >
+        <Ionicons name={icon} size={17} color={colors.primaryDark} />
+      </View>
       <View className="flex-1">
         <Text className="text-muted text-xs">{label}</Text>
-        <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
+        <Text className="text-ink text-base font-bold mt-0.5">{value}</Text>
       </View>
     </View>
   );
@@ -59,6 +69,7 @@ export default function BookingCheckoutScreen() {
   const { courtId, courtName, venueName, date, slots, forGameId } = params;
   const totalAmount = slots.reduce((sum, s) => sum + s.price, 0);
   const sortedSlots = [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const sportIconInfo = getSportIcon(params.sportName ?? "");
 
   const handleConfirm = async () => {
     if (!session?.user.id) return;
@@ -101,48 +112,102 @@ export default function BookingCheckoutScreen() {
 
   return (
     <View className="flex-1 bg-green-50">
-      <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <Text className="text-base font-bold text-ink">Confirm Booking</Text>
+      {/* Hero header — same tinted-panel + watermark language as the slot
+          picker screen this flow comes from. */}
+      <View
+        style={{ backgroundColor: colors.primaryLight, paddingTop: insets.top + 16, paddingBottom: 24, overflow: "hidden", position: "relative" }}
+      >
+        <MaterialCommunityIcons
+          name={sportIconInfo.icon}
+          size={150}
+          color={colors.primaryDark}
+          style={{ position: "absolute", right: -20, top: -10, opacity: 0.16, transform: [{ rotate: "-12deg" }] }}
+        />
+        <View className="px-4 flex-row items-center">
+          <Pressable
+            onPress={() => navigation.goBack()}
+            className="items-center justify-center rounded-full bg-white mr-3"
+            style={{ width: 40, height: 40, ...cardShadow }}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.ink} />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-ink font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
+              Confirm Booking
+            </Text>
+            <Text className="text-muted text-sm mt-0.5">Review your booking details</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-6" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView className="flex-1 px-4 pt-5" contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Booking Summary — shadow lives on this outer, non-clipping
             wrapper since a shadow doesn't render on a view with
             overflow:hidden (needed to clip the header band's corners). */}
         <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: "white" }}>
-          <View className="border border-border rounded-2xl overflow-hidden">
-            <View className="bg-primary-light px-4 py-3">
-              <Text className="text-primary-dark font-semibold text-sm">Booking Summary</Text>
+          <View className="rounded-2xl overflow-hidden">
+            <View className="flex-row items-center" style={{ backgroundColor: colors.primaryLight, gap: 12, padding: 16 }}>
+              <View
+                className="items-center justify-center rounded-full bg-white"
+                style={{ width: 44, height: 44 }}
+              >
+                <Ionicons name="checkmark-done" size={20} color={colors.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink font-bold text-base">Booking Summary</Text>
+                <Text className="text-xs mt-0.5" style={{ color: colors.primaryDark }}>
+                  Please review your booking details before confirming
+                </Text>
+              </View>
             </View>
-            <View className="px-4 py-4" style={{ gap: 12 }}>
+            <View className="px-4">
               <SummaryRow icon="business-outline" label="Venue" value={venueName} />
               <SummaryRow icon="tennisball-outline" label="Court" value={courtName} />
-              <View className="h-px bg-border" />
-              <SummaryRow icon="calendar-outline" label="Date" value={formatDateFull(date)} />
-              <View className="flex-row items-start" style={{ gap: 12 }}>
-                <Ionicons name="time-outline" size={16} color={colors.muted} style={{ marginTop: 2 }} />
+              <SummaryRow icon="calendar-outline" label="Date" value={formatDateFull(date)} divider={false} />
+              <View className="flex-row items-start py-3" style={{ gap: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+                >
+                  <Ionicons name="time-outline" size={17} color={colors.primaryDark} />
+                </View>
                 <View className="flex-1">
-                  <Text className="text-muted text-xs mb-1">
-                    {sortedSlots.length} time slot{sortedSlots.length !== 1 ? "s" : ""}
+                  <Text className="text-muted text-xs mb-2">
+                    Time Slots ({sortedSlots.length})
                   </Text>
-                  {sortedSlots.map((s) => (
-                    <View key={s.startTime} className="flex-row items-center justify-between mt-0.5">
-                      <Text className="text-ink text-sm font-medium">
-                        {formatTime(s.startTime)} – {formatTime(s.endTime)}
-                      </Text>
-                      <Text className="text-muted text-sm">Rs {s.price.toLocaleString()}</Text>
-                    </View>
-                  ))}
+                  <View className="rounded-xl overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+                    {sortedSlots.map((s, i) => (
+                      <View
+                        key={s.startTime}
+                        className="flex-row items-center justify-between px-3 py-2.5"
+                        style={{
+                          borderTopWidth: i === 0 ? 0 : 1,
+                          borderTopColor: "white",
+                        }}
+                      >
+                        <Text className="text-ink text-sm font-bold">
+                          {formatTime(s.startTime)} – {formatTime(s.endTime)}
+                        </Text>
+                        <Text className="text-muted text-sm">Rs {s.price.toLocaleString()}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
               </View>
-              <View className="h-px bg-border" />
-              <View className="flex-row items-center justify-between">
-                <Text className="text-muted text-sm">Total Amount</Text>
-                <Text className="text-ink font-bold text-xl">Rs {totalAmount.toLocaleString()}</Text>
+            </View>
+            <View
+              className="flex-row items-center justify-between mx-4 mb-4 rounded-xl px-4 py-3.5"
+              style={{ backgroundColor: colors.primaryLight, gap: 12 }}
+            >
+              <View className="flex-row items-center" style={{ gap: 12 }}>
+                <View className="items-center justify-center rounded-full bg-white" style={{ width: 36, height: 36 }}>
+                  <Ionicons name="wallet-outline" size={17} color={colors.primaryDark} />
+                </View>
+                <Text className="text-ink font-medium">Total Amount</Text>
               </View>
+              <Text className="font-extrabold text-xl" style={{ color: colors.primaryDark }}>
+                Rs {totalAmount.toLocaleString()}
+              </Text>
             </View>
           </View>
         </View>
@@ -152,16 +217,21 @@ export default function BookingCheckoutScreen() {
           className="border border-border rounded-2xl bg-white px-4 py-4 flex-row items-center"
           style={{ gap: 12, ...cardShadow }}
         >
-          <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+          <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center">
             <Ionicons name="cash-outline" size={20} color={colors.primary} />
           </View>
           <View className="flex-1">
-            <Text className="text-ink font-medium">Pay at Venue</Text>
+            <Text className="text-ink font-bold text-base">Pay at Venue</Text>
             <Text className="text-muted text-xs mt-0.5">
               Cash on arrival · Online payment coming soon
             </Text>
           </View>
-          <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 26, height: 26, backgroundColor: colors.primary }}
+          >
+            <Ionicons name="checkmark" size={16} color="white" />
+          </View>
         </View>
       </ScrollView>
 
@@ -169,15 +239,18 @@ export default function BookingCheckoutScreen() {
         <Pressable
           onPress={handleConfirm}
           disabled={createBooking.isPending}
-          className="bg-primary rounded-xl py-4 items-center"
-          style={primaryButtonShadow}
+          className="bg-primary rounded-2xl py-4 flex-row items-center justify-center"
+          style={{ gap: 8, ...primaryButtonShadow }}
         >
           {createBooking.isPending ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text className="text-white font-semibold text-base">
-              Confirm Booking · Rs {totalAmount.toLocaleString()}
-            </Text>
+            <>
+              <Text className="text-white font-bold text-base">
+                Confirm Booking · Rs {totalAmount.toLocaleString()}
+              </Text>
+              <Ionicons name="arrow-forward" size={18} color="white" />
+            </>
           )}
         </Pressable>
       </View>
