@@ -6,14 +6,15 @@ import { Image } from "react-native";
 // bar icon already carries the focused/unfocused signal on its own.
 export default function ProfileTabIcon({ size }: { focused: boolean; size: number }) {
   // Vector tab icons (e.g. Venues' "location" glyph) have built-in visual
-  // padding inside their nominal bounding box, so they read smaller than
-  // this PNG does at the same `size` — scaling it down leaves the same gap
-  // beneath it that the other tab icons have.
-  const iconSize = size * 1.0;
+  // padding baked into their glyph, inked well short of their nominal
+  // bounding box's bottom edge — this PNG fills its box edge-to-edge, so
+  // without extra space below it the label sits closer to it than it does
+  // under the other tab icons. Keep the icon itself at full `size` and add
+  // that gap as its own margin instead of shrinking the icon to fake it.
   return (
     <Image
       source={require("../../assets/profileSection_icon.png")}
-      style={{ width: iconSize, height: iconSize, borderRadius: iconSize / 2, overflow: "hidden" }}
+      style={{ width: size, height: size, borderRadius: size / 2, overflow: "hidden", marginBottom: 4 }}
       resizeMode="cover"
     />
   );
