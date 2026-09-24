@@ -12,7 +12,6 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
-import type { ProfileStats } from "../../lib/api/profileStats";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import PieChart from "../../components/PieChart";
 import { getSportIcon } from "../../lib/sportIcons";
@@ -47,20 +46,6 @@ function formatMonthYear(iso: string): string {
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-type Achievement = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; unlocked: boolean };
-
-function buildAchievements(stats: ProfileStats): Achievement[] {
-  return [
-    { key: "first-game", label: "First Game", icon: "flag-outline", unlocked: stats.gamesPlayedTotal >= 1 },
-    { key: "regular", label: "5 Games Played", icon: "repeat-outline", unlocked: stats.gamesPlayedTotal >= 5 },
-    { key: "veteran", label: "25 Games Played", icon: "shield-checkmark-outline", unlocked: stats.gamesPlayedTotal >= 25 },
-    { key: "tournament", label: "Tournament Debut", icon: "trophy-outline", unlocked: stats.tournamentsPlayedTotal >= 1 },
-    { key: "squad", label: "Team Player", icon: "people-outline", unlocked: stats.activeSquads.length >= 1 },
-    { key: "host", label: "Game Host", icon: "star-outline", unlocked: stats.gamesHostedTotal >= 1 },
-    { key: "venues", label: "Venue Explorer", icon: "location-outline", unlocked: stats.favoriteVenuesCount >= 3 },
-  ];
 }
 
 function StatCard({
@@ -207,30 +192,6 @@ function SquadChip({ name, onPress }: { name: string; onPress: () => void }) {
   );
 }
 
-function AchievementBadge({ achievement }: { achievement: Achievement }) {
-  return (
-    <View style={{ width: "31%", alignItems: "center", marginBottom: 16 }}>
-      <View
-        className="items-center justify-center rounded-full mb-1.5"
-        style={{ width: 52, height: 52, backgroundColor: achievement.unlocked ? colors.primaryLight : "#F3F4F6" }}
-      >
-        <Ionicons
-          name={achievement.unlocked ? achievement.icon : "lock-closed-outline"}
-          size={22}
-          color={achievement.unlocked ? colors.primaryDark : "#9CA3AF"}
-        />
-      </View>
-      <Text
-        className="text-center text-xs"
-        style={{ color: achievement.unlocked ? colors.ink : "#9CA3AF" }}
-        numberOfLines={2}
-      >
-        {achievement.label}
-      </Text>
-    </View>
-  );
-}
-
 type ProfileScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<ProfileStackParamList>,
   BottomTabNavigationProp<MainTabParamList>
@@ -246,7 +207,6 @@ export default function ProfileScreen() {
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [showAllAchievements, setShowAllAchievements] = useState(false);
 
   async function handleChangeAvatar() {
     if (!userId) return;
@@ -280,7 +240,6 @@ export default function ProfileScreen() {
   const sportTotal = Math.max(1, sportSegments.reduce((sum, s) => sum + s.value, 0));
   const regularGamesPlayed = stats?.regularGamesPlayedTotal ?? 0;
   const activityMax = Math.max(regularGamesPlayed, stats?.tournamentsPlayedTotal ?? 0, stats?.gamesHostedTotal ?? 0, 1);
-  const achievements = stats ? buildAchievements(stats) : [];
 
   async function handlePickSkillLevel(level: SkillLevel) {
     if (!userId) return;
@@ -549,35 +508,6 @@ export default function ProfileScreen() {
                 <ActivityBarRow light icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
                 <ActivityBarRow light icon="people" iconBg="#FAF5FF" label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#C084FC" />
               </LinearGradient>
-            </View>
-
-            {/* Achievements */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Ionicons name="trophy" size={16} color={colors.primaryDark} />
-                <Text className="text-lg font-semibold text-ink">Achievements</Text>
-              </View>
-              {achievements.length > 6 ? (
-                <Pressable
-                  onPress={() => setShowAllAchievements((v) => !v)}
-                  className="flex-row items-center"
-                  style={{ gap: 2 }}
-                >
-                  <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-                    {showAllAchievements ? "Show less" : "See all"}
-                  </Text>
-                  <Ionicons
-                    name={showAllAchievements ? "chevron-up" : "chevron-forward"}
-                    size={14}
-                    color={colors.primaryDark}
-                  />
-                </Pressable>
-              ) : null}
-            </View>
-            <View className="flex-row flex-wrap justify-between mb-3">
-              {(showAllAchievements ? achievements : achievements.slice(0, 6)).map((a) => (
-                <AchievementBadge key={a.key} achievement={a} />
-              ))}
             </View>
 
           </>
