@@ -258,6 +258,7 @@ export default function HomeScreen() {
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <NotificationBell
+              size={28}
               unreadCount={unreadCount}
               onPress={() => navigation.navigate("Notifications")}
             />
