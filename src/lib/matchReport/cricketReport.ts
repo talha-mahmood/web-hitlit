@@ -9,7 +9,7 @@ import {
   type InningsState,
   type BallEvent,
 } from "../cricketScoring";
-import { escapeHtml, reportFooter, wrapReportHtml } from "./reportHtml";
+import { escapeHtml, reportFooter, wrapReportHtml, teamCrestHtml, SPORT_EMOJI } from "./reportHtml";
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-PK", {
@@ -277,10 +277,13 @@ export function buildCricketMatchReportHtml(
 
   const scoreCards = innings
     .map(
-      ({ teamName, state }) => `
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:${innings.length > 1 ? "10px" : "0"};">
+      ({ teamName, state }, i) => `
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:${innings.length > 1 ? "10px" : "0"};">
+          <div style="text-align:center;">
+            ${teamCrestHtml(i === 0 ? "#16A34A" : "#1D4ED8", SPORT_EMOJI.cricket, 40)}
+            <div style="font-weight:700; font-size:11px; margin-top:4px;">${escapeHtml(teamName)}</div>
+          </div>
           <div>
-            <div class="label" style="margin-bottom:0;">${escapeHtml(teamName)}</div>
             <div class="value">${state.runs}-${state.wickets} in ${formatOvers(state.legalBalls)} overs</div>
           </div>
         </div>`

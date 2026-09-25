@@ -1,4 +1,4 @@
-import { escapeHtml, reportFooter, wrapReportHtml } from "./reportHtml";
+import { escapeHtml, reportFooter, wrapReportHtml, teamCrestHtml, SPORT_EMOJI } from "./reportHtml";
 
 export type ReportBreakdownRow = { label: string; scoreA: string; scoreB: string };
 export type ReportEventRow = { time: string; team: "A" | "B"; label: string };
@@ -73,6 +73,8 @@ export function buildGenericMatchReportHtml(input: {
     )
     .join("");
 
+  const emoji = SPORT_EMOJI[input.sportLabel.toLowerCase()] ?? "🏆";
+
   const body = `
     <h1>Match Report</h1>
     <table>
@@ -81,15 +83,21 @@ export function buildGenericMatchReportHtml(input: {
           <div class="card">
             <table>
               <tr>
-                <td>
-                  <div class="label">${escapeHtml(input.teamAName)}</div>
+                <td style="display:flex; align-items:center; gap:12px;">
+                  <div style="text-align:center;">
+                    ${teamCrestHtml("#16A34A", emoji, 40)}
+                    <div style="font-weight:700; font-size:11px; margin-top:4px;">${escapeHtml(input.teamAName)}</div>
+                  </div>
                   <div class="value">${escapeHtml(input.finalScoreA)}</div>
                 </td>
               </tr>
-              <tr><td style="height:8px;"></td></tr>
+              <tr><td style="height:10px;"></td></tr>
               <tr>
-                <td>
-                  <div class="label">${escapeHtml(input.teamBName)}</div>
+                <td style="display:flex; align-items:center; gap:12px;">
+                  <div style="text-align:center;">
+                    ${teamCrestHtml("#1D4ED8", emoji, 40)}
+                    <div style="font-weight:700; font-size:11px; margin-top:4px;">${escapeHtml(input.teamBName)}</div>
+                  </div>
                   <div class="value">${escapeHtml(input.finalScoreB)}</div>
                 </td>
               </tr>

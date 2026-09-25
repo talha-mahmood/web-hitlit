@@ -226,6 +226,21 @@ export default function PickleballLiveScoringScreen() {
             <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
             <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Pickleball</Text>
           </View>
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
+            style={{ gap: 6 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={18} color="white" />
+                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
           {/* Team crests + final score, with a winner ribbon */}
@@ -294,22 +309,6 @@ export default function PickleballLiveScoringScreen() {
               </View>
             ))}
           </View>
-
-          <Pressable
-            onPress={handleGenerateMatchReport}
-            disabled={generatingReport}
-            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5 mb-3"
-            style={{ gap: 8 }}
-          >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
-                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
-              </>
-            )}
-          </Pressable>
 
           <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
             <LinearGradient

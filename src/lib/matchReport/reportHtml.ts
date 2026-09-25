@@ -60,6 +60,37 @@ export const REPORT_STYLES = `
   .page-break { page-break-before: always; }
 `;
 
+// Same emoji-per-sport a team's crest icon would use, matched to the exact
+// MaterialCommunityIcons glyph each sport's TeamCrest already uses on its
+// match-listing cards (getSportIcon-derived: "cricket", "racquetball",
+// "tennis", "badminton", "table-tennis" for both pickleball and table
+// tennis, and football's default "soccer") — a PDF can't load that icon
+// font, so this is the closest same-sport stand-in.
+export const SPORT_EMOJI: Record<string, string> = {
+  cricket: "🏏",
+  padel: "🎾",
+  tennis: "🎾",
+  badminton: "🏸",
+  pickleball: "🏓",
+  "table tennis": "🏓",
+  football: "⚽",
+};
+
+// The same shield-shaped crest TeamCrest.tsx draws (icon + star on a
+// colored shield) — icon above, team name written underneath it, exactly
+// like the sport's match-listing cards — reproduced in plain SVG/HTML since
+// a PDF can't render the app's own icon font component.
+export function teamCrestHtml(color: string, emoji: string, size = 44): string {
+  return `
+    <div style="position:relative; width:${size}px; height:${size}px; display:inline-block;">
+      <svg width="${size}" height="${size}" viewBox="0 0 40 46" style="position:absolute; top:0; left:0;">
+        <path d="M20 0 L40 6 V22 C40 34 32 42 20 46 C8 42 0 34 0 22 V6 Z" fill="${color}" />
+      </svg>
+      <span style="position:absolute; top:${size * 0.08}px; left:50%; transform:translateX(-50%); font-size:${size * 0.32}px;">⭐</span>
+      <span style="position:absolute; bottom:${size * 0.1}px; left:50%; transform:translateX(-50%); font-size:${size * 0.34}px;">${emoji}</span>
+    </div>`;
+}
+
 // The footer every page of the STUMPS-style reference PDF carries — kept as
 // its own generic line here ("created from <app name>") rather than copying
 // that specific third-party product's own name/branding.

@@ -241,13 +241,23 @@ export default function FullScorecardScreen() {
             Cricket · {dayLabel(match.created_at.slice(0, 10))}, {timeLabel}
           </Text>
         </View>
-        <View
-          className="flex-row items-center rounded-full"
-          style={{ gap: 5, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="checkmark-circle" size={15} color={colors.primaryDark} />
-          <Text className="font-bold text-xs" style={{ color: colors.primaryDark }}>Completed</Text>
-        </View>
+        {innings.length > 0 && (
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
+            style={{ gap: 6 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={18} color="white" />
+                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
@@ -317,24 +327,6 @@ export default function FullScorecardScreen() {
               />
             );
           })
-        )}
-
-        {innings.length > 0 && (
-          <Pressable
-            onPress={handleGenerateMatchReport}
-            disabled={generatingReport}
-            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5"
-            style={{ gap: 8 }}
-          >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
-                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
-              </>
-            )}
-          </Pressable>
         )}
       </ScrollView>
     </View>
