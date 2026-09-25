@@ -3,7 +3,8 @@ import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
 import {
   useSquadDetail,
@@ -25,15 +26,16 @@ import {
 } from "../../hooks/useInvites";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
-import { colors, primaryButtonShadow } from "../../constants/theme";
+import { colors, primaryButtonShadow, cardShadow } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
-import DetailSportBackdrop from "../../components/DetailSportBackdrop";
+import WaveDivider from "../../components/WaveDivider";
 import type { Database } from "../../types/database.types";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
+import { getSportIcon } from "../../lib/sportIcons";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
@@ -47,6 +49,8 @@ function skillLabel(skill: string | null): string {
 }
 
 // ── sub-components ────────────────────────────────────────────────────────────
+// Same shell as GameDetailScreen's InfoRow — icon in a light-green circle,
+// optional badge next to the label, optional colored pill for the value.
 
 function InfoRow({
   icon,
@@ -54,20 +58,44 @@ function InfoRow({
   value,
   action,
   pillColor,
+  badge,
+  divider = true,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   value: string;
   action?: React.ReactNode;
-  // When set, the value renders as a solid colored pill instead of plain
-  // text — same palette as the squad list cards.
   pillColor?: string;
+  badge?: { label: string; color: string };
+  divider?: boolean;
 }) {
   return (
-    <View className="flex-row items-start py-2.5" style={{ gap: 12 }}>
-      <Ionicons name={icon} size={18} color={colors.muted} style={{ marginTop: 1 }} />
+    <View
+      className="flex-row items-center py-3"
+      style={{ gap: 12, borderBottomWidth: divider ? 1 : 0, borderBottomColor: colors.border }}
+    >
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+      >
+        <Ionicons name={icon} size={17} color={colors.primaryDark} />
+      </View>
       <View className="flex-1">
-        <Text className="text-muted text-xs">{label}</Text>
+        <View className="flex-row items-center" style={{ gap: 6 }}>
+          <Text className="text-muted text-xs">{label}</Text>
+          {badge && (
+            <View
+              style={{
+                backgroundColor: badge.color,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 999,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>{badge.label}</Text>
+            </View>
+          )}
+        </View>
         {pillColor ? (
           <View
             style={{
@@ -130,6 +158,18 @@ function MemberAvatar({
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Member").split(" ")[0]}
       </Text>
+    </View>
+  );
+}
+
+// Same dashed placeholder GameDetailScreen shows for an unfilled player slot.
+function EmptySlot() {
+  return (
+    <View className="items-center" style={{ width: 64 }}>
+      <View className="w-12 h-12 rounded-full border-2 border-dashed border-border items-center justify-center">
+        <Ionicons name="add" size={20} color={colors.border} />
+      </View>
+      <Text className="text-border text-xs mt-1">Open</Text>
     </View>
   );
 }
@@ -204,6 +244,7 @@ export default function SquadDetailScreen() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const { data: squad, isLoading, error } = useSquadDetail(params.squadId);
   const { data: chatUnreadCount } = useSquadChatUnreadCount(squad?.id, userId);
@@ -442,65 +483,78 @@ export default function SquadDetailScreen() {
   const genderLabel = squad.gender === "male" ? "Male Only" : squad.gender === "female" ? "Female Only" : "Everyone";
   const genderPillColor = squad.gender === "male" ? "#2563EB" : squad.gender === "female" ? "#EC4899" : colors.primary;
 
+  const sportIconInfo = squad.sports?.name ? getSportIcon(squad.sports.name) : null;
+
   return (
     <View className="flex-1 bg-green-50">
-      <DetailSportBackdrop />
+      {/* Hero header — dark gradient with a decorative sport-icon watermark,
+          same treatment as GameDetailScreen, fading into the page via a
+          wave divider. */}
+      <View style={{ position: "relative" }}>
+        <LinearGradient
+          colors={["#07301D", "#0E5C34", "#1D9254"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: insets.top + 16, paddingBottom: 44, paddingHorizontal: 16, overflow: "hidden" }}
+        >
+          {sportIconInfo && (
+            <MaterialCommunityIcons
+              name={sportIconInfo.icon}
+              size={130}
+              color="white"
+              style={{ position: "absolute", right: -20, bottom: -16, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
+            />
+          )}
 
-      {/* Header */}
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border"
-        style={{ paddingTop: insets.top + 16 }}
-      >
-        <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-base font-bold text-ink" numberOfLines={1}>{squad.name}</Text>
-          <View
-            className="mt-1"
-            style={{ backgroundColor: squadSkillColor, alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}
-          >
-            <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
-              {skillLabel(squad.skill_level)}
-            </Text>
+          <View className="flex-row items-center">
+            <Pressable
+              onPress={() => navigation.goBack()}
+              className="items-center justify-center rounded-full mr-3"
+              style={{ width: 38, height: 38, backgroundColor: "rgba(255,255,255,0.16)", borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" }}
+            >
+              <Ionicons name="arrow-back" size={20} color="white" />
+            </Pressable>
+            {(isOwner || hasJoined) && (
+              <Pressable
+                onPress={() => navigation.navigate("SquadChat", { squadId: squad.id, squadName: squad.name })}
+                className="ml-auto items-center justify-center rounded-full"
+                style={{
+                  width: 42,
+                  height: 42,
+                  backgroundColor: "white",
+                  shadowColor: "#0F172A",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 6,
+                  elevation: 2,
+                }}
+              >
+                <ChatIcon size={23} unreadCount={chatUnreadCount} />
+              </Pressable>
+            )}
           </View>
-        </View>
-        {isOwner && (
-          <Pressable onPress={() => setShowInviteModal(true)} className="mr-2 p-1">
-            <Ionicons name="person-add-outline" size={22} color={colors.ink} />
-          </Pressable>
-        )}
-        {isOwner && (
-          <Pressable
-            onPress={() => navigation.navigate("EditSquad", { squadId: squad.id })}
-            className="mr-2 p-1"
-          >
-            <Ionicons name="create-outline" size={22} color={colors.ink} />
-          </Pressable>
-        )}
-        {(isOwner || hasJoined) && (
-          <Pressable
-            onPress={() => navigation.navigate("SquadChat", { squadId: squad.id, squadName: squad.name })}
-            className="ml-1 mr-2 items-center justify-center rounded-full"
-            style={{
-              width: 42,
-              height: 42,
-              backgroundColor: "white",
-              shadowColor: "#0F172A",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 2,
-            }}
-          >
-            <ChatIcon size={23} unreadCount={chatUnreadCount} />
-          </Pressable>
-        )}
-        {isClosedToJoins && (
-          <View className="bg-orange-50 px-2 py-1 rounded-lg">
-            <Text className="text-orange-600 text-xs font-semibold">Full</Text>
+
+          <Text className="text-white font-extrabold mt-3" style={{ fontSize: 26 }} numberOfLines={1}>
+            {squad.name}
+          </Text>
+          <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
+            {sportIconInfo && squad.sports?.name && (
+              <View
+                className="flex-row items-center bg-white"
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
+              >
+                <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
+                <Text style={{ color: sportIconInfo.fg, fontSize: 12, fontWeight: "700" }}>{squad.sports.name}</Text>
+              </View>
+            )}
+            {isClosedToJoins && (
+              <View className="bg-white px-2 py-1 rounded-lg">
+                <Text className="text-orange-600 text-xs font-semibold">Full</Text>
+              </View>
+            )}
           </View>
-        )}
+        </LinearGradient>
+        <WaveDivider color={colors.background} height={30} />
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
@@ -533,55 +587,85 @@ export default function SquadDetailScreen() {
           </View>
         )}
 
-        {/* Squad info — plain rows, no card chrome */}
+        {/* Squad info — card, collapsed behind a dropdown by default;
+            tapping the header reveals it. Same shell as GameDetailScreen's
+            "Game Details" card. */}
         <View className="px-5 mt-5">
-          <View className="flex-row items-center mb-1" style={{ gap: 6 }}>
-            <Text className="text-ink font-bold text-base">Squad Details</Text>
-            <BlinkingEyeIcon size={16} />
-          </View>
-          {/* The ID/code is only meaningful (and only shown) to people
-              already in the squad — a non-member has nothing to do with it
-              and shouldn't see it at all. */}
-          {(isOwner || hasJoined) && (
-            <InfoRow
-              icon="pricetag-outline"
-              label="Squad ID"
-              value={squad.squad_code}
-              action={
-                <Pressable
-                  onPress={handleCopySquadCode}
-                  hitSlop={8}
-                  className="flex-row items-center px-2.5 py-1.5 rounded-lg bg-gray-50"
-                  style={{ gap: 4 }}
-                >
-                  <Ionicons
-                    name={codeCopied ? "checkmark" : "copy-outline"}
-                    size={14}
-                    color={codeCopied ? colors.primary : colors.muted}
+          <View className="bg-white rounded-2xl px-4" style={cardShadow}>
+            <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="document-text-outline" size={19} color={colors.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <Text className="text-ink font-bold text-base">Squad Details</Text>
+                  <BlinkingEyeIcon size={16} />
+                </View>
+                <Text className="text-muted text-xs mt-0.5">View complete squad information</Text>
+              </View>
+              <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
+            </Pressable>
+            {detailsExpanded && (
+              <View className="pb-1" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
+                {/* The ID/code is only meaningful (and only shown) to people
+                    already in the squad — a non-member has nothing to do with
+                    it and shouldn't see it at all. */}
+                {(isOwner || hasJoined) && (
+                  <InfoRow
+                    icon="pricetag-outline"
+                    label="Squad ID"
+                    value={squad.squad_code}
+                    action={
+                      <Pressable
+                        onPress={handleCopySquadCode}
+                        hitSlop={8}
+                        className="flex-row items-center px-3 py-1.5 rounded-lg bg-white"
+                        style={{ gap: 4, borderWidth: 1, borderColor: colors.border }}
+                      >
+                        <Ionicons
+                          name={codeCopied ? "checkmark" : "copy-outline"}
+                          size={14}
+                          color={codeCopied ? colors.primary : colors.muted}
+                        />
+                        <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
+                          {codeCopied ? "Copied" : "Copy"}
+                        </Text>
+                      </Pressable>
+                    }
                   />
-                  <Text className={`text-xs font-medium ${codeCopied ? "text-primary" : "text-muted"}`}>
-                    {codeCopied ? "Copied" : "Copy"}
-                  </Text>
-                </Pressable>
-              }
-            />
-          )}
-          {squad.sports && <InfoRow icon="football-outline" label="Sport" value={squad.sports.name} />}
-          <InfoRow
-            icon="speedometer-outline"
-            label="Skill Level"
-            value={skillLabel(squad.skill_level)}
-            pillColor={squadSkillColor}
-          />
-          <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
-          <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} />
+                )}
+                {squad.sports && <InfoRow icon="football-outline" label="Sport" value={squad.sports.name} />}
+                <InfoRow
+                  icon="speedometer-outline"
+                  label="Skill Level"
+                  value={skillLabel(squad.skill_level)}
+                  pillColor={squadSkillColor}
+                />
+                <InfoRow icon="location-outline" label="Location" value={squad.location ?? "Not set"} />
+                <InfoRow icon="people-outline" label="Open To" value={genderLabel} pillColor={genderPillColor} divider={false} />
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Description */}
         {!!squad.description && (
           <View className="px-5 mt-6">
-            <Text className="text-ink font-semibold text-sm mb-2">About this squad</Text>
-            <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
+            <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="megaphone-outline" size={19} color={colors.primaryDark} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink font-bold text-base mb-1">About this squad</Text>
+                <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
+              </View>
+            </View>
           </View>
         )}
 
@@ -591,19 +675,42 @@ export default function SquadDetailScreen() {
             <Text className="text-ink font-semibold text-sm">
               Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
             </Text>
-            {!!squad.max_players && (
-              emptySlots > 0 ? (
-                <View className="bg-green-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-primary text-xs font-medium">
-                    {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
-                  </Text>
-                </View>
-              ) : (
-                <View className="bg-red-50 px-2 py-0.5 rounded-full">
-                  <Text className="text-red-600 text-xs font-medium">Full</Text>
-                </View>
-              )
-            )}
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              {!!squad.max_players && (
+                emptySlots > 0 ? (
+                  <View className="bg-green-50 px-2 py-0.5 rounded-full">
+                    <Text className="text-primary text-xs font-medium">
+                      {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
+                    </Text>
+                  </View>
+                ) : (
+                  <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                    <Text className="text-red-600 text-xs font-medium">Full</Text>
+                  </View>
+                )
+              )}
+              {isOwner && (
+                <Pressable onPress={() => setShowInviteModal(true)} style={primaryButtonShadow}>
+                  <LinearGradient
+                    colors={["#0E5C34", "#1D9254"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      borderRadius: 999,
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons name="sparkles" size={14} color="white" />
+                    <Ionicons name="person-add-outline" size={16} color="white" />
+                    <Text className="text-white text-sm font-bold">Invite Players</Text>
+                  </LinearGradient>
+                </Pressable>
+              )}
+            </View>
           </View>
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
             {activeMembers.map((m) => (
@@ -618,6 +725,9 @@ export default function SquadDetailScreen() {
                     : undefined
                 }
               />
+            ))}
+            {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
+              <EmptySlot key={`empty-${i}`} />
             ))}
           </View>
         </View>
@@ -718,7 +828,7 @@ export default function SquadDetailScreen() {
       </ScrollView>
 
       {/* CTA */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-6">
+      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-3">
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
         ) : isOwner ? (
@@ -740,9 +850,14 @@ export default function SquadDetailScreen() {
             </Pressable>
             <Pressable
               onPress={handleDisband}
-              className="border border-danger rounded-xl py-4 items-center"
+              className="flex-row items-center justify-between rounded-xl px-4 py-4"
+              style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
             >
-              <Text className="text-danger font-semibold">Disband This Squad</Text>
+              <View className="flex-row items-center" style={{ gap: 10 }}>
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <Text className="text-danger font-semibold">Disband This Squad</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.danger} />
             </Pressable>
           </>
         ) : hasJoined ? (
