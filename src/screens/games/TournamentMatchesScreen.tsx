@@ -128,7 +128,6 @@ function FixturesPanel({
               {f.teamB ?? "Bye"}
             </Text>
             {f.teamB ? <TeamStatusIcon status={statusByName.get(f.teamB)} /> : <View style={{ width: 28 }} />}
-            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
           </View>
         ))}
       </View>
