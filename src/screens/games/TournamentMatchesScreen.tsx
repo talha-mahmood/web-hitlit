@@ -172,11 +172,13 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
 
 function MatchRow({
   match,
+  matchNumber,
   showScorecardButton,
   onGoToScorecard,
   onEnterScoreManually,
 }: {
   match: TournamentMatch;
+  matchNumber: number;
   // Only ever true for the single first match on the whole screen, and only
   // once the host can actually do something with it (venue already booked)
   // — see canGoToScorecard in the screen component. "Enter Score Manually"
@@ -187,6 +189,7 @@ function MatchRow({
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
+  const isReady = !!showScorecardButton && !!match.team_a && !!match.team_b;
 
   if (match.status === "COMPLETED") {
     const resultLabel = match.is_draw
@@ -197,11 +200,20 @@ function MatchRow({
           ? "—"
           : `${teamAName} advances`; // a bye, auto-completed at generation
     return (
-      <View className="bg-gray-50 rounded-xl px-3 py-2.5">
-        <View className="flex-row items-center justify-between">
+      <View className="bg-gray-50 rounded-2xl px-3 py-2.5">
+        <Text className="text-muted text-xs font-bold mb-1.5">Match {matchNumber}</Text>
+        <View className="flex-row items-center" style={{ gap: 10 }}>
+          <TeamStatusIcon status={match.team_a?.id ? "APPROVED" : undefined} />
           <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
-          <Text className="text-muted text-xs mx-2">vs</Text>
+          <View className="items-center justify-center rounded-full bg-gray-200" style={{ width: 32, height: 32 }}>
+            <Text className="text-muted text-xs font-bold">VS</Text>
+          </View>
           <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+          {match.team_b ? (
+            <TeamStatusIcon status={match.team_b?.id ? "APPROVED" : undefined} />
+          ) : (
+            <View style={{ width: 28 }} />
+          )}
         </View>
         <Text className="text-primary text-xs font-semibold mt-1.5">{resultLabel}</Text>
         {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
@@ -211,23 +223,63 @@ function MatchRow({
   }
 
   return (
-    <View className="bg-gray-50 rounded-xl px-3 py-2.5">
-      <View className="flex-row items-center justify-between">
+    <View
+      className="rounded-2xl px-3 py-2.5"
+      style={{ backgroundColor: isReady ? colors.primaryLight : "#F9FAFB" }}
+    >
+      <View className="flex-row items-center justify-between mb-1.5">
+        <Text
+          className="text-xs font-bold"
+          style={{ color: isReady ? colors.primaryDark : colors.muted }}
+        >
+          Match {matchNumber}
+        </Text>
+        {isReady && (
+          <View className="bg-white px-2.5 py-1 rounded-full">
+            <Text className="text-primary text-xs font-bold">Ready to Enter Score</Text>
+          </View>
+        )}
+      </View>
+      <View className="flex-row items-center" style={{ gap: 10 }}>
+        <TeamStatusIcon status={match.team_a ? "APPROVED" : undefined} />
         <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
-        <Text className="text-muted text-xs mx-2">vs</Text>
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 32, height: 32, backgroundColor: isReady ? "white" : "#E5E7EB" }}
+        >
+          <Text className="text-muted text-xs font-bold">VS</Text>
+        </View>
         <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+        {match.team_b ? <TeamStatusIcon status="APPROVED" /> : <View style={{ width: 28 }} />}
+        {!isReady && <Ionicons name="chevron-forward" size={16} color={colors.muted} />}
       </View>
       {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       <LinkedMatchScoreDetails match={match} />
-      {showScorecardButton && match.team_a && match.team_b && (
-        <>
-          <Pressable onPress={onGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
-            <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+      {isReady && (
+        <View style={{ gap: 8, marginTop: 12 }}>
+          <Pressable
+            onPress={onGoToScorecard}
+            className="flex-row items-center justify-between bg-primary rounded-2xl px-4"
+            style={{ paddingVertical: 14, ...cardShadow }}
+          >
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <Ionicons name="clipboard-outline" size={17} color="white" />
+              <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="white" />
           </Pressable>
-          <Pressable onPress={onEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
-            <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
+          <Pressable
+            onPress={onEnterScoreManually}
+            className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
+            style={{ paddingVertical: 14 }}
+          >
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <Ionicons name="pencil-outline" size={17} color={colors.primary} />
+              <Text className="text-primary font-bold text-sm">Enter Score Manually</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
           </Pressable>
-        </>
+        </View>
       )}
     </View>
   );
@@ -349,10 +401,11 @@ function MatchesPanel({
               {roundLabel(format, round, roundMatches)}
             </Text>
             <View style={{ gap: 8 }}>
-              {roundMatches.map((m) => (
+              {roundMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
+                  matchNumber={mi + 1}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
@@ -655,10 +708,11 @@ function PoolMatchesPanel({
           <View key={pool.id} className={idx > 0 ? "mt-4" : undefined}>
             <Text className="text-ink text-xs font-semibold mb-2">{pool.name}</Text>
             <View style={{ gap: 8 }}>
-              {poolMatches.map((m) => (
+              {poolMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
+                  matchNumber={mi + 1}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
@@ -803,10 +857,11 @@ function PoolPlayoffPanel({
               {roundLabel("KNOCKOUT", round, roundMatches)}
             </Text>
             <View style={{ gap: 8 }}>
-              {roundMatches.map((m) => (
+              {roundMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
+                  matchNumber={mi + 1}
                   showScorecardButton={canGoToScorecard && m.id === firstMatchId}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
