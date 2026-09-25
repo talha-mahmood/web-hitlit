@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { View, Text, Image, ScrollView, Pressable } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, Image, ScrollView, Pressable, BackHandler } from "react-native";
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -154,6 +154,20 @@ export default function ScorecardHomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+
+  // Scorecard is a bottom-tab root — the phone's hardware/gesture back
+  // button should take the user to the Home tab instead of exiting the app.
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (navigation.canGoBack()) return false;
+        navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home");
+        return true;
+      };
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
 
   return (
     <View className="flex-1 bg-green-50">

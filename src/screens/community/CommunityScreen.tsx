@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Dimensions, Image } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
@@ -193,6 +193,21 @@ export default function CommunityScreen() {
     return navigation.getParent()?.addListener("blur", () => setSegment("community"));
   }, [navigation]);
 
+  // Community is a bottom-tab root — the phone's hardware/gesture back
+  // button should take the user to the Home tab instead of exiting the app,
+  // same as the header's own back arrow (only exits when already on Home).
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (navigation.canGoBack()) return false;
+        navigation.getParent()?.navigate("Home");
+        return true;
+      };
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   return (
     <View className="flex-1 bg-green-50">
       {/* Fixed header — stays on screen while only the content below switches. */}
@@ -210,6 +225,17 @@ export default function CommunityScreen() {
         }}
       >
         <View className="flex-row items-center" style={{ gap: 14 }}>
+          <Pressable
+            onPress={() => {
+              // Community is a bottom-tab root, so there's usually nothing to
+              // pop to — fall back to the Home tab in that case.
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.getParent()?.navigate("Home");
+            }}
+            hitSlop={8}
+          >
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
           <View
             className="items-center justify-center"
             style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: "#4CAF6A" }}

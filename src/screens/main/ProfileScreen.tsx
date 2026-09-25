@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -205,6 +205,21 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+
+  // Profile is a bottom-tab root — the phone's hardware/gesture back button
+  // should take the user to the Home tab instead of exiting the app.
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (navigation.canGoBack()) return false;
+        navigation.getParent()?.navigate("Home");
+        return true;
+      };
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
+
   const { data: stats, isLoading } = useProfileStats(userId);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
@@ -270,6 +285,18 @@ export default function ProfileScreen() {
         }}
       >
         <View className="flex-row items-center">
+          <Pressable
+            onPress={() => {
+              // Profile is a bottom-tab root, so there's usually nothing to
+              // pop to — fall back to the Home tab in that case.
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.getParent()?.navigate("Home");
+            }}
+            hitSlop={8}
+            className="mr-3"
+          >
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
           <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
             {profile?.avatar ? (
               <Image

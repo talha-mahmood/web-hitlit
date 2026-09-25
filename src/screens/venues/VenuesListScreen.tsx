@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl, BackHandler } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -115,6 +115,20 @@ export default function VenuesListScreen() {
   const navigation = useNavigation<VenuesListNavigationProp>();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+
+  // Venues is a bottom-tab root — the phone's hardware/gesture back button
+  // should take the user to the Home tab instead of exiting the app.
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (navigation.canGoBack()) return false;
+        navigation.getParent()?.navigate("Home");
+        return true;
+      };
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }, [navigation])
+  );
 
   const [search, setSearch] = useState("");
   const [selectedSportId, setSelectedSportId] = useState<string | undefined>(
