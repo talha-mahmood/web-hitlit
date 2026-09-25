@@ -325,12 +325,28 @@ export default function SquadDetailScreen() {
   };
 
   const handleToggleJoinBlocked = () => {
-    setJoinBlocked.mutate(
-      { squadId: squad.id, blocked: !squad.join_requests_blocked },
-      {
-        onError: (err) =>
-          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update this setting. Try again.")),
-      }
+    const nextBlocked = !squad.join_requests_blocked;
+    Alert.alert(
+      nextBlocked ? "Block New Join Requests?" : "Unblock New Join Requests?",
+      nextBlocked
+        ? "No one will be able to request to join this squad until you unblock it."
+        : "Players will be able to request to join this squad again.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: nextBlocked ? "Block" : "Unblock",
+          style: nextBlocked ? "destructive" : "default",
+          onPress: () => {
+            setJoinBlocked.mutate(
+              { squadId: squad.id, blocked: nextBlocked },
+              {
+                onError: (err) =>
+                  Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update this setting. Try again.")),
+              }
+            );
+          },
+        },
+      ]
     );
   };
 
@@ -546,6 +562,58 @@ export default function SquadDetailScreen() {
                 <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
                 <Text style={{ color: sportIconInfo.fg, fontSize: 12, fontWeight: "700" }}>{squad.sports.name}</Text>
               </View>
+            )}
+            {isOwner && (
+              <Pressable
+                onPress={handleToggleJoinBlocked}
+                disabled={setJoinBlocked.isPending}
+                className="flex-row items-center"
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 999,
+                  gap: 5,
+                  backgroundColor: "white",
+                }}
+              >
+                {setJoinBlocked.isPending ? (
+                  <ActivityIndicator size="small" color={squad.join_requests_blocked ? colors.primary : colors.danger} />
+                ) : (
+                  <>
+                    <View style={{ width: 13, height: 13 }}>
+                      <Ionicons
+                        name="person"
+                        size={13}
+                        color={squad.join_requests_blocked ? colors.primary : colors.danger}
+                      />
+                      <View
+                        className="items-center justify-center rounded-full"
+                        style={{
+                          position: "absolute",
+                          right: -3,
+                          bottom: -3,
+                          width: 9,
+                          height: 9,
+                          backgroundColor: squad.join_requests_blocked ? colors.primary : colors.danger,
+                          borderWidth: 1,
+                          borderColor: "white",
+                        }}
+                      >
+                        <Ionicons name="ban" size={6} color="white" />
+                      </View>
+                    </View>
+                    <Text
+                      style={{
+                        color: squad.join_requests_blocked ? colors.primary : colors.danger,
+                        fontSize: 12,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {squad.join_requests_blocked ? "Unblock Users" : "Block Users"}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
             )}
             {isClosedToJoins && (
               <View className="bg-white px-2 py-1 rounded-lg">
@@ -833,28 +901,13 @@ export default function SquadDetailScreen() {
         ) : isOwner ? (
           <>
             <Pressable
-              onPress={handleToggleJoinBlocked}
-              disabled={setJoinBlocked.isPending}
-              className={`rounded-xl py-4 items-center mb-3 ${
-                squad.join_requests_blocked ? "bg-gray-100" : "border border-primary"
-              }`}
-            >
-              {setJoinBlocked.isPending ? (
-                <ActivityIndicator color={colors.primary} />
-              ) : (
-                <Text className={`font-semibold ${squad.join_requests_blocked ? "text-muted" : "text-primary"}`}>
-                  {squad.join_requests_blocked ? "Unblock New Join Requests" : "Block New Join Requests"}
-                </Text>
-              )}
-            </Pressable>
-            <Pressable
               onPress={handleDisband}
               className="flex-row items-center justify-between rounded-xl px-4 py-4"
               style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
             >
               <View className="flex-row items-center" style={{ gap: 10 }}>
                 <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <Text className="text-danger font-semibold">Disband This Squad</Text>
+                <Text className="text-danger font-semibold">Delete This Squad</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.danger} />
             </Pressable>
