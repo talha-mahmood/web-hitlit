@@ -609,7 +609,7 @@ export default function SquadDetailScreen() {
                         fontWeight: "700",
                       }}
                     >
-                      {squad.join_requests_blocked ? "Unblock Users" : "Block Users"}
+                      {squad.join_requests_blocked ? "Unblock New Users" : "Block New Users"}
                     </Text>
                   </>
                 )}

@@ -2,7 +2,7 @@ import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGameDetail } from "../../hooks/useGames";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import {
@@ -25,6 +25,7 @@ import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { getSportIcon } from "../../lib/sportIcons";
 import {
   computeFixtures,
   computeStandings,
@@ -40,31 +41,94 @@ type Nav = NativeStackNavigationProp<GamesStackParamList, "TournamentMatches">;
 // Tournament Details page just links to this screen instead of rendering
 // all of this inline. ─────────────────────────────────────────────────────
 
+// Shared card header — icon-in-a-circle + title/subtitle, with an optional
+// pill badge on the right. Used at the top of every card on this screen so
+// they all read as the same family (Fixtures, Matches, Groups, Standings…).
+function CardHeader({
+  icon,
+  title,
+  subtitle,
+  badge,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  title: string;
+  subtitle?: string;
+  badge?: string;
+}) {
+  return (
+    <View className="flex-row items-center mb-3" style={{ gap: 12 }}>
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+      >
+        <Ionicons name={icon} size={19} color={colors.primaryDark} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-ink font-bold text-base">{title}</Text>
+        {subtitle && <Text className="text-muted text-xs mt-0.5">{subtitle}</Text>}
+      </View>
+      {badge && (
+        <View className="bg-indigo-50 px-2.5 py-1 rounded-full">
+          <Text className="text-indigo-700 text-xs font-semibold">{badge}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// A team's real approval status, shown as a small colored icon — blue
+// person for an approved team, orange hourglass for one still pending.
+function TeamStatusIcon({ status }: { status: Database["public"]["Enums"]["tournament_team_status_type"] | undefined }) {
+  const pending = status !== "APPROVED";
+  return (
+    <View
+      className="items-center justify-center rounded-lg"
+      style={{ width: 28, height: 28, backgroundColor: pending ? "#FFEDD5" : "#DBEAFE" }}
+    >
+      <Ionicons name={pending ? "hourglass" : "person"} size={14} color={pending ? "#C2410C" : "#2563EB"} />
+    </View>
+  );
+}
+
 function FixturesPanel({
   format,
-  teamNames,
+  teams,
 }: {
   format: Database["public"]["Enums"]["tournament_format_type"];
-  teamNames: string[];
+  teams: { name: string; status: Database["public"]["Enums"]["tournament_team_status_type"] }[];
 }) {
-  const fixtures = computeFixtures(format, teamNames);
+  const fixtures = computeFixtures(format, teams.map((t) => t.name));
   if (fixtures.length === 0) return null;
+  const statusByName = new Map(teams.map((t) => [t.name, t.status]));
+
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-ink font-semibold text-sm">Fixtures</Text>
-        <View className="bg-indigo-50 px-2 py-0.5 rounded-full">
-          <Text className="text-indigo-700 text-xs font-medium">{TOURNAMENT_FORMAT_LABEL[format]}</Text>
-        </View>
-      </View>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader
+        icon="calendar-outline"
+        title="Fixtures"
+        subtitle="Tournament matchups"
+        badge={TOURNAMENT_FORMAT_LABEL[format]}
+      />
       <View style={{ gap: 8 }}>
         {fixtures.map((f, i) => (
-          <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+          <View
+            key={i}
+            className="flex-row items-center bg-gray-50 rounded-xl px-3 py-2.5"
+            style={{ gap: 10 }}
+          >
+            <TeamStatusIcon status={statusByName.get(f.teamA)} />
             <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{f.teamA}</Text>
-            <Text className="text-muted text-xs mx-2">vs</Text>
+            <View
+              className="items-center justify-center rounded-full bg-gray-200"
+              style={{ width: 32, height: 32 }}
+            >
+              <Text className="text-muted text-xs font-bold">VS</Text>
+            </View>
             <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>
               {f.teamB ?? "Bye"}
             </Text>
+            {f.teamB ? <TeamStatusIcon status={statusByName.get(f.teamB)} /> : <View style={{ width: 28 }} />}
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
           </View>
         ))}
       </View>
@@ -218,25 +282,32 @@ function MatchesPanel({
   if (!hasMatches) {
     if (!isHost) return null;
     return (
-      <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-        <Text className="text-ink font-semibold text-sm mb-1">Matches</Text>
+      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+        <CardHeader
+          icon="git-network-outline"
+          title="Matches"
+          subtitle={
+            canGenerate
+              ? "All teams are approved — generate the matchups"
+              : `Waiting on team approvals (${approvedTeams.length}/${requiredTeams || "—"})`
+          }
+        />
         {canGenerate ? (
-          <>
-            <Text className="text-muted text-xs mb-3">
-              All {requiredTeams} teams are approved — generate the matchups so you can start entering results.
-            </Text>
-            <Pressable
-              onPress={() => generateMatches.mutate({ format, teams: approvedTeams })}
-              disabled={generateMatches.isPending}
-              className="bg-primary rounded-lg py-2.5 items-center"
-            >
-              {generateMatches.isPending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-white text-xs font-semibold">Generate Matches</Text>
-              )}
-            </Pressable>
-          </>
+          <Pressable
+            onPress={() => generateMatches.mutate({ format, teams: approvedTeams })}
+            disabled={generateMatches.isPending}
+            className="flex-row items-center justify-center bg-primary rounded-full py-3"
+            style={{ gap: 8 }}
+          >
+            {generateMatches.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="git-network-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">Generate Matches</Text>
+              </>
+            )}
+          </Pressable>
         ) : (
           <Text className="text-muted text-xs">
             Matches will be available once all {requiredTeams || "—"} teams are approved ({approvedTeams.length}/
@@ -268,13 +339,8 @@ function MatchesPanel({
 
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-ink font-semibold text-sm">Matches</Text>
-        <View className="bg-indigo-50 px-2 py-0.5 rounded-full">
-          <Text className="text-indigo-700 text-xs font-medium">{TOURNAMENT_FORMAT_LABEL[format]}</Text>
-        </View>
-      </View>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader icon="git-network-outline" title="Matches" badge={TOURNAMENT_FORMAT_LABEL[format]} />
 
       {rounds.map((round, idx) => {
         const roundMatches = allMatches.filter((m) => m.round === round);
@@ -302,14 +368,18 @@ function MatchesPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
           disabled={generateNextRound.isPending}
-          className="bg-primary rounded-lg py-2.5 items-center mt-4"
+          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
+          style={{ gap: 8 }}
         >
           {generateNextRound.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white text-xs font-semibold">
-              Generate {knockoutRoundLabel(bracketWinners.length)} Matches
-            </Text>
+            <>
+              <Ionicons name="git-network-outline" size={16} color="white" />
+              <Text className="text-white text-sm font-bold">
+                Generate {knockoutRoundLabel(bracketWinners.length)} Matches
+              </Text>
+            </>
           )}
         </Pressable>
       )}
@@ -318,14 +388,18 @@ function MatchesPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: 2, teams: playoffTeams })}
           disabled={generateNextRound.isPending}
-          className="bg-primary rounded-lg py-2.5 items-center mt-4"
+          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
+          style={{ gap: 8 }}
         >
           {generateNextRound.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white text-xs font-semibold">
-              Generate {knockoutRoundLabel(playoffTeams.length)} Playoffs (Top {playoffTeams.length})
-            </Text>
+            <>
+              <Ionicons name="trophy-outline" size={16} color="white" />
+              <Text className="text-white text-sm font-bold">
+                Generate {knockoutRoundLabel(playoffTeams.length)} Playoffs (Top {playoffTeams.length})
+              </Text>
+            </>
           )}
         </Pressable>
       )}
@@ -352,8 +426,8 @@ function StandingsPanel({
   if (standings.length === 0 || standings.every((s) => s.played === 0)) return null;
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <Text className="text-ink font-semibold text-sm mb-3">{label}</Text>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader icon="stats-chart-outline" title={label} />
       <View className="flex-row items-center pb-2 border-b border-border">
         <Text className="text-muted text-xs font-semibold flex-1">Team</Text>
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>P</Text>
@@ -414,8 +488,8 @@ function GroupsPanel({
   };
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <Text className="text-ink font-semibold text-sm mb-3">Groups</Text>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader icon="people-outline" title="Groups" />
       {pools.map((pool) => {
         const teamsInPool = approvedTeams.filter((t) => t.pool_id === pool.id);
         return (
@@ -527,34 +601,37 @@ function PoolMatchesPanel({
   if (!hasMatches) {
     if (!isHost) return null;
     return (
-      <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-        <Text className="text-ink font-semibold text-sm mb-1">Matches</Text>
+      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+        <CardHeader
+          icon="git-network-outline"
+          title="Matches"
+          subtitle={canGenerate ? "Every approved team has a group — generate the group-stage matchups" : undefined}
+        />
         {canGenerate ? (
-          <>
-            <Text className="text-muted text-xs mb-3">
-              Every approved team has a group — generate the group-stage matchups.
-            </Text>
-            <Pressable
-              onPress={() =>
-                generatePoolMatches.mutate(
-                  pools.map((pool) => ({
-                    poolId: pool.id,
-                    teams: approvedTeams
-                      .filter((t) => t.pool_id === pool.id)
-                      .map((t) => ({ id: t.id, name: t.name })),
-                  }))
-                )
-              }
-              disabled={generatePoolMatches.isPending}
-              className="bg-primary rounded-lg py-2.5 items-center"
-            >
-              {generatePoolMatches.isPending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-white text-xs font-semibold">Generate Group Matches</Text>
-              )}
-            </Pressable>
-          </>
+          <Pressable
+            onPress={() =>
+              generatePoolMatches.mutate(
+                pools.map((pool) => ({
+                  poolId: pool.id,
+                  teams: approvedTeams
+                    .filter((t) => t.pool_id === pool.id)
+                    .map((t) => ({ id: t.id, name: t.name })),
+                }))
+              )
+            }
+            disabled={generatePoolMatches.isPending}
+            className="flex-row items-center justify-center bg-primary rounded-full py-3"
+            style={{ gap: 8 }}
+          >
+            {generatePoolMatches.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="git-network-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">Generate Group Matches</Text>
+              </>
+            )}
+          </Pressable>
         ) : (
           <Text className="text-muted text-xs">
             {approvedTeams.length < requiredTeams
@@ -570,13 +647,8 @@ function PoolMatchesPanel({
 
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-ink font-semibold text-sm">Matches</Text>
-        <View className="bg-indigo-50 px-2 py-0.5 rounded-full">
-          <Text className="text-indigo-700 text-xs font-medium">Pool</Text>
-        </View>
-      </View>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader icon="git-network-outline" title="Matches" badge="Pool" />
       {pools.map((pool, idx) => {
         const poolMatches = allMatches.filter((m) => m.pool_id === pool.id);
         if (poolMatches.length === 0) return null;
@@ -685,24 +757,28 @@ function PoolPlayoffPanel({
     if (qualifiers.length < 2) return null;
 
     return (
-      <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-        <Text className="text-ink font-semibold text-sm mb-1">Playoffs</Text>
-        <Text className="text-muted text-xs mb-3">
-          Every group is done — generate the {knockoutRoundLabel(qualifiers.length).toLowerCase()}
-          {qualifiers.length > 2 ? "s" : ""} from the group standings.
-        </Text>
+      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+        <CardHeader
+          icon="trophy-outline"
+          title="Playoffs"
+          subtitle={`Every group is done — generate the ${knockoutRoundLabel(qualifiers.length).toLowerCase()}${qualifiers.length > 2 ? "s" : ""} from the group standings`}
+        />
         {isHost && (
           <Pressable
             onPress={() => generateNextRound.mutate({ round: 2, teams: qualifiers })}
             disabled={generateNextRound.isPending}
-            className="bg-primary rounded-lg py-2.5 items-center"
+            className="flex-row items-center justify-center bg-primary rounded-full py-3"
+            style={{ gap: 8 }}
           >
             {generateNextRound.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white text-xs font-semibold">
-                Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
-              </Text>
+              <>
+                <Ionicons name="trophy-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">
+                  Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
+                </Text>
+              </>
             )}
           </Pressable>
         )}
@@ -718,8 +794,8 @@ function PoolPlayoffPanel({
   const canAdvanceBracket = bracketWinners !== null && bracketWinners.length > 1;
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
-      <Text className="text-ink font-semibold text-sm mb-2">Playoffs</Text>
+    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <CardHeader icon="trophy-outline" title="Playoffs" />
       {rounds.map((round, idx) => {
         const roundMatches = playoffMatches.filter((m) => m.round === round);
         return (
@@ -746,14 +822,18 @@ function PoolPlayoffPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
           disabled={generateNextRound.isPending}
-          className="bg-primary rounded-lg py-2.5 items-center mt-4"
+          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
+          style={{ gap: 8 }}
         >
           {generateNextRound.isPending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white text-xs font-semibold">
-              Generate {knockoutRoundLabel(bracketWinners.length)} Matches
-            </Text>
+            <>
+              <Ionicons name="git-network-outline" size={16} color="white" />
+              <Text className="text-white text-sm font-bold">
+                Generate {knockoutRoundLabel(bracketWinners.length)} Matches
+              </Text>
+            </>
           )}
         </Pressable>
       )}
@@ -789,6 +869,7 @@ export default function TournamentMatchesScreen() {
   }
 
   const isHost = game.creator_id === userId;
+  const sportIconInfo = game.sports?.name ? getSportIcon(game.sports.name) : null;
   // A team with just one joined player is shown by that player's name.
   const teams = (teamsData ?? []).map((t) => ({
     ...t,
@@ -893,15 +974,37 @@ export default function TournamentMatchesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-green-50">
-      <View
-        className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
-        style={{ paddingTop: insets.top + 16 }}
-      >
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="mr-3 p-1">
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+    <View className="flex-1" style={{ backgroundColor: colors.background, position: "relative" }}>
+      {/* Decorative sport watermark, behind everything on the page. */}
+      {sportIconInfo && (
+        <>
+          <MaterialCommunityIcons
+            name={sportIconInfo.icon}
+            size={220}
+            color={colors.primary}
+            style={{ position: "absolute", right: -50, top: -10, opacity: 0.1, transform: [{ rotate: "12deg" }] }}
+            pointerEvents="none"
+          />
+          <MaterialCommunityIcons
+            name={sportIconInfo.icon}
+            size={170}
+            color={colors.primary}
+            style={{ position: "absolute", right: 20, bottom: 90, opacity: 0.08, transform: [{ rotate: "-18deg" }] }}
+            pointerEvents="none"
+          />
+        </>
+      )}
+
+      <View className="flex-row items-center px-4" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 12 }}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+          className="items-center justify-center bg-white rounded-full"
+          style={{ width: 44, height: 44, ...cardShadow }}
+        >
+          <Ionicons name="arrow-back" size={20} color={colors.ink} />
         </Pressable>
-        <Text className="text-base font-bold text-ink flex-1" numberOfLines={1}>
+        <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 21 }} numberOfLines={1}>
           Matches · {game.title}
         </Text>
       </View>
@@ -962,7 +1065,7 @@ export default function TournamentMatchesScreen() {
                 preview is replaced by the persisted, result-entry version below —
                 so there's never a redundant/conflicting fixtures list on screen. */}
             {game.tournament_format && !hasMatches && (
-              <FixturesPanel format={game.tournament_format} teamNames={activeTeams.map((t) => t.name)} />
+              <FixturesPanel format={game.tournament_format} teams={activeTeams.map((t) => ({ name: t.name, status: t.status }))} />
             )}
             {game.tournament_format && (
               <MatchesPanel
