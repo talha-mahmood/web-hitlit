@@ -112,13 +112,13 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
       const sr = s.balls > 0 ? (s.runs / s.balls) * 100 : 0;
       return `
         <tr>
-          <td style="padding:6px 0;">${escapeHtml(name)}</td>
-          <td style="padding:6px 0; color:#6B7280;">${s.isOut ? escapeHtml(s.outDescription ?? "out") : "not out"}</td>
-          <td style="padding:6px 0; text-align:center;">${s.runs}</td>
-          <td style="padding:6px 0; text-align:center;">${s.balls}</td>
-          <td style="padding:6px 0; text-align:center;">${s.fours}</td>
-          <td style="padding:6px 0; text-align:center;">${s.sixes}</td>
-          <td style="padding:6px 0; text-align:center;">${sr.toFixed(1)}</td>
+          <td style="padding:7px 0; font-weight:700;">${escapeHtml(name)}</td>
+          <td style="padding:7px 0; color:#6B7280;">${s.isOut ? escapeHtml(s.outDescription ?? "out") : "not out"}</td>
+          <td style="padding:7px 0; text-align:center;">${s.runs}</td>
+          <td style="padding:7px 0; text-align:center;">${s.balls}</td>
+          <td style="padding:7px 0; text-align:center;">${s.fours}</td>
+          <td style="padding:7px 0; text-align:center;">${s.sixes}</td>
+          <td style="padding:7px 0; text-align:center;">${sr.toFixed(1)}</td>
         </tr>`;
     })
     .join("");
@@ -129,12 +129,12 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
       const econ = b.legalBalls > 0 ? (b.runsConceded / b.legalBalls) * 6 : 0;
       return `
         <tr>
-          <td style="padding:6px 0;">${escapeHtml(name)}</td>
-          <td style="padding:6px 0; text-align:center;">${formatOvers(b.legalBalls)}</td>
-          <td style="padding:6px 0; text-align:center;">${b.maidens}</td>
-          <td style="padding:6px 0; text-align:center;">${b.runsConceded}</td>
-          <td style="padding:6px 0; text-align:center;">${b.wickets}</td>
-          <td style="padding:6px 0; text-align:center;">${econ.toFixed(1)}</td>
+          <td style="padding:7px 0; font-weight:700;">${escapeHtml(name)}</td>
+          <td style="padding:7px 0; text-align:center;">${formatOvers(b.legalBalls)}</td>
+          <td style="padding:7px 0; text-align:center;">${b.maidens}</td>
+          <td style="padding:7px 0; text-align:center;">${b.runsConceded}</td>
+          <td style="padding:7px 0; text-align:center;">${b.wickets}</td>
+          <td style="padding:7px 0; text-align:center;">${econ.toFixed(1)}</td>
         </tr>`;
     })
     .join("");
@@ -153,14 +153,14 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
         </tr>
       </table>
       <table style="margin-top:10px;">
-        <tr style="color:#6B7280; font-size:11px; border-bottom:1px solid #D1D5DB;">
-          <td style="padding-bottom:4px;">${escapeHtml(teamName)}</td>
-          <td></td>
-          <td style="text-align:center;">R</td>
-          <td style="text-align:center;">B</td>
-          <td style="text-align:center;">4s</td>
-          <td style="text-align:center;">6s</td>
-          <td style="text-align:center;">SR</td>
+        <tr style="color:#0F8A8A; font-size:11px; font-weight:700;">
+          <td style="padding-bottom:5px; border-bottom:1px solid #D1D5DB;">${escapeHtml(teamName)}</td>
+          <td style="border-bottom:1px solid #D1D5DB;"></td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">R</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">B</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">4s</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">6s</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">SR</td>
         </tr>
         ${battingRows}
       </table>
@@ -172,13 +172,13 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
       ${
         bowlingRows
           ? `<table style="margin-top:10px;">
-        <tr style="color:#6B7280; font-size:11px; border-bottom:1px solid #D1D5DB;">
-          <td style="padding-bottom:4px;">Bowler</td>
-          <td style="text-align:center;">O</td>
-          <td style="text-align:center;">M</td>
-          <td style="text-align:center;">R</td>
-          <td style="text-align:center;">W</td>
-          <td style="text-align:center;">Eco</td>
+        <tr style="color:#0F8A8A; font-size:11px; font-weight:700;">
+          <td style="padding-bottom:5px; border-bottom:1px solid #D1D5DB;">Bowler</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">O</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">M</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">R</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">W</td>
+          <td style="text-align:center; border-bottom:1px solid #D1D5DB;">Eco</td>
         </tr>
         ${bowlingRows}
       </table>`
@@ -258,19 +258,19 @@ export function buildCricketMatchReportHtml(
         const bowl = topBowlers[i] ? state.bowlingStats[topBowlers[i]] : null;
         return `
           <tr>
-            <td style="padding:4px 0;">${bat ? `${escapeHtml(bat.name)} ${bat.runs}${bat.isOut ? "" : "*"}(${bat.balls})` : ""}</td>
-            <td style="padding:4px 0; text-align:right;">${bowl ? `${escapeHtml(bowl.name)} ${bowl.wickets}-${bowl.runsConceded}` : ""}</td>
+            <td style="padding:5px 0; color:#0F8A8A;">${bat ? `${escapeHtml(bat.name)} ${bat.runs}${bat.isOut ? "" : "*"}(${bat.balls})` : ""}</td>
+            <td style="padding:5px 0; text-align:right; color:#0F8A8A;">${bowl ? `${escapeHtml(bowl.name)} ${bowl.wickets}-${bowl.runsConceded}` : ""}</td>
           </tr>`;
       }).join("");
       return `
-        <div style="margin-bottom:10px;">
+        <div style="margin-bottom:14px;">
           <table>
             <tr>
-              <td style="font-weight:700;">${escapeHtml(teamName)}</td>
-              <td style="text-align:right; font-weight:700;">${state.runs}-${state.wickets} (${formatOvers(state.legalBalls)})</td>
+              <td style="font-weight:700; padding-bottom:6px; border-bottom:1px solid #D1D5DB;">${escapeHtml(teamName)}</td>
+              <td style="text-align:right; font-weight:700; padding-bottom:6px; border-bottom:1px solid #D1D5DB;">${state.runs}-${state.wickets} (${formatOvers(state.legalBalls)})</td>
             </tr>
           </table>
-          <table style="margin-top:4px;">${rows}</table>
+          <table style="margin-top:2px;">${rows}</table>
         </div>`;
     })
     .join("");
