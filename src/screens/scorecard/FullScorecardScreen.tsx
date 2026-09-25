@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -11,6 +11,9 @@ import { replayInnings, formatOvers, computeRunRate, type InningsState } from ".
 import { dayLabel } from "../../lib/badgeColors";
 import TeamCrest from "../../components/TeamCrest";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import { useProfileStore } from "../../store/profileStore";
+import { buildCricketMatchReportHtml } from "../../lib/matchReport/cricketReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
 
 type Route = RouteProp<ScorecardStackParamList, "FullScorecard">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FullScorecard">;
@@ -183,6 +186,24 @@ export default function FullScorecardScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useCricketMatch(params.matchId);
+  const profile = useProfileStore((s) => s.profile);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  const handleGenerateMatchReport = async () => {
+    if (!match) return;
+    setGeneratingReport(true);
+    try {
+      const html = buildCricketMatchReportHtml(match, {
+        organiserName: profile?.full_name ?? "—",
+        appName: "PlayOye",
+      });
+      await generateAndShareMatchReport(html);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const innings = useMemo(() => {
     if (!match) return [];
@@ -296,6 +317,24 @@ export default function FullScorecardScreen() {
               />
             );
           })
+        )}
+
+        {innings.length > 0 && (
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5"
+            style={{ gap: 8 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
         )}
       </ScrollView>
     </View>

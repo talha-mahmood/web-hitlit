@@ -26,7 +26,6 @@ import {
   type WicketType,
 } from "../../lib/cricketScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
-
 type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 

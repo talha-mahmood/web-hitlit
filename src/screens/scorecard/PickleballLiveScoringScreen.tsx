@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -27,6 +27,9 @@ import TeamCrest from "../../components/TeamCrest";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import { useProfileStore } from "../../store/profileStore";
+import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
 
 type Route = RouteProp<ScorecardStackParamList, "PickleballLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PickleballLiveScoring">;
@@ -93,6 +96,8 @@ export default function PickleballLiveScoringScreen() {
   const deleteLastRally = useDeleteLastPickleballRally(params.matchId);
   const completeMatch = useCompletePickleballMatch();
   const syncTournamentResult = useSyncScorecardMatchResult();
+  const profile = useProfileStore((s) => s.profile);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const rallies = useMemo(() => {
     if (!match) return [];
@@ -178,6 +183,37 @@ export default function PickleballLiveScoringScreen() {
   const currentGame = state.games[state.games.length - 1];
   const pickleballBgImage = getSportImage("pickleball");
 
+  const handleGenerateMatchReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const html = buildGenericMatchReportHtml({
+        sportLabel: "Pickleball",
+        teamAName: match.team_a_name,
+        teamBName: match.team_b_name,
+        finalScoreA: `${state.gamesWonA} games`,
+        finalScoreB: `${state.gamesWonB} games`,
+        resultSummary: match.result_summary,
+        venue: match.venue,
+        createdAt: match.created_at,
+        playMode: isDoubles ? "Doubles" : "Singles",
+        formatLabel: `Best of ${match.games_to_win * 2 - 1} games, ${match.points_to_win} points (${match.scoring_mode === "RALLY" ? "Rally" : "Side-out"} scoring)`,
+        organiserName: profile?.full_name ?? "—",
+        breakdownTitle: "Game-by-Game",
+        breakdown: state.games.map((game, i) => ({
+          label: `Game ${i + 1}`,
+          scoreA: String(game.scoreA),
+          scoreB: String(game.scoreB),
+        })),
+        appName: "PlayOye",
+      });
+      await generateAndShareMatchReport(html);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
     return (
@@ -258,6 +294,22 @@ export default function PickleballLiveScoringScreen() {
               </View>
             ))}
           </View>
+
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5 mb-3"
+            style={{ gap: 8 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
 
           <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
             <LinearGradient

@@ -37,6 +37,9 @@ import {
   type GoalEvent,
 } from "../../lib/footballScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import { useProfileStore } from "../../store/profileStore";
+import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
 
 type Route = RouteProp<ScorecardStackParamList, "FootballLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballLiveScoring">;
@@ -125,6 +128,8 @@ export default function FootballLiveScoringScreen() {
   const startPenalties = useStartPenalties(params.matchId);
   const completeMatch = useCompleteFootballMatch(params.matchId);
   const syncTournamentResult = useSyncScorecardMatchResult();
+  const profile = useProfileStore((s) => s.profile);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const [now, setNow] = useState(Date.now());
   const ringPlayer = useAudioPlayer(require("../../../assets/sounds/half-time-ring.wav"));
@@ -383,6 +388,34 @@ export default function FootballLiveScoringScreen() {
       ...(scoreSummary.afterExtraTime ? [{ label: "EXTRA TIME", a: scoreSummary.afterExtraTime.a, b: scoreSummary.afterExtraTime.b }] : []),
       ...(shootout ? [{ label: "PENALTIES", a: shootout.scoreA, b: shootout.scoreB }] : []),
     ];
+
+    const handleGenerateMatchReport = async () => {
+      setGeneratingReport(true);
+      try {
+        const html = buildGenericMatchReportHtml({
+          sportLabel: "Football",
+          teamAName: match.team_a_name,
+          teamBName: match.team_b_name,
+          finalScoreA: `${scoreSummary.current.a} goals`,
+          finalScoreB: `${scoreSummary.current.b} goals`,
+          resultSummary: match.result_summary,
+          venue: match.venue,
+          createdAt: match.created_at,
+          formatLabel: `${match.half_duration_minutes}-min halves`,
+          organiserName: profile?.full_name ?? "—",
+          breakdownTitle: "Period-by-Period",
+          breakdown: periodRows.map((row) => ({ label: row.label, scoreA: String(row.a), scoreB: String(row.b) })),
+          eventsTitle: "Goal History",
+          events: goals.map((g) => ({ time: g.minuteLabel, team: g.team, label: "Goal" })),
+          appName: "PlayOye",
+        });
+        await generateAndShareMatchReport(html);
+      } catch (err) {
+        Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+      } finally {
+        setGeneratingReport(false);
+      }
+    };
     return (
       <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
@@ -461,6 +494,22 @@ export default function FootballLiveScoringScreen() {
           </View>
 
           <GoalHistoryCard goals={goals} teamAName={match.team_a_name} teamBName={match.team_b_name} />
+
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5 mb-3"
+            style={{ gap: 8 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
 
           <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
             <LinearGradient

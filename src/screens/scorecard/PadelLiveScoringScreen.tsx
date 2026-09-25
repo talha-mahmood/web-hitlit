@@ -15,6 +15,9 @@ import TeamCrest from "../../components/TeamCrest";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import { useProfileStore } from "../../store/profileStore";
+import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
 
 type Route = RouteProp<ScorecardStackParamList, "PadelLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelLiveScoring">;
@@ -83,6 +86,8 @@ export default function PadelLiveScoringScreen() {
   const completeMatch = useCompletePadelMatch();
   const syncTournamentResult = useSyncScorecardMatchResult();
   const [receivingSide, setReceivingSide] = useState<"RIGHT" | "LEFT">("RIGHT");
+  const profile = useProfileStore((s) => s.profile);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const points = useMemo(() => {
     if (!match) return [];
@@ -186,6 +191,37 @@ export default function PadelLiveScoringScreen() {
   const plainScoreParts = plainScoreMatch ? ([plainScoreMatch[1], plainScoreMatch[2]] as const) : null;
   const padelBgImage = getSportImage("padel");
 
+  const handleGenerateMatchReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const html = buildGenericMatchReportHtml({
+        sportLabel: "Padel",
+        teamAName: match.team_a_name,
+        teamBName: match.team_b_name,
+        finalScoreA: `${state.setsWonA} sets`,
+        finalScoreB: `${state.setsWonB} sets`,
+        resultSummary: match.result_summary,
+        venue: match.venue,
+        createdAt: match.created_at,
+        playMode: match.play_mode === "DOUBLES" ? "Doubles" : "Singles",
+        formatLabel: `${match.format === "BEST_OF_3" ? "Best of 3" : match.format} sets`,
+        organiserName: profile?.full_name ?? "—",
+        breakdownTitle: "Set-by-Set",
+        breakdown: state.sets.map((set, i) => ({
+          label: set.isMatchTiebreak ? "Match Tiebreak" : `Set ${i + 1}`,
+          scoreA: formatSetScore(set, "A"),
+          scoreB: formatSetScore(set, "B"),
+        })),
+        appName: "PlayOye",
+      });
+      await generateAndShareMatchReport(html);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
     return (
@@ -268,6 +304,22 @@ export default function PadelLiveScoringScreen() {
               </View>
             ))}
           </View>
+
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5 mb-3"
+            style={{ gap: 8 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
 
           <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
             <LinearGradient

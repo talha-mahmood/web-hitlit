@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -15,6 +15,9 @@ import TeamCrest from "../../components/TeamCrest";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import { useProfileStore } from "../../store/profileStore";
+import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
 
 type Route = RouteProp<ScorecardStackParamList, "TennisLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisLiveScoring">;
@@ -89,6 +92,8 @@ export default function TennisLiveScoringScreen() {
   const deleteLastPoint = useDeleteLastTennisPoint(params.matchId);
   const completeMatch = useCompleteTennisMatch();
   const syncTournamentResult = useSyncScorecardMatchResult();
+  const profile = useProfileStore((s) => s.profile);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const points = useMemo(() => {
     if (!match) return [];
@@ -179,6 +184,37 @@ export default function TennisLiveScoringScreen() {
   const plainScoreParts = plainScoreMatch ? ([plainScoreMatch[1], plainScoreMatch[2]] as const) : null;
   const tennisBgImage = getSportImage("tennis");
 
+  const handleGenerateMatchReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const html = buildGenericMatchReportHtml({
+        sportLabel: "Tennis",
+        teamAName: match.player_a_name,
+        teamBName: match.player_b_name,
+        finalScoreA: `${state.setsWonA} sets`,
+        finalScoreB: `${state.setsWonB} sets`,
+        resultSummary: match.result_summary,
+        venue: match.venue,
+        createdAt: match.created_at,
+        playMode: match.play_mode === "DOUBLES" ? "Doubles" : "Singles",
+        formatLabel: `${match.format === "BEST_OF_3" ? "Best of 3" : match.format} sets`,
+        organiserName: profile?.full_name ?? "—",
+        breakdownTitle: "Set-by-Set",
+        breakdown: state.sets.map((set, i) => ({
+          label: `Set ${i + 1}`,
+          scoreA: formatSetScore(set, "A"),
+          scoreB: formatSetScore(set, "B"),
+        })),
+        appName: "PlayOye",
+      });
+      await generateAndShareMatchReport(html);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.player_a_name : match.player_b_name;
     return (
@@ -259,6 +295,22 @@ export default function TennisLiveScoringScreen() {
               </View>
             ))}
           </View>
+
+          <Pressable
+            onPress={handleGenerateMatchReport}
+            disabled={generatingReport}
+            className="flex-row items-center justify-center border border-primary rounded-2xl py-3.5 mb-3"
+            style={{ gap: 8 }}
+          >
+            {generatingReport ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                <Text className="text-primary font-bold text-base">Generate Match Report</Text>
+              </>
+            )}
+          </Pressable>
 
           <Pressable onPress={() => leaveScorecard()} style={primaryButtonShadow}>
             <LinearGradient

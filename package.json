@@ -26,6 +26,7 @@
     "expo-linking": "~56.0.16",
     "expo-location": "~56.0.23",
     "expo-notifications": "~56.0.25",
+    "expo-print": "~56.0.4",
     "expo-secure-store": "~56.0.4",
     "expo-sharing": "~56.0.26",
     "expo-status-bar": "~56.0.4",
