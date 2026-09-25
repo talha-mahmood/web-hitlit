@@ -665,7 +665,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
                   gap: 6,
                 }}
               >
-                <Ionicons name="sparkles" size={14} color="white" />
                 <Ionicons name="person-add-outline" size={16} color="white" />
                 <Text className="text-white text-sm font-bold">Invite a Squad</Text>
               </LinearGradient>
