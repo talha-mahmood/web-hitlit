@@ -153,6 +153,18 @@ export async function leaveTeam(teamId: string, userId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// Host-only: pulls one specific member off their team (mirrors a squad
+// owner's "remove member") — allowed under the same pre-venue-booked
+// window as a member leaving on their own (see enforce_team_roster_rules).
+export async function removeTeamMember(memberId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_team_members")
+    .update({ status: "REMOVED" })
+    .eq("id", memberId)
+    .eq("status", "JOINED");
+  if (error) throw new Error(error.message);
+}
+
 // A team's roster fills up automatically via the auto_approve_full_team DB
 // trigger: if the host filled it, it's approved immediately; otherwise it
 // lands in PENDING_HOST_APPROVAL for the host to approve/reject below. This

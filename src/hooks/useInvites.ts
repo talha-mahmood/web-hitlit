@@ -146,3 +146,28 @@ export function useDeclineTeamInvite() {
     },
   });
 }
+
+// Same "acted on from Notifications, not a specific squad screen" shape as
+// useAcceptTeamInvite/useDeclineTeamInvite above — used for a squad_invite
+// notification's inline Approve/Decline.
+export function useAcceptSquadInviteFromNotification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) => acceptSquadInvite(inviteId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["squads"] });
+      qc.invalidateQueries({ queryKey: ["squadInvite"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}
+
+export function useDeclineSquadInviteFromNotification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) => declineSquadInvite(inviteId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}

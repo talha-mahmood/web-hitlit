@@ -14,7 +14,12 @@ import {
   useNotifications,
   useDeleteNotification,
 } from "../../hooks/useNotifications";
-import { useAcceptTeamInvite, useDeclineTeamInvite } from "../../hooks/useInvites";
+import {
+  useAcceptTeamInvite,
+  useDeclineTeamInvite,
+  useAcceptSquadInviteFromNotification,
+  useDeclineSquadInviteFromNotification,
+} from "../../hooks/useInvites";
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -84,15 +89,15 @@ function NotificationCard({
   notification,
   onPress,
   onDelete,
-  teamInviteActions,
+  inviteActions,
 }: {
   notification: NotificationRow;
   onPress: () => void;
   onDelete: () => void;
-  // Only set for a still-pending team_invite — the one notification type
-  // that's acted on right here instead of just navigating away, so the
-  // recipient can approve/decline a specific team without leaving this list.
-  teamInviteActions?: { onApprove: () => void; onDecline: () => void; isResponding: boolean };
+  // Only set for a still-pending team_invite/squad_invite — the notification
+  // types that are acted on right here instead of just navigating away, so
+  // the recipient can approve/decline without leaving this list.
+  inviteActions?: { onApprove: () => void; onDecline: () => void; isResponding: boolean };
 }) {
   const meta = TYPE_META[notification.type ?? ""] ?? DEFAULT_META;
   const unread = !notification.is_read;
@@ -124,21 +129,21 @@ function NotificationCard({
           </Text>
         )}
         <Text className="text-muted text-xs mt-1.5">{timeAgo(notification.created_at)}</Text>
-        {teamInviteActions && (
+        {inviteActions && (
           <View className="flex-row mt-3" style={{ gap: 8 }}>
             <Pressable
-              onPress={teamInviteActions.onDecline}
-              disabled={teamInviteActions.isResponding}
+              onPress={inviteActions.onDecline}
+              disabled={inviteActions.isResponding}
               className="flex-1 border border-danger rounded-lg py-2 items-center"
             >
               <Text className="text-danger text-xs font-semibold">Decline</Text>
             </Pressable>
             <Pressable
-              onPress={teamInviteActions.onApprove}
-              disabled={teamInviteActions.isResponding}
+              onPress={inviteActions.onApprove}
+              disabled={inviteActions.isResponding}
               className="flex-1 bg-primary rounded-lg py-2 items-center"
             >
-              {teamInviteActions.isResponding ? (
+              {inviteActions.isResponding ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-white text-xs font-semibold">Approve</Text>
@@ -165,7 +170,9 @@ export default function NotificationsScreen() {
   const deleteNotif = useDeleteNotification(userId);
   const acceptTeamInvite = useAcceptTeamInvite();
   const declineTeamInvite = useDeclineTeamInvite();
-  // Session-only — once a team invite is acted on, its Approve/Decline pair
+  const acceptSquadInvite = useAcceptSquadInviteFromNotification();
+  const declineSquadInvite = useDeclineSquadInviteFromNotification();
+  // Session-only — once an invite is acted on, its Approve/Decline pair
   // hides in favor of the notification's own text, without needing to alter
   // the notification row itself (it's just a plain info feed otherwise).
   const [respondedInviteIds, setRespondedInviteIds] = useState<Set<string>>(new Set());
@@ -195,8 +202,11 @@ export default function NotificationsScreen() {
     ]);
   };
 
-  const handleApproveTeamInvite = (n: NotificationRow, inviteId: string) => {
-    acceptTeamInvite.mutate(inviteId, {
+  // Both team_invite and squad_invite notifications get the same inline
+  // Approve/Decline treatment — just backed by a different pair of mutations.
+  const handleApproveInvite = (n: NotificationRow, inviteId: string) => {
+    const accept = n.type === "squad_invite" ? acceptSquadInvite : acceptTeamInvite;
+    accept.mutate(inviteId, {
       onSuccess: () => {
         setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
         if (!n.is_read) markRead.mutate(n.id);
@@ -205,8 +215,9 @@ export default function NotificationsScreen() {
     });
   };
 
-  const handleDeclineTeamInvite = (n: NotificationRow, inviteId: string) => {
-    declineTeamInvite.mutate(inviteId, {
+  const handleDeclineInvite = (n: NotificationRow, inviteId: string) => {
+    const decline = n.type === "squad_invite" ? declineSquadInvite : declineTeamInvite;
+    decline.mutate(inviteId, {
       onSuccess: () => {
         setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
         if (!n.is_read) markRead.mutate(n.id);
@@ -251,21 +262,27 @@ export default function NotificationsScreen() {
           }
           renderItem={({ item }) => {
             const { inviteId } = resolveTarget(item);
-            const isPendingTeamInvite =
-              item.type === "team_invite" && !!inviteId && !respondedInviteIds.has(inviteId);
+            const isPendingInvite =
+              (item.type === "team_invite" || item.type === "squad_invite") &&
+              !!inviteId &&
+              !respondedInviteIds.has(inviteId);
+            const isResponding =
+              !!inviteId &&
+              ((acceptTeamInvite.isPending && acceptTeamInvite.variables === inviteId) ||
+                (declineTeamInvite.isPending && declineTeamInvite.variables === inviteId) ||
+                (acceptSquadInvite.isPending && acceptSquadInvite.variables === inviteId) ||
+                (declineSquadInvite.isPending && declineSquadInvite.variables === inviteId));
             return (
               <NotificationCard
                 notification={item}
                 onPress={() => handlePress(item)}
                 onDelete={() => handleDelete(item)}
-                teamInviteActions={
-                  isPendingTeamInvite
+                inviteActions={
+                  isPendingInvite
                     ? {
-                        onApprove: () => handleApproveTeamInvite(item, inviteId!),
-                        onDecline: () => handleDeclineTeamInvite(item, inviteId!),
-                        isResponding:
-                          (acceptTeamInvite.isPending && acceptTeamInvite.variables === inviteId) ||
-                          (declineTeamInvite.isPending && declineTeamInvite.variables === inviteId),
+                        onApprove: () => handleApproveInvite(item, inviteId!),
+                        onDecline: () => handleDeclineInvite(item, inviteId!),
+                        isResponding,
                       }
                     : undefined
                 }

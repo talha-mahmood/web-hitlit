@@ -107,8 +107,8 @@ export function useDeleteFootballMatch() {
 export function useAddFootballGoal(matchId: string) {
   return useFootballMatchMutation(
     matchId,
-    (args: { seq: number; team: Team; phase: Phase; minuteLabel: string }) =>
-      addFootballGoal(matchId, args.seq, args.team, args.phase, args.minuteLabel)
+    (args: { seq: number; team: Team; phase: Phase; minuteLabel: string; scorerName?: string | null }) =>
+      addFootballGoal(matchId, args.seq, args.team, args.phase, args.minuteLabel, args.scorerName)
   );
 }
 

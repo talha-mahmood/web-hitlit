@@ -28,10 +28,11 @@ export type GameListItem = GameRow & {
     name: string;
     status: TournamentTeamRow["status"];
     sort_order: number | null;
-    // Only status is needed here (to count JOINED members per team for the
-    // "N players left" readout on the list card) — full member profiles
-    // aren't needed until the detail screen.
-    tournament_team_members: { status: string }[];
+    // status (to count JOINED members per team for the "N players left"
+    // readout, and which teams are still open) + user_id (so the card can
+    // tell whether the current viewer is already on one of these teams) —
+    // full member profiles aren't needed until the detail screen.
+    tournament_team_members: { status: string; user_id: string }[];
   }[];
 };
 
@@ -101,7 +102,7 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), venues(id, name, city, address, latitude, longitude), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order, tournament_team_members(status))";
+  "*, sports(id, name), venues(id, name, city, address, latitude, longitude), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order, tournament_team_members(status, user_id))";
 
 const DETAIL_SELECT =
   "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";

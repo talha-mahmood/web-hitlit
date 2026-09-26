@@ -83,6 +83,7 @@ export type GoalEvent = {
   team: Team;
   phase: Phase; // which phase it was scored in — determines which score bucket(s) it counts toward
   minuteLabel: string; // e.g. "23'" or "45+2'", computed once at the moment it was scored
+  scorerName?: string | null; // which team player scored it, if one was picked
 };
 
 export type PenaltyKick = {

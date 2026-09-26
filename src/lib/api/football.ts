@@ -50,6 +50,8 @@ export async function createFootballMatch(params: {
   userId: string;
   teamAName: string;
   teamBName: string;
+  teamAPlayers: string[];
+  teamBPlayers: string[];
   requiresWinner: boolean;
   halfDurationMinutes: number;
   extraTimePeriodMinutes: number;
@@ -62,6 +64,8 @@ export async function createFootballMatch(params: {
       user_id: params.userId,
       team_a_name: params.teamAName,
       team_b_name: params.teamBName,
+      team_a_players: params.teamAPlayers,
+      team_b_players: params.teamBPlayers,
       requires_winner: params.requiresWinner,
       half_duration_minutes: params.halfDurationMinutes,
       extra_time_period_minutes: params.extraTimePeriodMinutes,
@@ -187,10 +191,17 @@ export async function deleteFootballMatch(matchId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function addFootballGoal(matchId: string, seq: number, team: Team, phase: Phase, minuteLabel: string): Promise<void> {
+export async function addFootballGoal(
+  matchId: string,
+  seq: number,
+  team: Team,
+  phase: Phase,
+  minuteLabel: string,
+  scorerName?: string | null
+): Promise<void> {
   const { error } = await supabase
     .from("football_goals")
-    .insert({ match_id: matchId, seq, team, phase, minute_label: minuteLabel });
+    .insert({ match_id: matchId, seq, team, phase, minute_label: minuteLabel, scorer_name: scorerName ?? null });
   if (error) throw new Error(error.message);
 }
 
@@ -210,7 +221,13 @@ export async function deleteLastPenaltyKick(matchId: string, seq: number): Promi
 }
 
 export function goalRowToEvent(row: FootballGoalRow): GoalEvent {
-  return { seq: row.seq, team: row.team as Team, phase: row.phase as Phase, minuteLabel: row.minute_label };
+  return {
+    seq: row.seq,
+    team: row.team as Team,
+    phase: row.phase as Phase,
+    minuteLabel: row.minute_label,
+    scorerName: row.scorer_name,
+  };
 }
 
 export function penaltyKickRowToEvent(row: FootballPenaltyKickRow): PenaltyKick {

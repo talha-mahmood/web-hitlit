@@ -757,7 +757,7 @@ export default function SquadDetailScreen() {
                   </View>
                 )
               )}
-              {isOwner && (
+              {(isOwner || hasJoined) && (
                 <Pressable onPress={() => setShowInviteModal(true)} style={primaryButtonShadow}>
                   <LinearGradient
                     colors={["#0E5C34", "#1D9254"]}

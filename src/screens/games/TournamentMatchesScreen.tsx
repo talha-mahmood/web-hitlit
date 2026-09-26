@@ -269,7 +269,6 @@ function MatchRow({
         </View>
         <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
         {match.team_b ? <TeamStatusIcon status="APPROVED" /> : <View style={{ width: 28 }} />}
-        {!isReady && <Ionicons name="chevron-forward" size={16} color={colors.muted} />}
       </View>
       {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       <LinkedMatchScoreDetails match={match} />

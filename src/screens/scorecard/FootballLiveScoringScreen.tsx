@@ -8,6 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import TeamCrest from "../../components/TeamCrest";
+import SelectMatchPlayerModal from "../../components/SelectMatchPlayerModal";
 import {
   useFootballMatch,
   useAddFootballGoal,
@@ -61,8 +62,15 @@ const PHASE_LABEL: Partial<Record<Phase, string>> = {
 // Timeline-style goal list — minute, a colored dot connected to the next
 // one, a team-colored ball badge, and the team name. Shared between the
 // live-scoring view and the Match Complete summary.
+// Fixed-height once there are enough goals to need it — otherwise the list
+// would keep growing and push the scoring buttons further down the page
+// with every goal.
+const GOAL_HISTORY_ROW_HEIGHT = 62;
+const GOAL_HISTORY_MAX_VISIBLE_ROWS = 4;
+
 function GoalHistoryCard({ goals, teamAName, teamBName }: { goals: GoalEvent[]; teamAName: string; teamBName: string }) {
   if (goals.length === 0) return null;
+  const scrollable = goals.length > GOAL_HISTORY_MAX_VISIBLE_ROWS;
   return (
     <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
       <View
@@ -77,33 +85,40 @@ function GoalHistoryCard({ goals, teamAName, teamBName }: { goals: GoalEvent[]; 
         </View>
         <Text className="text-ink font-extrabold text-sm" style={{ letterSpacing: 0.5 }}>GOAL HISTORY</Text>
       </View>
-      {goals.map((g, i) => {
-        const teamColor = g.team === "A" ? colors.primary : "#1D4ED8";
-        const teamBg = g.team === "A" ? colors.primaryLight : "#DBEAFE";
-        return (
-          <View key={g.seq} className="flex-row items-start" style={{ paddingVertical: 8 }}>
-            <Text className="text-muted text-xs font-semibold" style={{ width: 44, marginTop: 8 }}>
-              {g.minuteLabel}
-            </Text>
-            <View className="items-center" style={{ width: 12, marginTop: 8 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: teamColor }} />
-              {i < goals.length - 1 && <View style={{ width: 1, height: 26, backgroundColor: colors.border, marginTop: 4 }} />}
-            </View>
-            <View
-              className="items-center justify-center rounded-full"
-              style={{ width: 30, height: 30, backgroundColor: teamBg, marginLeft: 8 }}
-            >
-              <Ionicons name="football" size={14} color={teamColor} />
-            </View>
-            <View className="flex-1 ml-2">
-              <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-                {g.team === "A" ? teamAName : teamBName}
+      <ScrollView
+        style={scrollable ? { maxHeight: GOAL_HISTORY_ROW_HEIGHT * GOAL_HISTORY_MAX_VISIBLE_ROWS } : undefined}
+        scrollEnabled={scrollable}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={scrollable}
+      >
+        {goals.map((g, i) => {
+          const teamColor = g.team === "A" ? colors.primary : "#1D4ED8";
+          const teamBg = g.team === "A" ? colors.primaryLight : "#DBEAFE";
+          return (
+            <View key={g.seq} className="flex-row items-start" style={{ paddingVertical: 8 }}>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 44, marginTop: 8 }}>
+                {g.minuteLabel}
               </Text>
-              <Text className="text-muted text-xs">Goal</Text>
+              <View className="items-center" style={{ width: 12, marginTop: 8 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: teamColor }} />
+                {i < goals.length - 1 && <View style={{ width: 1, height: 26, backgroundColor: colors.border, marginTop: 4 }} />}
+              </View>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 30, height: 30, backgroundColor: teamBg, marginLeft: 8 }}
+              >
+                <Ionicons name="football" size={14} color={teamColor} />
+              </View>
+              <View className="flex-1 ml-2">
+                <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                  {g.team === "A" ? teamAName : teamBName}
+                </Text>
+                <Text className="text-muted text-xs" numberOfLines={1}>{g.scorerName || "Goal"}</Text>
+              </View>
             </View>
-          </View>
-        );
-      })}
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
@@ -130,6 +145,11 @@ export default function FootballLiveScoringScreen() {
   const syncTournamentResult = useSyncScorecardMatchResult();
   const profile = useProfileStore((s) => s.profile);
   const [generatingReport, setGeneratingReport] = useState(false);
+  // Which team's "Select a Player" sheet is open, if any — declared up here
+  // (not down by handleGoalTap) so it's never skipped by the loading guard's
+  // early return below, which would otherwise change the hook count between
+  // renders.
+  const [goalPickerTeam, setGoalPickerTeam] = useState<Team | null>(null);
 
   const [now, setNow] = useState(Date.now());
   const ringPlayer = useAudioPlayer(require("../../../assets/sounds/half-time-ring.wav"));
@@ -290,14 +310,33 @@ export default function FootballLiveScoringScreen() {
     }
   };
 
-  const handleGoal = (team: Team) => {
+  const handleGoal = (team: Team, scorerName?: string | null) => {
     if (!isRunning || isPaused || isRinging) return;
     const seq = goals.length + 1;
     const minuteLabel = formatGoalMinuteLabel(elapsedSeconds);
     addGoal.mutate(
-      { seq, team, phase, minuteLabel },
+      { seq, team, phase, minuteLabel, scorerName },
       { onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not record goal.")) }
     );
+  };
+
+  // Tapping a team's goal button opens "Select a Player" when that team has
+  // players configured (see FootballNewMatchScreen's Add Players field) —
+  // otherwise records the goal straight away, same as before that field
+  // existed, so older/player-less matches keep working exactly as they did.
+  const handleGoalTap = (team: Team) => {
+    if (!isRunning || isPaused || isRinging) return;
+    const players = team === "A" ? match.team_a_players : match.team_b_players;
+    if (players.length > 0) {
+      setGoalPickerTeam(team);
+    } else {
+      handleGoal(team, null);
+    }
+  };
+  const handleSelectGoalScorer = (playerName: string) => {
+    if (!goalPickerTeam) return;
+    handleGoal(goalPickerTeam, playerName);
+    setGoalPickerTeam(null);
   };
 
   const handleUndo = () => {
@@ -406,7 +445,7 @@ export default function FootballLiveScoringScreen() {
           breakdownTitle: "Period-by-Period",
           breakdown: periodRows.map((row) => ({ label: row.label, scoreA: String(row.a), scoreB: String(row.b) })),
           eventsTitle: "Goal History",
-          events: goals.map((g) => ({ time: g.minuteLabel, team: g.team, label: "Goal" })),
+          events: goals.map((g) => ({ time: g.minuteLabel, team: g.team, label: g.scorerName ? `Goal — ${g.scorerName}` : "Goal" })),
           appName: "PlayOye",
         });
         await generateAndShareMatchReport(html);
@@ -645,7 +684,7 @@ export default function FootballLiveScoringScreen() {
               pointerEvents={addGoal.isPending || isPaused || isRinging ? "none" : "auto"}
               style={{ opacity: addGoal.isPending || isPaused || isRinging ? 0.5 : 1, gap: 10 }}
             >
-              <Pressable onPress={() => handleGoal("A")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
+              <Pressable onPress={() => handleGoalTap("A")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
                 <LinearGradient
                   colors={[colors.primary, colors.primaryDark]}
                   start={{ x: 0, y: 0 }}
@@ -661,7 +700,7 @@ export default function FootballLiveScoringScreen() {
                   <Ionicons name="chevron-forward" size={20} color="white" />
                 </LinearGradient>
               </Pressable>
-              <Pressable onPress={() => handleGoal("B")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
+              <Pressable onPress={() => handleGoalTap("B")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
                 <LinearGradient
                   colors={["#2563EB", "#1D4ED8"]}
                   start={{ x: 0, y: 0 }}
@@ -822,6 +861,14 @@ export default function FootballLiveScoringScreen() {
           </>
         )}
       </ScrollView>
+
+      <SelectMatchPlayerModal
+        visible={!!goalPickerTeam}
+        onClose={() => setGoalPickerTeam(null)}
+        teamName={goalPickerTeam === "A" ? match.team_a_name : match.team_b_name}
+        players={goalPickerTeam === "A" ? match.team_a_players : goalPickerTeam === "B" ? match.team_b_players : []}
+        onSelect={handleSelectGoalScorer}
+      />
     </View>
   );
 }

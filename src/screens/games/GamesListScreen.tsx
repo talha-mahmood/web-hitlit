@@ -5,8 +5,10 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
+import { useRequestToJoinTeam } from "../../hooks/useTournamentTeams";
 import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
 import SelectSportModal from "../../components/SelectSportModal";
@@ -14,6 +16,7 @@ import SelectDistanceModal from "../../components/SelectDistanceModal";
 import SelectLocationModal from "../../components/SelectLocationModal";
 import { SPORT_ICON_BADGE_SIZE } from "../../components/SportsBySportSection";
 import JoinRequestModal from "../../components/JoinRequestModal";
+import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -70,15 +73,16 @@ function GameCard({
   game,
   onPress,
   onJoinPress,
+  onTeamJoinPress,
   currentUserId,
   index,
 }: {
   game: GameListItem;
   onPress: () => void;
   // Regular games only — opens the join-request modal right from the card.
-  // Tournaments have no single "join" action (you pick a team on the detail
-  // screen), so their card CTA just navigates via `onPress` instead.
   onJoinPress: () => void;
+  // Team-based games/tournaments — opens the "pick a team" sheet instead.
+  onTeamJoinPress: () => void;
   currentUserId?: string;
   index: number;
 }) {
@@ -88,7 +92,13 @@ function GameCard({
   // regular games that still use the flat game_players join list.
   const isTeamBased = game.number_of_teams != null;
   const joined = game.game_players.filter((p) => p.status === "JOINED");
-  const hasJoined = !isTeamBased && game.game_players.some((p) => p.user_id === currentUserId && p.status === "JOINED");
+  const hasJoinedTeam =
+    isTeamBased &&
+    !!currentUserId &&
+    game.tournament_teams.some(
+      (t) => t.status !== "REJECTED" && t.tournament_team_members.some((m) => m.user_id === currentUserId && m.status === "JOINED")
+    );
+  const hasJoined = isTeamBased ? hasJoinedTeam : game.game_players.some((p) => p.user_id === currentUserId && p.status === "JOINED");
   const hasRequested = !isTeamBased && game.game_players.some((p) => p.user_id === currentUserId && p.status === "PENDING");
   // Only teams the host has actually approved count toward the roster — a
   // team that's still forming or awaiting approval hasn't secured a slot
@@ -183,7 +193,10 @@ function GameCard({
               </View>
               <View className="flex-row items-center" style={{ gap: 6 }}>
                 {!isMyGame && !isFull && (
-                  <Bouncy onPress={isTeamBased ? onPress : onJoinPress} scaleTo={0.94}>
+                  <Bouncy
+                    onPress={isTeamBased ? (hasJoined ? onPress : onTeamJoinPress) : onJoinPress}
+                    scaleTo={0.94}
+                  >
                     {hasJoined ? (
                       <View
                         className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
@@ -434,6 +447,40 @@ export default function GamesListScreen() {
   // this tracks which regular game (if any) it's currently open for.
   const [joinTargetGame, setJoinTargetGame] = useState<GameListItem | null>(null);
   const joinGame = useJoinGame();
+  // Same shared-instance pattern for team-based games/tournaments — picking
+  // a team here joins it directly (see requestToJoinTeam's rejoin-safe
+  // upsert), no host approval step needed.
+  const [teamJoinTargetGame, setTeamJoinTargetGame] = useState<GameListItem | null>(null);
+  const qc = useQueryClient();
+  const requestToJoinTeam = useRequestToJoinTeam(teamJoinTargetGame?.id ?? "");
+  const joinableTeams: JoinableTeam[] = teamJoinTargetGame
+    ? teamJoinTargetGame.tournament_teams
+        .filter((t) => t.status !== "REJECTED")
+        .filter((t) => {
+          const joinedCount = t.tournament_team_members.filter((m) => m.status === "JOINED").length;
+          const requiredSize = teamJoinTargetGame.players_per_team ?? 0;
+          return requiredSize <= 0 || joinedCount < requiredSize;
+        })
+        .map((t) => ({
+          id: t.id,
+          name: t.name,
+          joinedCount: t.tournament_team_members.filter((m) => m.status === "JOINED").length,
+          requiredSize: teamJoinTargetGame.players_per_team ?? 0,
+        }))
+    : [];
+  const handleSelectJoinTeam = (teamId: string) => {
+    if (!userId || !teamJoinTargetGame) return;
+    requestToJoinTeam.mutate(
+      { teamId, userId },
+      {
+        onSuccess: () => {
+          setTeamJoinTargetGame(null);
+          qc.invalidateQueries({ queryKey: ["games"] });
+        },
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not join this team.")),
+      }
+    );
+  };
   const handleSubmitJoinRequest = (
     skillLevel: Database["public"]["Enums"]["skill_level_type"],
     location: string
@@ -776,6 +823,7 @@ export default function GamesListScreen() {
               index={index}
               onPress={() => navigation.navigate("GameDetail", { gameId: item.id })}
               onJoinPress={() => setJoinTargetGame(item)}
+              onTeamJoinPress={() => setTeamJoinTargetGame(item)}
             />
           )}
         />
@@ -792,6 +840,14 @@ export default function GamesListScreen() {
             ? `Entry fee: Rs ${joinTargetGame.entry_fee.toLocaleString()} (pay at the venue). The host must approve your request before you're added.`
             : "The host must approve your request before you're added."
         }
+      />
+
+      <SelectJoinTeamModal
+        visible={!!teamJoinTargetGame}
+        onClose={() => setTeamJoinTargetGame(null)}
+        teams={joinableTeams}
+        submitting={requestToJoinTeam.isPending}
+        onSelect={handleSelectJoinTeam}
       />
     </View>
   );

@@ -12,6 +12,7 @@ import {
   useLeaveTeam,
   useApproveTeam,
   useRejectPendingTeam,
+  useRemoveTeamMember,
 } from "../../hooks/useTournamentTeams";
 import { useSquadFillTournamentTeam } from "../../hooks/useSquadTeamFill";
 import { useCreateTeamInvite } from "../../hooks/useInvites";
@@ -60,10 +61,12 @@ function MemberAvatar({
   name,
   avatar,
   colorIndex,
+  onRemove,
 }: {
   name: string | null;
   avatar: string | null;
   colorIndex: number;
+  onRemove?: () => void;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   const color = MEMBER_COLORS[colorIndex % MEMBER_COLORS.length];
@@ -93,6 +96,15 @@ function MemberAvatar({
             borderColor: "white",
           }}
         />
+        {onRemove && (
+          <Pressable
+            onPress={onRemove}
+            hitSlop={8}
+            className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center border-2 border-white"
+          >
+            <Ionicons name="close" size={11} color="white" />
+          </Pressable>
+        )}
       </View>
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Player").split(" ")[0]}
@@ -117,6 +129,7 @@ function TeamCard({
   onInvitePlayer,
   onFillWithSquadMembers,
   onJoinTeam,
+  onRemoveMember,
   genderMismatch,
   gameGenderLabel,
   noun,
@@ -145,6 +158,8 @@ function TeamCard({
   onFillWithSquadMembers?: () => void;
   // A non-host, teamless user's plain individual join — see canJoinTeam.
   onJoinTeam?: () => void;
+  // Host-only: pull one specific joined member off this team.
+  onRemoveMember?: (memberId: string, name: string | null) => void;
   // True when this game/tournament is restricted to one gender and the
   // current user (or, more precisely, any squad they could use) doesn't
   // match it — hides "Create Team" in favor of an explanation.
@@ -197,6 +212,12 @@ function TeamCard({
   // "Add Myself", just inline on the card instead of behind a picker.
   const canJoinTeam =
     isRosterEditable && !isTeamFull && !hasActiveTeamElsewhere && !isJoinedMember && !genderMismatch;
+  // Host can pull a member off the roster under the same pre-venue-booked
+  // window a member can leave under themselves (see enforce_team_roster_rules).
+  const canHostRemoveMembers =
+    isHost &&
+    (team.status === "FORMING" || team.status === "PENDING_HOST_APPROVAL" || team.status === "APPROVED") &&
+    !isVenueBooked;
 
   const chatButton = isJoinedMember ? (
     <Pressable
@@ -252,6 +273,11 @@ function TeamCard({
               name={m.profiles?.full_name ?? null}
               avatar={m.profiles?.avatar ?? null}
               colorIndex={i}
+              onRemove={
+                canHostRemoveMembers && m.user_id !== userId && onRemoveMember
+                  ? () => onRemoveMember(m.id, m.profiles?.full_name ?? null)
+                  : undefined
+              }
             />
           ))}
         </View>
@@ -572,6 +598,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
   const approveTeam = useApproveTeam(game.id);
   const rejectPendingTeam = useRejectPendingTeam(game.id);
+  const removeTeamMember = useRemoveTeamMember(game.id);
   const createTeamInvite = useCreateTeamInvite(game.id);
 
   if (isLoading) {
@@ -609,7 +636,8 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     requestToJoinTeam.isPending ||
     leaveTeam.isPending ||
     approveTeam.isPending ||
-    rejectPendingTeam.isPending;
+    rejectPendingTeam.isPending ||
+    removeTeamMember.isPending;
 
   const fillTeam = fillTeamId ? teams.find((t) => t.id === fillTeamId) : undefined;
   const invitePlayerTeam = invitePlayerTeamId ? teams.find((t) => t.id === invitePlayerTeamId) : undefined;
@@ -670,6 +698,24 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           }),
       },
     ]);
+  };
+
+  const handleRemoveMember = (memberId: string, name: string | null) => {
+    Alert.alert(
+      "Remove Player",
+      `Remove ${name ?? "this player"} from this team?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () =>
+            removeTeamMember.mutate(memberId, {
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not remove this player.")),
+            }),
+        },
+      ]
+    );
   };
 
   const handleAddMyself = (teamId: string) => {
@@ -799,6 +845,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onInvitePlayer={userId ? () => setInvitePlayerTeamId(team.id) : undefined}
               onFillWithSquadMembers={userId ? () => setFillSquadTeamId(team.id) : undefined}
               onJoinTeam={userId ? () => handleJoinTeam(team.id) : undefined}
+              onRemoveMember={handleRemoveMember}
               genderMismatch={genderMismatch}
               gameGenderLabel={gameGenderLabel}
               noun={noun}

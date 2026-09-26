@@ -6,6 +6,7 @@ import {
   createTournamentTeamPlaceholders,
   requestToJoinTeam,
   leaveTeam,
+  removeTeamMember,
   rejectTeam,
   approveTeam,
   rejectPendingTeam,
@@ -97,6 +98,16 @@ export function useLeaveTeam(gameId: string) {
   return useMutation({
     mutationFn: ({ teamId, userId }: { teamId: string; userId: string }) =>
       leaveTeam(teamId, userId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+    },
+  });
+}
+
+export function useRemoveTeamMember(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => removeTeamMember(memberId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

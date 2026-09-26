@@ -69,6 +69,73 @@ function InfoBox({ text }: { text: string }) {
   );
 }
 
+// Same "Add Players" chip-list pattern as cricket's NewMatchScreen — free-
+// text player names (not linked to any real user), used later to attribute
+// a goal to a specific player via Select a Player.
+function AddPlayersField({
+  players,
+  onPlayersChange,
+  playersLocked,
+}: {
+  players: string[];
+  onPlayersChange: (players: string[]) => void;
+  playersLocked?: boolean;
+}) {
+  const [draft, setDraft] = useState("");
+
+  const addPlayer = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    onPlayersChange([...players, trimmed]);
+    setDraft("");
+  };
+
+  return (
+    <>
+      <Text className="text-ink font-semibold text-sm mb-2 mt-4">Players</Text>
+      {!playersLocked && (
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <View className="flex-1">
+            <FieldInput
+              value={draft}
+              onChangeText={setDraft}
+              placeholder="Add player name"
+              onSubmitEditing={addPlayer}
+              returnKeyType="done"
+              left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
+            />
+          </View>
+          <Pressable
+            onPress={addPlayer}
+            disabled={!draft.trim()}
+            className={`w-11 h-11 rounded-xl items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
+          >
+            <Ionicons name="add" size={20} color="white" />
+          </Pressable>
+        </View>
+      )}
+      {players.length > 0 && (
+        <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
+          {players.map((p, i) => (
+            <View
+              key={`${p}-${i}`}
+              className="flex-row items-center bg-primary-light rounded-full pl-3 pr-2 py-1.5"
+              style={{ gap: 6 }}
+            >
+              <Text className="text-primary text-sm font-medium">{p}</Text>
+              {!playersLocked && (
+                <Pressable onPress={() => onPlayersChange(players.filter((_, idx) => idx !== i))} hitSlop={6}>
+                  <Ionicons name="close-circle" size={16} color={colors.primary} />
+                </Pressable>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
 export default function FootballNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
@@ -79,6 +146,10 @@ export default function FootballNewMatchScreen() {
 
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  // Players come pre-filled from the tournament roster and are locked, same
+  // as cricket's NewMatchScreen.
+  const [teamAPlayers, setTeamAPlayers] = useState<string[]>(prefill?.teamAPlayers ?? []);
+  const [teamBPlayers, setTeamBPlayers] = useState<string[]>(prefill?.teamBPlayers ?? []);
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
   const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
@@ -109,6 +180,8 @@ export default function FootballNewMatchScreen() {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
+        teamAPlayers,
+        teamBPlayers,
         requiresWinner: needsExtraTime,
         halfDurationMinutes,
         // Not needed for a match that can end in a draw, but the column is
@@ -151,6 +224,7 @@ export default function FootballNewMatchScreen() {
             editable={!prefill}
             containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
           />
+          <AddPlayersField players={teamAPlayers} onPlayersChange={setTeamAPlayers} playersLocked={!!prefill} />
         </CardSection>
 
         <CardSection icon="shirt-outline" title="Team B">
@@ -162,6 +236,7 @@ export default function FootballNewMatchScreen() {
             editable={!prefill}
             containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
           />
+          <AddPlayersField players={teamBPlayers} onPlayersChange={setTeamBPlayers} playersLocked={!!prefill} />
         </CardSection>
 
         <CardSection icon="location-outline" title="Venue">

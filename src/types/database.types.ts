@@ -760,6 +760,7 @@ export type Database = {
           match_id: string
           minute_label: string
           phase: string
+          scorer_name: string | null
           seq: number
           team: string
         }
@@ -769,6 +770,7 @@ export type Database = {
           match_id: string
           minute_label: string
           phase: string
+          scorer_name?: string | null
           seq: number
           team: string
         }
@@ -778,6 +780,7 @@ export type Database = {
           match_id?: string
           minute_label?: string
           phase?: string
+          scorer_name?: string | null
           seq?: number
           team?: string
         }
@@ -813,7 +816,9 @@ export type Database = {
           second_half_kickoff_at: string | null
           status: string
           team_a_name: string
+          team_a_players: string[]
           team_b_name: string
+          team_b_players: string[]
           user_id: string
           venue: string | null
           winner_team: string | null
@@ -839,7 +844,9 @@ export type Database = {
           second_half_kickoff_at?: string | null
           status?: string
           team_a_name: string
+          team_a_players?: string[]
           team_b_name: string
+          team_b_players?: string[]
           user_id: string
           venue?: string | null
           winner_team?: string | null
@@ -865,7 +872,9 @@ export type Database = {
           second_half_kickoff_at?: string | null
           status?: string
           team_a_name?: string
+          team_a_players?: string[]
           team_b_name?: string
+          team_b_players?: string[]
           user_id?: string
           venue?: string | null
           winner_team?: string | null
