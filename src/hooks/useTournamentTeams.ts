@@ -83,8 +83,8 @@ export function useRequestToJoinTeam(gameId: string) {
     }: {
       teamId: string;
       userId: string;
-      skillLevel: SkillLevel;
-      location: string;
+      skillLevel?: SkillLevel | null;
+      location?: string;
     }) => requestToJoinTeam(teamId, userId, skillLevel, location),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });

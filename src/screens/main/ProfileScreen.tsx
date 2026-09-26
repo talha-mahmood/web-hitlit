@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Clipboard from "expo-clipboard";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { supabase } from "../../lib/supabase";
 import { signOutGoogle } from "../../lib/googleAuth";
@@ -224,6 +225,14 @@ export default function ProfileScreen() {
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [userIdCopied, setUserIdCopied] = useState(false);
+
+  const handleCopyUserId = async () => {
+    if (!profile?.user_code) return;
+    await Clipboard.setStringAsync(profile.user_code);
+    setUserIdCopied(true);
+    setTimeout(() => setUserIdCopied(false), 1500);
+  };
 
   async function handleChangeAvatar() {
     if (!userId) return;
@@ -330,9 +339,13 @@ export default function ProfileScreen() {
               </Text>
               <Ionicons name="checkmark-circle" size={17} color="#4ADE80" />
             </View>
-            <Text style={{ color: "#BBF7D0" }} className="text-sm mt-1" numberOfLines={1}>
-              {profile?.email}
-            </Text>
+            <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
+              <Ionicons name="pricetag-outline" size={12} color="#BBF7D0" />
+              <Text style={{ color: "#BBF7D0" }} className="text-sm" numberOfLines={1}>
+                ID: {profile?.user_code ?? "—"}
+              </Text>
+              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="#BBF7D0" />
+            </Pressable>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
                 <Ionicons name="calendar-outline" size={12} color="#BBF7D0" />

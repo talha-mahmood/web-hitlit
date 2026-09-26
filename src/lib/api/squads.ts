@@ -110,6 +110,30 @@ export async function fetchMyOwnedSquads(ownerId: string): Promise<SquadListItem
   return (data ?? []) as SquadListItem[];
 }
 
+// Every squad the user has a stake in — owned, or an active member of —
+// for pickers like "Fill with my Squad" (unlike fetchMyOwnedSquads, which
+// only covers squads they created). Two queries + a merge-by-id, since
+// PostgREST's .or() can't filter the parent row by a joined table's column.
+export async function fetchMySquads(userId: string): Promise<SquadListItem[]> {
+  const [ownedRes, memberRes] = await Promise.all([
+    supabase.from("squads").select(LIST_SELECT).eq("squad_owner_id", userId).is("deleted_at", null),
+    supabase
+      .from("squad_members")
+      .select(`squads(${LIST_SELECT})`)
+      .eq("user_id", userId)
+      .eq("status", "ACTIVE"),
+  ]);
+  if (ownedRes.error) throw new Error(ownedRes.error.message);
+  if (memberRes.error) throw new Error(memberRes.error.message);
+
+  const merged = new Map<string, SquadListItem>();
+  for (const s of (ownedRes.data ?? []) as SquadListItem[]) merged.set(s.id, s);
+  for (const row of (memberRes.data ?? []) as unknown as { squads: SquadListItem | null }[]) {
+    if (row.squads && !row.squads.deleted_at) merged.set(row.squads.id, row.squads);
+  }
+  return Array.from(merged.values());
+}
+
 export async function fetchSquadDetail(squadId: string): Promise<SquadDetail> {
   const { data, error } = await supabase
     .from("squads")

@@ -1817,6 +1817,8 @@ export type Database = {
           skill_level: Database["public"]["Enums"]["skill_level_type"] | null
           type: Database["public"]["Enums"]["profile_type"]
           updated_at: string
+          user_code: string
+          visibility: string
         }
         Insert: {
           address?: string | null
@@ -1838,6 +1840,8 @@ export type Database = {
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
+          user_code: string
+          visibility?: string
         }
         Update: {
           address?: string | null
@@ -1859,6 +1863,8 @@ export type Database = {
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
+          user_code?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -2564,6 +2570,7 @@ export type Database = {
           played_at: string | null
           pool_id: string | null
           round: number
+          scorer_user_id: string | null
           sort_order: number
           status: string
           table_tennis_match_id: string | null
@@ -2587,6 +2594,7 @@ export type Database = {
           played_at?: string | null
           pool_id?: string | null
           round?: number
+          scorer_user_id?: string | null
           sort_order?: number
           status?: string
           table_tennis_match_id?: string | null
@@ -2610,6 +2618,7 @@ export type Database = {
           played_at?: string | null
           pool_id?: string | null
           round?: number
+          scorer_user_id?: string | null
           sort_order?: number
           status?: string
           table_tennis_match_id?: string | null
@@ -2667,6 +2676,13 @@ export type Database = {
             columns: ["pool_id"]
             isOneToOne: false
             referencedRelation: "tournament_pools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_scorer_user_id_fkey"
+            columns: ["scorer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -2738,6 +2754,61 @@ export type Database = {
           },
         ]
       }
+      tournament_team_invites: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          invited_by: string
+          invited_user_id: string
+          status: Database["public"]["Enums"]["tournament_team_invite_status_type"]
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          invited_by: string
+          invited_user_id: string
+          status?: Database["public"]["Enums"]["tournament_team_invite_status_type"]
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          invited_by?: string
+          invited_user_id?: string
+          status?: Database["public"]["Enums"]["tournament_team_invite_status_type"]
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_team_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_invites_invited_user_id_fkey"
+            columns: ["invited_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_invites_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_team_members: {
         Row: {
           created_at: string
@@ -2804,7 +2875,7 @@ export type Database = {
           pool_id: string | null
           sort_order: number | null
           status: Database["public"]["Enums"]["tournament_team_status_type"]
-          team_code: string
+          team_code: string | null
           updated_at: string
         }
         Insert: {
@@ -2818,7 +2889,7 @@ export type Database = {
           pool_id?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
-          team_code?: string
+          team_code?: string | null
           updated_at?: string
         }
         Update: {
@@ -2832,7 +2903,7 @@ export type Database = {
           pool_id?: string | null
           sort_order?: number | null
           status?: Database["public"]["Enums"]["tournament_team_status_type"]
-          team_code?: string
+          team_code?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3136,6 +3207,7 @@ export type Database = {
     Functions: {
       accept_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
       accept_squad_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      accept_team_invite: { Args: { p_invite_id: string }; Returns: undefined }
       create_notification: {
         Args: {
           p_body: string
@@ -3151,6 +3223,7 @@ export type Database = {
         Args: { p_invite_id: string }
         Returns: undefined
       }
+      decline_team_invite: { Args: { p_invite_id: string }; Returns: undefined }
       delete_old_community_comments: { Args: never; Returns: undefined }
       delete_old_game_messages: { Args: never; Returns: undefined }
       delete_old_squad_messages: { Args: never; Returns: undefined }
@@ -3164,6 +3237,7 @@ export type Database = {
       generate_game_code: { Args: never; Returns: string }
       generate_squad_code: { Args: never; Returns: string }
       generate_team_code: { Args: never; Returns: string }
+      generate_user_code: { Args: never; Returns: string }
       get_booked_slots: {
         Args: { p_court_id: string; p_date: string }
         Returns: {
@@ -3282,6 +3356,7 @@ export type Database = {
         | "DECLINED"
       squad_role_type: "captain" | "member"
       tournament_format_type: "KNOCKOUT" | "LEAGUE" | "POOL"
+      tournament_team_invite_status_type: "pending" | "accepted" | "declined"
       tournament_team_status_type:
         | "FORMING"
         | "PENDING_HOST_APPROVAL"
@@ -3450,6 +3525,7 @@ export const Constants = {
       ],
       squad_role_type: ["captain", "member"],
       tournament_format_type: ["KNOCKOUT", "LEAGUE", "POOL"],
+      tournament_team_invite_status_type: ["pending", "accepted", "declined"],
       tournament_team_status_type: [
         "FORMING",
         "PENDING_HOST_APPROVAL",

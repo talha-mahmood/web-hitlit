@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -10,6 +11,7 @@ import {
   useGenerateMatches,
   useGenerateNextRound,
   useGeneratePoolMatches,
+  useSetMatchScorer,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
 import { useCricketMatch } from "../../hooks/useCricket";
@@ -19,6 +21,7 @@ import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import { manualSportForName } from "../../lib/manualScore";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
+import SelectScorerModal, { type ScorerCandidate } from "../../components/SelectScorerModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -173,23 +176,36 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
 function MatchRow({
   match,
   matchNumber,
-  showScorecardButton,
+  isEligible,
+  isHost,
+  isAssignedScorer,
+  scorerName,
   onGoToScorecard,
   onEnterScoreManually,
+  onSelectScorer,
 }: {
   match: TournamentMatch;
   matchNumber: number;
-  // Only ever true for the single first match on the whole screen, and only
-  // once the host can actually do something with it (venue already booked)
-  // — see canGoToScorecard in the screen component. "Enter Score Manually"
-  // sits right beneath it, for a match played without live scoring.
-  showScorecardButton?: boolean;
+  // True once the venue is booked and both teams are set — the same bar
+  // "Go To Scorecard"/"Enter Score Manually" always required, now checked
+  // per match instead of only the single earliest one.
+  isEligible: boolean;
+  // The host never scores directly from here — they assign a scorer
+  // instead (see onSelectScorer) — unless they've assigned themselves, in
+  // which case they also get the two scoring buttons below their own
+  // "Select Scorer" row.
+  isHost: boolean;
+  isAssignedScorer: boolean;
+  scorerName?: string | null;
   onGoToScorecard?: () => void;
   onEnterScoreManually?: () => void;
+  onSelectScorer?: () => void;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
-  const isReady = !!showScorecardButton && !!match.team_a && !!match.team_b;
+  const showScoringButtons = isEligible && isAssignedScorer;
+  const showSelectScorer = isEligible && isHost;
+  const isReady = isEligible && (isAssignedScorer || isHost);
 
   if (match.status === "COMPLETED") {
     const resultLabel = match.is_draw
@@ -236,7 +252,9 @@ function MatchRow({
         </Text>
         {isReady && (
           <View className="bg-white px-2.5 py-1 rounded-full">
-            <Text className="text-primary text-xs font-bold">Ready to Enter Score</Text>
+            <Text className="text-primary text-xs font-bold">
+              {showScoringButtons ? "Ready to Enter Score" : "Select a Scorer"}
+            </Text>
           </View>
         )}
       </View>
@@ -257,28 +275,47 @@ function MatchRow({
       <LinkedMatchScoreDetails match={match} />
       {isReady && (
         <View style={{ gap: 8, marginTop: 12 }}>
-          <Pressable
-            onPress={onGoToScorecard}
-            className="flex-row items-center justify-between bg-primary rounded-2xl px-4"
-            style={{ paddingVertical: 14, ...cardShadow }}
-          >
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Ionicons name="clipboard-outline" size={17} color="white" />
-              <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="white" />
-          </Pressable>
-          <Pressable
-            onPress={onEnterScoreManually}
-            className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
-            style={{ paddingVertical: 14 }}
-          >
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Ionicons name="pencil-outline" size={17} color={colors.primary} />
-              <Text className="text-primary font-bold text-sm">Enter Score Manually</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
-          </Pressable>
+          {showScoringButtons && (
+            <>
+              <Pressable
+                onPress={onGoToScorecard}
+                className="flex-row items-center justify-between bg-primary rounded-2xl px-4"
+                style={{ paddingVertical: 14, ...cardShadow }}
+              >
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <Ionicons name="clipboard-outline" size={17} color="white" />
+                  <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="white" />
+              </Pressable>
+              <Pressable
+                onPress={onEnterScoreManually}
+                className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
+                style={{ paddingVertical: 14 }}
+              >
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <Ionicons name="pencil-outline" size={17} color={colors.primary} />
+                  <Text className="text-primary font-bold text-sm">Enter Score Manually</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+              </Pressable>
+            </>
+          )}
+          {showSelectScorer && (
+            <Pressable
+              onPress={onSelectScorer}
+              className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
+              style={{ paddingVertical: 14 }}
+            >
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Ionicons name="person-add-outline" size={17} color={colors.primary} />
+                <Text className="text-primary font-bold text-sm">
+                  {scorerName ? `Scorer: ${scorerName}` : "Select Scorer"}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -306,20 +343,24 @@ function MatchesPanel({
   approvedTeams,
   requiredTeams,
   isHost,
-  firstMatchId,
-  canGoToScorecard,
+  isVenueBooked,
+  currentUserId,
+  getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
+  onSelectScorer,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
   approvedTeams: { id: string; name: string }[];
   requiredTeams: number;
   isHost: boolean;
-  firstMatchId?: string;
-  canGoToScorecard: boolean;
+  isVenueBooked: boolean;
+  currentUserId?: string;
+  getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
+  onSelectScorer: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
@@ -406,9 +447,13 @@ function MatchesPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isHost={isHost}
+                  isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
+                  scorerName={getScorerName(m)}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
+                  onSelectScorer={() => onSelectScorer(m)}
                 />
               ))}
             </View>
@@ -621,20 +666,24 @@ function PoolMatchesPanel({
   approvedTeams,
   requiredTeams,
   isHost,
-  firstMatchId,
-  canGoToScorecard,
+  isVenueBooked,
+  currentUserId,
+  getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
+  onSelectScorer,
 }: {
   gameId: string;
   pools: TournamentPool[];
   approvedTeams: TournamentTeam[];
   requiredTeams: number;
   isHost: boolean;
-  firstMatchId?: string;
-  canGoToScorecard: boolean;
+  isVenueBooked: boolean;
+  currentUserId?: string;
+  getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
+  onSelectScorer: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
@@ -713,9 +762,13 @@ function PoolMatchesPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isHost={isHost}
+                  isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
+                  scorerName={getScorerName(m)}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
+                  onSelectScorer={() => onSelectScorer(m)}
                 />
               ))}
             </View>
@@ -743,20 +796,24 @@ function PoolPlayoffPanel({
   approvedTeams,
   requiredTeams,
   isHost,
-  firstMatchId,
-  canGoToScorecard,
+  isVenueBooked,
+  currentUserId,
+  getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
+  onSelectScorer,
 }: {
   gameId: string;
   pools: TournamentPool[];
   approvedTeams: TournamentTeam[];
   requiredTeams: number;
   isHost: boolean;
-  firstMatchId?: string;
-  canGoToScorecard: boolean;
+  isVenueBooked: boolean;
+  currentUserId?: string;
+  getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
+  onSelectScorer: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
@@ -862,9 +919,13 @@ function PoolPlayoffPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  showScorecardButton={canGoToScorecard && m.id === firstMatchId}
+                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isHost={isHost}
+                  isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
+                  scorerName={getScorerName(m)}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
+                  onSelectScorer={() => onSelectScorer(m)}
                 />
               ))}
             </View>
@@ -913,6 +974,8 @@ export default function TournamentMatchesScreen() {
   const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: pools } = useTournamentPools(params.gameId);
+  const setMatchScorer = useSetMatchScorer(params.gameId);
+  const [scorerModalMatchId, setScorerModalMatchId] = useState<string | null>(null);
 
   if (gameLoading || teamsLoading || !game) {
     return (
@@ -948,13 +1011,6 @@ export default function TournamentMatchesScreen() {
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = sportName.includes("cricket");
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
-  const canGoToScorecard = isHost && isVenueBooked;
-  // "Go To Scorecard" tracks the earliest still-pending real match (both
-  // teams set, not a bye) across the whole tournament — once one match's
-  // scorecard finishes, its result is synced automatically (see
-  // syncCricketMatchResult) and this naturally advances to the next one,
-  // round after round, all the way to the final.
-  const firstMatchId = (matches ?? []).find((m) => m.status !== "COMPLETED" && m.team_a && m.team_b)?.id;
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
@@ -965,6 +1021,30 @@ export default function TournamentMatchesScreen() {
         .map((m) => m.profiles?.full_name ?? "Player")
     );
   }
+
+  // Every joined member across every active team — the pool the host picks
+  // a match's scorer from (not just the two teams playing that match, per
+  // spec: "all the members of tournament will show in drop down list").
+  const scorerCandidates: ScorerCandidate[] = activeTeams.flatMap((t) =>
+    t.tournament_team_members
+      .filter((m) => m.status === "JOINED" && m.user_id)
+      .map((m) => ({ id: m.user_id, name: m.profiles?.full_name ?? "Player", teamName: t.name }))
+  );
+  const scorerNameById = new Map(scorerCandidates.map((c) => [c.id, c.name]));
+  const getScorerName = (match: TournamentMatch): string | null =>
+    match.scorer_user_id ? scorerNameById.get(match.scorer_user_id) ?? null : null;
+
+  const scorerModalMatch = (matches ?? []).find((m) => m.id === scorerModalMatchId) ?? null;
+  const handleSelectScorer = (userId: string) => {
+    if (!scorerModalMatchId) return;
+    setMatchScorer.mutate(
+      { matchId: scorerModalMatchId, scorerUserId: userId },
+      {
+        onSuccess: () => setScorerModalMatchId(null),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not assign scorer.")),
+      }
+    );
+  };
 
   const buildPrefill = (match: TournamentMatch): ScorecardPrefill | null => {
     if (!match.team_a || !match.team_b) return null;
@@ -1079,10 +1159,12 @@ export default function TournamentMatchesScreen() {
               approvedTeams={approvedTeamsFull}
               requiredTeams={requiredTeams}
               isHost={isHost}
-              firstMatchId={firstMatchId}
-              canGoToScorecard={canGoToScorecard}
+              isVenueBooked={isVenueBooked}
+              currentUserId={userId}
+              getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
+              onSelectScorer={(match) => setScorerModalMatchId(match.id)}
             />
             {matches &&
               (pools ?? []).map((pool) => {
@@ -1105,10 +1187,12 @@ export default function TournamentMatchesScreen() {
               approvedTeams={approvedTeamsFull}
               requiredTeams={requiredTeams}
               isHost={isHost}
-              firstMatchId={firstMatchId}
-              canGoToScorecard={canGoToScorecard}
+              isVenueBooked={isVenueBooked}
+              currentUserId={userId}
+              getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
+              onSelectScorer={(match) => setScorerModalMatchId(match.id)}
             />
           </>
         ) : (
@@ -1128,10 +1212,12 @@ export default function TournamentMatchesScreen() {
                 approvedTeams={approvedTeams}
                 requiredTeams={requiredTeams}
                 isHost={isHost}
-                firstMatchId={firstMatchId}
-                canGoToScorecard={canGoToScorecard}
+                isVenueBooked={isVenueBooked}
+                currentUserId={userId}
+                getScorerName={getScorerName}
                 onGoToScorecard={handleGoToScorecard}
                 onEnterScoreManually={handleEnterScoreManually}
+                onSelectScorer={(match) => setScorerModalMatchId(match.id)}
               />
             )}
             {game.tournament_format === "LEAGUE" && matches && (
@@ -1141,6 +1227,14 @@ export default function TournamentMatchesScreen() {
         )}
       </ScrollView>
 
+      <SelectScorerModal
+        visible={!!scorerModalMatchId}
+        onClose={() => setScorerModalMatchId(null)}
+        members={scorerCandidates}
+        currentScorerId={scorerModalMatch?.scorer_user_id ?? null}
+        onSelect={handleSelectScorer}
+        submitting={setMatchScorer.isPending}
+      />
     </View>
   );
 }

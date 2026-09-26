@@ -93,13 +93,45 @@ export async function createTournamentTeamPlaceholders(
 // Joining a still-forming team always inserts straight as JOINED — there's
 // no captain to approve the request, no matter who else is already on the
 // roster. Who ends up leading the team on match day is sorted out in person
-// once everyone's at the venue, not gated in the app.
+// once everyone's at the venue, not gated in the app. skillLevel/location
+// are optional — "Add Myself" (the tournament host joining an existing,
+// not-yet-full team) skips that prompt entirely and just joins directly.
+//
+// leaveTeam (below) flips a member's row to LEFT rather than deleting it —
+// rejoining the same team later has to reuse that same row (flip it back to
+// JOINED) instead of inserting a second one, otherwise the team would end up
+// with two rows for the same player and anything doing a plain `find()` by
+// user id (see TeamCard's myMembership) could pick up the stale LEFT one.
 export async function requestToJoinTeam(
   teamId: string,
   userId: string,
-  skillLevel: SkillLevel,
-  location: string
+  skillLevel: SkillLevel | null = null,
+  location: string = ""
 ): Promise<void> {
+  const { data: existing, error: fetchError } = await supabase
+    .from("tournament_team_members")
+    .select("id")
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (fetchError) throw new Error(fetchError.message);
+
+  if (existing) {
+    const { error } = await supabase
+      .from("tournament_team_members")
+      .update({
+        status: "JOINED",
+        skill_level: skillLevel,
+        location: location || null,
+        joined_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
   const { error } = await supabase.from("tournament_team_members").insert({
     team_id: teamId,
     user_id: userId,

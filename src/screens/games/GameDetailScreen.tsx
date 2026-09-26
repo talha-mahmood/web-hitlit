@@ -305,24 +305,23 @@ export default function GameDetailScreen() {
   // "part of the game" yet.
   const isApprovedTournamentParticipant = isTeamBased && !!userId && (tournamentTeams ?? []).some((t) => t.status === "APPROVED" && t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"));
 
-  // "Book Venue" only makes sense once the roster is actually locked in —
-  // every team slot filled and approved. Applies to any team-based game
-  // (tournaments, and regular games created with the team flow), same bar
-  // the Matches screen uses before it'll let a tournament host generate
-  // fixtures.
-  const requiredTeams = game.number_of_teams ?? 0;
-  const activeTournamentTeams = (tournamentTeams ?? []).filter((t) => t.status !== "REJECTED");
-  const allTeamsFilled =
-    requiredTeams > 0 &&
-    activeTournamentTeams.length === requiredTeams &&
-    activeTournamentTeams.every((t) => t.status === "APPROVED");
+  // "Book Venue" shows as soon as the game/tournament is created (as long as
+  // it has a venue attached) — the host doesn't have to wait for every team
+  // slot to fill first. Applies to any team-based game (tournaments, and
+  // regular games created with the team flow).
   const hasLinkedVenue = !!game.venue_id;
   const hasCustomVenue = !!game.custom_venue_name;
   // A real (dropdown-picked) venue needs an actual booking; a manually
   // typed venue has no venue record to book against, so it's treated as
-  // already settled the moment the roster fills.
+  // already settled the moment it's set.
   const isVenueBooked = hasLinkedVenue ? !!game.booking_id : hasCustomVenue;
-  const showBookVenue = isTeamBased && isCreator && allTeamsFilled && (hasLinkedVenue || hasCustomVenue);
+  const showBookVenue = isTeamBased && isCreator && (hasLinkedVenue || hasCustomVenue);
+  // "Cancel This Game/Tournament" now stays visible alongside "Book Venue"
+  // until the venue is actually booked (not hidden the moment a venue is
+  // merely attached) — when both render at once the bottom CTA bar is
+  // taller, so the scroll content needs extra bottom padding or its last
+  // line ("Hosted by …") ends up hidden underneath it.
+  const showBothCreatorCTAs = isCreator && showBookVenue && !isVenueBooked;
 
   const skillLabel = !game.skill_level ? "Any Level" : game.skill_level === "BEGINNER" ? "Beginner" : game.skill_level === "INTERMEDIATE" ? "Intermediate" : game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
   const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;
@@ -586,7 +585,7 @@ export default function GameDetailScreen() {
         <WaveDivider color={colors.background} height={30} />
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: showBothCreatorCTAs ? 190 : 120 }}>
         {/* Pending host invite — shown regardless of game_type, since the
             normal bottom join CTA is hidden entirely for a tournament
             non-host (joining a tournament happens via a team below instead). */}
@@ -805,7 +804,7 @@ export default function GameDetailScreen() {
                   </Text>
                 </Pressable>
               )}
-              {!showBookVenue && (
+              {!isVenueBooked && (
                 <Pressable
                   onPress={handleCancel}
                   className="flex-row items-center justify-between rounded-xl px-4 py-4"

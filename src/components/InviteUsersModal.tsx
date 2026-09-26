@@ -85,7 +85,7 @@ export default function InviteUsersModal({
           <FieldInput
             value={searchInput}
             onChangeText={setSearchInput}
-            placeholder="Search by name or email"
+            placeholder="Search by name, email, or user ID"
             autoCapitalize="none"
             autoCorrect={false}
             left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
@@ -125,11 +125,9 @@ export default function InviteUsersModal({
                       <Text className="text-ink font-medium text-sm" numberOfLines={1}>
                         {user.full_name ?? "Unnamed player"}
                       </Text>
-                      {!!user.email && (
-                        <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-                          {user.email}
-                        </Text>
-                      )}
+                      <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                        ID: {user.user_code}
+                      </Text>
                     </View>
                     <Pressable
                       onPress={() => handleInvite(user)}

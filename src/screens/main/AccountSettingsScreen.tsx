@@ -102,6 +102,8 @@ export default function AccountSettingsScreen() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const visibility = profile?.visibility ?? "public";
 
   const nameChanged = name.trim() !== (profile?.full_name ?? "").trim();
   const nameValid = isValidName(name);
@@ -137,6 +139,18 @@ export default function AccountSettingsScreen() {
       Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
     } finally {
       setSavingPhone(false);
+    }
+  };
+
+  const handleChangeVisibility = async (next: "public" | "private") => {
+    if (!userId || next === visibility) return;
+    setSavingVisibility(true);
+    try {
+      await updateProfile(userId, { visibility: next });
+    } catch (err) {
+      Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
+    } finally {
+      setSavingVisibility(false);
     }
   };
 
@@ -230,6 +244,44 @@ export default function AccountSettingsScreen() {
               </Text>
             )}
           </Pressable>
+        </SectionCard>
+
+        <SectionCard
+          icon="eye-outline"
+          title="Profile Visibility"
+          subtitle="Public players can be found and invited to teams/squads. Private players are hidden from Invite Players search."
+        >
+          <View className="flex-row bg-gray-100 rounded-2xl p-1" style={{ gap: 4 }}>
+            {(["public", "private"] as const).map((option) => {
+              const selected = visibility === option;
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => handleChangeVisibility(option)}
+                  disabled={savingVisibility}
+                  className={`flex-1 flex-row items-center justify-center rounded-xl py-2.5 ${
+                    selected ? "bg-primary" : ""
+                  }`}
+                  style={{ gap: 6 }}
+                >
+                  {savingVisibility && selected ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name={option === "public" ? "eye-outline" : "eye-off-outline"}
+                        size={15}
+                        color={selected ? "white" : colors.muted}
+                      />
+                      <Text className={`text-sm font-bold ${selected ? "text-white" : "text-muted"}`}>
+                        {option === "public" ? "Public" : "Private"}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
         </SectionCard>
 
         <SectionCard

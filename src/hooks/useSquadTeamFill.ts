@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchMyOwnedSquads } from "../lib/api/squads";
+import { fetchMyOwnedSquads, fetchMySquads } from "../lib/api/squads";
 import {
   squadFillTournamentTeam,
   squadFillGameSlots,
@@ -14,6 +14,16 @@ export function useMyOwnedSquads(ownerId: string | undefined) {
     queryKey: ["myOwnedSquads", ownerId],
     queryFn: () => fetchMyOwnedSquads(ownerId as string),
     enabled: !!ownerId,
+  });
+}
+
+// Owned + member-of squads — used by "Fill with my Squad" (unlike Create
+// Team's squad picker, which only ever registers a squad the user owns).
+export function useMySquads(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["mySquads", userId],
+    queryFn: () => fetchMySquads(userId as string),
+    enabled: !!userId,
   });
 }
 

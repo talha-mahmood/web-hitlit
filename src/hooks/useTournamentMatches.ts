@@ -10,6 +10,7 @@ import {
   syncCricketMatchResult,
   linkScorecardMatch,
   syncScorecardMatchResult,
+  setMatchScorer,
   type ScorecardSport,
 } from "../lib/api/tournamentMatches";
 import { supabase } from "../lib/supabase";
@@ -47,6 +48,15 @@ export function useTournamentMatches(gameId: string) {
   }, [gameId, qc]);
 
   return query;
+}
+
+export function useSetMatchScorer(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { matchId: string; scorerUserId: string | null }) =>
+      setMatchScorer(params.matchId, params.scorerUserId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
 }
 
 export function useGenerateMatches(gameId: string) {

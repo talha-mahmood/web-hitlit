@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
@@ -13,8 +14,10 @@ import {
   useNotifications,
   useDeleteNotification,
 } from "../../hooks/useNotifications";
+import { useAcceptTeamInvite, useDeclineTeamInvite } from "../../hooks/useInvites";
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "Notifications">,
@@ -40,10 +43,13 @@ const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: s
   team_pending_approval: { icon: "hourglass", color: "#D97706", bg: "bg-yellow-50" },
   game_invite: { icon: "mail", color: "#3B82F6", bg: "bg-blue-50" },
   squad_invite: { icon: "mail", color: "#3B82F6", bg: "bg-blue-50" },
+  team_invite: { icon: "mail", color: "#3B82F6", bg: "bg-blue-50" },
   game_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
   squad_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
+  team_invite_accepted: { icon: "checkmark-circle", color: "#16A34A", bg: "bg-green-50" },
   game_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   squad_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
+  team_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   community_reply: { icon: "chatbubble-ellipses", color: "#3B82F6", bg: "bg-blue-50" },
 };
 const DEFAULT_META = { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
@@ -62,13 +68,15 @@ function timeAgo(iso: string): string {
 
 // Every notification stores enough in `data` to know where it points —
 // gameId covers games, tournaments, and team events (all surfaced on the
-// game detail screen); squadId covers squad events.
-function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string } {
+// game detail screen); squadId covers squad events; inviteId is only set on
+// a team_invite, for its inline Approve/Decline below.
+function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string; inviteId?: string } {
   const data = (n.data ?? {}) as Record<string, unknown>;
   return {
     gameId: typeof data.gameId === "string" ? data.gameId : undefined,
     squadId: typeof data.squadId === "string" ? data.squadId : undefined,
     commentId: typeof data.commentId === "string" ? data.commentId : undefined,
+    inviteId: typeof data.inviteId === "string" ? data.inviteId : undefined,
   };
 }
 
@@ -76,10 +84,15 @@ function NotificationCard({
   notification,
   onPress,
   onDelete,
+  teamInviteActions,
 }: {
   notification: NotificationRow;
   onPress: () => void;
   onDelete: () => void;
+  // Only set for a still-pending team_invite — the one notification type
+  // that's acted on right here instead of just navigating away, so the
+  // recipient can approve/decline a specific team without leaving this list.
+  teamInviteActions?: { onApprove: () => void; onDecline: () => void; isResponding: boolean };
 }) {
   const meta = TYPE_META[notification.type ?? ""] ?? DEFAULT_META;
   const unread = !notification.is_read;
@@ -111,6 +124,28 @@ function NotificationCard({
           </Text>
         )}
         <Text className="text-muted text-xs mt-1.5">{timeAgo(notification.created_at)}</Text>
+        {teamInviteActions && (
+          <View className="flex-row mt-3" style={{ gap: 8 }}>
+            <Pressable
+              onPress={teamInviteActions.onDecline}
+              disabled={teamInviteActions.isResponding}
+              className="flex-1 border border-danger rounded-lg py-2 items-center"
+            >
+              <Text className="text-danger text-xs font-semibold">Decline</Text>
+            </Pressable>
+            <Pressable
+              onPress={teamInviteActions.onApprove}
+              disabled={teamInviteActions.isResponding}
+              className="flex-1 bg-primary rounded-lg py-2 items-center"
+            >
+              {teamInviteActions.isResponding ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className="text-white text-xs font-semibold">Approve</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
       </View>
       <Pressable onPress={onDelete} hitSlop={10} className="p-1 -mt-1 -mr-1">
         <Ionicons name="close" size={18} color={colors.muted} />
@@ -128,6 +163,12 @@ export default function NotificationsScreen() {
   const markRead = useMarkNotificationRead(userId);
   const markAllRead = useMarkAllNotificationsRead(userId);
   const deleteNotif = useDeleteNotification(userId);
+  const acceptTeamInvite = useAcceptTeamInvite();
+  const declineTeamInvite = useDeclineTeamInvite();
+  // Session-only — once a team invite is acted on, its Approve/Decline pair
+  // hides in favor of the notification's own text, without needing to alter
+  // the notification row itself (it's just a plain info feed otherwise).
+  const [respondedInviteIds, setRespondedInviteIds] = useState<Set<string>>(new Set());
 
   const hasUnread = (notifications ?? []).some((n) => !n.is_read);
 
@@ -152,6 +193,26 @@ export default function NotificationsScreen() {
         onPress: () => deleteNotif.mutate(n.id),
       },
     ]);
+  };
+
+  const handleApproveTeamInvite = (n: NotificationRow, inviteId: string) => {
+    acceptTeamInvite.mutate(inviteId, {
+      onSuccess: () => {
+        setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
+        if (!n.is_read) markRead.mutate(n.id);
+      },
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not approve this request.")),
+    });
+  };
+
+  const handleDeclineTeamInvite = (n: NotificationRow, inviteId: string) => {
+    declineTeamInvite.mutate(inviteId, {
+      onSuccess: () => {
+        setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
+        if (!n.is_read) markRead.mutate(n.id);
+      },
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not decline this request.")),
+    });
   };
 
   return (
@@ -188,13 +249,29 @@ export default function NotificationsScreen() {
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <NotificationCard
-              notification={item}
-              onPress={() => handlePress(item)}
-              onDelete={() => handleDelete(item)}
-            />
-          )}
+          renderItem={({ item }) => {
+            const { inviteId } = resolveTarget(item);
+            const isPendingTeamInvite =
+              item.type === "team_invite" && !!inviteId && !respondedInviteIds.has(inviteId);
+            return (
+              <NotificationCard
+                notification={item}
+                onPress={() => handlePress(item)}
+                onDelete={() => handleDelete(item)}
+                teamInviteActions={
+                  isPendingTeamInvite
+                    ? {
+                        onApprove: () => handleApproveTeamInvite(item, inviteId!),
+                        onDecline: () => handleDeclineTeamInvite(item, inviteId!),
+                        isResponding:
+                          (acceptTeamInvite.isPending && acceptTeamInvite.variables === inviteId) ||
+                          (declineTeamInvite.isPending && declineTeamInvite.variables === inviteId),
+                      }
+                    : undefined
+                }
+              />
+            );
+          }}
         />
       )}
     </View>

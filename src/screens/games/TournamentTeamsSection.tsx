@@ -5,19 +5,16 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import WaveDivider from "../../components/WaveDivider";
-import * as Clipboard from "expo-clipboard";
 import {
   useTournamentTeams,
   useCreateTeam,
+  useRequestToJoinTeam,
   useLeaveTeam,
   useApproveTeam,
   useRejectPendingTeam,
 } from "../../hooks/useTournamentTeams";
-import {
-  useSquadFillTournamentTeam,
-  useSendGameSquadInvite,
-  useGameSquadInvitesForGame,
-} from "../../hooks/useSquadTeamFill";
+import { useSquadFillTournamentTeam } from "../../hooks/useSquadTeamFill";
+import { useCreateTeamInvite } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
@@ -27,7 +24,9 @@ import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
-import InviteSquadModal from "../../components/InviteSquadModal";
+import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
+import InviteUsersModal from "../../components/InviteUsersModal";
+import FillTeamWithSquadModal from "../../components/FillTeamWithSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -109,11 +108,15 @@ function TeamCard({
   isHost,
   disabled,
   hasActiveTeamElsewhere,
+  isVenueBooked,
   onLeave,
   onFillWithSquad,
   onApprove,
   onReject,
   onOpenChat,
+  onInvitePlayer,
+  onFillWithSquadMembers,
+  onJoinTeam,
   genderMismatch,
   gameGenderLabel,
   noun,
@@ -127,11 +130,21 @@ function TeamCard({
   // (non-rejected) team in this same tournament — until they leave it,
   // they can't join this team too.
   hasActiveTeamElsewhere: boolean;
+  // Once the venue is actually booked, the roster is fully locked — a
+  // joined member can no longer leave (see enforce_team_roster_rules).
+  isVenueBooked: boolean;
   onLeave: () => void;
   onFillWithSquad?: () => void;
   onApprove: () => void;
   onReject: () => void;
   onOpenChat: () => void;
+  // "Invite a Player" (search one user) / "Fill with my Squad" (send several
+  // individual requests at once) — both available to the host or anyone
+  // already on this team, while it still has an open slot.
+  onInvitePlayer?: () => void;
+  onFillWithSquadMembers?: () => void;
+  // A non-host, teamless user's plain individual join — see canJoinTeam.
+  onJoinTeam?: () => void;
   // True when this game/tournament is restricted to one gender and the
   // current user (or, more precisely, any squad they could use) doesn't
   // match it — hides "Create Team" in favor of an explanation.
@@ -142,7 +155,6 @@ function TeamCard({
   // "the game" there instead.
   noun: "tournament" | "game";
 }) {
-  const [codeCopied, setCodeCopied] = useState(false);
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const myMembership = userId
     ? team.tournament_team_members.find((m) => m.user_id === userId)
@@ -168,19 +180,23 @@ function TeamCard({
   // The "Create Team" squad-registration CTA only makes sense on a genuinely
   // empty team — the server only allows it there too.
   const isEmpty = joinedMembers.length === 0;
-  // A team only has a real captain/code once someone has actually claimed
-  // it (created it, or registered a squad into it) — visible to that team's
-  // own people and the host only, same rule as the game/tournament ID.
-  const isClaimed = !!team.captain_id;
-  const canSeeTeamCode = isClaimed && (isHost || !!myMembership);
   const isJoinedMember = myMembership?.status === "JOINED";
   const { data: teamChatUnread } = useTeamChatUnreadCount(isJoinedMember ? team.id : undefined, userId);
-
-  const handleCopyCode = async () => {
-    await Clipboard.setStringAsync(team.team_code);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 1500);
-  };
+  // A joined member can leave a team that's still FORMING, or even one
+  // that's already PENDING_HOST_APPROVAL/APPROVED — but only before the
+  // venue is actually booked (see enforce_team_roster_rules); once booked,
+  // the roster is fully locked.
+  const canLeaveTeam =
+    (team.status === "FORMING" || team.status === "PENDING_HOST_APPROVAL" || team.status === "APPROVED") &&
+    !isVenueBooked;
+  // "Invite a Player"/"Fill with my Squad" — recruiting into an open slot,
+  // available to the host or anyone already on this specific team.
+  const canManageRecruiting = isRosterEditable && !isTeamFull && (isHost || isJoinedMember);
+  // "Join Team" — a non-host without a team of their own yet can join any
+  // open (not full) team directly, same one-tap mechanic as the host's own
+  // "Add Myself", just inline on the card instead of behind a picker.
+  const canJoinTeam =
+    isRosterEditable && !isTeamFull && !hasActiveTeamElsewhere && !isJoinedMember && !genderMismatch;
 
   const chatButton = isJoinedMember ? (
     <Pressable
@@ -227,17 +243,6 @@ function TeamCard({
       </View>
 
       <View className="p-4" style={{ paddingTop: 4 }}>
-      {canSeeTeamCode && (
-        <Pressable
-          onPress={handleCopyCode}
-          hitSlop={8}
-          className="flex-row items-center self-start px-3 py-1.5 rounded-lg bg-gray-100 mt-2 mb-3"
-          style={{ gap: 6 }}
-        >
-          <Text className="text-muted text-xs font-medium">Team ID: {team.team_code}</Text>
-          <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={13} color={codeCopied ? colors.primary : colors.muted} />
-        </Pressable>
-      )}
 
       {joinedMembers.length > 0 && (
         <View className="flex-row flex-wrap mt-1" style={{ gap: 10 }}>
@@ -306,54 +311,81 @@ function TeamCard({
 
       {/* This team's own CTA. Individually joining always inserts the player
           straight in — there's no approval step for that — so a JOINED
-          member just gets a progress readout alongside their Leave option,
-          and anyone else can register a whole squad via Create Team. A team
-          moves on automatically the instant it's full (see
-          auto_approve_full_team). */}
+          member just gets a progress readout, and anyone else can register a
+          whole squad via Create Team. A team moves on automatically the
+          instant it's full (see auto_approve_full_team). */}
       {isRosterEditable && (
         <View className="mt-4">
-          {isJoinedMember ? (
-            <>
-              <View className={`rounded-xl py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
-                <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
-                  {isTeamFull
-                    ? `Team full — joining ${noun}…`
-                    : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
-                </Text>
-              </View>
-              <Pressable
-                onPress={onLeave}
-                disabled={disabled}
-                className="rounded-full border border-danger py-3 items-center mt-2"
-              >
-                <Text className="text-danger font-bold text-sm">Leave Team</Text>
-              </Pressable>
-            </>
-          ) : null}
-          {/* Registers a whole squad into this slot in one go — independent
-              of the individual-join flow above, and not gated on
-              hasActiveTeamElsewhere since the squad owner themselves need
-              not be one of the registered players. */}
-          {isEmpty && onFillWithSquad && !genderMismatch && (
+          {isJoinedMember && (
+            <View className={`rounded-xl py-2.5 items-center ${isTeamFull ? "bg-green-50" : "bg-gray-100"}`}>
+              <Text className={`text-xs font-semibold ${isTeamFull ? "text-green-700" : "text-muted"}`}>
+                {isTeamFull
+                  ? `Team full — joining ${noun}…`
+                  : `${joinedMembers.length}/${requiredSize || "—"} Players — Need ${playersNeeded} More`}
+              </Text>
+            </View>
+          )}
+          {/* The tournament host no longer gets a per-card "Create Team"
+              here — they use "Add Myself" in the header (any non-full team,
+              picked from one dropdown) instead of a bulk squad-register
+              button on every empty card. */}
+          {/* A non-host without a team of their own gets a plain, instant
+              individual join instead — on every open (not full) team card,
+              not just an empty one. Hidden the moment they're on any team in
+              this tournament, and back once they leave it. */}
+          {!isHost && canJoinTeam && onJoinTeam && (
             <Pressable
-              onPress={onFillWithSquad}
+              onPress={onJoinTeam}
               disabled={disabled}
               className="flex-row items-center justify-center rounded-full bg-primary py-3.5 mt-3"
               style={{ gap: 8 }}
             >
-              <View
-                className="items-center justify-center rounded-full bg-white"
-                style={{ width: 22, height: 22 }}
-              >
-                <Ionicons name="add" size={16} color={colors.primary} />
-              </View>
-              <Text className="text-white font-bold text-sm">Create Team</Text>
+              <Ionicons name="add" size={17} color="white" />
+              <Text className="text-white font-bold text-sm">Join Team</Text>
             </Pressable>
           )}
-          {isEmpty && genderMismatch && (
-            <Text className="text-muted text-xs text-center mt-2">
-              This {noun} is open to {gameGenderLabel} players only, so you can't create a team here.
-            </Text>
+        </View>
+      )}
+
+      {/* Leave Team is independent of isRosterEditable — a joined member can
+          still back out of a PENDING_HOST_APPROVAL/APPROVED team too, as
+          long as the venue isn't booked yet (see canLeaveTeam). */}
+      {isJoinedMember && canLeaveTeam && (
+        <Pressable
+          onPress={onLeave}
+          disabled={disabled}
+          className="rounded-full border border-danger py-3 items-center mt-3"
+        >
+          <Text className="text-danger font-bold text-sm">Leave Team</Text>
+        </Pressable>
+      )}
+
+      {/* Recruiting into this team's open slot — a single searched player
+          (instant invite, approved from their Notifications), or several
+          individual requests at once from one of my squads. */}
+      {canManageRecruiting && (onInvitePlayer || onFillWithSquadMembers) && (
+        <View className="flex-row mt-3" style={{ gap: 8 }}>
+          {onInvitePlayer && (
+            <Pressable
+              onPress={onInvitePlayer}
+              disabled={disabled}
+              className="flex-1 flex-row items-center justify-center rounded-full border border-primary py-3"
+              style={{ gap: 6 }}
+            >
+              <Ionicons name="person-add-outline" size={15} color={colors.primary} />
+              <Text className="text-primary font-bold text-xs">Invite a Player</Text>
+            </Pressable>
+          )}
+          {onFillWithSquadMembers && (
+            <Pressable
+              onPress={onFillWithSquadMembers}
+              disabled={disabled}
+              className="flex-1 flex-row items-center justify-center rounded-full bg-primary py-3"
+              style={{ gap: 6 }}
+            >
+              <Ionicons name="people-outline" size={15} color="white" />
+              <Text className="text-white font-bold text-xs">Fill with my Squad</Text>
+            </Pressable>
           )}
         </View>
       )}
@@ -529,16 +561,18 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const noun: "tournament" | "game" = isTournament ? "tournament" : "game";
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [fillTeamId, setFillTeamId] = useState<string | null>(null);
-  const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
+  const [showJoinTeamModal, setShowJoinTeamModal] = useState(false);
+  const [invitePlayerTeamId, setInvitePlayerTeamId] = useState<string | null>(null);
+  const [fillSquadTeamId, setFillSquadTeamId] = useState<string | null>(null);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
+  const requestToJoinTeam = useRequestToJoinTeam(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
   const approveTeam = useApproveTeam(game.id);
   const rejectPendingTeam = useRejectPendingTeam(game.id);
-  const sendSquadInvite = useSendGameSquadInvite(game.id);
-  const { data: squadInvites } = useGameSquadInvitesForGame(game.id);
+  const createTeamInvite = useCreateTeamInvite(game.id);
 
   if (isLoading) {
     return <ActivityIndicator color={colors.primary} className="mt-4" />;
@@ -564,11 +598,22 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   // used to surface an explanation instead of just silently hiding it.
   const hiddenByGenderOnly = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams && genderMismatch;
   const isPoolFormat = game.tournament_format === "POOL";
+  // Same "Book Venue"/"Go To Scorecard" rule used everywhere else — a real
+  // (dropdown-picked) venue needs an actual booking, a manually typed one is
+  // treated as already settled the moment it's set. Once booked, a joined
+  // member can no longer leave their team (see TeamCard's canLeaveTeam).
+  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
 
   const disabled =
-    createTeam.isPending || leaveTeam.isPending || approveTeam.isPending || rejectPendingTeam.isPending;
+    createTeam.isPending ||
+    requestToJoinTeam.isPending ||
+    leaveTeam.isPending ||
+    approveTeam.isPending ||
+    rejectPendingTeam.isPending;
 
   const fillTeam = fillTeamId ? teams.find((t) => t.id === fillTeamId) : undefined;
+  const invitePlayerTeam = invitePlayerTeamId ? teams.find((t) => t.id === invitePlayerTeamId) : undefined;
+  const fillSquadTeam = fillSquadTeamId ? teams.find((t) => t.id === fillSquadTeamId) : undefined;
   // A squad can fill more than one team here (its owner just repeats
   // "Create Team" on another card with a different subset of members), but
   // never with the same player on two teams — this is every player already
@@ -576,6 +621,20 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const joinedElsewhereUserIds = activeTeams.flatMap((t) =>
     t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.user_id)
   );
+  // "Add Myself" — every active team with an open slot, offered to the host
+  // only while they don't already have a team of their own in this
+  // tournament (see myTeam above; leaving one makes this available again).
+  const joinableTeams: JoinableTeam[] = activeTeams
+    .filter((t) => {
+      const joinedCount = t.tournament_team_members.filter((m) => m.status === "JOINED").length;
+      return requiredSize <= 0 || joinedCount < requiredSize;
+    })
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      joinedCount: t.tournament_team_members.filter((m) => m.status === "JOINED").length,
+      requiredSize,
+    }));
 
   const handleLeave = (teamId: string) => {
     if (!userId) return;
@@ -611,6 +670,27 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           }),
       },
     ]);
+  };
+
+  const handleAddMyself = (teamId: string) => {
+    if (!userId) return;
+    requestToJoinTeam.mutate(
+      { teamId, userId },
+      {
+        onSuccess: () => setShowJoinTeamModal(false),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not join this team.")),
+      }
+    );
+  };
+
+  // A non-host's plain "Join Team" tap, straight from that team's own card
+  // (no picker needed — the card it's on is the team being joined).
+  const handleJoinTeam = (teamId: string) => {
+    if (!userId) return;
+    requestToJoinTeam.mutate(
+      { teamId, userId },
+      { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not join this team.")) }
+    );
   };
 
   return (
@@ -650,8 +730,11 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           Teams ({activeTeams.length}/{requiredTeams || "—"})
         </Text>
         <View className="flex-row" style={{ gap: 8 }}>
-          {isHost && (
-            <Pressable onPress={() => setShowInviteSquadModal(true)} style={primaryButtonShadow}>
+          {/* The host can add themselves straight onto any existing,
+              not-yet-full team — hidden again once they're already on one
+              (see myTeam); leaving that team brings this back. */}
+          {isHost && !myTeam && (
+            <Pressable onPress={() => setShowJoinTeamModal(true)} style={primaryButtonShadow}>
               <LinearGradient
                 colors={["#0E5C34", "#1D9254"]}
                 start={{ x: 0, y: 0 }}
@@ -666,7 +749,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
                 }}
               >
                 <Ionicons name="person-add-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">Invite a Squad</Text>
+                <Text className="text-white text-sm font-bold">Add Myself</Text>
               </LinearGradient>
             </Pressable>
           )}
@@ -685,7 +768,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
 
       {hiddenByGenderOnly && (
         <Text className="mx-4 -mt-2 mb-3 text-muted text-xs">
-          This {noun} is open to {gameGenderLabel} players only, so you can't create a team here.
+          This {noun} is open to {gameGenderLabel} players only, so you can't create or join a team here.
         </Text>
       )}
 
@@ -707,11 +790,15 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               isHost={isHost}
               disabled={disabled}
               hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
+              isVenueBooked={isVenueBooked}
               onLeave={() => handleLeave(team.id)}
               onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
               onApprove={() => handleApprove(team.id)}
               onReject={() => handleReject(team.id)}
               onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name, sportName: game.sports?.name })}
+              onInvitePlayer={userId ? () => setInvitePlayerTeamId(team.id) : undefined}
+              onFillWithSquadMembers={userId ? () => setFillSquadTeamId(team.id) : undefined}
+              onJoinTeam={userId ? () => handleJoinTeam(team.id) : undefined}
               genderMismatch={genderMismatch}
               gameGenderLabel={gameGenderLabel}
               noun={noun}
@@ -759,23 +846,50 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
       />
 
       {isHost && (
-        <InviteSquadModal
-          visible={showInviteSquadModal}
-          onClose={() => setShowInviteSquadModal(false)}
-          submitting={sendSquadInvite.isPending}
-          alreadyInvitedSquadIds={(squadInvites ?? []).map((i) => i.squad_id)}
-          onInvite={(squadId, squadName) => {
-            if (!userId) return;
-            sendSquadInvite.mutate(
-              { squadId, invitedBy: userId },
-              {
-                onSuccess: () => Alert.alert("Invited", `Invite sent to "${squadName}".`),
-                onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send invite.")),
-              }
-            );
-          }}
+        <SelectJoinTeamModal
+          visible={showJoinTeamModal}
+          onClose={() => setShowJoinTeamModal(false)}
+          teams={joinableTeams}
+          submitting={requestToJoinTeam.isPending}
+          onSelect={handleAddMyself}
         />
       )}
+
+      <InviteUsersModal
+        visible={!!invitePlayerTeamId}
+        onClose={() => setInvitePlayerTeamId(null)}
+        title={`Invite a Player · ${invitePlayerTeam?.name ?? ""}`}
+        excludeIds={joinedElsewhereUserIds}
+        onInvite={async (user) => {
+          if (!userId || !invitePlayerTeamId) return;
+          await createTeamInvite.mutateAsync({ teamId: invitePlayerTeamId, invitedUserId: user.id, invitedBy: userId });
+        }}
+      />
+
+      <FillTeamWithSquadModal
+        visible={!!fillSquadTeamId}
+        onClose={() => setFillSquadTeamId(null)}
+        userId={userId}
+        remainingSlots={Math.max(
+          requiredSize - (fillSquadTeam?.tournament_team_members.filter((m) => m.status === "JOINED").length ?? 0),
+          0
+        )}
+        submitting={createTeamInvite.isPending}
+        excludeUserIds={joinedElsewhereUserIds}
+        gameGender={game.gender}
+        onSubmit={async (memberUserIds) => {
+          if (!userId || !fillSquadTeamId) return;
+          try {
+            for (const memberUserId of memberUserIds) {
+              await createTeamInvite.mutateAsync({ teamId: fillSquadTeamId, invitedUserId: memberUserId, invitedBy: userId });
+            }
+            setFillSquadTeamId(null);
+            Alert.alert("Requests Sent", `Sent ${memberUserIds.length} request${memberUserIds.length === 1 ? "" : "s"}.`);
+          } catch (err) {
+            Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send all requests."));
+          }
+        }}
+      />
     </View>
   );
 }

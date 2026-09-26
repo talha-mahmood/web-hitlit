@@ -8,6 +8,11 @@ export type GameInvite = Database["public"]["Tables"]["game_invites"]["Row"] & {
 export type SquadInvite = Database["public"]["Tables"]["squad_invites"]["Row"] & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
 };
+// A team invite's recipient sees it from Notifications (no per-screen
+// "you're invited" banner like game/squad invites get), so this type only
+// ever needs to travel as the notification's own `data` payload — no
+// dedicated fetch-by-team query, unlike GameInvite/SquadInvite above.
+export type TeamInvite = Database["public"]["Tables"]["tournament_team_invites"]["Row"];
 
 const GAME_INVITE_SELECT = "*, profiles!game_invites_invited_by_fkey(id, full_name, avatar)";
 const SQUAD_INVITE_SELECT = "*, profiles!squad_invites_invited_by_fkey(id, full_name, avatar)";
@@ -34,6 +39,23 @@ export async function createSquadInvite(squadId: string, invitedUserId: string, 
   if (error) {
     if (isUniqueViolation(error)) {
       throw new Error("This player has already been invited.");
+    }
+    throw new Error(error.message);
+  }
+}
+
+// A team's own joined members (or the tournament host) inviting one specific
+// player straight into that team — bypasses the normal request/approval
+// flow entirely: accepting one joins the invitee directly (see
+// accept_team_invite), same as game/squad invites above. Enforced
+// server-side by tournament_team_invites_insert_member.
+export async function createTeamInvite(teamId: string, invitedUserId: string, invitedBy: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_team_invites")
+    .insert({ team_id: teamId, invited_user_id: invitedUserId, invited_by: invitedBy });
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("This player has already been invited to this team.");
     }
     throw new Error(error.message);
   }
@@ -87,5 +109,15 @@ export async function acceptSquadInvite(inviteId: string): Promise<void> {
 
 export async function declineSquadInvite(inviteId: string): Promise<void> {
   const { error } = await supabase.rpc("decline_squad_invite", { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
+}
+
+export async function acceptTeamInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase.rpc("accept_team_invite", { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
+}
+
+export async function declineTeamInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase.rpc("decline_team_invite", { p_invite_id: inviteId });
   if (error) throw new Error(error.message);
 }
