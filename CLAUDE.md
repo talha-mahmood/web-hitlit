@@ -9,3 +9,5 @@ For any UI change you must not change any app functionality it was just a UI cha
 
 Now i will give you updated UI screenshot of a screen of my app recognize which screen it is and make its UI exactly like in the attached image
 
+Whenever you build a brand-new screen or a brand-new component (not editing an existing one), its UI must match the existing UI/design system of this app exactly — same card style (white rounded-2xl cards with cardShadow), same color palette (colors.primary/primaryDark/primaryLight, the "#14532D" dark-green rounded-bottom banner treatment used across tab-root screens), same typography/icon conventions (Ionicons/MaterialCommunityIcons at the sizes/weights already used elsewhere), same spacing. Do not invent a new visual style for a new screen/component unless explicitly asked to.
+
