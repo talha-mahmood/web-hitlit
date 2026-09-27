@@ -273,7 +273,10 @@ export default function CommunityScreen() {
         />
       )}
       {segment === "chat" && (
-        <CommunityChatContent onReply={(rootId) => navigation.navigate("CommentThread", { rootId })} />
+        <CommunityChatContent
+          onReply={(rootId) => navigation.navigate("CommentThread", { rootId })}
+          onOpenProfile={(userId) => navigation.navigate("PlayerProfile", { userId })}
+        />
       )}
     </View>
   );

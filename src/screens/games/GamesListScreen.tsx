@@ -386,7 +386,11 @@ export default function GamesListScreen() {
   const { coords: myCoords, status: locationStatus, requestLocation } = useDeviceLocation();
   const myOnly = listFilter === "mine";
   const gameType = route.params?.gameType;
-  const isTournamentList = gameType === "TOURNAMENT";
+  // Off = only regular games, on = only tournaments — an entry point that
+  // opens this screen already scoped to tournaments (e.g. "Explore
+  // Tournaments") just starts the toggle on; the user can still flip it.
+  const [showTournaments, setShowTournaments] = useState(gameType === "TOURNAMENT");
+  const isTournamentList = showTournaments;
 
   // navigation.navigate() re-focuses this screen (already mounted in the
   // stack) instead of remounting it, so a new sportId param wouldn't
@@ -396,6 +400,10 @@ export default function GamesListScreen() {
   }, [route.params?.sportId]);
 
   useEffect(() => {
+    setShowTournaments(gameType === "TOURNAMENT");
+  }, [gameType]);
+
+  useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
     return () => clearTimeout(t);
   }, [searchInput]);
@@ -403,7 +411,7 @@ export default function GamesListScreen() {
   const { data: sports } = useSports();
   const { data: gamesData, isLoading, isRefetching, refetch } = useGames({
     sportId: selectedSportId,
-    gameType,
+    gameType: showTournaments ? "TOURNAMENT" : "REGULAR",
   });
   // The search box matches a game's name/ID, its sport, and its venue/location.
   const searched = debouncedSearch
@@ -603,6 +611,25 @@ export default function GamesListScreen() {
               </Pressable>
             );
           })}
+          {/* "Tournaments" — off shows only regular games, on shows only
+              tournaments (never both mixed together). */}
+          <Pressable
+            onPress={() => setShowTournaments((v) => !v)}
+            className="flex-row items-center rounded-full"
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              gap: 5,
+              backgroundColor: showTournaments ? colors.primary : "white",
+              borderWidth: 1,
+              borderColor: showTournaments ? colors.primary : colors.border,
+            }}
+          >
+            <Ionicons name="trophy-outline" size={14} color={showTournaments ? "white" : colors.muted} />
+            <Text className="font-medium" style={{ fontSize: 13.5, color: showTournaments ? "white" : colors.muted }}>
+              Tournaments
+            </Text>
+          </Pressable>
           {/* "Location" — opens a bottom sheet with a free-text field plus
               city suggestions (multi-select), in place of the old
               always-visible inline field. Right after All/My Games. */}

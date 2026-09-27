@@ -195,6 +195,21 @@ export default function AccountSettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="mail-outline" size={20} color={colors.primaryDark} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-muted text-xs">Email</Text>
+            <Text className="text-ink font-bold text-sm mt-0.5" numberOfLines={1}>
+              {profile?.email ?? "—"}
+            </Text>
+          </View>
+        </View>
+
         <SectionCard icon="person-outline" title="Display Name" subtitle="This name will be visible to other players.">
           <FieldInput value={name} onChangeText={setName} placeholder="Your name" maxLength={60} />
           {!nameValid && name.length > 0 && (

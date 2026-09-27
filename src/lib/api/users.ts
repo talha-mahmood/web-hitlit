@@ -27,6 +27,9 @@ export async function searchUsers(term: string, excludeIds: string[] = []): Prom
     .from("profiles")
     .select("id, full_name, avatar, user_code")
     .eq("visibility", "public")
+    // Owner (venue business) and superadmin accounts aren't players — never
+    // offered as someone to invite to a squad/team/game.
+    .eq("type", "user")
     .or(`full_name.ilike.%${trimmed}%,email.ilike.%${trimmed}%,user_code.ilike.%${trimmed}%`)
     .limit(20);
   if (excludeIds.length > 0) {

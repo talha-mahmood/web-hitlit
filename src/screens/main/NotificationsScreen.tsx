@@ -56,6 +56,7 @@ const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: s
   squad_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   team_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   community_reply: { icon: "chatbubble-ellipses", color: "#3B82F6", bg: "bg-blue-50" },
+  followed_post: { icon: "chatbubble-ellipses", color: colors.primary, bg: "bg-primary-light" },
 };
 const DEFAULT_META = { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
 
@@ -179,8 +180,9 @@ export default function NotificationsScreen() {
 
   const hasUnread = (notifications ?? []).some((n) => !n.is_read);
 
-  const handlePress = (n: NotificationRow) => {
-    if (!n.is_read) markRead.mutate(n.id);
+  // Shared by tapping the card itself and by approving an invite from it —
+  // both land the user on whatever the notification is actually about.
+  const navigateToTarget = (n: NotificationRow) => {
     const { gameId, squadId, commentId } = resolveTarget(n);
     if (gameId) {
       navigation.navigate("GameDetail", { gameId });
@@ -189,6 +191,11 @@ export default function NotificationsScreen() {
     } else if (commentId) {
       navigation.navigate("Community", { screen: "CommentThread", params: { rootId: commentId } });
     }
+  };
+
+  const handlePress = (n: NotificationRow) => {
+    if (!n.is_read) markRead.mutate(n.id);
+    navigateToTarget(n);
   };
 
   const handleDelete = (n: NotificationRow) => {
@@ -210,6 +217,7 @@ export default function NotificationsScreen() {
       onSuccess: () => {
         setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
         if (!n.is_read) markRead.mutate(n.id);
+        navigateToTarget(n);
       },
       onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not approve this request.")),
     });

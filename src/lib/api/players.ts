@@ -62,6 +62,11 @@ export type PlayerPublicProfile = {
   hoursPlayedTotal: number;
   computedSkillLevel: SkillLevel | null;
   sportBreakdown: PlayerSportBreakdownEntry[];
+  // Sport-specific totals — only meaningful (and only ever shown) when the
+  // profile is filtered to Cricket/Football respectively; see
+  // get_player_public_stats's name-matching caveat.
+  totalRuns: number;
+  totalGoals: number;
 };
 
 // Basic identity comes straight from `profiles` (publicly readable); the
@@ -101,5 +106,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
     hoursPlayedTotal: Number(stats.hours_played),
     computedSkillLevel: stats.computed_skill_level,
     sportBreakdown: sportBreakdown.sort((a, b) => b.count - a.count),
+    totalRuns: stats.total_runs ?? 0,
+    totalGoals: stats.total_goals ?? 0,
   };
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, Text, FlatList, TextInput, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
@@ -43,22 +43,28 @@ function CommentCard({
   onReply,
   onDelete,
   onToggleLike,
+  onOpenProfile,
 }: {
   comment: CommunityComment;
   isOwn: boolean;
   onReply: () => void;
   onDelete: () => void;
   onToggleLike: () => void;
+  onOpenProfile: () => void;
 }) {
   return (
     <View className="bg-white rounded-2xl border border-border p-4 mb-3" style={cardShadow}>
       <View className="flex-row items-start" style={{ gap: 10 }}>
-        <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
+        <Pressable onPress={onOpenProfile} hitSlop={4}>
+          <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
+        </Pressable>
         <View className="flex-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-              {comment.profiles?.full_name ?? "Player"}
-            </Text>
+            <Pressable onPress={onOpenProfile} className="flex-1 mr-2">
+              <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                {comment.profiles?.full_name ?? "Player"}
+              </Text>
+            </Pressable>
             {isOwn && (
               <Pressable onPress={onDelete} hitSlop={8} className="p-1">
                 <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
@@ -87,18 +93,34 @@ function CommentCard({
   );
 }
 
+const DAY_FILTERS = [1, 2, 3] as const;
+
 // Shared by the Community tab's in-place "Community Chat" segment — the
 // composer + feed list, with no header of its own since the caller already
 // provides one (the segmented pill row, for the in-place case).
-export default function CommunityChatContent({ onReply }: { onReply: (rootId: string) => void }) {
+export default function CommunityChatContent({
+  onReply,
+  onOpenProfile,
+}: {
+  onReply: (rootId: string) => void;
+  onOpenProfile: (userId: string) => void;
+}) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
   const [draft, setDraft] = useState("");
+  // null = no age filter (show everything the 6-month retention still has).
+  const [dayFilter, setDayFilter] = useState<1 | 2 | 3 | null>(null);
 
   const { data: comments, isLoading, error } = useCommunityFeed(userId);
   const postComment = usePostComment();
   const deleteComment = useDeleteComment();
   const toggleLike = useToggleCommentLike();
+
+  const visibleComments = useMemo(() => {
+    if (!dayFilter) return comments ?? [];
+    const cutoff = Date.now() - dayFilter * 24 * 60 * 60 * 1000;
+    return (comments ?? []).filter((c) => new Date(c.created_at).getTime() >= cutoff);
+  }, [comments, dayFilter]);
 
   const handlePost = () => {
     const body = draft.trim();
@@ -160,6 +182,24 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
         </Pressable>
       </View>
 
+      <View className="flex-row items-center px-4 py-2.5 bg-white border-b border-border" style={{ gap: 8 }}>
+        {DAY_FILTERS.map((d) => {
+          const active = dayFilter === d;
+          return (
+            <Pressable
+              key={d}
+              onPress={() => setDayFilter(active ? null : d)}
+              className="rounded-full px-3 py-1.5"
+              style={{ backgroundColor: active ? colors.primary : "#F3F4F6" }}
+            >
+              <Text className={`text-xs font-bold ${active ? "text-white" : "text-muted"}`}>
+                {d} Day{d === 1 ? "" : "s"}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : error ? (
@@ -171,15 +211,17 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
         </View>
       ) : (
         <FlatList
-          data={comments ?? []}
+          data={visibleComments}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
           ListEmptyComponent={
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
-              <Text className="text-ink font-semibold text-base">No comments yet</Text>
+              <Text className="text-ink font-semibold text-base">
+                {dayFilter ? `No comments in the last ${dayFilter} day${dayFilter === 1 ? "" : "s"}` : "No comments yet"}
+              </Text>
               <Text className="text-muted text-sm text-center px-8">
-                Be the first to say something to the community!
+                {dayFilter ? "Try a wider filter." : "Be the first to say something to the community!"}
               </Text>
             </View>
           }
@@ -190,6 +232,7 @@ export default function CommunityChatContent({ onReply }: { onReply: (rootId: st
               onReply={() => onReply(item.id)}
               onDelete={() => handleDelete(item)}
               onToggleLike={() => handleToggleLike(item)}
+              onOpenProfile={() => onOpenProfile(item.user_id)}
             />
           )}
         />

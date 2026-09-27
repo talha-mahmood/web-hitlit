@@ -1,9 +1,12 @@
-import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
+import { useState } from "react";
+import { View, Text, Image, ScrollView, ActivityIndicator, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { usePlayerPublicProfile } from "../../hooks/usePlayers";
+import { useFollowState, useToggleFollow } from "../../hooks/usePlayerFollows";
+import { useAuthStore } from "../../store/authStore";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
@@ -46,7 +49,26 @@ export default function PlayerProfileScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const insets = useSafeAreaInsets();
-  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId, route.params.sportId);
+  const viewerId = useAuthStore((s) => s.session?.user.id);
+  // If the list this was opened from had no sport filter on, tapping a
+  // "Sports Played" card below applies that one sport's filter right here
+  // instead — tapping the same one again clears it back to unfiltered.
+  const [filterSportId, setFilterSportId] = useState(route.params.sportId);
+  const [filterSportName, setFilterSportName] = useState(route.params.sportName);
+  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId, filterSportId);
+  const { data: followState } = useFollowState(viewerId, route.params.userId);
+  const toggleFollow = useToggleFollow(route.params.userId, viewerId);
+  const isOwnProfile = viewerId === route.params.userId;
+
+  const handleSelectSportCard = (sportId: string, sportName: string) => {
+    if (filterSportId === sportId) {
+      setFilterSportId(undefined);
+      setFilterSportName(undefined);
+    } else {
+      setFilterSportId(sportId);
+      setFilterSportName(sportName);
+    }
+  };
 
   const matchesWon = player?.matchesWonTotal ?? 0;
   const matchesPlayed = player?.matchesPlayedTotal ?? 0;
@@ -165,7 +187,43 @@ export default function PlayerProfileScreen() {
               </Text>
             </View>
           </View>
+          {!isOwnProfile && (
+            <Pressable
+              onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
+              disabled={toggleFollow.isPending || !viewerId}
+              className="flex-row items-center rounded-full px-4 py-2"
+              style={{
+                gap: 6,
+                backgroundColor: followState?.isFollowing ? "white" : colors.primary,
+                borderWidth: followState?.isFollowing ? 1 : 0,
+                borderColor: colors.border,
+              }}
+            >
+              {toggleFollow.isPending ? (
+                <ActivityIndicator size="small" color={followState?.isFollowing ? colors.primary : "white"} />
+              ) : (
+                <>
+                  <Ionicons
+                    name={followState?.isFollowing ? "checkmark" : "add"}
+                    size={16}
+                    color={followState?.isFollowing ? colors.primaryDark : "white"}
+                  />
+                  <Text
+                    className="text-sm font-bold"
+                    style={{ color: followState?.isFollowing ? colors.primaryDark : "white" }}
+                  >
+                    {followState?.isFollowing ? "Following" : "Follow"}
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          )}
         </View>
+        {(followState?.followerCount ?? 0) > 0 && (
+          <Text className="text-muted text-xs mt-3">
+            {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
+          </Text>
+        )}
       </View>
 
       {isLoading || !player ? (
@@ -228,7 +286,7 @@ export default function PlayerProfileScreen() {
                     {matchesWon} / {matchesPlayed}
                   </Text>
                   <Text className="text-muted text-xs mt-0.5">
-                    {route.params.sportName ? `Games Win · ${route.params.sportName}` : "Games Win"}
+                    {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                   </Text>
                 </View>
               </View>
@@ -251,6 +309,38 @@ export default function PlayerProfileScreen() {
             <Text className="text-muted text-xs mt-2">{winCaption}</Text>
           </View>
 
+          {/* Sport-specific totals — only meaningful once filtered to that
+              one sport (see get_player_public_stats' name-matching caveat on
+              why these can't be shown unfiltered/combined). */}
+          {filterSportName?.toLowerCase() === "cricket" && (
+            <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+              >
+                <MaterialCommunityIcons name="cricket" size={22} color={colors.primaryDark} />
+              </View>
+              <View>
+                <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
+                <Text className="text-muted text-xs mt-0.5">Total Runs Scored</Text>
+              </View>
+            </View>
+          )}
+          {filterSportName?.toLowerCase() === "football" && (
+            <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+              >
+                <MaterialCommunityIcons name="soccer" size={22} color={colors.primaryDark} />
+              </View>
+              <View>
+                <Text className="text-ink font-extrabold text-xl">{player.totalGoals}</Text>
+                <Text className="text-muted text-xs mt-0.5">Total Goals</Text>
+              </View>
+            </View>
+          )}
+
           {/* Sport breakdown */}
           {player.sportBreakdown.length > 0 && (
             <>
@@ -269,8 +359,18 @@ export default function PlayerProfileScreen() {
               <View style={{ gap: 8 }}>
                 {player.sportBreakdown.map((s) => {
                   const { icon, bg, fg } = getSportIcon(s.sportName);
+                  const selected = filterSportId === s.sportId;
                   return (
-                    <View key={s.sportId} className="flex-row items-center bg-white rounded-2xl p-3" style={cardShadow}>
+                    <Pressable
+                      key={s.sportId}
+                      onPress={() => handleSelectSportCard(s.sportId, s.sportName)}
+                      className="flex-row items-center bg-white rounded-2xl p-3"
+                      style={{
+                        ...cardShadow,
+                        borderWidth: selected ? 1.5 : 0,
+                        borderColor: selected ? colors.primary : "transparent",
+                      }}
+                    >
                       <View
                         className="items-center justify-center rounded-xl mr-3"
                         style={{ width: 46, height: 46, backgroundColor: bg }}
@@ -285,7 +385,8 @@ export default function PlayerProfileScreen() {
                           {s.count} {s.count === 1 ? "game" : "games"}
                         </Text>
                       </View>
-                    </View>
+                      {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
+                    </Pressable>
                   );
                 })}
               </View>

@@ -62,6 +62,7 @@ function CommentBubble({
   onReply,
   onDelete,
   onToggleLike,
+  onOpenProfile,
 }: {
   comment: CommunityComment;
   isOwn: boolean;
@@ -69,18 +70,23 @@ function CommentBubble({
   onReply: () => void;
   onDelete: () => void;
   onToggleLike: () => void;
+  onOpenProfile: () => void;
 }) {
   return (
     <View
       className={`rounded-2xl border p-3.5 mb-3 ${isRoot ? "bg-white border-border" : "bg-primary-light border-primary-light"}`}
     >
       <View className="flex-row items-start" style={{ gap: 10 }}>
-        <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
+        <Pressable onPress={onOpenProfile} hitSlop={4}>
+          <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
+        </Pressable>
         <View className="flex-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-              {comment.profiles?.full_name ?? "Player"}
-            </Text>
+            <Pressable onPress={onOpenProfile} className="flex-1 mr-2">
+              <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                {comment.profiles?.full_name ?? "Player"}
+              </Text>
+            </Pressable>
             {isOwn && (
               <Pressable onPress={onDelete} hitSlop={8} className="p-1">
                 <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
@@ -216,6 +222,7 @@ export default function CommentThreadScreen() {
               onReply={() => setReplyTarget({ id: root.id, name: root.profiles?.full_name ?? "this comment" })}
               onDelete={() => handleDelete(root)}
               onToggleLike={() => handleToggleLike(root)}
+              onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: root.user_id })}
             />
           }
           renderItem={({ item }) => (
@@ -229,6 +236,7 @@ export default function CommentThreadScreen() {
                 }
                 onDelete={() => handleDelete(item)}
                 onToggleLike={() => handleToggleLike(item)}
+                onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: item.user_id })}
               />
             </View>
           )}
