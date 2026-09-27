@@ -3299,6 +3299,7 @@ export type Database = {
           sport_breakdown: Json
           total_goals: number
           total_runs: number
+          total_wickets: number
           tournaments_played: number
         }[]
       }

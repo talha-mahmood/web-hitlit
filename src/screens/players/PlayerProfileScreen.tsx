@@ -120,24 +120,6 @@ export default function PlayerProfileScreen() {
           color={colors.primaryDark}
           style={{ position: "absolute", right: -26, top: 28, opacity: 0.1, transform: [{ rotate: "-8deg" }] }}
         />
-        <Text
-          numberOfLines={3}
-          style={{
-            position: "absolute",
-            right: 18,
-            top: insets.top + 58,
-            width: 110,
-            fontSize: 11,
-            fontStyle: "italic",
-            fontWeight: "700",
-            color: colors.primaryDark,
-            opacity: 0.5,
-            textAlign: "right",
-            transform: [{ rotate: "-4deg" }],
-          }}
-        >
-          Good Players Build Brighter Communities
-        </Text>
 
         <View className="flex-row items-center mb-5">
           <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
@@ -313,16 +295,30 @@ export default function PlayerProfileScreen() {
               one sport (see get_player_public_stats' name-matching caveat on
               why these can't be shown unfiltered/combined). */}
           {filterSportName?.toLowerCase() === "cricket" && (
-            <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
-              <View
-                className="items-center justify-center rounded-full"
-                style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
-              >
-                <MaterialCommunityIcons name="cricket" size={22} color={colors.primaryDark} />
+            <View className="flex-row mb-4" style={{ gap: 12 }}>
+              <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                >
+                  <MaterialCommunityIcons name="cricket" size={22} color={colors.primaryDark} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
+                  <Text className="text-muted text-xs mt-0.5">Total Runs</Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
-                <Text className="text-muted text-xs mt-0.5">Total Runs Scored</Text>
+              <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                >
+                  <MaterialCommunityIcons name="bowling" size={22} color={colors.primaryDark} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-ink font-extrabold text-xl">{player.totalWickets}</Text>
+                  <Text className="text-muted text-xs mt-0.5">Total Wickets</Text>
+                </View>
               </View>
             </View>
           )}

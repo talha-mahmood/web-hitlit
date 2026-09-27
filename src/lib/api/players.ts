@@ -67,6 +67,7 @@ export type PlayerPublicProfile = {
   // get_player_public_stats's name-matching caveat.
   totalRuns: number;
   totalGoals: number;
+  totalWickets: number;
 };
 
 // Basic identity comes straight from `profiles` (publicly readable); the
@@ -108,5 +109,6 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
     sportBreakdown: sportBreakdown.sort((a, b) => b.count - a.count),
     totalRuns: stats.total_runs ?? 0,
     totalGoals: stats.total_goals ?? 0,
+    totalWickets: stats.total_wickets ?? 0,
   };
 }
