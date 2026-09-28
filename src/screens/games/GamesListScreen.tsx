@@ -19,7 +19,7 @@ import JoinRequestModal from "../../components/JoinRequestModal";
 import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
 import type { Database } from "../../types/database.types";
@@ -27,7 +27,6 @@ import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
-import { computeFixtures, TOURNAMENT_FORMAT_LABEL } from "../../lib/tournamentFixtures";
 import { matchesLocationQuery } from "../../lib/locationFilter";
 import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
@@ -123,21 +122,10 @@ function GameCard({
       : `${dayLabel(game.game_date)} · ${formatTimeRange(game.start_time, game.end_time)}`;
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
 
-  // Fixtures are derived from the host's ordered team-name list — same logic
-  // as the full list on TournamentTeamsSection, just capped for card space.
-  const orderedTeamNames = [...game.tournament_teams]
-    .filter((t) => t.status !== "REJECTED")
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    .map((t) => t.name);
-  const fixtures = game.tournament_format
-    ? computeFixtures(game.tournament_format, orderedTeamNames)
-    : [];
-  const FIXTURES_PREVIEW_LIMIT = 2;
-
   const sportName = game.sports?.name ?? "";
   const sportPhoto = getSportImage(sportName);
   const sportGlyph = getSportIcon(sportName);
-  // The title/location/teams rows keep clear of the sport picture on the right.
+  // The title/location/people rows keep clear of the sport picture on the right.
   const rightGutter = { paddingRight: 92 };
 
   return (
@@ -152,7 +140,55 @@ function GameCard({
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24 }}>
+        {/* Laid out as the same five rows (and the same min height / font
+            sizes) as the Squads list card: CTA pinned top-right, sport
+            picture in the disc on the right edge, then title, location,
+            people line, badge line, skill + price line. */}
+        <View
+          className="border border-border overflow-hidden bg-white"
+          style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}
+        >
+          {/* Join/Joined/Requested/Full/hosting CTA — pinned to the top-right
+              corner. Nested Bouncy so a tap here doesn't also trigger the
+              card's own onPress. */}
+          <View style={{ position: "absolute", top: 16, right: 16, zIndex: 5 }}>
+            {isMyGame ? (
+              <View className="bg-blue-50 rounded-2xl px-3 py-2">
+                <Text className="text-blue-600 font-bold text-sm">{isTournament ? "My Tournament" : "My Game"}</Text>
+              </View>
+            ) : isFull && !hasJoined ? (
+              <View className="bg-red-50 rounded-2xl px-3 py-2">
+                <Text className="text-red-600 font-bold text-sm">Full</Text>
+              </View>
+            ) : (
+              <Bouncy
+                onPress={isTeamBased ? (hasJoined ? onPress : onTeamJoinPress) : onJoinPress}
+                scaleTo={0.94}
+              >
+                {hasJoined ? (
+                  <View
+                    className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
+                    style={{ gap: 4, minWidth: 78 }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Text className="text-primary font-semibold text-sm">Joined</Text>
+                  </View>
+                ) : hasRequested ? (
+                  <View className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2" style={{ minWidth: 78 }}>
+                    <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                  </View>
+                ) : (
+                  <View
+                    className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
+                    style={{ minWidth: 78, ...primaryButtonShadow }}
+                  >
+                    <Text className="text-white font-bold text-sm">Join</Text>
+                  </View>
+                )}
+              </Bouncy>
+            )}
+          </View>
+
           {/* Sport picture in a soft green disc, tucked into the right edge */}
           <View
             pointerEvents="none"
@@ -177,56 +213,9 @@ function GameCard({
           </View>
 
           <View className="px-4 pt-4 pb-4">
-            {/* Row 1: time/date badge + Join CTA + menu dots. Nested Bouncy so a
-                tap on Join doesn't also trigger the card's own onPress. */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View
-                className="flex-row items-center"
-                style={{ backgroundColor: badgeColor, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, gap: 6 }}
-              >
-                <Ionicons
-                  name={isTournament && game.end_date && game.end_date !== game.game_date ? "calendar-outline" : "time-outline"}
-                  size={15}
-                  color="white"
-                />
-                <Text style={{ color: "white", fontSize: 12.5, fontWeight: "700" }}>{badgeLabel}</Text>
-              </View>
-              <View className="flex-row items-center" style={{ gap: 6 }}>
-                {!isMyGame && !isFull && (
-                  <Bouncy
-                    onPress={isTeamBased ? (hasJoined ? onPress : onTeamJoinPress) : onJoinPress}
-                    scaleTo={0.94}
-                  >
-                    {hasJoined ? (
-                      <View
-                        className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
-                        style={{ gap: 4, minWidth: 78 }}
-                      >
-                        <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                        <Text className="text-primary font-semibold text-sm">Joined</Text>
-                      </View>
-                    ) : hasRequested ? (
-                      <View
-                        className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2"
-                        style={{ minWidth: 78 }}
-                      >
-                        <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
-                      </View>
-                    ) : (
-                      <View
-                        className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
-                        style={{ minWidth: 78, ...primaryButtonShadow }}
-                      >
-                        <Text className="text-white font-bold text-sm">Join</Text>
-                      </View>
-                    )}
-                  </Bouncy>
-                )}
-              </View>
-            </View>
-
-            {/* Row 2: Icon (if the host set a custom one) + Title */}
-            <View className="flex-row items-center mb-1.5" style={{ gap: 8, ...rightGutter }}>
+            {/* Row 1: Icon (if the host set a custom one) + Title — kept clear
+                of the corner CTA via a wider right gutter, one line. */}
+            <View className="flex-row items-center mb-1.5" style={{ gap: 8, paddingRight: 100 }}>
               {game.icon_url && (
                 <Image
                   source={{ uri: game.icon_url }}
@@ -234,24 +223,23 @@ function GameCard({
                   resizeMode="cover"
                 />
               )}
-              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={2}>
+              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={1}>
                 {game.title}
               </Text>
             </View>
 
-            {/* Row 3: Location */}
-            {(game.venues || game.custom_venue_name) && (
-              <View className="flex-row items-center mb-2.5" style={{ gap: 5, ...rightGutter }}>
-                <Ionicons name="location-outline" size={15} color={colors.muted} />
-                <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
-                  {game.venues ? game.venues.name : game.custom_venue_name}
-                  {game.venues?.city ? ` · ${game.venues.city}` : ""}
-                </Text>
-              </View>
-            )}
+            {/* Row 2: Location */}
+            <View className="flex-row items-center mb-2.5" style={{ gap: 5, ...rightGutter }}>
+              <Ionicons name="location-outline" size={15} color={colors.muted} />
+              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+                {game.venues
+                  ? `${game.venues.name}${game.venues.city ? ` · ${game.venues.city}` : ""}`
+                  : game.custom_venue_name ?? "Location not set"}
+              </Text>
+            </View>
 
-            {/* Row 4: avatar stack + going/teams count */}
-            <View className="flex-row items-center mb-2.5" style={{ gap: 8, ...rightGutter }}>
+            {/* Row 3: avatar stack + going/teams count and how many are left */}
+            <View className="flex-row items-center mb-3" style={{ gap: 8, ...rightGutter }}>
               <AvatarStack
                 people={joined.map((p) => ({
                   avatar: p.profiles?.avatar ?? null,
@@ -259,88 +247,42 @@ function GameCard({
                 }))}
                 size={30}
               />
-              <Text className="text-muted font-medium" style={{ fontSize: 14 }}>
+              <Text className="text-muted font-medium flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {isTeamBased
-                  ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""}`
-                  : `${joined.length} Going`}
+                  ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""} · ${Math.max(teamsLeft, 0)} left`
+                  : `${joined.length} Going · ${Math.max(spotsLeft, 0)} left`}
               </Text>
             </View>
 
-            {/* Row 5: Entry fee — "Per Team" for tournaments, "Per Person" for
-                regular games. */}
-            <View className="flex-row items-center mb-3" style={{ gap: 8, ...rightGutter }}>
-              <Ionicons name="ticket-outline" size={18} color={colors.ink} />
-              <Text className="text-ink" style={{ fontSize: 14.5 }} numberOfLines={1}>
-                <Text className="font-bold">{isTournament ? "Entry Fee Per Team" : "Entry Fee Per Person"}: </Text>
-                <Text className="font-bold" style={{ color: colors.primary }}>
-                  {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
+            {/* Row 4: when + sport — never wraps; the time text truncates
+                rather than pushing a second line in on narrow screens. */}
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <View
+                className="flex-row items-center px-3 py-1 rounded-full"
+                style={{ backgroundColor: badgeColor, gap: 5, flexShrink: 1 }}
+              >
+                <Ionicons
+                  name={isTournament && game.end_date && game.end_date !== game.game_date ? "calendar-outline" : "time-outline"}
+                  size={13}
+                  color="white"
+                />
+                <Text className="text-white text-xs font-bold" numberOfLines={1} style={{ flexShrink: 1 }}>
+                  {badgeLabel}
                 </Text>
-              </Text>
+              </View>
+              <View className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 0 }}>
+                <Text className="text-primary text-xs font-bold" numberOfLines={1}>
+                  {game.sports?.name ?? "Sport"}
+                </Text>
+              </View>
             </View>
 
-            {/* Row 6: Sport + tournament + my-game + spots badges */}
-            <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
-              <View className="bg-primary-light px-3 py-1 rounded-full">
-                <Text className="text-primary text-xs font-bold">{game.sports?.name ?? "Sport"}</Text>
-              </View>
-              {isTournament && (
-                <View className="bg-purple-50 px-3 py-1 rounded-full">
-                  <Text className="text-purple-700 text-xs font-semibold">🏆 Tournament</Text>
-                </View>
-              )}
-              {isMyGame && (
-                <View className="bg-blue-50 px-3 py-1 rounded-full">
-                  <Text className="text-blue-600 text-xs font-semibold">
-                    {isTournament ? "My Tournament" : "My Game"}
-                  </Text>
-                </View>
-              )}
-              {isFull ? (
-                <View className="bg-red-50 px-3 py-1 rounded-full">
-                  <Text className="text-red-600 text-xs font-semibold">Full</Text>
-                </View>
-              ) : (
-                <View className="bg-green-50 px-3 py-1 rounded-full">
-                  <Text className="text-primary text-xs font-semibold">
-                    {isTeamBased
-                      ? `${teamsLeft} team${teamsLeft !== 1 ? "s" : ""} left`
-                      : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Row 6b: fixtures preview (tournament only, once teams exist) */}
-            {fixtures.length > 0 && (
-              <View className="rounded-2xl px-4 py-3 mt-3" style={{ backgroundColor: "#EEF0FF", gap: 3 }}>
-                <Text className="text-indigo-700 text-sm font-bold mb-0.5">
-                  {TOURNAMENT_FORMAT_LABEL[game.tournament_format!]} Fixtures
-                </Text>
-                {fixtures.slice(0, FIXTURES_PREVIEW_LIMIT).map((f, i) => (
-                  <Text key={i} className="text-ink text-sm" numberOfLines={1}>
-                    {f.teamA} vs {f.teamB ?? "Bye"}
-                  </Text>
-                ))}
-                {fixtures.length > FIXTURES_PREVIEW_LIMIT && (
-                  <Text className="text-muted text-xs mt-0.5">
-                    +{fixtures.length - FIXTURES_PREVIEW_LIMIT} more
-                  </Text>
-                )}
-              </View>
-            )}
-
-            {/* Row 7: skill pill + creator */}
-            <View className="flex-row items-center mt-3">
+            {/* Row 5: skill pill + entry fee */}
+            <View className="flex-row items-center mt-3" style={{ minHeight: 30 }}>
               {skillColor && skillLabel && (
                 <View
                   className="flex-row items-center"
-                  style={{
-                    backgroundColor: skillColor,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 999,
-                    gap: 6,
-                  }}
+                  style={{ backgroundColor: skillColor, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, gap: 6 }}
                 >
                   <Ionicons name="stats-chart" size={13} color="white" />
                   <Text style={{ color: "white", fontSize: 12.5, fontWeight: "700" }}>{skillLabel}</Text>
@@ -349,9 +291,12 @@ function GameCard({
               {skillColor && skillLabel ? (
                 <View style={{ width: 1, height: 22, backgroundColor: colors.border, marginHorizontal: 12 }} />
               ) : null}
-              <Ionicons name="person-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
-              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
-                {game.profiles?.full_name ?? "Unknown"}
+              <Ionicons name="ticket-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
+              <Text className="flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+                <Text className="font-bold" style={{ color: colors.primary }}>
+                  {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
+                </Text>
+                <Text className="text-muted">{isTournament ? " per team" : " per person"}</Text>
               </Text>
             </View>
           </View>

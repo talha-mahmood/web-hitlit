@@ -30,6 +30,12 @@ export const cardShadow = {
   elevation: 3,
 };
 
+// The Squads, Games/Tournaments and Venues list cards all share this one
+// height (each is laid out as the same five rows: name, location, a
+// people/rating line, a badge line, and a skill/price line) so the three
+// lists read as the same size of card.
+export const LIST_CARD_MIN_HEIGHT = 214;
+
 // Heavier variant for large, singular, centered hero cards (auth screens,
 // modals) — same recipe as the login screen's card.
 export const heroShadow = {

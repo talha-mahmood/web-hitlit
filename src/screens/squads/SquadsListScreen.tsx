@@ -17,7 +17,7 @@ import SelectLocationModal from "../../components/SelectLocationModal";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
-import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
 import type { Database } from "../../types/database.types";
@@ -83,7 +83,7 @@ function SquadCard({
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, position: "relative" }}>
+        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}>
           {/* Join/Joined/Requested CTA — pinned to the card's top-right
               corner. Nested Bouncy so a tap here doesn't also trigger the
               card's own onPress. */}
