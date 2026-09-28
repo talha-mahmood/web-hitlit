@@ -12,6 +12,7 @@ import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm } from "../../lib/distance";
 import type { VenueListItem } from "../../lib/api/venues";
 import { getSportImage } from "../../lib/sportImages";
+import { getVenuePhoto } from "../../lib/venuePhotos";
 import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
 import SelectSportModal from "../../components/SelectSportModal";
@@ -23,14 +24,10 @@ import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator
 type VenuesListRouteProp = RouteProp<VenuesStackParamList, "VenuesList">;
 type VenuesListNavigationProp = NativeStackNavigationProp<VenuesStackParamList, "VenuesList">;
 
-// A venue card for this list, laid out as the same five rows as the Squads
-// list card (and given the same shared min height / font sizes) so the
-// Squads, Games and Venues lists all show the same size of card: a CTA
-// pinned top-right, the venue's photo in the soft disc on the right edge,
-// then name, location, rating line, sport chips and a price line. This is
-// separate from the shared components/VenueCard.tsx, which the Home
-// screen's "Venues near you" carousel still uses at a much narrower, fixed
-// width — resizing that shared one to this shape would break that carousel.
+// A venue card for this list: the venue's banner photo across the top (with
+// its rating pinned on it, same as the home screen's venue cards), then
+// name, location, and the sport chips + View CTA. Separate from the shared
+// components/VenueCard.tsx (the home carousel's fixed-width card).
 function VenueListCard({
   venue,
   onPress,
@@ -42,10 +39,9 @@ function VenueListCard({
 }) {
   const coverImage = [...venue.venue_images].sort((a, b) => a.display_order - b.display_order).at(0)?.image_url;
   const sportNames = Array.from(new Set(venue.court.map((c) => c.sports?.name).filter(Boolean))) as string[];
-  const sportFallbackImage = getSportImage(sportNames[0] ?? "");
-  const minPrice = venue.court.length > 0 ? Math.min(...venue.court.map((c) => c.price_per_hour)) : null;
-  // The name/location/rating rows keep clear of the photo disc on the right.
-  const rightGutter = { paddingRight: 92 };
+  // Same fallback order as the home screen's venue cards: an uploaded photo,
+  // else the curated photo for this venue, else a photo of its sport.
+  const fallbackImage = getVenuePhoto(venue.id) ?? getSportImage(sportNames[0] ?? "");
   const MAX_SPORT_CHIPS = 2;
 
   return (
@@ -55,94 +51,60 @@ function VenueListCard({
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View
-          className="border border-border overflow-hidden bg-white"
-          style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}
-        >
-          {/* View CTA — pinned to the card's top-right corner, same spot as
-              the Squads card's Join button. */}
-          <View style={{ position: "absolute", top: 16, right: 16, zIndex: 5 }}>
-            <View
-              className="flex-row items-center justify-center bg-primary rounded-2xl px-3 py-2"
-              style={{ gap: 4, minWidth: 78, ...primaryButtonShadow }}
-            >
-              <Text className="text-white font-bold text-sm">View</Text>
-              <Ionicons name="arrow-forward" size={14} color="white" />
-            </View>
-          </View>
-
-          {/* Venue photo in the soft green disc, tucked into the right edge */}
-          <View
-            pointerEvents="none"
-            className="items-center justify-center overflow-hidden"
-            style={{
-              position: "absolute",
-              right: -30,
-              top: 56,
-              width: 128,
-              height: 128,
-              borderRadius: 64,
-              backgroundColor: "#E4F7EA",
-            }}
-          >
+        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, height: LIST_CARD_MIN_HEIGHT }}>
+          <View style={{ position: "relative", flex: 1 }}>
             {coverImage ? (
-              <Image source={{ uri: coverImage }} style={{ width: 128, height: 128 }} resizeMode="cover" />
-            ) : sportFallbackImage ? (
-              <View style={{ width: 132, height: 74, marginRight: 26, mixBlendMode: "multiply" }}>
-                <Image source={sportFallbackImage} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-              </View>
+              <Image source={{ uri: coverImage }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="cover" />
+            ) : fallbackImage ? (
+              <Image source={fallbackImage} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="cover" />
             ) : (
-              <Ionicons name="business" size={50} color={colors.primary} style={{ marginRight: 26, opacity: 0.8 }} />
+              <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.primaryLight }} />
             )}
-          </View>
-
-          <View className="px-4 pt-4 pb-4">
-            {/* Row 1: name — clear of the corner CTA via a wider right gutter */}
-            <View className="flex-row items-center mb-1.5" style={{ paddingRight: 100 }}>
-              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={1}>
-                {venue.name}
+            <View
+              className="absolute flex-row items-center bg-black/60 rounded-full"
+              style={{ left: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 5, gap: 4 }}
+            >
+              <Ionicons name="star" size={13} color={colors.warning} />
+              <Text className="text-white font-bold" style={{ fontSize: 12.5 }}>
+                {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
               </Text>
             </View>
+          </View>
 
-            {/* Row 2: location */}
-            <View className="flex-row items-center mb-2.5" style={{ gap: 5, ...rightGutter }}>
+          <View className="px-4 pt-3 pb-3">
+            <Text className="text-ink font-extrabold mb-0.5" style={{ fontSize: 20 }} numberOfLines={1}>
+              {venue.name}
+            </Text>
+
+            <View className="flex-row items-center mb-2" style={{ gap: 5 }}>
               <Ionicons name="location-outline" size={15} color={colors.muted} />
               <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {[venue.address, venue.city].filter(Boolean).join(" · ") || "Location not set"}
               </Text>
             </View>
 
-            {/* Row 3: rating + court count (same slot as the squad's member count) */}
-            <View className="flex-row items-center mb-3" style={{ gap: 8, minHeight: 30, ...rightGutter }}>
-              <Ionicons name="star" size={16} color={colors.warning} />
-              <Text className="text-muted font-medium" style={{ fontSize: 14 }} numberOfLines={1}>
-                {venue.rating > 0 ? venue.rating.toFixed(1) : "New"} · {venue.court.length} court
-                {venue.court.length !== 1 ? "s" : ""}
-              </Text>
-            </View>
-
-            {/* Row 4: sport chips (capped so this row never wraps to a second line) */}
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              {sportNames.slice(0, MAX_SPORT_CHIPS).map((name) => (
-                <View key={name} className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 1 }}>
-                  <Text className="text-primary text-xs font-bold" numberOfLines={1}>
-                    {name}
-                  </Text>
-                </View>
-              ))}
-              {sportNames.length > MAX_SPORT_CHIPS && (
-                <View className="bg-primary-light px-3 py-1 rounded-full">
-                  <Text className="text-primary text-xs font-bold">+{sportNames.length - MAX_SPORT_CHIPS}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Row 5: price line (same slot as the squad's skill + creator row) */}
-            <View className="flex-row items-center mt-3" style={{ minHeight: 30 }}>
-              <Ionicons name="ticket-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
-              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
-                {minPrice != null ? `From Rs ${minPrice.toLocaleString()} / hr` : "Pricing not set"}
-              </Text>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1" style={{ gap: 8, marginRight: 8 }}>
+                {sportNames.slice(0, MAX_SPORT_CHIPS).map((name) => (
+                  <View key={name} className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 1 }}>
+                    <Text className="text-primary text-xs font-bold" numberOfLines={1}>
+                      {name}
+                    </Text>
+                  </View>
+                ))}
+                {sportNames.length > MAX_SPORT_CHIPS && (
+                  <View className="bg-primary-light px-3 py-1 rounded-full">
+                    <Text className="text-primary text-xs font-bold">+{sportNames.length - MAX_SPORT_CHIPS}</Text>
+                  </View>
+                )}
+              </View>
+              <View
+                className="flex-row items-center justify-center bg-primary rounded-2xl px-3 py-1.5"
+                style={{ gap: 4, ...primaryButtonShadow }}
+              >
+                <Text className="text-white font-bold text-sm">View</Text>
+                <Ionicons name="arrow-forward" size={14} color="white" />
+              </View>
             </View>
           </View>
         </View>
