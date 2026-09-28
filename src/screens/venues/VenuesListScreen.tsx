@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
-import { distanceKm } from "../../lib/distance";
+import { distanceKm, formatDistanceKm } from "../../lib/distance";
 import type { VenueListItem } from "../../lib/api/venues";
 import { getSportImage } from "../../lib/sportImages";
 import { getVenuePhoto } from "../../lib/venuePhotos";
@@ -32,10 +32,13 @@ function VenueListCard({
   venue,
   onPress,
   index,
+  distanceLabel,
 }: {
   venue: VenueListItem;
   onPress: () => void;
   index: number;
+  // Set only once the device location is known.
+  distanceLabel?: string;
 }) {
   const coverImage = [...venue.venue_images].sort((a, b) => a.display_order - b.display_order).at(0)?.image_url;
   const sportNames = Array.from(new Set(venue.court.map((c) => c.sports?.name).filter(Boolean))) as string[];
@@ -69,6 +72,14 @@ function VenueListCard({
                 {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
               </Text>
             </View>
+            {distanceLabel ? (
+              <View
+                className="absolute bg-black/60 rounded-full"
+                style={{ right: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 5 }}
+              >
+                <Text className="text-white font-semibold" style={{ fontSize: 12.5 }}>{distanceLabel}</Text>
+              </View>
+            ) : null}
           </View>
 
           <View className="px-4 pt-3 pb-3">
@@ -378,6 +389,11 @@ export default function VenuesListScreen() {
             <VenueListCard
               venue={item}
               index={index}
+              distanceLabel={
+                myCoords && item.latitude != null && item.longitude != null
+                  ? formatDistanceKm(distanceKm(myCoords.latitude, myCoords.longitude, item.latitude, item.longitude))
+                  : undefined
+              }
               onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
             />
           )}

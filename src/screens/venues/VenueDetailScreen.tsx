@@ -116,12 +116,11 @@ export default function VenueDetailScreen() {
         )}
       </View>
 
-      {/* Identity card overlapping the header photo — everything below it
-          sits on the page's light green canvas as its own separate card,
-          matching the Home screen / other detail screens instead of one
-          continuous white block. */}
+      {/* One continuous white sheet overlapping the header photo — identity,
+          facilities, amenities and courts all live in it as plain sections
+          (no separate card per section). */}
       <View
-        className="bg-white px-5 pt-5 pb-5"
+        className="bg-white px-5 pt-5 pb-8"
         style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26, ...cardShadow }}
       >
         <View className="flex-row items-start justify-between">
@@ -156,11 +155,10 @@ export default function VenueDetailScreen() {
         {venue.description && (
           <Text className="text-ink mt-4 leading-5">{venue.description}</Text>
         )}
-      </View>
 
       {venue.venue_facilities.length > 0 && (
-        <View className="px-5 mt-6">
-          <View className="bg-white rounded-2xl p-4" style={cardShadow}>
+        <View className="mt-6">
+          <View>
             <Text className="text-ink font-bold text-base mb-3">Facilities</Text>
             <View className="flex-row flex-wrap gap-2">
               {venue.venue_facilities.map((facility) => (
@@ -181,8 +179,8 @@ export default function VenueDetailScreen() {
       )}
 
       {amenities.length > 0 && (
-        <View className="px-5 mt-6">
-          <View className="bg-white rounded-2xl p-4" style={cardShadow}>
+        <View className="mt-6">
+          <View>
             <Text className="text-ink font-bold text-base mb-3">Amenities</Text>
             <View className="flex-row flex-wrap" style={{ rowGap: 12, columnGap: 10 }}>
               {amenities.map((label) => (
@@ -207,8 +205,8 @@ export default function VenueDetailScreen() {
         </View>
       )}
 
-      <View className="px-5 mt-6">
-        <View className="bg-white rounded-2xl p-4" style={cardShadow}>
+      <View className="mt-6">
+        <View>
           <Text className="text-ink font-bold text-base mb-3">Courts</Text>
           {venue.court.filter((c) => c.isactive).map((court) => {
             const sportName = court.sports?.name ?? "";
@@ -237,7 +235,7 @@ export default function VenueDetailScreen() {
                   })
                 }
                 className="flex-row items-center bg-white rounded-2xl px-3 py-3 mb-2.5"
-                style={{ borderWidth: 1, borderColor: colors.border, ...cardShadow }}
+                style={{ borderWidth: 1, borderColor: colors.border }}
               >
                 {courtPhoto || fallbackImage ? (
                   <Image
@@ -268,6 +266,7 @@ export default function VenueDetailScreen() {
             );
           })}
         </View>
+      </View>
       </View>
     </ScrollView>
   );
