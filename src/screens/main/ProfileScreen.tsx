@@ -421,29 +421,10 @@ export default function ProfileScreen() {
           style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24, position: "relative" }}
         >
           <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 10,
-                paddingHorizontal: 8,
-                paddingVertical: 6,
-              }}
-            >
-              <Text
-                numberOfLines={2}
-                style={{
-                  color: colors.muted,
-                  fontSize: 11,
-                  fontWeight: "700",
-                  fontStyle: "italic",
-                  textAlign: "right",
-                  opacity: 0.75,
-                }}
-              >
-                {"Play More\nGet Better"}
+            <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: ratingTier.bg }}>
+              <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
+                {ratingTier.label}
               </Text>
-              <Ionicons name="trending-up" size={14} color={colors.muted} style={{ marginTop: 4, opacity: 0.75, alignSelf: "flex-end" }} />
             </View>
           </View>
           <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
@@ -481,15 +462,6 @@ export default function ProfileScreen() {
                 backgroundColor: ratingTier.color,
               }}
             />
-          </View>
-          <View
-            className="flex-row items-center self-end rounded-full pl-3 pr-2 py-1.5 mt-3"
-            style={{ backgroundColor: ratingTier.bg, gap: 2 }}
-          >
-            <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
-              {ratingTier.label}
-            </Text>
-            <Ionicons name="chevron-forward" size={12} color={ratingTier.color} />
           </View>
         </View>
 
