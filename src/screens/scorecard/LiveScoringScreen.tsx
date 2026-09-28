@@ -383,7 +383,7 @@ export default function LiveScoringScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-green-50">
+      <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -543,7 +543,7 @@ export default function LiveScoringScreen() {
   const ballsLeft = target && inningsState ? Math.max(match.overs_limit * 6 - inningsState.legalBalls, 0) : null;
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       <View
         className="overflow-hidden"
         style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 16, paddingBottom: 16 }}

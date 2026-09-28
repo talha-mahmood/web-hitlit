@@ -258,7 +258,7 @@ export default function GameDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-green-50 items-center justify-center">
+      <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -266,7 +266,7 @@ export default function GameDetailScreen() {
 
   if (error || !game) {
     return (
-      <View className="flex-1 bg-green-50 items-center justify-center px-6">
+      <View className="flex-1 bg-white items-center justify-center px-6">
         <Text className="text-ink font-semibold text-base mb-2">Game not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
@@ -470,7 +470,7 @@ export default function GameDetailScreen() {
   const sportIconInfo = game.sports?.name ? getSportIcon(game.sports.name) : null;
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero header — dark gradient with a decorative ball + sport-icon
           watermark, and a wave divider fading into the page background. */}
       <View style={{ position: "relative" }}>

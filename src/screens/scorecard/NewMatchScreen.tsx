@@ -234,7 +234,7 @@ export default function NewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="overflow-hidden" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View
           pointerEvents="none"

@@ -978,7 +978,7 @@ export default function TournamentMatchesScreen() {
 
   if (gameLoading || teamsLoading || !game) {
     return (
-      <View className="flex-1 items-center justify-center bg-green-50">
+      <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator color={colors.primary} />
       </View>
     );

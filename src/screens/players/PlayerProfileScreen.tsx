@@ -101,7 +101,7 @@ export default function PlayerProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero */}
       <View
         style={{

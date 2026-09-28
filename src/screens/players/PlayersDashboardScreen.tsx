@@ -15,7 +15,7 @@ export default function PlayersDashboardScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       <View
         className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
         style={{ paddingTop: insets.top + 16 }}

@@ -19,7 +19,7 @@ const navigationRef = createNavigationContainerRef<ParamListBase>();
 // page colour the Home screen uses.
 const AppTheme = {
   ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: "#F0FDF4" },
+  colors: { ...DefaultTheme.colors, background: "#FFFFFF" },
 };
 
 export default function RootNavigator() {

@@ -279,7 +279,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
       <View

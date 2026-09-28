@@ -82,7 +82,7 @@ export default function BookingConfirmationScreen() {
   };
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 32 }}

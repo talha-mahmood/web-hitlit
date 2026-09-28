@@ -220,7 +220,7 @@ export default function FullScorecardScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-green-50">
+      <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -230,7 +230,7 @@ export default function FullScorecardScreen() {
   const timeLabel = matchDate.toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit" });
 
   return (
-    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

@@ -27,7 +27,7 @@ export default function App() {
   // the system font first. If loading somehow fails, fall through rather
   // than leave the app on a blank screen (text then uses the system font).
   if (!fontsLoaded && !fontError) {
-    return <View style={{ flex: 1, backgroundColor: "#F0FDF4" }} />;
+    return <View style={{ flex: 1, backgroundColor: "#FFFFFF" }} />;
   }
 
   return (

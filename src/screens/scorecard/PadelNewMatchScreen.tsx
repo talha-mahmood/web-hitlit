@@ -255,7 +255,7 @@ export default function PadelNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="padel"
         title="New Padel Match"

@@ -209,7 +209,7 @@ export default function CommunityScreen() {
   );
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Fixed header — stays on screen while only the content below switches. */}
       {/* Dark-green header: icon tile + title/subtitle, rounded at the bottom; the tab bar overlaps its lower edge. */}
       {isFocused ? <StatusBar style="light" /> : null}

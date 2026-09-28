@@ -79,7 +79,7 @@ export default function FillTeamWithSquadModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-green-50">
+      <View className="flex-1 bg-white">
         <View className="px-4 pb-4" style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 12 }}>
           <View className="flex-row items-center justify-center">
             <Pressable onPress={onClose} hitSlop={10} style={{ position: "absolute", left: 0 }}>

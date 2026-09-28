@@ -112,7 +112,7 @@ export default function BookingCheckoutScreen() {
   };
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero header — same tinted-panel + watermark language as the slot
           picker screen this flow comes from. */}
       <View

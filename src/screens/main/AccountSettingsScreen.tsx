@@ -179,7 +179,7 @@ export default function AccountSettingsScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View
         style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 22 }}
       >

@@ -138,7 +138,7 @@ export default function PadelLiveScoringScreen() {
 
   if (isLoading || !match || !state) {
     return (
-      <View className="flex-1 items-center justify-center bg-green-50">
+      <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -225,7 +225,7 @@ export default function PadelLiveScoringScreen() {
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
     return (
-      <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -337,7 +337,7 @@ export default function PadelLiveScoringScreen() {
   }
 
   return (
-    <View className="flex-1 bg-green-50" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
         <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

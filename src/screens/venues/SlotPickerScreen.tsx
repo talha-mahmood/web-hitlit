@@ -68,7 +68,7 @@ export default function SlotPickerScreen() {
   const sportIconInfo = getSportIcon(params.sportName ?? "");
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero header — a soft tinted panel with a decorative sport-icon
           watermark, matching the card-based look used elsewhere. */}
       <View

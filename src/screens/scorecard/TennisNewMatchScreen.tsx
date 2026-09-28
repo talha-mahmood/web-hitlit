@@ -252,7 +252,7 @@ export default function TennisNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-green-50" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="tennis"
         title="New Tennis Match"

@@ -264,7 +264,7 @@ export default function SquadDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-green-50 items-center justify-center">
+      <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -272,7 +272,7 @@ export default function SquadDetailScreen() {
 
   if (error || !squad) {
     return (
-      <View className="flex-1 bg-green-50 items-center justify-center px-6">
+      <View className="flex-1 bg-white items-center justify-center px-6">
         <Text className="text-ink font-semibold text-base mb-2">Squad not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
@@ -502,7 +502,7 @@ export default function SquadDetailScreen() {
   const sportIconInfo = squad.sports?.name ? getSportIcon(squad.sports.name) : null;
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero header — dark gradient with a decorative sport-icon watermark,
           same treatment as GameDetailScreen, fading into the page via a
           wave divider. */}

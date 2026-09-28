@@ -163,7 +163,7 @@ export default function MyBookingsScreen() {
   const list = tab === "upcoming" ? upcoming : past;
 
   return (
-    <View className="flex-1 bg-green-50">
+    <View className="flex-1 bg-white">
       {/* Hero header */}
       <View
         style={{ backgroundColor: colors.primaryLight, paddingTop: insets.top + 16, paddingBottom: 20, overflow: "hidden", position: "relative" }}

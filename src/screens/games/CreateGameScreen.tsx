@@ -620,7 +620,7 @@ export default function CreateGameScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-green-50"
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
