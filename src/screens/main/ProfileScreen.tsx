@@ -589,86 +589,102 @@ export default function ProfileScreen() {
               </LinearGradient>
             </View>
 
-            {/* Games Win — same card as on a player's Top Players detail page */}
-            <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+            {/* Games Win — same green card look as the rest of the Profile cards */}
+            <LinearGradient
+              colors={["#0E5C34", "#1D9254"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ borderRadius: 16, padding: 16, marginBottom: 16, overflow: "hidden" }}
+            >
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+                    style={{ width: 40, height: 40, backgroundColor: "#F0FDF4" }}
                   >
-                    <Ionicons name="locate" size={20} color={colors.primaryDark} />
+                    <Ionicons name="locate" size={20} color="#16A34A" />
                   </View>
                   <View>
-                    <Text className="text-ink font-extrabold text-xl">
+                    <Text className="text-white font-extrabold text-xl">
                       {matchesWon} / {matchesPlayed}
                     </Text>
-                    <Text className="text-muted text-xs mt-0.5">
+                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
                       {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                     </Text>
                   </View>
                 </View>
                 <View className="items-end">
-                  <Text className="font-extrabold text-lg" style={{ color: colors.primaryDark }}>
-                    {winPercentage}%
-                  </Text>
+                  <Text className="text-white font-extrabold text-lg">{winPercentage}%</Text>
                   {winTag && (
-                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: colors.primaryLight }}>
-                      <Text className="text-[10px] font-bold" style={{ color: colors.primaryDark }}>
-                        {winTag}
-                      </Text>
+                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}>
+                      <Text className="text-[10px] font-bold text-white">{winTag}</Text>
                     </View>
                   )}
                 </View>
               </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.primaryLight, overflow: "hidden" }}>
-                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: "#4ADE80" }} />
               </View>
-              <Text className="text-muted text-xs mt-2">{winCaption}</Text>
-            </View>
+              <Text className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.75)" }}>{winCaption}</Text>
+            </LinearGradient>
 
             {/* Sport-specific totals — only once filtered to that one sport */}
             {player && filterSportName?.toLowerCase() === "cricket" && (
               <View className="flex-row mb-4" style={{ gap: 12 }}>
-                <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                <LinearGradient
+                  colors={["#0E5C34", "#1D9254"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ flex: 1, borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10 }}
+                >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
                   >
-                    <MaterialCommunityIcons name="cricket" size={22} color={colors.primaryDark} />
+                    <MaterialCommunityIcons name="cricket" size={22} color="#16A34A" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
-                    <Text className="text-muted text-xs mt-0.5">Total Runs</Text>
+                    <Text className="text-white font-extrabold text-xl">{player.totalRuns}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Runs</Text>
                   </View>
-                </View>
-                <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                </LinearGradient>
+                <LinearGradient
+                  colors={["#0E5C34", "#1D9254"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ flex: 1, borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10 }}
+                >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
                   >
-                    <MaterialCommunityIcons name="bowling" size={22} color={colors.primaryDark} />
+                    <MaterialCommunityIcons name="bowling" size={22} color="#16A34A" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{player.totalWickets}</Text>
-                    <Text className="text-muted text-xs mt-0.5">Total Wickets</Text>
+                    <Text className="text-white font-extrabold text-xl">{player.totalWickets}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Wickets</Text>
                   </View>
-                </View>
+                </LinearGradient>
               </View>
             )}
             {player && filterSportName?.toLowerCase() === "football" && (
-              <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
-                <View
-                  className="items-center justify-center rounded-full"
-                  style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+              <LinearGradient
+                  colors={["#0E5C34", "#1D9254"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                 >
-                  <MaterialCommunityIcons name="soccer" size={22} color={colors.primaryDark} />
-                </View>
-                <View>
-                  <Text className="text-ink font-extrabold text-xl">{player.totalGoals}</Text>
-                  <Text className="text-muted text-xs mt-0.5">Total Goals</Text>
-                </View>
-              </View>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
+                  >
+                    <MaterialCommunityIcons name="soccer" size={22} color="#16A34A" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-white font-extrabold text-xl">{player.totalGoals}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Goals</Text>
+                  </View>
+                </LinearGradient>
             )}
 
             {/* Sports Played — tap one to filter Games Win and the sport totals above */}
@@ -694,28 +710,35 @@ export default function ProfileScreen() {
                       <Pressable
                         key={sp.sportId}
                         onPress={() => handleSelectSportCard(sp.sportId, sp.sportName)}
-                        className="flex-row items-center bg-white rounded-2xl p-3"
                         style={{
-                          ...cardShadow,
-                          borderWidth: selected ? 1.5 : 0,
-                          borderColor: selected ? colors.primary : "transparent",
+                          borderRadius: 16,
+                          overflow: "hidden",
+                          borderWidth: 1.5,
+                          borderColor: selected ? "#4ADE80" : "transparent",
                         }}
                       >
-                        <View
-                          className="items-center justify-center rounded-xl mr-3"
-                          style={{ width: 46, height: 46, backgroundColor: bg }}
+                        <LinearGradient
+                          colors={["#0E5C34", "#1D9254"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{ flexDirection: "row", alignItems: "center", padding: 12 }}
                         >
-                          <MaterialCommunityIcons name={icon} size={22} color={fg} />
-                        </View>
-                        <View className="flex-1">
-                          <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-                            {sp.sportName}
-                          </Text>
-                          <Text className="text-muted text-xs mt-0.5">
-                            {sp.count} {sp.count === 1 ? "game" : "games"}
-                          </Text>
-                        </View>
-                        {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
+                          <View
+                            className="items-center justify-center rounded-xl mr-3"
+                            style={{ width: 46, height: 46, backgroundColor: bg }}
+                          >
+                            <MaterialCommunityIcons name={icon} size={22} color={fg} />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-white font-bold text-sm" numberOfLines={1}>
+                              {sp.sportName}
+                            </Text>
+                            <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+                              {sp.count} {sp.count === 1 ? "game" : "games"}
+                            </Text>
+                          </View>
+                          {selected && <Ionicons name="checkmark-circle" size={18} color="#4ADE80" />}
+                        </LinearGradient>
                       </Pressable>
                     );
                   })}
