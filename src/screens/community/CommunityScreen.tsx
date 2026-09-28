@@ -218,7 +218,7 @@ export default function CommunityScreen() {
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
-          paddingHorizontal: 20,
+          paddingHorizontal: 14,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",

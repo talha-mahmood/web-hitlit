@@ -35,7 +35,7 @@ export type PromoSlide = {
 // width is whatever the parent gives this component (full column width,
 // screen-edge-to-edge, etc.), so this component makes no assumption about
 // its own placement/padding.
-const FALLBACK_WIDTH = Dimensions.get("window").width - 40;
+const FALLBACK_WIDTH = Dimensions.get("window").width - 28;
 const CARD_HEIGHT = 172;
 const AUTO_ADVANCE_MS = 4500;
 

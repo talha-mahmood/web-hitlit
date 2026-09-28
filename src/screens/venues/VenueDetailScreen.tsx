@@ -120,7 +120,7 @@ export default function VenueDetailScreen() {
           facilities, amenities and courts all live in it as plain sections
           (no separate card per section). */}
       <View
-        className="bg-white px-5 pt-5 pb-8"
+        className="bg-white px-3.5 pt-5 pb-8"
         style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26 }}
       >
         <View className="flex-row items-start justify-between">

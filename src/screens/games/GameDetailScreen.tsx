@@ -608,7 +608,7 @@ export default function GameDetailScreen() {
 
         {/* Game info — card, collapsed behind a dropdown by default;
             tapping the header reveals it. */}
-        <View className="px-5 mt-5">
+        <View className="px-3.5 mt-5">
           <View className="bg-white rounded-2xl px-4" style={cardShadow}>
           <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
             <View
@@ -696,7 +696,7 @@ export default function GameDetailScreen() {
 
         {/* Description */}
         {!!game.description && (
-          <View className="px-5 mt-6">
+          <View className="px-3.5 mt-6">
             <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
@@ -718,7 +718,7 @@ export default function GameDetailScreen() {
           <TournamentTeamsSection game={game} />
         ) : (
           <>
-            <View className="px-5 mt-6">
+            <View className="px-3.5 mt-6">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-ink font-semibold text-sm">
                   Players ({joinedPlayers.length}/{game.max_players})
@@ -752,7 +752,7 @@ export default function GameDetailScreen() {
 
             {/* Pending join requests — host only */}
             {isCreator && pendingRequests.length > 0 && (
-              <View className="px-5 mt-6">
+              <View className="px-3.5 mt-6">
                 <Text className="text-ink font-semibold text-sm mb-1">Join Requests ({pendingRequests.length})</Text>
                 <Text className="text-muted text-xs mb-2">Approve players before they're added to the game.</Text>
                 {pendingRequests.map((p) => (
@@ -765,7 +765,7 @@ export default function GameDetailScreen() {
         )}
 
         {/* Host */}
-        <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
+        <View className="px-3.5 mt-6 flex-row items-center" style={{ gap: 12 }}>
           {game.profiles?.avatar ? (
             <Image source={{ uri: game.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
           ) : (
@@ -784,7 +784,7 @@ export default function GameDetailScreen() {
           with the team flow), non-host actions (create/join a team) live
           inline in TournamentTeamsSection instead of a single bottom button */}
       {isOpen && (isCreator || !isTeamBased) && (
-        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-3">
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
           ) : isCreator ? (

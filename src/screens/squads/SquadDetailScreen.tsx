@@ -658,7 +658,7 @@ export default function SquadDetailScreen() {
         {/* Squad info — card, collapsed behind a dropdown by default;
             tapping the header reveals it. Same shell as GameDetailScreen's
             "Game Details" card. */}
-        <View className="px-5 mt-5">
+        <View className="px-3.5 mt-5">
           <View className="bg-white rounded-2xl px-4" style={cardShadow}>
             <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
               <View
@@ -721,7 +721,7 @@ export default function SquadDetailScreen() {
 
         {/* Description */}
         {!!squad.description && (
-          <View className="px-5 mt-6">
+          <View className="px-3.5 mt-6">
             <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
@@ -738,7 +738,7 @@ export default function SquadDetailScreen() {
         )}
 
         {/* Members */}
-        <View className="px-5 mt-6">
+        <View className="px-3.5 mt-6">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-ink font-semibold text-sm">
               Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
@@ -801,7 +801,7 @@ export default function SquadDetailScreen() {
 
         {/* Game/tournament invites — owner only, accept to open the fill-team flow on that game */}
         {isOwner && (gameInvites?.length ?? 0) > 0 && (
-          <View className="px-5 mt-6">
+          <View className="px-3.5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-1">
               Game Invites ({gameInvites!.length})
             </Text>
@@ -844,7 +844,7 @@ export default function SquadDetailScreen() {
 
         {/* Pending join requests — owner only, shows requester's skill + location */}
         {isOwner && pendingRequests.length > 0 && (
-          <View className="px-5 mt-6">
+          <View className="px-3.5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-1">
               Join Requests ({pendingRequests.length})
             </Text>
@@ -872,7 +872,7 @@ export default function SquadDetailScreen() {
         )}
 
         {/* Owner */}
-        <View className="px-5 mt-6 flex-row items-center" style={{ gap: 12 }}>
+        <View className="px-3.5 mt-6 flex-row items-center" style={{ gap: 12 }}>
           {squad.profiles?.avatar ? (
             <Image
               source={{ uri: squad.profiles.avatar }}
@@ -895,7 +895,7 @@ export default function SquadDetailScreen() {
       </ScrollView>
 
       {/* CTA */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-5 pt-3 pb-3">
+      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
         ) : isOwner ? (

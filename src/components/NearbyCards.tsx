@@ -17,7 +17,7 @@ import type { VenueListItem } from "../lib/api/venues";
 // Dashboard action cards on the home screen (48% of the row width, 120 tall)
 // so the two card families read as one consistent size language.
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SECTION_HORIZONTAL_PADDING = 20; // matches the home screen's px-5 wrapper
+const SECTION_HORIZONTAL_PADDING = 14; // matches the home screen's px-3.5 wrapper
 export const NEARBY_CARD_GAP = 10;
 export const NEARBY_CARD_WIDTH = Math.round(
   (SCREEN_WIDTH - SECTION_HORIZONTAL_PADDING * 2) * 0.48

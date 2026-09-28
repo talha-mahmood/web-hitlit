@@ -43,7 +43,7 @@ export default function AdminVenueListScreen() {
       <FlatList
         data={venues ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 40, gap: 12 }}
         ListEmptyComponent={
           <View className="border border-dashed border-border rounded-2xl p-8 items-center">
             <Ionicons name="business-outline" size={32} color={colors.border} />

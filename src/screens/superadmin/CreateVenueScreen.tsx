@@ -82,7 +82,7 @@ export default function CreateVenueScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 20, paddingBottom: 260 }}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingVertical: 20, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
       >
         <Text className="text-muted text-xs font-semibold mb-1.5">Venue Name</Text>

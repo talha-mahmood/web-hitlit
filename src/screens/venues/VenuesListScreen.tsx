@@ -195,7 +195,7 @@ export default function VenuesListScreen() {
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
-          paddingHorizontal: 20,
+          paddingHorizontal: 14,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -227,7 +227,7 @@ export default function VenuesListScreen() {
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
           now the "Sports" pill in the filter row below instead. */}
-      <View className="px-5 mb-3">
+      <View className="px-3.5 mb-3">
         <FieldInput
           value={search}
           onChangeText={setSearch}
@@ -247,7 +247,7 @@ export default function VenuesListScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 8 }}
+            contentContainerStyle={{ paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 8 }}
           >
             {/* "Location" — opens a bottom sheet with a free-text field plus
                 city suggestions (multi-select), in place of the old
@@ -374,7 +374,7 @@ export default function VenuesListScreen() {
         <FlatList
           data={venues ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }

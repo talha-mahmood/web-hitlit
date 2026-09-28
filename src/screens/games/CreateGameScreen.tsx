@@ -665,7 +665,7 @@ export default function CreateGameScreen() {
       <ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 260 }}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 260 }}
         keyboardShouldPersistTaps="handled"
         onScroll={handleScroll}
         scrollEventThrottle={64}

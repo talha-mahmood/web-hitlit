@@ -181,7 +181,7 @@ export default function AccountSettingsScreen() {
   return (
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View
-        style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 22 }}
+        style={{ paddingTop: insets.top + 16, paddingHorizontal: 14, paddingBottom: 22 }}
       >
         <View className="flex-row items-center">
           <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="mr-3 p-1">

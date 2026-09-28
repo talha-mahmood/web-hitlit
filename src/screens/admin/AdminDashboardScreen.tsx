@@ -301,7 +301,7 @@ export default function AdminDashboardScreen() {
           style={{
             paddingTop: insets.top + 12,
             paddingBottom: 44,
-            paddingHorizontal: 20,
+            paddingHorizontal: 14,
             borderBottomLeftRadius: 28,
             borderBottomRightRadius: 28,
           }}
@@ -341,7 +341,7 @@ export default function AdminDashboardScreen() {
           )}
         </LinearGradient>
 
-        <View className="px-5" style={{ marginTop: -30 }}>
+        <View className="px-3.5" style={{ marginTop: -30 }}>
           <View className="bg-white rounded-2xl p-5 flex-row items-center justify-between mb-6" style={cardShadow}>
             <View className="flex-1 mr-3">
               <Text className="text-muted text-xs">Today's Revenue</Text>

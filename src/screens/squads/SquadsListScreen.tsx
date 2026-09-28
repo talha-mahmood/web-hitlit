@@ -298,7 +298,7 @@ export default function SquadsListScreen() {
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
-          paddingHorizontal: 20,
+          paddingHorizontal: 14,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -336,7 +336,7 @@ export default function SquadsListScreen() {
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
           now the "Sports" pill in the filter row below instead. */}
-      <View className="px-5 mb-3">
+      <View className="px-3.5 mb-3">
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
@@ -356,7 +356,7 @@ export default function SquadsListScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 8 }}
+            contentContainerStyle={{ paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 8 }}
           >
             {(
               [
@@ -512,7 +512,7 @@ export default function SquadsListScreen() {
         <FlatList
           data={squads ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null ? (

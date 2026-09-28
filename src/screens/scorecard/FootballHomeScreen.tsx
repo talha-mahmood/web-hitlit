@@ -176,7 +176,7 @@ export default function FootballHomeScreen() {
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
-      <View className="flex-row items-center px-5 mb-4" style={{ gap: 8 }}>
+      <View className="flex-row items-center px-3.5 mb-4" style={{ gap: 8 }}>
         <Pressable onPress={() => navigation.navigate("ScorecardHome")} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
@@ -194,7 +194,7 @@ export default function FootballHomeScreen() {
         </Pressable>
       </View>
 
-      <View className="px-5 mb-4">
+      <View className="px-3.5 mb-4">
         <View className="flex-row items-center bg-white rounded-2xl p-1.5" style={cardShadow}>
           {TABS.map((tab) => {
             const selected = activeTab === tab.key;

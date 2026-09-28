@@ -107,7 +107,7 @@ export default function PlayerProfileScreen() {
         style={{
           backgroundColor: "#E3F6EA",
           paddingTop: insets.top + 12,
-          paddingHorizontal: 20,
+          paddingHorizontal: 14,
           paddingBottom: 26,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,

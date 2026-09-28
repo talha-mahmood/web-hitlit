@@ -218,7 +218,7 @@ export default function HomeScreen() {
           backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
-          paddingHorizontal: 20,
+          paddingHorizontal: 14,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -264,7 +264,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
-      <View className="px-5" style={{ paddingTop: 20 }}>
+      <View className="px-3.5" style={{ paddingTop: 20 }}>
         <PromoCarousel slides={promoSlides} />
 
         <View className="flex-row items-center mb-3" style={{ gap: 6 }}>

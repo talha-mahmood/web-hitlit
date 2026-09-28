@@ -42,7 +42,7 @@ export default function AllVenuesListScreen() {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <View className="px-5" style={{ paddingTop: insets.top + 16, paddingBottom: 12 }}>
+      <View className="px-3.5" style={{ paddingTop: insets.top + 16, paddingBottom: 12 }}>
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-2xl font-bold text-ink">All Venues</Text>
           <Pressable
@@ -63,7 +63,7 @@ export default function AllVenuesListScreen() {
         <FlatList
           data={venues ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 10 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 40, gap: 10 }}
           ListEmptyComponent={
             <View className="border border-dashed border-border rounded-2xl p-8 items-center">
               <Ionicons name="business-outline" size={32} color={colors.border} />
