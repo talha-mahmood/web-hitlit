@@ -469,6 +469,42 @@ export default function ProfileScreen() {
           <ActivityIndicator color={colors.primary} className="my-8" />
         ) : (
           <>
+            {/* Games Win — right under the rating card so it stands out */}
+            <View
+              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24 }}
+            >
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 40, height: 40, backgroundColor: "#F0FDF4" }}
+                  >
+                    <Ionicons name="locate" size={20} color="#16A34A" />
+                  </View>
+                  <View>
+                    <Text className="text-ink font-extrabold text-xl">
+                      {matchesWon} / {matchesPlayed}
+                    </Text>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
+                      {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
+                    </Text>
+                  </View>
+                </View>
+                <View className="items-end">
+                  <Text className="text-ink font-extrabold text-lg">{winPercentage}%</Text>
+                  {winTag && (
+                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#F3F4F6" }}>
+                      <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
+                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+              </View>
+              <Text className="text-xs mt-2" style={{ color: colors.muted }}>{winCaption}</Text>
+            </View>
+
             {/* Stat grid */}
             <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
               <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.gamesPlayedTotal ?? 0} label="Games Played" />
@@ -487,7 +523,7 @@ export default function ProfileScreen() {
                 <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
                   <Ionicons name="pie-chart" size={15} color={colors.primary} />
                   <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Sports You Play
+                    Sports Played
                   </Text>
                 </View>
                 {sportSegments.length === 0 ? (
@@ -548,42 +584,6 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Games Win — same green card look as the rest of the Profile cards */}
-            <View
-              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 16 }}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 40, height: 40, backgroundColor: "#F0FDF4" }}
-                  >
-                    <Ionicons name="locate" size={20} color="#16A34A" />
-                  </View>
-                  <View>
-                    <Text className="text-ink font-extrabold text-xl">
-                      {matchesWon} / {matchesPlayed}
-                    </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
-                      {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
-                    </Text>
-                  </View>
-                </View>
-                <View className="items-end">
-                  <Text className="text-ink font-extrabold text-lg">{winPercentage}%</Text>
-                  {winTag && (
-                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#F3F4F6" }}>
-                      <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
-                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
-              </View>
-              <Text className="text-xs mt-2" style={{ color: colors.muted }}>{winCaption}</Text>
-            </View>
-
             {/* Sport-specific totals — only once filtered to that one sport */}
             {player && filterSportName?.toLowerCase() === "cricket" && (
               <View className="flex-row mb-4" style={{ gap: 12 }}>
@@ -638,7 +638,7 @@ export default function ProfileScreen() {
             {sportsPlayed.length > 0 && (
               <View className="mb-6">
                 <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-base font-bold text-ink">Sports Played</Text>
+                  <Text className="text-base font-bold text-ink">Filter By Sports</Text>
                   <View
                     className="flex-row items-center rounded-full px-2.5 py-1"
                     style={{ backgroundColor: colors.primaryLight, gap: 4 }}
