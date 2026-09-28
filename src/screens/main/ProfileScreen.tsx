@@ -16,7 +16,7 @@ import { useProfileStats } from "../../hooks/useProfileStats";
 import { usePlayerPublicProfile } from "../../hooks/usePlayers";
 import { useFollowState } from "../../hooks/usePlayerFollows";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
-import PieChart from "../../components/PieChart";
+import PlayerStatCards from "../../components/PlayerStatCards";
 import { getSportIcon } from "../../lib/sportIcons";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { colors, cardShadow } from "../../constants/theme";
@@ -51,39 +51,6 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function StatCard({
-  icon,
-  bg,
-  fg,
-  value,
-  label,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  bg: string;
-  fg: string;
-  value: string | number;
-  label: string;
-}) {
-  return (
-    <View
-      style={{ width: "31%", borderRadius: 16, padding: 12, backgroundColor: "white", ...cardShadow }}
-    >
-      <View className="mb-2">
-        <View
-          className="items-center justify-center rounded-full"
-          style={{ width: 34, height: 34, backgroundColor: bg }}
-        >
-          <Ionicons name={icon} size={17} color={fg} />
-        </View>
-      </View>
-      <Text className="text-ink font-extrabold text-xl">{value}</Text>
-      <Text className="text-[11px] mt-0.5" style={{ color: colors.muted }} numberOfLines={2}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
 function EnrolledRow({
   title,
   subtitle,
@@ -108,61 +75,6 @@ function EnrolledRow({
       </View>
       <Ionicons name="chevron-forward" size={16} color={colors.muted} />
     </Pressable>
-  );
-}
-
-function ActivityBarRow({
-  icon,
-  iconBg,
-  label,
-  value,
-  max,
-  color,
-  light,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconBg: string;
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-  // On a dark/gradient card the label+value need light text and a
-  // translucent track instead of the default dark-on-white styling.
-  light?: boolean;
-}) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <View className="mb-3">
-      <View className="flex-row items-center justify-between mb-1.5">
-        <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
-          <View
-            className="items-center justify-center rounded-full"
-            style={{ width: 24, height: 24, backgroundColor: iconBg }}
-          >
-            <Ionicons name={icon} size={12} color={color} />
-          </View>
-          <Text
-            className="text-sm font-medium"
-            style={{ color: light ? "rgba(255,255,255,0.9)" : colors.ink }}
-          >
-            {label}
-          </Text>
-        </View>
-        <Text className="text-sm font-bold" style={{ color: light ? "white" : colors.ink }}>
-          {value}
-        </Text>
-      </View>
-      <View
-        style={{
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: light ? "rgba(255,255,255,0.18)" : "#F3F4F6",
-          overflow: "hidden",
-        }}
-      >
-        <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: color }} />
-      </View>
-    </View>
   );
 }
 
@@ -245,22 +157,6 @@ export default function ProfileScreen() {
   };
   const matchesWon = player?.matchesWonTotal ?? 0;
   const matchesPlayed = player?.matchesPlayedTotal ?? 0;
-  const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
-  let winTag: string | null = null;
-  let winCaption = "Play more scored games to build this up.";
-  if (matchesPlayed > 0) {
-    if (winPercentage === 100) {
-      winTag = "Perfect!";
-      winCaption = "Great performance! Keep it up!";
-    } else if (winPercentage >= 70) {
-      winTag = "Great!";
-      winCaption = "Strong performance — keep it going!";
-    } else if (winPercentage >= 40) {
-      winCaption = "Solid effort — keep grinding!";
-    } else {
-      winCaption = "Room to improve — keep playing!";
-    }
-  }
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -300,11 +196,7 @@ export default function ProfileScreen() {
     color: getSportIcon(s.sportName).fg,
   }));
 
-  // Percentages are each sport's share of the chart's own total, so every one
-  // is between 0 and 100 and together they make up the whole pie.
-  const sportTotal = Math.max(1, sportSegments.reduce((sum, s) => sum + s.value, 0));
   const regularGamesPlayed = stats?.regularGamesPlayedTotal ?? 0;
-  const activityMax = Math.max(regularGamesPlayed, stats?.tournamentsPlayedTotal ?? 0, stats?.gamesHostedTotal ?? 0, 1);
 
   async function handlePickSkillLevel(level: SkillLevel) {
     if (!userId) return;
@@ -416,280 +308,27 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
       <View className="px-6" style={{ paddingTop: 20 }}>
-        {/* Rating card */}
-        <View
-          style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24, position: "relative" }}
-        >
-          <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
-            <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: ratingTier.bg }}>
-              <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
-                {ratingTier.label}
-              </Text>
-            </View>
-          </View>
-          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
-            Your Rating
-          </Text>
-          <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
-            <View className="flex-row items-center" style={{ gap: 10 }}>
-              <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>
-                <MaterialCommunityIcons
-                  name="hexagon"
-                  size={52}
-                  color={ratingTier.bg}
-                  style={{ position: "absolute" }}
-                />
-                <Ionicons name="trophy" size={22} color={ratingTier.color} />
-              </View>
-              <Text className="text-ink font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
-                {rating}
-              </Text>
-              <Ionicons name="star" size={16} color="#FACC15" style={{ marginTop: -18 }} />
-            </View>
-          </View>
-          <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
-            <Text className="text-xs" style={{ color: colors.muted }}>
-              {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
-            </Text>
-            <Ionicons name="information-circle-outline" size={13} color={colors.muted} />
-          </View>
-          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
-            <View
-              style={{
-                height: 8,
-                borderRadius: 4,
-                width: `${ratingTier.progress * 100}%`,
-                backgroundColor: ratingTier.color,
-              }}
-            />
-          </View>
-        </View>
-
-        {isLoading ? (
-          <ActivityIndicator color={colors.primary} className="my-8" />
-        ) : (
-          <>
-            {/* Games Win — right under the rating card so it stands out */}
-            <View
-              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24 }}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 40, height: 40, backgroundColor: "#F0FDF4" }}
-                  >
-                    <Ionicons name="locate" size={20} color="#16A34A" />
-                  </View>
-                  <View>
-                    <Text className="text-ink font-extrabold text-xl">
-                      {matchesWon} / {matchesPlayed}
-                    </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
-                      {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
-                    </Text>
-                  </View>
-                </View>
-                <View className="items-end">
-                  <Text className="text-ink font-extrabold text-lg">{winPercentage}%</Text>
-                  {winTag && (
-                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#F3F4F6" }}>
-                      <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
-                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
-              </View>
-              <Text className="text-xs mt-2" style={{ color: colors.muted }}>{winCaption}</Text>
-            </View>
-
-            {/* Stat grid */}
-            <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
-              <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.gamesPlayedTotal ?? 0} label="Games Played" />
-              <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={stats?.tournamentsPlayedTotal ?? 0} label="Tournaments Played" />
-              <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={stats?.gamesHostedTotal ?? 0} label="Games Hosted" />
-              <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={stats?.activeSquads.length ?? 0} label="Active Squads" />
-              <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={stats?.hoursPlayedTotal ?? 0} label="Hours Played" />
-              <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={computeRating(stats)} label="Participation Score" />
-            </View>
-
-            {/* Sport breakdown + activity, side by side */}
-            <View className="flex-row mb-6 items-stretch" style={{ gap: 12 }}>
-              <View
-                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1, position: "relative" }}
-              >
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="pie-chart" size={15} color={colors.primary} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Sports Played
-                  </Text>
-                </View>
-                {sportSegments.length === 0 ? (
-                  <View className="items-center py-4">
-                    <Ionicons name="bar-chart-outline" size={24} color="#9CA3AF" />
-                    <Text className="text-xs mt-2 text-center" style={{ color: colors.muted }}>
-                      Play your first game to see this here.
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="items-center">
-                    <View style={{ width: 110, height: 110 }}>
-                      <PieChart segments={sportSegments} size={110} gapColor="white" />
-                      <View
-                        pointerEvents="none"
-                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
-                      >
-                        <View
-                          className="items-center justify-center rounded-full"
-                          style={{ width: 60, height: 60, backgroundColor: "white" }}
-                        >
-                          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }}>
-                            {sportSegments.length}
-                          </Text>
-                          <Text style={{ color: colors.muted, fontSize: 10 }}>Sports</Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View className="w-full mt-3" style={{ gap: 6 }}>
-                      {sportSegments.map((s) => (
-                        <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
-                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
-                          <Text className="text-xs flex-1" style={{ color: colors.muted }} numberOfLines={1}>
-                            {s.label}
-                          </Text>
-                          <Text className="text-[11px]" style={{ color: colors.muted }}>
-                            {Math.round((s.value / sportTotal) * 100)}%
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
-
-              <View
-                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1 }}
-              >
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="bar-chart" size={15} color={colors.primary} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Your Activity
-                  </Text>
-                </View>
-                <ActivityBarRow icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
-                <ActivityBarRow icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
-                <ActivityBarRow icon="people" iconBg="#FAF5FF" label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#C084FC" />
-              </View>
-            </View>
-
-            {/* Sport-specific totals — only once filtered to that one sport */}
-            {player && filterSportName?.toLowerCase() === "cricket" && (
-              <View className="flex-row mb-4" style={{ gap: 12 }}>
-                <View
-                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
-                  >
-                    <MaterialCommunityIcons name="cricket" size={22} color="#16A34A" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Runs</Text>
-                  </View>
-                </View>
-                <View
-                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
-                  >
-                    <MaterialCommunityIcons name="bowling" size={22} color="#16A34A" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{player.totalWickets}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Wickets</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-            {player && filterSportName?.toLowerCase() === "football" && (
-              <View
-                  style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
-                  >
-                    <MaterialCommunityIcons name="soccer" size={22} color="#16A34A" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{player.totalGoals}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Goals</Text>
-                  </View>
-                </View>
-            )}
-
-            {/* Sports Played — tap one to filter Games Win and the sport totals above */}
-            {sportsPlayed.length > 0 && (
-              <View className="mb-6">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-base font-bold text-ink">Filter By Sports</Text>
-                  <View
-                    className="flex-row items-center rounded-full px-2.5 py-1"
-                    style={{ backgroundColor: colors.primaryLight, gap: 4 }}
-                  >
-                    <Ionicons name="bar-chart" size={12} color={colors.primaryDark} />
-                    <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
-                      {sportsPlayed.length} {sportsPlayed.length === 1 ? "Sport" : "Sports"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={{ gap: 8 }}>
-                  {sportsPlayed.map((sp) => {
-                    const { icon, bg, fg } = getSportIcon(sp.sportName);
-                    const selected = filterSportId === sp.sportId;
-                    return (
-                      <Pressable
-                        key={sp.sportId}
-                        onPress={() => handleSelectSportCard(sp.sportId, sp.sportName)}
-                        style={{
-                          borderRadius: 16,
-                          borderWidth: 1.5,
-                          borderColor: selected ? colors.primary : "transparent",
-                        }}
-                      >
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center", padding: 12 }}
-                        >
-                          <View
-                            className="items-center justify-center rounded-xl mr-3"
-                            style={{ width: 46, height: 46, backgroundColor: bg }}
-                          >
-                            <MaterialCommunityIcons name={icon} size={22} color={fg} />
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
-                              {sp.sportName}
-                            </Text>
-                            <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
-                              {sp.count} {sp.count === 1 ? "game" : "games"}
-                            </Text>
-                          </View>
-                          {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-          </>
-        )}
+        <PlayerStatCards
+          data={{
+            rating,
+            gamesPlayed: stats?.gamesPlayedTotal ?? 0,
+            tournamentsPlayed: stats?.tournamentsPlayedTotal ?? 0,
+            gamesHosted: stats?.gamesHostedTotal ?? 0,
+            activeSquads: stats?.activeSquads.length ?? 0,
+            hoursPlayed: stats?.hoursPlayedTotal ?? 0,
+            participationScore: computeRating(stats),
+            regularGamesPlayed,
+            matchesWon,
+            matchesPlayed,
+            sportSegments,
+            totals: player ? { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals } : null,
+          }}
+          isLoading={isLoading}
+          filterSportId={filterSportId}
+          filterSportName={filterSportName}
+          sportsPlayed={sportsPlayed}
+          onSelectSport={handleSelectSportCard}
+        />
 
         <Pressable
           onPress={async () => {

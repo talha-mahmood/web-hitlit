@@ -1433,6 +1433,8 @@ export type Database = {
       }
       match_results: {
         Row: {
+          cricket_match_id: string | null
+          football_match_id: string | null
           game_date: string | null
           game_id: string
           game_title: string | null
@@ -1445,6 +1447,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cricket_match_id?: string | null
+          football_match_id?: string | null
           game_date?: string | null
           game_id: string
           game_title?: string | null
@@ -1457,6 +1461,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cricket_match_id?: string | null
+          football_match_id?: string | null
           game_date?: string | null
           game_id?: string
           game_title?: string | null
@@ -1469,6 +1475,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "match_results_cricket_match_id_fkey"
+            columns: ["cricket_match_id"]
+            isOneToOne: false
+            referencedRelation: "cricket_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_football_match_id_fkey"
+            columns: ["football_match_id"]
+            isOneToOne: false
+            referencedRelation: "football_matches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "match_results_sport_id_fkey"
             columns: ["sport_id"]
@@ -3291,6 +3311,13 @@ export type Database = {
         Returns: {
           end_time: string
           start_time: string
+        }[]
+      }
+      get_player_extra_stats: {
+        Args: { p_sport_id?: string; p_user_id: string }
+        Returns: {
+          active_squads: number
+          regular_games_played: number
         }[]
       }
       get_player_public_stats: {

@@ -68,6 +68,10 @@ export type PlayerPublicProfile = {
   totalRuns: number;
   totalGoals: number;
   totalWickets: number;
+  // From get_player_extra_stats — the two numbers the Profile-style cards need
+  // that the main stats RPC doesn't return.
+  activeSquads: number;
+  regularGamesPlayed: number;
 };
 
 // Basic identity comes straight from `profiles` (publicly readable); the
@@ -77,16 +81,18 @@ export type PlayerPublicProfile = {
 // opened from the Top Players list with a sport filter on, so the profile
 // matches the row that was tapped.
 export async function fetchPlayerPublicProfile(userId: string, sportId?: string): Promise<PlayerPublicProfile> {
-  const [profileRes, statsRes] = await Promise.all([
+  const [profileRes, statsRes, extraRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, avatar, city, bio, skill_level")
       .eq("id", userId)
       .single(),
     supabase.rpc("get_player_public_stats", { p_user_id: userId, p_sport_id: sportId }).single(),
+    supabase.rpc("get_player_extra_stats", { p_user_id: userId, p_sport_id: sportId }).single(),
   ]);
   if (profileRes.error) throw new Error(profileRes.error.message);
   if (statsRes.error) throw new Error(statsRes.error.message);
+  if (extraRes.error) throw new Error(extraRes.error.message);
 
   const profile = profileRes.data;
   const stats = statsRes.data;
@@ -110,5 +116,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
     totalRuns: stats.total_runs ?? 0,
     totalGoals: stats.total_goals ?? 0,
     totalWickets: stats.total_wickets ?? 0,
+    activeSquads: extraRes.data.active_squads,
+    regularGamesPlayed: extraRes.data.regular_games_played,
   };
 }
