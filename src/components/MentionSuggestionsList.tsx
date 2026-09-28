@@ -1,4 +1,11 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Image } from "react-native";
+// Gesture-handler's ScrollView (not RN's): this dropdown is absolutely
+// positioned *outside* its parent's bounds (top/bottom: 100%), and on
+// Android RN's own touch system never delivers touches that land outside a
+// parent's bounds — so RN's ScrollView here can't receive scroll drags.
+// Gesture-handler recognizes gestures natively at the root view (see
+// GestureHandlerRootView in App.tsx), so it scrolls fine from there.
+import { ScrollView } from "react-native-gesture-handler";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
 import type { MentionSuggestion } from "../lib/api/mentions";
@@ -103,6 +110,7 @@ export default function MentionSuggestionsList({
     >
       <ScrollView
         horizontal
+        nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 8, gap: 6 }}
@@ -152,7 +160,7 @@ export default function MentionSuggestionsList({
           <Text className="text-muted text-xs mt-1.5 text-center">No matches for "{query.trim()}".</Text>
         </View>
       ) : (
-        <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 230 }}>
+        <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: 230 }}>
           {suggestions.map((item) => (
             <SuggestionRow key={`${item.entityType}:${item.entityId}`} item={item} onPress={() => onSelect(item)} />
           ))}
