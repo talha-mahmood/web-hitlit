@@ -22,7 +22,7 @@ const GRID_GAP = 18;
 // square, its height too — a bit bigger.
 const GRID_SIDE_PADDING = 10;
 const CARD_WIDTH = (SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_GAP) / 2;
-const CARD_TEXT_HEIGHT = 105;
+const CARD_TEXT_HEIGHT = 46;
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
 // except the Create Squad card, which gets a banner-image-then-title layout
@@ -32,12 +32,10 @@ function ImageCard({
   source,
   onPress,
   title,
-  subtitle,
 }: {
   source: number;
   onPress: () => void;
   title: string;
-  subtitle?: string;
 }) {
   return (
     <Bouncy
@@ -73,40 +71,26 @@ function ImageCard({
         <View
           style={{
             height: CARD_TEXT_HEIGHT,
-            paddingHorizontal: 14,
-            paddingTop: 12,
-            paddingBottom: 10,
-            justifyContent: "flex-start",
+            paddingHorizontal: 10,
+            paddingTop: 0,
+            paddingBottom: 0,
+            justifyContent: "center",
           }}
         >
           <Text
             className="text-ink font-extrabold"
             style={{
-              fontSize: 17,
-              lineHeight: 21,
-              width: CARD_WIDTH - 28,
+              fontSize: 10,
+              lineHeight: 16,
+              width: CARD_WIDTH - 20,
+              textTransform: "uppercase",
             }}
-            numberOfLines={2}
-            ellipsizeMode="tail"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
           >
             {title}
           </Text>
-
-          {subtitle && (
-            <Text
-              className="text-muted"
-              style={{
-                fontSize: 11,
-                lineHeight: 15,
-                marginTop: 5,
-                width: CARD_WIDTH - 28,
-              }}
-              numberOfLines={3}
-              ellipsizeMode="tail"
-            >
-              {subtitle}
-            </Text>
-          )}
         </View>
       </View>
     </Bouncy>
@@ -124,25 +108,21 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
           title="Host Game/Tournament"
-          subtitle="Bring your squad together and compete"
         />
         <ImageCard
           source={require("../../../assets/community-icons/explore-games.png")}
           onPress={() => navigation.navigate("GamesList", undefined)}
           title="Explore Games/Tournaments"
-          subtitle="Discover new games and join exciting tournaments"
         />
         <ImageCard
           source={require("../../../assets/community-icons/create-squad.png")}
           onPress={() => navigation.navigate("CreateSquad")}
           title="Create Squad"
-          subtitle="Create squad to chat with members"
         />
         <ImageCard
           source={require("../../../assets/community-icons/explore-squad.png")}
           onPress={() => navigation.navigate("SquadsList")}
           title="Explore Squads"
-          subtitle="Explore & join squads in around you"
         />
       </View>
     </ScrollView>
