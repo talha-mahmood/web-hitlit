@@ -80,7 +80,7 @@ function ImageCard({
           <Text
             className="text-ink font-extrabold"
             style={{
-              fontSize: 10,
+              fontSize: 18,
               lineHeight: 16,
               width: CARD_WIDTH - 20,
               textTransform: "uppercase",
@@ -107,12 +107,12 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
         <ImageCard
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
-          title="Host Game/Tournament"
+          title="Host Game"
         />
         <ImageCard
           source={require("../../../assets/community-icons/explore-games.png")}
           onPress={() => navigation.navigate("GamesList", undefined)}
-          title="Explore Games/Tournaments"
+          title="Explore Games"
         />
         <ImageCard
           source={require("../../../assets/community-icons/create-squad.png")}
