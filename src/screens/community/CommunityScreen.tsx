@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } from "react-native";
+import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -17,12 +17,11 @@ type Segment = "community" | "players" | "chat";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_PADDING = 16;
-const GRID_GAP = 18;
-// The four cards sit a little wider than the rest of the page content (they
-// stretch out into the side margin), which makes each card — and, being
-// square, its height too — a bit bigger.
-const GRID_SIDE_PADDING = 10;
-const CARD_WIDTH = (SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_GAP) / 2;
+// The cards run almost edge to edge: a slim margin on each side and a slim
+// gap between the two columns, so each card is as wide as the screen allows.
+const GRID_SIDE_PADDING = 8;
+const GRID_COL_GAP = 8;
+const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
 const CARD_TEXT_HEIGHT = 46;
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
@@ -34,7 +33,12 @@ function ImageCard({
   visual,
   onPress,
   title,
+  width,
+  height,
 }: {
+  width: number;
+  // Height of the picture area (the title strip sits under it).
+  height: number;
   source?: number;
   // A drawn visual (see HeroVisual) used instead of a picture.
   visual?: ReactNode;
@@ -48,7 +52,7 @@ function ImageCard({
       style={{
         ...cardShadow,
         backgroundColor: "white",
-        width: CARD_WIDTH,
+        width,
         borderRadius: 22,
       }}
     >
@@ -66,8 +70,8 @@ function ImageCard({
           <Image
             source={source}
             style={{
-              width: CARD_WIDTH,
-              height: CARD_WIDTH,
+              width,
+              height,
             }}
             resizeMode="cover"
           />
@@ -88,7 +92,7 @@ function ImageCard({
             style={{
               fontSize: 18,
               lineHeight: 16,
-              width: CARD_WIDTH - 20,
+              width: width - 20,
               textTransform: "uppercase",
             }}
             numberOfLines={1}
@@ -110,31 +114,36 @@ function HeroVisual({
   colorsFrom,
   icon,
   accentIcons,
+  width,
+  height,
 }: {
+  width: number;
+  height: number;
   colorsFrom: [string, string];
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   accentIcons: (keyof typeof MaterialCommunityIcons.glyphMap)[];
 }) {
+  const size = Math.min(width, height);
   return (
     <LinearGradient
       colors={colorsFrom}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ width: CARD_WIDTH, height: CARD_WIDTH, alignItems: "center", justifyContent: "center" }}
+      style={{ width, height, alignItems: "center", justifyContent: "center" }}
     >
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: CARD_WIDTH * 0.9, height: CARD_WIDTH * 0.9, borderRadius: CARD_WIDTH, backgroundColor: "white", opacity: 0.1, top: -CARD_WIDTH * 0.3, right: -CARD_WIDTH * 0.3 }}
+        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: "white", opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
       />
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: CARD_WIDTH * 0.6, height: CARD_WIDTH * 0.6, borderRadius: CARD_WIDTH, backgroundColor: "white", opacity: 0.08, bottom: -CARD_WIDTH * 0.2, left: -CARD_WIDTH * 0.15 }}
+        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: "white", opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
       />
       <View
         className="items-center justify-center"
-        style={{ width: CARD_WIDTH * 0.52, height: CARD_WIDTH * 0.52, borderRadius: CARD_WIDTH, backgroundColor: "rgba(255,255,255,0.2)" }}
+        style={{ width: size * 0.52, height: size * 0.52, borderRadius: size, backgroundColor: "rgba(255,255,255,0.2)" }}
       >
-        <MaterialCommunityIcons name={icon} size={CARD_WIDTH * 0.3} color="white" />
+        <MaterialCommunityIcons name={icon} size={size * 0.3} color="white" />
       </View>
       <MaterialCommunityIcons name={accentIcons[0]} size={24} color="white" style={{ position: "absolute", top: 14, left: 14, opacity: 0.6 }} />
       <MaterialCommunityIcons name={accentIcons[1]} size={22} color="white" style={{ position: "absolute", bottom: 14, right: 14, opacity: 0.6 }} />
@@ -151,44 +160,71 @@ function MyCommunityContent({
   onOpenPlayers: () => void;
   onOpenChat: () => void;
 }) {
+  // All six cards (3 rows of 2) are sized to fit the space between the header
+  // and the bottom tab bar, so nothing needs scrolling. The card is capped at
+  // its regular width-based size on tall screens.
+  const [areaHeight, setAreaHeight] = useState(0);
+  const onLayout = (e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height);
+  const ROWS = 3;
+  const TOP_PAD = 12;
+  const BOTTOM_PAD = 12;
+  const ROW_GAP = 12;
+  const fitted = areaHeight > 0
+    ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - CARD_TEXT_HEIGHT * ROWS) / ROWS
+    : CARD_WIDTH;
+  // Picture height fits the available space; the width is always the full
+  // column width, so on short screens the cards are wider than they are tall.
+  const imageHeight = Math.floor(Math.max(96, Math.min(CARD_WIDTH, fitted)));
+
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: SIDE_PADDING, paddingTop: 16, paddingBottom: 40 }}>
-      <View
-        className="flex-row flex-wrap justify-between"
-        style={{ rowGap: GRID_GAP, marginHorizontal: GRID_SIDE_PADDING - SIDE_PADDING }}
-      >
-        <ImageCard
-          visual={<HeroVisual colorsFrom={["#22C55E", "#14532D"]} icon="message-text" accentIcons={["chat-processing", "account-group"]} />}
-          onPress={onOpenChat}
-          title="Community Chat"
-        />
-        <ImageCard
-          visual={<HeroVisual colorsFrom={["#16A34A", "#15803D"]} icon="trophy" accentIcons={["star", "medal"]} />}
-          onPress={onOpenPlayers}
-          title="Top Players"
-        />
-        <ImageCard
-          source={require("../../../assets/community-icons/host-game.png")}
-          onPress={() => navigation.navigate("CreateGame", undefined)}
-          title="Host Game"
-        />
-        <ImageCard
-          source={require("../../../assets/community-icons/explore-games.png")}
-          onPress={() => navigation.navigate("GamesList", undefined)}
-          title="Explore Games"
-        />
-        <ImageCard
-          source={require("../../../assets/community-icons/create-squad.png")}
-          onPress={() => navigation.navigate("CreateSquad")}
-          title="Create Squad"
-        />
-        <ImageCard
-          source={require("../../../assets/community-icons/explore-squad.png")}
-          onPress={() => navigation.navigate("SquadsList")}
-          title="Explore Squads"
-        />
-      </View>
-    </ScrollView>
+    <View style={{ flex: 1 }} onLayout={onLayout}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: BOTTOM_PAD }}>
+        <View className="flex-row flex-wrap justify-between" style={{ rowGap: ROW_GAP }}>
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            visual={<HeroVisual width={CARD_WIDTH} height={imageHeight} colorsFrom={["#22C55E", "#14532D"]} icon="message-text" accentIcons={["chat-processing", "account-group"]} />}
+            onPress={onOpenChat}
+            title="Community Chat"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            visual={<HeroVisual width={CARD_WIDTH} height={imageHeight} colorsFrom={["#16A34A", "#15803D"]} icon="trophy" accentIcons={["star", "medal"]} />}
+            onPress={onOpenPlayers}
+            title="Top Players"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/host-game.png")}
+            onPress={() => navigation.navigate("CreateGame", undefined)}
+            title="Host Game"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/explore-games.png")}
+            onPress={() => navigation.navigate("GamesList", undefined)}
+            title="Explore Games"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/create-squad.png")}
+            onPress={() => navigation.navigate("CreateSquad")}
+            title="Create Squad"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/explore-squad.png")}
+            onPress={() => navigation.navigate("SquadsList")}
+            title="Explore Squads"
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
