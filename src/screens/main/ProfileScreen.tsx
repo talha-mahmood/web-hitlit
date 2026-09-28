@@ -541,59 +541,12 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {/* My Bookings — same shell as the Skill Level card. */}
-        <Pressable
-          onPress={() => navigation.navigate("MyBookings")}
-          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-3 mt-2"
-          style={{ backgroundColor: "white", ...CARD_SHADOW }}
-        >
-          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
-            <View
-              className="items-center justify-center rounded-2xl"
-              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
-            >
-              <Ionicons name="calendar-outline" size={22} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 18 }}>
-                My Bookings
-              </Text>
-              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
-                View your court bookings
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-        </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate("BlockedUsers")}
-          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-3"
-          style={{ backgroundColor: "white", ...CARD_SHADOW }}
-        >
-          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
-            <View
-              className="items-center justify-center rounded-2xl"
-              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
-            >
-              <Ionicons name="hand-left-outline" size={22} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 18 }}>
-                Blocked Users
-              </Text>
-              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
-                Manage who you've blocked
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-        </Pressable>
         <Pressable
           onPress={async () => {
             await signOutGoogle();
             signOutWithPushCleanup();
           }}
-          className="bg-primary rounded-xl py-4 items-center"
+          className="bg-primary rounded-xl py-4 items-center mt-2"
         >
           <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
         </Pressable>
