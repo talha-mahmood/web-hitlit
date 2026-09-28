@@ -194,7 +194,6 @@ export default function HomeScreen() {
       bgColor: "#0B3B24",
       accentColor: "#4ADE80",
       image: require("../../../assets/Slider-images/second_slider_image.png"),
-      onPress: () => navigation.navigate("Venues", { screen: "VenuesList" }),
     },
     {
       key: "squads",
@@ -205,7 +204,6 @@ export default function HomeScreen() {
       bgColor: "#1E3A5F",
       accentColor: "#7DD3FC",
       image: require("../../../assets/Slider-images/third_slider_image.png"),
-      onPress: () => navigation.navigate("SquadsList", undefined),
     },
   ];
 
