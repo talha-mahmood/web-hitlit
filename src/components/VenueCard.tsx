@@ -29,6 +29,9 @@ type VenueCardProps = {
   // VenuesListScreen default) keeps today's behavior: every sport shown,
   // row absent entirely when there are none.
   maxSportChips?: number;
+  // Just the photo (with the rating pinned on it) and the venue's name
+  // beneath — no city, sport chips or distance. Used by the home screen.
+  minimal?: boolean;
 };
 
 // A small rotating palette so the sport chips on a venue card read as
@@ -45,6 +48,7 @@ export default function VenueCard({
   index,
   distanceLabel,
   maxSportChips,
+  minimal = false,
 }: VenueCardProps) {
   const coverImage = [...venue.venue_images]
     .sort((a, b) => a.display_order - b.display_order)
@@ -92,7 +96,26 @@ export default function VenueCard({
               />
             </Bouncy>
           )}
-          {distanceLabel ? (
+          {minimal && (
+            <View
+              className="absolute flex-row items-center bg-black/60 rounded-full"
+              style={{ left: 8, bottom: 8, paddingHorizontal: 8, paddingVertical: 4, gap: 4 }}
+            >
+              <Ionicons name="star" size={12} color={colors.warning} />
+              <Text className="text-white text-xs font-bold">
+                {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
+              </Text>
+            </View>
+          )}
+          {minimal && distanceLabel ? (
+            <View
+              className="absolute bg-black/60 rounded-full"
+              style={{ left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
+            </View>
+          ) : null}
+          {!minimal && distanceLabel ? (
             <View className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1">
               <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
             </View>
@@ -103,17 +126,21 @@ export default function VenueCard({
             <Text className="text-ink font-semibold text-base flex-1" numberOfLines={1}>
               {venue.name}
             </Text>
-            <View className="flex-row items-center ml-2">
-              <Ionicons name="star" size={14} color={colors.warning} />
-              <Text className="text-ink text-sm ml-1">
-                {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
-              </Text>
-            </View>
+            {!minimal && (
+              <View className="flex-row items-center ml-2">
+                <Ionicons name="star" size={14} color={colors.warning} />
+                <Text className="text-ink text-sm ml-1">
+                  {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
+                </Text>
+              </View>
+            )}
           </View>
-          <Text className="text-muted text-sm mt-0.5" numberOfLines={1}>
-            {venue.city}
-          </Text>
-          {maxSportChips !== undefined || sportNames.length > 0 ? (
+          {!minimal && (
+            <Text className="text-muted text-sm mt-0.5" numberOfLines={1}>
+              {venue.city}
+            </Text>
+          )}
+          {!minimal && (maxSportChips !== undefined || sportNames.length > 0) ? (
             <View
               className="flex-row flex-wrap mt-1.5"
               style={{ gap: 6, minHeight: maxSportChips !== undefined ? 20 : undefined }}

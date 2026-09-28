@@ -321,8 +321,8 @@ export default function HomeScreen() {
               <VenueCard
                 venue={item}
                 showFavorite={false}
+                minimal
                 distanceLabel={km !== null ? formatDistanceKm(km) : undefined}
-                maxSportChips={2}
                 onPress={() => navigation.navigate("VenueDetail", { venueId: item.id })}
               />
             </View>
