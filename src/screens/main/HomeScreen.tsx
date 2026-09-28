@@ -205,6 +205,7 @@ export default function HomeScreen() {
       icon: "flash",
       bgColor: "#0B3B24",
       accentColor: "#4ADE80",
+      image: require("../../../assets/Slider-images/second_slider_image.png"),
       onPress: () => navigation.navigate("Venues", { screen: "VenuesList" }),
     },
     {
@@ -215,17 +216,8 @@ export default function HomeScreen() {
       icon: "people",
       bgColor: "#1E3A5F",
       accentColor: "#7DD3FC",
+      image: require("../../../assets/Slider-images/third_slider_image.png"),
       onPress: () => navigation.navigate("SquadsList", undefined),
-    },
-    {
-      key: "games",
-      title: "Jump Into a Game",
-      subtitle: "Browse open games nearby and play today.",
-      cta: "Browse Games",
-      icon: "flame",
-      bgColor: "#7C2D12",
-      accentColor: "#FDBA74",
-      onPress: () => navigation.navigate("GamesList", undefined),
     },
   ];
 
