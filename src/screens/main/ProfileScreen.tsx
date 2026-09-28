@@ -6,7 +6,6 @@ import { useFocusEffect, useIsFocused, useNavigation, type CompositeNavigationPr
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { supabase } from "../../lib/supabase";
@@ -66,11 +65,8 @@ function StatCard({
   label: string;
 }) {
   return (
-    <LinearGradient
-      colors={["#0E5C34", "#1D9254"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ width: "31%", borderRadius: 16, padding: 12, overflow: "hidden" }}
+    <View
+      style={{ width: "31%", borderRadius: 16, padding: 12, backgroundColor: "white", ...cardShadow }}
     >
       <View className="mb-2">
         <View
@@ -80,11 +76,11 @@ function StatCard({
           <Ionicons name={icon} size={17} color={fg} />
         </View>
       </View>
-      <Text className="text-white font-extrabold text-xl">{value}</Text>
-      <Text className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }} numberOfLines={2}>
+      <Text className="text-ink font-extrabold text-xl">{value}</Text>
+      <Text className="text-[11px] mt-0.5" style={{ color: colors.muted }} numberOfLines={2}>
         {label}
       </Text>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -421,17 +417,14 @@ export default function ProfileScreen() {
       >
       <View className="px-6" style={{ paddingTop: 20 }}>
         {/* Rating card */}
-        <LinearGradient
-          colors={["#0E5C34", "#1D9254"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 16, padding: 16, marginBottom: 24, overflow: "hidden", position: "relative" }}
+        <View
+          style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24, position: "relative" }}
         >
           <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
             <View
               style={{
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.25)",
+                borderColor: colors.border,
                 borderRadius: 10,
                 paddingHorizontal: 8,
                 paddingVertical: 6,
@@ -440,7 +433,7 @@ export default function ProfileScreen() {
               <Text
                 numberOfLines={2}
                 style={{
-                  color: "white",
+                  color: colors.muted,
                   fontSize: 11,
                   fontWeight: "700",
                   fontStyle: "italic",
@@ -450,10 +443,10 @@ export default function ProfileScreen() {
               >
                 {"Play More\nGet Better"}
               </Text>
-              <Ionicons name="trending-up" size={14} color="white" style={{ marginTop: 4, opacity: 0.75, alignSelf: "flex-end" }} />
+              <Ionicons name="trending-up" size={14} color={colors.muted} style={{ marginTop: 4, opacity: 0.75, alignSelf: "flex-end" }} />
             </View>
           </View>
-          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: "rgba(255,255,255,0.75)" }}>
+          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
             Your Rating
           </Text>
           <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
@@ -467,19 +460,19 @@ export default function ProfileScreen() {
                 />
                 <Ionicons name="trophy" size={22} color={ratingTier.color} />
               </View>
-              <Text className="text-white font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
+              <Text className="text-ink font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
                 {rating}
               </Text>
               <Ionicons name="star" size={16} color="#FACC15" style={{ marginTop: -18 }} />
             </View>
           </View>
           <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
-            <Text className="text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
+            <Text className="text-xs" style={{ color: colors.muted }}>
               {ratingTier.nextLabel ? `${ratingTier.remaining} points to ${ratingTier.nextLabel}` : "Top tier"}
             </Text>
-            <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.6)" />
+            <Ionicons name="information-circle-outline" size={13} color={colors.muted} />
           </View>
-          <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
             <View
               style={{
                 height: 8,
@@ -491,14 +484,14 @@ export default function ProfileScreen() {
           </View>
           <View
             className="flex-row items-center self-end rounded-full pl-3 pr-2 py-1.5 mt-3"
-            style={{ backgroundColor: "white", gap: 2 }}
+            style={{ backgroundColor: ratingTier.bg, gap: 2 }}
           >
-            <Text className="text-xs font-bold" style={{ color: colors.ink }}>
+            <Text className="text-xs font-bold" style={{ color: ratingTier.color }}>
               {ratingTier.label}
             </Text>
-            <Ionicons name="chevron-forward" size={12} color={colors.ink} />
+            <Ionicons name="chevron-forward" size={12} color={ratingTier.color} />
           </View>
-        </LinearGradient>
+        </View>
 
         {isLoading ? (
           <ActivityIndicator color={colors.primary} className="my-8" />
@@ -516,41 +509,38 @@ export default function ProfileScreen() {
 
             {/* Sport breakdown + activity, side by side */}
             <View className="flex-row mb-6 items-stretch" style={{ gap: 12 }}>
-              <LinearGradient
-                colors={["#0E5C34", "#1D9254"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden", position: "relative" }}
+              <View
+                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1, position: "relative" }}
               >
                 <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="pie-chart" size={15} color="#4ADE80" />
-                  <Text className="text-white font-semibold" numberOfLines={1}>
+                  <Ionicons name="pie-chart" size={15} color={colors.primary} />
+                  <Text className="text-ink font-semibold" numberOfLines={1}>
                     Sports You Play
                   </Text>
                 </View>
                 {sportSegments.length === 0 ? (
                   <View className="items-center py-4">
-                    <Ionicons name="bar-chart-outline" size={24} color="rgba(255,255,255,0.4)" />
-                    <Text className="text-xs mt-2 text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    <Ionicons name="bar-chart-outline" size={24} color="#9CA3AF" />
+                    <Text className="text-xs mt-2 text-center" style={{ color: colors.muted }}>
                       Play your first game to see this here.
                     </Text>
                   </View>
                 ) : (
                   <View className="items-center">
                     <View style={{ width: 110, height: 110 }}>
-                      <PieChart segments={sportSegments} size={110} gapColor="#0E5C34" />
+                      <PieChart segments={sportSegments} size={110} gapColor="white" />
                       <View
                         pointerEvents="none"
                         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
                       >
                         <View
                           className="items-center justify-center rounded-full"
-                          style={{ width: 60, height: 60, backgroundColor: "#0E5C34" }}
+                          style={{ width: 60, height: 60, backgroundColor: "white" }}
                         >
-                          <Text className="text-white font-extrabold" style={{ fontSize: 20 }}>
+                          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }}>
                             {sportSegments.length}
                           </Text>
-                          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>Sports</Text>
+                          <Text style={{ color: colors.muted, fontSize: 10 }}>Sports</Text>
                         </View>
                       </View>
                     </View>
@@ -558,10 +548,10 @@ export default function ProfileScreen() {
                       {sportSegments.map((s) => (
                         <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
                           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
-                          <Text className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.85)" }} numberOfLines={1}>
+                          <Text className="text-xs flex-1" style={{ color: colors.muted }} numberOfLines={1}>
                             {s.label}
                           </Text>
-                          <Text className="text-[11px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                          <Text className="text-[11px]" style={{ color: colors.muted }}>
                             {Math.round((s.value / sportTotal) * 100)}%
                           </Text>
                         </View>
@@ -569,32 +559,26 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                 )}
-              </LinearGradient>
+              </View>
 
-              <LinearGradient
-                colors={["#0E5C34", "#1D9254"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ borderRadius: 16, padding: 14, flex: 1, overflow: "hidden" }}
+              <View
+                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1 }}
               >
                 <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="bar-chart" size={15} color="#4ADE80" />
-                  <Text className="text-white font-semibold" numberOfLines={1}>
+                  <Ionicons name="bar-chart" size={15} color={colors.primary} />
+                  <Text className="text-ink font-semibold" numberOfLines={1}>
                     Your Activity
                   </Text>
                 </View>
-                <ActivityBarRow light icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
-                <ActivityBarRow light icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
-                <ActivityBarRow light icon="people" iconBg="#FAF5FF" label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#C084FC" />
-              </LinearGradient>
+                <ActivityBarRow icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
+                <ActivityBarRow icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={stats?.tournamentsPlayedTotal ?? 0} max={activityMax} color="#FBBF24" />
+                <ActivityBarRow icon="people" iconBg="#FAF5FF" label="Games Hosted" value={stats?.gamesHostedTotal ?? 0} max={activityMax} color="#C084FC" />
+              </View>
             </View>
 
             {/* Games Win — same green card look as the rest of the Profile cards */}
-            <LinearGradient
-              colors={["#0E5C34", "#1D9254"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ borderRadius: 16, padding: 16, marginBottom: 16, overflow: "hidden" }}
+            <View
+              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 16 }}
             >
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
@@ -605,37 +589,34 @@ export default function ProfileScreen() {
                     <Ionicons name="locate" size={20} color="#16A34A" />
                   </View>
                   <View>
-                    <Text className="text-white font-extrabold text-xl">
+                    <Text className="text-ink font-extrabold text-xl">
                       {matchesWon} / {matchesPlayed}
                     </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
                       {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                     </Text>
                   </View>
                 </View>
                 <View className="items-end">
-                  <Text className="text-white font-extrabold text-lg">{winPercentage}%</Text>
+                  <Text className="text-ink font-extrabold text-lg">{winPercentage}%</Text>
                   {winTag && (
-                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}>
-                      <Text className="text-[10px] font-bold text-white">{winTag}</Text>
+                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#F3F4F6" }}>
+                      <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
                     </View>
                   )}
                 </View>
               </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
-                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: "#4ADE80" }} />
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
+                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
               </View>
-              <Text className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.75)" }}>{winCaption}</Text>
-            </LinearGradient>
+              <Text className="text-xs mt-2" style={{ color: colors.muted }}>{winCaption}</Text>
+            </View>
 
             {/* Sport-specific totals — only once filtered to that one sport */}
             {player && filterSportName?.toLowerCase() === "cricket" && (
               <View className="flex-row mb-4" style={{ gap: 12 }}>
-                <LinearGradient
-                  colors={["#0E5C34", "#1D9254"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ flex: 1, borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10 }}
+                <View
+                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
@@ -644,15 +625,12 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons name="cricket" size={22} color="#16A34A" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-extrabold text-xl">{player.totalRuns}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Runs</Text>
+                    <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Runs</Text>
                   </View>
-                </LinearGradient>
-                <LinearGradient
-                  colors={["#0E5C34", "#1D9254"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ flex: 1, borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10 }}
+                </View>
+                <View
+                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
@@ -661,18 +639,15 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons name="bowling" size={22} color="#16A34A" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-extrabold text-xl">{player.totalWickets}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Wickets</Text>
+                    <Text className="text-ink font-extrabold text-xl">{player.totalWickets}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Wickets</Text>
                   </View>
-                </LinearGradient>
+                </View>
               </View>
             )}
             {player && filterSportName?.toLowerCase() === "football" && (
-              <LinearGradient
-                  colors={["#0E5C34", "#1D9254"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ borderRadius: 16, padding: 14, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
+              <View
+                  style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
@@ -681,10 +656,10 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons name="soccer" size={22} color="#16A34A" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-extrabold text-xl">{player.totalGoals}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Total Goals</Text>
+                    <Text className="text-ink font-extrabold text-xl">{player.totalGoals}</Text>
+                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Goals</Text>
                   </View>
-                </LinearGradient>
+                </View>
             )}
 
             {/* Sports Played — tap one to filter Games Win and the sport totals above */}
@@ -712,15 +687,11 @@ export default function ProfileScreen() {
                         onPress={() => handleSelectSportCard(sp.sportId, sp.sportName)}
                         style={{
                           borderRadius: 16,
-                          overflow: "hidden",
                           borderWidth: 1.5,
-                          borderColor: selected ? "#4ADE80" : "transparent",
+                          borderColor: selected ? colors.primary : "transparent",
                         }}
                       >
-                        <LinearGradient
-                          colors={["#0E5C34", "#1D9254"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
+                        <View
                           style={{ flexDirection: "row", alignItems: "center", padding: 12 }}
                         >
                           <View
@@ -730,15 +701,15 @@ export default function ProfileScreen() {
                             <MaterialCommunityIcons name={icon} size={22} color={fg} />
                           </View>
                           <View className="flex-1">
-                            <Text className="text-white font-bold text-sm" numberOfLines={1}>
+                            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
                               {sp.sportName}
                             </Text>
-                            <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+                            <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
                               {sp.count} {sp.count === 1 ? "game" : "games"}
                             </Text>
                           </View>
-                          {selected && <Ionicons name="checkmark-circle" size={18} color="#4ADE80" />}
-                        </LinearGradient>
+                          {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
+                        </View>
                       </Pressable>
                     );
                   })}
