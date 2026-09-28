@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   Pressable,
   Alert,
   ActivityIndicator,
@@ -21,6 +20,7 @@ import { useProfileStore } from "../../store/profileStore";
 import {
   useCommentThread,
   usePostComment,
+  useUpdateComment,
   useDeleteComment,
   useToggleCommentLike,
 } from "../../hooks/useCommunityChat";
@@ -28,6 +28,9 @@ import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import MentionComposer from "../../components/MentionComposer";
+import MentionText from "../../components/MentionText";
+import type { Mention } from "../../lib/mentionParser";
 
 type Route = RouteProp<CommunityStackParamList, "CommentThread">;
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommentThread">;
@@ -60,6 +63,7 @@ function CommentBubble({
   isOwn,
   isRoot,
   onReply,
+  onEdit,
   onDelete,
   onToggleLike,
   onOpenProfile,
@@ -68,10 +72,21 @@ function CommentBubble({
   isOwn: boolean;
   isRoot: boolean;
   onReply: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   onToggleLike: () => void;
   onOpenProfile: () => void;
 }) {
+  const isEdited = comment.updated_at && comment.updated_at !== comment.created_at;
+
+  const handleOpenMenu = () => {
+    Alert.alert("Message Options", undefined, [
+      { text: "Edit", onPress: onEdit },
+      { text: "Delete", style: "destructive", onPress: onDelete },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
   return (
     <View
       className={`rounded-2xl border p-3.5 mb-3 ${isRoot ? "bg-white border-border" : "bg-primary-light border-primary-light"}`}
@@ -88,13 +103,16 @@ function CommentBubble({
               </Text>
             </Pressable>
             {isOwn && (
-              <Pressable onPress={onDelete} hitSlop={8} className="p-1">
+              <Pressable onPress={handleOpenMenu} hitSlop={8} className="p-1">
                 <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
               </Pressable>
             )}
           </View>
-          <Text className="text-muted text-xs mt-0.5">{formatCommunityTimeAgo(comment.created_at)}</Text>
-          <Text className="text-ink text-sm mt-2">{comment.body}</Text>
+          <Text className="text-muted text-xs mt-0.5">
+            {formatCommunityTimeAgo(comment.created_at)}
+            {isEdited ? " · Edited" : ""}
+          </Text>
+          <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
           <View className="flex-row items-center mt-2.5" style={{ gap: 18 }}>
             <Pressable onPress={onToggleLike} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
               <Ionicons
@@ -122,30 +140,48 @@ export default function CommentThreadScreen() {
   const isFocused = useIsFocused();
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
-  const [draft, setDraft] = useState("");
   const [replyTarget, setReplyTarget] = useState<{ id: string; name: string } | null>(null);
+  const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
 
   const { data: thread, isLoading, error } = useCommentThread(params.rootId, userId);
   const postComment = usePostComment();
+  const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
   const toggleLike = useToggleCommentLike();
 
   const root = thread?.find((c) => c.id === params.rootId);
   const replies = (thread ?? []).filter((c) => c.id !== params.rootId);
 
-  const handlePost = () => {
-    const body = draft.trim();
-    if (!body || !userId) return;
-    setDraft("");
+  const handleSend = (body: string, mentions: Mention[]) => {
+    if (!userId) return;
     postComment.mutate(
-      { userId, body, parentId: replyTarget?.id ?? params.rootId },
+      { userId, body, mentions, parentId: replyTarget?.id ?? params.rootId },
       {
-        onError: (err) => {
-          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post reply."));
-          setDraft(body);
-        },
+        onSuccess: () => setReplyTarget(null),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post reply.")),
       }
     );
+  };
+
+  const handleSaveEdit = (body: string, mentions: Mention[]) => {
+    if (!editingComment) return;
+    updateComment.mutate(
+      { commentId: editingComment.id, body, mentions },
+      {
+        onSuccess: () => setEditingComment(null),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save changes.")),
+      }
+    );
+  };
+
+  const startEdit = (comment: CommunityComment) => {
+    setReplyTarget(null);
+    setEditingComment(comment);
+  };
+
+  const startReply = (id: string, name: string) => {
+    setEditingComment(null);
+    setReplyTarget({ id, name });
   };
 
   const handleDelete = (comment: CommunityComment) => {
@@ -219,7 +255,8 @@ export default function CommentThreadScreen() {
               comment={root}
               isOwn={root.user_id === userId}
               isRoot
-              onReply={() => setReplyTarget({ id: root.id, name: root.profiles?.full_name ?? "this comment" })}
+              onReply={() => startReply(root.id, root.profiles?.full_name ?? "this comment")}
+              onEdit={() => startEdit(root)}
               onDelete={() => handleDelete(root)}
               onToggleLike={() => handleToggleLike(root)}
               onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: root.user_id })}
@@ -231,9 +268,8 @@ export default function CommentThreadScreen() {
                 comment={item}
                 isOwn={item.user_id === userId}
                 isRoot={false}
-                onReply={() =>
-                  setReplyTarget({ id: item.id, name: item.profiles?.full_name ?? "this reply" })
-                }
+                onReply={() => startReply(item.id, item.profiles?.full_name ?? "this reply")}
+                onEdit={() => startEdit(item)}
                 onDelete={() => handleDelete(item)}
                 onToggleLike={() => handleToggleLike(item)}
                 onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: item.user_id })}
@@ -243,7 +279,7 @@ export default function CommentThreadScreen() {
         />
       )}
 
-      {replyTarget && (
+      {replyTarget && !editingComment && (
         <View className="flex-row items-center justify-between px-4 py-2 bg-primary-light">
           <Text className="text-primary text-xs font-medium" numberOfLines={1}>
             Replying to {replyTarget.name}
@@ -254,26 +290,23 @@ export default function CommentThreadScreen() {
         </View>
       )}
 
-      <View
-        className="flex-row items-center border-t border-border px-3 py-2 bg-white"
-        style={{ paddingBottom: insets.bottom + 8, gap: 8 }}
-      >
-        <Avatar name={profile?.full_name ?? null} avatar={profile?.avatar ?? null} size={32} />
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
+      <View style={{ paddingBottom: insets.bottom }}>
+        <MentionComposer
+          avatarName={profile?.full_name ?? null}
+          avatarUrl={profile?.avatar ?? null}
           placeholder="Write a reply..."
-          className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
-          maxLength={1000}
-          multiline
+          dropdownPosition="above"
+          onSend={handleSend}
+          sending={postComment.isPending}
+          editing={
+            editingComment
+              ? { messageId: editingComment.id, initialBody: editingComment.body, initialMentions: editingComment.mentions }
+              : null
+          }
+          onSave={handleSaveEdit}
+          onCancelEdit={() => setEditingComment(null)}
+          saving={updateComment.isPending}
         />
-        <Pressable
-          onPress={handlePost}
-          disabled={!draft.trim() || postComment.isPending}
-          className={`w-10 h-10 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
-        >
-          <Ionicons name="send" size={16} color="white" />
-        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );

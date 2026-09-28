@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, TextInput, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
@@ -7,12 +7,16 @@ import { useProfileStore } from "../../store/profileStore";
 import {
   useCommunityFeed,
   usePostComment,
+  useUpdateComment,
   useDeleteComment,
   useToggleCommentLike,
 } from "../../hooks/useCommunityChat";
 import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import MentionComposer from "../../components/MentionComposer";
+import MentionText from "../../components/MentionText";
+import type { Mention } from "../../lib/mentionParser";
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -41,6 +45,7 @@ function CommentCard({
   comment,
   isOwn,
   onReply,
+  onEdit,
   onDelete,
   onToggleLike,
   onOpenProfile,
@@ -48,10 +53,21 @@ function CommentCard({
   comment: CommunityComment;
   isOwn: boolean;
   onReply: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   onToggleLike: () => void;
   onOpenProfile: () => void;
 }) {
+  const isEdited = comment.updated_at && comment.updated_at !== comment.created_at;
+
+  const handleOpenMenu = () => {
+    Alert.alert("Message Options", undefined, [
+      { text: "Edit", onPress: onEdit },
+      { text: "Delete", style: "destructive", onPress: onDelete },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
   return (
     <View className="bg-white rounded-2xl border border-border p-4 mb-3" style={cardShadow}>
       <View className="flex-row items-start" style={{ gap: 10 }}>
@@ -66,13 +82,16 @@ function CommentCard({
               </Text>
             </Pressable>
             {isOwn && (
-              <Pressable onPress={onDelete} hitSlop={8} className="p-1">
+              <Pressable onPress={handleOpenMenu} hitSlop={8} className="p-1">
                 <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
               </Pressable>
             )}
           </View>
-          <Text className="text-muted text-xs mt-0.5">{formatCommunityTimeAgo(comment.created_at)}</Text>
-          <Text className="text-ink text-sm mt-2">{comment.body}</Text>
+          <Text className="text-muted text-xs mt-0.5">
+            {formatCommunityTimeAgo(comment.created_at)}
+            {isEdited ? " · Edited" : ""}
+          </Text>
+          <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
           <View className="flex-row items-center mt-3" style={{ gap: 18 }}>
             <Pressable onPress={onToggleLike} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
               <Ionicons
@@ -107,12 +126,13 @@ export default function CommunityChatContent({
 }) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
-  const [draft, setDraft] = useState("");
   // null = no age filter (show everything the 6-month retention still has).
   const [dayFilter, setDayFilter] = useState<1 | 2 | 3 | null>(null);
+  const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
 
   const { data: comments, isLoading, error } = useCommunityFeed(userId);
   const postComment = usePostComment();
+  const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
   const toggleLike = useToggleCommentLike();
 
@@ -122,17 +142,21 @@ export default function CommunityChatContent({
     return (comments ?? []).filter((c) => new Date(c.created_at).getTime() >= cutoff);
   }, [comments, dayFilter]);
 
-  const handlePost = () => {
-    const body = draft.trim();
-    if (!body || !userId) return;
-    setDraft("");
+  const handleSend = (body: string, mentions: Mention[]) => {
+    if (!userId) return;
     postComment.mutate(
-      { userId, body },
+      { userId, body, mentions },
+      { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post comment.")) }
+    );
+  };
+
+  const handleSaveEdit = (body: string, mentions: Mention[]) => {
+    if (!editingComment) return;
+    updateComment.mutate(
+      { commentId: editingComment.id, body, mentions },
       {
-        onError: (err) => {
-          Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post comment."));
-          setDraft(body);
-        },
+        onSuccess: () => setEditingComment(null),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not save changes.")),
       }
     );
   };
@@ -163,24 +187,22 @@ export default function CommunityChatContent({
 
   return (
     <View className="flex-1">
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-border" style={{ gap: 8 }}>
-        <Avatar name={profile?.full_name ?? null} avatar={profile?.avatar ?? null} size={32} />
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder="Start a conversation... "
-          className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
-          maxLength={1000}
-          multiline
-        />
-        <Pressable
-          onPress={handlePost}
-          disabled={!draft.trim() || postComment.isPending}
-          className={`w-10 h-10 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
-        >
-          <Ionicons name="send" size={16} color="white" />
-        </Pressable>
-      </View>
+      <MentionComposer
+        avatarName={profile?.full_name ?? null}
+        avatarUrl={profile?.avatar ?? null}
+        placeholder="Start a conversation... "
+        dropdownPosition="below"
+        onSend={handleSend}
+        sending={postComment.isPending}
+        editing={
+          editingComment
+            ? { messageId: editingComment.id, initialBody: editingComment.body, initialMentions: editingComment.mentions }
+            : null
+        }
+        onSave={handleSaveEdit}
+        onCancelEdit={() => setEditingComment(null)}
+        saving={updateComment.isPending}
+      />
 
       <View className="flex-row items-center px-4 py-2.5 bg-white border-b border-border" style={{ gap: 8 }}>
         {DAY_FILTERS.map((d) => {
@@ -230,6 +252,7 @@ export default function CommunityChatContent({
               comment={item}
               isOwn={item.user_id === userId}
               onReply={() => onReply(item.id)}
+              onEdit={() => setEditingComment(item)}
               onDelete={() => handleDelete(item)}
               onToggleLike={() => handleToggleLike(item)}
               onOpenProfile={() => onOpenProfile(item.user_id)}

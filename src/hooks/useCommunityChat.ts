@@ -4,11 +4,13 @@ import {
   fetchCommunityFeed,
   fetchCommentThread,
   postComment,
+  updateComment,
   deleteComment,
   setCommentLiked,
 } from "../lib/api/communityChat";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
+import type { Mention } from "../lib/mentionParser";
 
 export function useCommunityFeed(userId: string | undefined) {
   const qc = useQueryClient();
@@ -75,8 +77,30 @@ export function useCommentThread(rootId: string, userId: string | undefined) {
 export function usePostComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, body, parentId }: { userId: string; body: string; parentId?: string }) =>
-      postComment(userId, body, parentId),
+    mutationFn: ({
+      userId,
+      body,
+      mentions,
+      parentId,
+    }: {
+      userId: string;
+      body: string;
+      mentions?: Mention[];
+      parentId?: string;
+    }) => postComment(userId, body, mentions ?? [], parentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["communityFeed"] });
+      qc.invalidateQueries({ queryKey: ["commentThread"] });
+    },
+  });
+}
+
+// Author-only edit — see community_comments_update_self.
+export function useUpdateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, body, mentions }: { commentId: string; body: string; mentions?: Mention[] }) =>
+      updateComment(commentId, body, mentions ?? []),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["communityFeed"] });
       qc.invalidateQueries({ queryKey: ["commentThread"] });
