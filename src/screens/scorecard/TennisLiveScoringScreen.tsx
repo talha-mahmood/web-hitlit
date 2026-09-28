@@ -205,7 +205,7 @@ export default function TennisLiveScoringScreen() {
           scoreA: formatSetScore(set, "A"),
           scoreB: formatSetScore(set, "B"),
         })),
-        appName: "PlayOye",
+        appName: "HitLit",
       });
       await generateAndShareMatchReport(html);
     } catch (err) {

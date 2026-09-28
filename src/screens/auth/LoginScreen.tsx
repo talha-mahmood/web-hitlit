@@ -47,7 +47,7 @@ export default function LoginScreen() {
             style={{ width: 68, height: 68, borderRadius: 34 }}
           />
           <Text className="text-xl font-extrabold text-ink mt-4 text-center">
-            Welcome to PlayOye
+            Welcome to HitLit
           </Text>
           <Text className="text-muted text-center mt-1.5 text-sm px-2">
             Find players, book courts, and get in the game.

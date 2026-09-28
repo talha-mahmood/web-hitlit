@@ -28,7 +28,7 @@ async function ensureAndroidChannel() {
   // No `sound` here on purpose: that option means "custom sound file", and
   // omitting it gives the phone's normal notification sound.
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: "PlayOye notifications",
+    name: "HitLit notifications",
     importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: "#16A34A",

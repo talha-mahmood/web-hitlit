@@ -38,7 +38,7 @@ export default function AdminMenuOverlay({
         <View className="flex-row items-center justify-between px-5 py-4">
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <Ionicons name="tennisball" size={22} color={colors.primary} />
-            <Text className="text-white text-lg font-bold">playoye</Text>
+            <Text className="text-white text-lg font-bold">HitLit</Text>
           </View>
           <Pressable onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={26} color="white" />
@@ -66,7 +66,7 @@ export default function AdminMenuOverlay({
 
         <View className="px-5" style={{ paddingBottom: insets.bottom + 20 }}>
           <Pressable
-            onPress={() => Linking.openURL("mailto:mahmoodhamza1261@gmail.com?subject=PlayOye%20Support")}
+            onPress={() => Linking.openURL("mailto:mahmoodhamza1261@gmail.com?subject=HitLit%20Support")}
             className="flex-row items-center"
             style={{ gap: 10 }}
           >

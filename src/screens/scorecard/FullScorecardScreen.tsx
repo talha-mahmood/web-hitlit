@@ -195,7 +195,7 @@ export default function FullScorecardScreen() {
     try {
       const html = buildCricketMatchReportHtml(match, {
         organiserName: profile?.full_name ?? "—",
-        appName: "PlayOye",
+        appName: "HitLit",
       });
       await generateAndShareMatchReport(html);
     } catch (err) {

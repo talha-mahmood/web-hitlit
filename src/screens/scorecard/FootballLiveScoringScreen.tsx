@@ -446,7 +446,7 @@ export default function FootballLiveScoringScreen() {
           breakdown: periodRows.map((row) => ({ label: row.label, scoreA: String(row.a), scoreB: String(row.b) })),
           eventsTitle: "Goal History",
           events: goals.map((g) => ({ time: g.minuteLabel, team: g.team, label: g.scorerName ? `Goal — ${g.scorerName}` : "Goal" })),
-          appName: "PlayOye",
+          appName: "HitLit",
         });
         await generateAndShareMatchReport(html);
       } catch (err) {

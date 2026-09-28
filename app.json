@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PlayOye",
+    "name": "HitLit",
     "slug": "hamza-playpal-app",
     "scheme": "playoye",
     "version": "1.0.0",
@@ -38,13 +38,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "PlayOye needs access to your photos so you can set a profile picture."
+          "photosPermission": "HitLit needs access to your photos so you can set a profile picture."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "PlayOye needs your location to set your squad's location automatically."
+          "locationWhenInUsePermission": "HitLit needs your location to set your squad's location automatically."
         }
       ],
       "expo-apple-authentication",

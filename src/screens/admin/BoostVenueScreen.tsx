@@ -32,7 +32,7 @@ export default function BoostVenueScreen() {
   const handlePay = () => {
     Alert.alert(
       "Coming Soon",
-      "Online payments for boosting aren't live yet. To boost this venue right now, contact PlayOye support and they'll activate it for you."
+      "Online payments for boosting aren't live yet. To boost this venue right now, contact HitLit support and they'll activate it for you."
     );
   };
 

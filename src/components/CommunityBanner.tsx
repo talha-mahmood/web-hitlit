@@ -3,7 +3,7 @@ import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-// The "PlayOye Community" banner at the top of My Community. Laid out on a
+// The "HitLit Community" banner at the top of My Community. Laid out on a
 // 361 x 103 design canvas that is scaled down on narrower phones, so the
 // text, glass sport badges and tagline keep their proportions.
 const BASE_W = 361;
@@ -122,7 +122,7 @@ export default function CommunityBanner({ width }: { width: number }) {
             letterSpacing: -0.3,
           }}
         >
-          PlayOye Community
+          HitLit Community
         </Text>
         <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#D3F6E0" }}>
           {"Create Join Explore\nSquads & Games!"}

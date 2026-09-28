@@ -1,6 +1,6 @@
 # Privacy Policy
 
-This privacy policy applies to the **PlayOye** app for mobile devices (Android and iOS), together with any related services, operated by **Hamza Mahmood** (collectively, the "Application"). Hamza Mahmood is hereby referred to as the "Service Provider."
+This privacy policy applies to the **HitLit** app for mobile devices (Android and iOS), together with any related services, operated by **Hamza Mahmood** (collectively, the "Application"). Hamza Mahmood is hereby referred to as the "Service Provider."
 
 **Effective date:** August 23, 2026
 

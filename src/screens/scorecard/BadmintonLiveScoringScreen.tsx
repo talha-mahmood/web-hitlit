@@ -202,7 +202,7 @@ export default function BadmintonLiveScoringScreen() {
           scoreA: String(game.scoreA),
           scoreB: String(game.scoreB),
         })),
-        appName: "PlayOye",
+        appName: "HitLit",
       });
       await generateAndShareMatchReport(html);
     } catch (err) {
