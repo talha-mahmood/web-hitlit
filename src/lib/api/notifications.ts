@@ -37,6 +37,18 @@ export async function deleteNotification(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// Soft-deletes every one of the user's notifications in one go — same
+// deleted_at convention (and the same "update own notifications" RLS
+// policy) as deleteNotification above.
+export async function deleteAllNotifications(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("deleted_at", null);
+  if (error) throw new Error(error.message);
+}
+
 export async function markNotificationRead(id: string): Promise<void> {
   const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
   if (error) throw new Error(error.message);

@@ -13,6 +13,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
   useDeleteNotification,
+  useDeleteAllNotifications,
 } from "../../hooks/useNotifications";
 import {
   useAcceptTeamInvite,
@@ -169,6 +170,7 @@ export default function NotificationsScreen() {
   const markRead = useMarkNotificationRead(userId);
   const markAllRead = useMarkAllNotificationsRead(userId);
   const deleteNotif = useDeleteNotification(userId);
+  const deleteAll = useDeleteAllNotifications(userId);
   const acceptTeamInvite = useAcceptTeamInvite();
   const declineTeamInvite = useDeclineTeamInvite();
   const acceptSquadInvite = useAcceptSquadInviteFromNotification();
@@ -196,6 +198,20 @@ export default function NotificationsScreen() {
   const handlePress = (n: NotificationRow) => {
     if (!n.is_read) markRead.mutate(n.id);
     navigateToTarget(n);
+  };
+
+  const handleDeleteAll = () => {
+    Alert.alert("Delete All Notifications", "Remove all your notifications? This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete All",
+        style: "destructive",
+        onPress: () =>
+          deleteAll.mutate(undefined, {
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete notifications.")),
+          }),
+      },
+    ]);
   };
 
   const handleDelete = (n: NotificationRow) => {
@@ -243,11 +259,18 @@ export default function NotificationsScreen() {
           </Pressable>
           <Text className="text-2xl font-bold text-ink">Notifications</Text>
         </View>
-        {hasUnread && (
-          <Pressable onPress={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
-            <Text className="text-primary font-semibold text-sm">Mark all read</Text>
-          </Pressable>
-        )}
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          {hasUnread && (
+            <Pressable onPress={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
+              <Text className="text-primary font-semibold text-sm">Mark all read</Text>
+            </Pressable>
+          )}
+          {(notifications?.length ?? 0) > 0 && (
+            <Pressable onPress={handleDeleteAll} disabled={deleteAll.isPending} hitSlop={8}>
+              <Text className="text-danger font-semibold text-sm">Delete all</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {isLoading ? (
