@@ -374,7 +374,7 @@ export default function ProfileScreen() {
           colors={["#0E5C34", "#1D9254"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 16, padding: 16, marginBottom: 16, overflow: "hidden", position: "relative" }}
+          style={{ borderRadius: 16, padding: 16, marginBottom: 24, overflow: "hidden", position: "relative" }}
         >
           <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
             <View
@@ -448,34 +448,6 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={12} color={colors.ink} />
           </View>
         </LinearGradient>
-
-        {/* Skill level card */}
-        <Pressable
-          onPress={() => setSkillPickerOpen(true)}
-          className="flex-row items-center justify-between rounded-2xl px-4 py-3.5 mb-6 overflow-hidden"
-          style={{ backgroundColor: "white", position: "relative", ...CARD_SHADOW }}
-        >
-          <View className="flex-row items-center flex-1" style={{ gap: 12 }}>
-            <View
-              className="items-center justify-center rounded-2xl"
-              style={{ width: 48, height: 48, backgroundColor: colors.primaryDark }}
-            >
-              <Ionicons name="locate" size={24} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.75 }}>
-                Skill Level
-              </Text>
-              <Text className="font-extrabold" style={{ color: colors.primaryDark, fontSize: 22 }}>
-                {effectiveSkillLevel ? capitalize(effectiveSkillLevel) : "Not set"}
-              </Text>
-              <Text className="text-xs font-medium" style={{ color: colors.primaryDark, opacity: 0.7 }}>
-                Tap to update
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-        </Pressable>
 
         {isLoading ? (
           <ActivityIndicator color={colors.primary} className="my-8" />
