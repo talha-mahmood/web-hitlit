@@ -159,11 +159,6 @@ export default function PlayerProfileScreen() {
             </Pressable>
           )}
         </View>
-        {(followState?.followerCount ?? 0) > 0 && (
-          <Text className="text-muted text-xs mt-3">
-            {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
-          </Text>
-        )}
       </View>
 
       {isLoading || !player ? (
