@@ -121,7 +121,7 @@ export default function VenueDetailScreen() {
           (no separate card per section). */}
       <View
         className="bg-white px-5 pt-5 pb-8"
-        style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26, ...cardShadow }}
+        style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26 }}
       >
         <View className="flex-row items-start justify-between">
           <Text className="text-xl font-extrabold text-ink flex-1 mr-3">{venue.name}</Text>
