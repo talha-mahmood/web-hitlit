@@ -193,7 +193,9 @@ export default function HomeScreen() {
       icon: "trophy",
       bgColor: "#111827",
       accentColor: "#F59E0B",
-      onPress: () => navigation.navigate("GamesList", { gameType: "TOURNAMENT" }),
+      // A picture-only slide (no tap action) — replaces the old
+      // "Compete & Win Big" text card.
+      image: require("../../../assets/Slider-images/first_slider_image.png"),
     },
     {
       key: "venues",

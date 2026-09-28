@@ -3,7 +3,9 @@ import {
   View,
   Text,
   Pressable,
+  Image,
   FlatList,
+  type ImageSourcePropType,
   Dimensions,
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
@@ -20,7 +22,12 @@ export type PromoSlide = {
   icon: keyof typeof Ionicons.glyphMap;
   bgColor: string;
   accentColor: string;
-  onPress: () => void;
+  // When set, the slide is just this picture, edge to edge (it carries its
+  // own design), instead of the generated title/subtitle/CTA card — the
+  // text fields above are then unused. The slide is only tappable if
+  // onPress is given.
+  image?: ImageSourcePropType;
+  onPress?: () => void;
 };
 
 // Fallback estimate used only until the container's real width is measured
@@ -33,6 +40,20 @@ const CARD_HEIGHT = 172;
 const AUTO_ADVANCE_MS = 4500;
 
 function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
+  if (slide.image) {
+    return (
+      <Pressable
+        onPress={slide.onPress}
+        disabled={!slide.onPress}
+        accessibilityLabel={slide.title}
+        style={{ width, height: CARD_HEIGHT }}
+        className="rounded-3xl overflow-hidden"
+      >
+        <Image source={slide.image} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       onPress={slide.onPress}
