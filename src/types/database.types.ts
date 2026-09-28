@@ -3313,6 +3313,13 @@ export type Database = {
           start_time: string
         }[]
       }
+      get_follower_counts: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          follower_count: number
+          user_id: string
+        }[]
+      }
       get_player_extra_stats: {
         Args: { p_sport_id?: string; p_user_id: string }
         Returns: {

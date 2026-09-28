@@ -116,6 +116,11 @@ export default function PlayerProfileScreen() {
             <Text className="font-extrabold text-ink" style={{ fontSize: 22 }} numberOfLines={1}>
               {player?.fullName ?? "Player"}
             </Text>
+            {player?.userCode ? (
+              <Text className="text-muted text-xs mt-1" numberOfLines={1}>
+                ID: {player.userCode}
+              </Text>
+            ) : null}
             <Text className="text-muted text-xs mt-1">Play Together, Stay Active</Text>
             <View
               className="flex-row items-center self-start rounded-full px-3 py-1 mt-2"

@@ -20,6 +20,7 @@ export type TopPlayer = {
   matchesPlayedTotal: number;
   matchesWonTotal: number;
   hoursPlayedTotal: number;
+  followerCount: number;
 };
 
 // Reads via a SECURITY DEFINER RPC (get_top_players) since the underlying
@@ -30,6 +31,14 @@ export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
     p_sport_id: sportId ?? undefined,
   });
   if (error) throw new Error(error.message);
+  // One grouped query for every listed player's follower count.
+  const ids = (data ?? []).map((row) => row.user_id);
+  const followerCounts = new Map<string, number>();
+  if (ids.length > 0) {
+    const { data: counts, error: countsError } = await supabase.rpc("get_follower_counts", { p_user_ids: ids });
+    if (countsError) throw new Error(countsError.message);
+    for (const c of counts ?? []) followerCounts.set(c.user_id, c.follower_count);
+  }
   return (data ?? []).map((row) => ({
     userId: row.user_id,
     fullName: row.full_name,
@@ -42,6 +51,7 @@ export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
     matchesPlayedTotal: row.matches_played,
     matchesWonTotal: row.matches_won,
     hoursPlayedTotal: Number(row.hours_played),
+    followerCount: followerCounts.get(row.user_id) ?? 0,
   }));
 }
 
@@ -50,6 +60,7 @@ export type PlayerSportBreakdownEntry = { sportId: string; sportName: string; co
 export type PlayerPublicProfile = {
   id: string;
   fullName: string | null;
+  userCode: string | null;
   avatar: string | null;
   city: string | null;
   bio: string | null;
@@ -84,7 +95,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
   const [profileRes, statsRes, extraRes] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, avatar, city, bio, skill_level")
+      .select("id, full_name, user_code, avatar, city, bio, skill_level")
       .eq("id", userId)
       .single(),
     supabase.rpc("get_player_public_stats", { p_user_id: userId, p_sport_id: sportId }).single(),
@@ -101,6 +112,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
   return {
     id: profile.id,
     fullName: profile.full_name,
+    userCode: profile.user_code,
     avatar: profile.avatar,
     city: profile.city,
     bio: profile.bio,

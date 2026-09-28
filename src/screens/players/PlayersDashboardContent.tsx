@@ -56,9 +56,15 @@ function PlayerRow({
             >
               <Ionicons name="flame" size={11} color={tier.color} />
             </View>
-            <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8 }}>
+            <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8, flexShrink: 1 }}>
               Rating {rating} · {tier.label}
             </Text>
+            <View className="flex-row items-center" style={{ gap: 3 }}>
+              <Ionicons name="people-outline" size={12} color={colors.muted} />
+              <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8 }}>
+                {player.followerCount} follower{player.followerCount === 1 ? "" : "s"}
+              </Text>
+            </View>
           </View>
         </View>
         <Text className="text-muted font-semibold text-xs">
