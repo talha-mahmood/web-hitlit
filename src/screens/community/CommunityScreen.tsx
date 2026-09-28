@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
@@ -30,10 +31,13 @@ const CARD_TEXT_HEIGHT = 46;
 // padded title/subtitle block underneath.
 function ImageCard({
   source,
+  visual,
   onPress,
   title,
 }: {
-  source: number;
+  source?: number;
+  // A drawn visual (see HeroVisual) used instead of a picture.
+  visual?: ReactNode;
   onPress: () => void;
   title: string;
 }) {
@@ -58,14 +62,16 @@ function ImageCard({
         }}
       >
         {/* IMAGE — stays the same size */}
-        <Image
-          source={source}
-          style={{
-            width: CARD_WIDTH,
-            height: CARD_WIDTH,
-          }}
-          resizeMode="cover"
-        />
+        {visual ?? (
+          <Image
+            source={source}
+            style={{
+              width: CARD_WIDTH,
+              height: CARD_WIDTH,
+            }}
+            resizeMode="cover"
+          />
+        )}
 
         {/* TEXT AREA — this is what gets bigger */}
         <View
@@ -97,13 +103,70 @@ function ImageCard({
   );
 }
 
-function MyCommunityContent({ navigation }: { navigation: Nav }) {
+// Drawn artwork for the two feature cards (Top Players / Community Chat) that
+// have no bundled picture: a green gradient tile with soft circles and a big
+// icon, sized like the pictures on the other four cards.
+function HeroVisual({
+  colorsFrom,
+  icon,
+  accentIcons,
+}: {
+  colorsFrom: [string, string];
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  accentIcons: (keyof typeof MaterialCommunityIcons.glyphMap)[];
+}) {
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: SIDE_PADDING, paddingTop: 4, paddingBottom: 40 }}>
+    <LinearGradient
+      colors={colorsFrom}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ width: CARD_WIDTH, height: CARD_WIDTH, alignItems: "center", justifyContent: "center" }}
+    >
+      <View
+        pointerEvents="none"
+        style={{ position: "absolute", width: CARD_WIDTH * 0.9, height: CARD_WIDTH * 0.9, borderRadius: CARD_WIDTH, backgroundColor: "white", opacity: 0.1, top: -CARD_WIDTH * 0.3, right: -CARD_WIDTH * 0.3 }}
+      />
+      <View
+        pointerEvents="none"
+        style={{ position: "absolute", width: CARD_WIDTH * 0.6, height: CARD_WIDTH * 0.6, borderRadius: CARD_WIDTH, backgroundColor: "white", opacity: 0.08, bottom: -CARD_WIDTH * 0.2, left: -CARD_WIDTH * 0.15 }}
+      />
+      <View
+        className="items-center justify-center"
+        style={{ width: CARD_WIDTH * 0.52, height: CARD_WIDTH * 0.52, borderRadius: CARD_WIDTH, backgroundColor: "rgba(255,255,255,0.2)" }}
+      >
+        <MaterialCommunityIcons name={icon} size={CARD_WIDTH * 0.3} color="white" />
+      </View>
+      <MaterialCommunityIcons name={accentIcons[0]} size={24} color="white" style={{ position: "absolute", top: 14, left: 14, opacity: 0.6 }} />
+      <MaterialCommunityIcons name={accentIcons[1]} size={22} color="white" style={{ position: "absolute", bottom: 14, right: 14, opacity: 0.6 }} />
+    </LinearGradient>
+  );
+}
+
+function MyCommunityContent({
+  navigation,
+  onOpenPlayers,
+  onOpenChat,
+}: {
+  navigation: Nav;
+  onOpenPlayers: () => void;
+  onOpenChat: () => void;
+}) {
+  return (
+    <ScrollView contentContainerStyle={{ paddingHorizontal: SIDE_PADDING, paddingTop: 16, paddingBottom: 40 }}>
       <View
         className="flex-row flex-wrap justify-between"
         style={{ rowGap: GRID_GAP, marginHorizontal: GRID_SIDE_PADDING - SIDE_PADDING }}
       >
+        <ImageCard
+          visual={<HeroVisual colorsFrom={["#22C55E", "#14532D"]} icon="message-text" accentIcons={["chat-processing", "account-group"]} />}
+          onPress={onOpenChat}
+          title="Community Chat"
+        />
+        <ImageCard
+          visual={<HeroVisual colorsFrom={["#16A34A", "#15803D"]} icon="trophy" accentIcons={["star", "medal"]} />}
+          onPress={onOpenPlayers}
+          title="Top Players"
+        />
         <ImageCard
           source={require("../../../assets/community-icons/host-game.png")}
           onPress={() => navigation.navigate("CreateGame", undefined)}
@@ -129,35 +192,6 @@ function MyCommunityContent({ navigation }: { navigation: Nav }) {
   );
 }
 
-function SegmentButton({
-  label,
-  icon,
-  active,
-  onPress,
-}: {
-  label: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-1 flex-row items-center justify-center rounded-full"
-      style={{ paddingVertical: 12, gap: 6, backgroundColor: active ? colors.primary : "transparent" }}
-    >
-      <MaterialCommunityIcons name={icon} size={18} color={active ? "white" : colors.ink} style={active ? undefined : { opacity: 0.75 }} />
-      <Text
-        className={active ? "text-white font-bold" : "text-ink font-semibold"}
-        style={[{ fontSize: 12 }, active ? null : { opacity: 0.75 }]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 export default function CommunityScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
@@ -179,13 +213,18 @@ export default function CommunityScreen() {
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
+        // Inside Top Players / Community Chat, back returns to the cards first.
+        if (segment !== "community") {
+          setSegment("community");
+          return true;
+        }
         if (navigation.canGoBack()) return false;
         navigation.getParent()?.navigate("Home");
         return true;
       };
       const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
       return () => subscription.remove();
-    }, [navigation])
+    }, [navigation, segment])
   );
 
   return (
@@ -207,6 +246,10 @@ export default function CommunityScreen() {
         <View className="flex-row items-center" style={{ gap: 14 }}>
           <Pressable
             onPress={() => {
+              if (segment !== "community") {
+                setSegment("community");
+                return;
+              }
               // Community is a bottom-tab root, so there's usually nothing to
               // pop to — fall back to the Home tab in that case.
               if (navigation.canGoBack()) navigation.goBack();
@@ -224,7 +267,7 @@ export default function CommunityScreen() {
           </View>
           <View className="flex-1">
             <Text className="text-white font-extrabold" style={{ fontSize: 23 }}>
-              Community
+              {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
             </Text>
             <Text style={{ fontSize: 14, lineHeight: 19, color: "#BBF7D0", marginTop: 2 }}>
               Play Together, Stay Active
@@ -233,18 +276,16 @@ export default function CommunityScreen() {
         </View>
       </View>
 
-      <View style={{ paddingTop: 16, paddingHorizontal: SIDE_PADDING, marginBottom: 12 }}>
-        <View className="flex-row items-center bg-white" style={{ borderRadius: 30, padding: 4, ...cardShadow }}>
-          <SegmentButton label="My Community" icon="account-group" active={segment === "community"} onPress={() => setSegment("community")} />
-          <SegmentButton label="Top Players" icon="trophy-outline" active={segment === "players"} onPress={() => setSegment("players")} />
-          {segment === "community" ? (
-            <View style={{ width: 1, height: 22, backgroundColor: "#E5E7EB" }} />
-          ) : null}
-          <SegmentButton label="Community Chat" icon="message-text-outline" active={segment === "chat"} onPress={() => setSegment("chat")} />
-        </View>
-      </View>
-
-      {segment === "community" && <MyCommunityContent navigation={navigation} />}
+      {segment === "community" && (
+        <MyCommunityContent
+          navigation={navigation}
+          onOpenPlayers={() => setSegment("players")}
+          onOpenChat={() => setSegment("chat")}
+        />
+      )}
+      {/* Top Players / Community Chat sit under the header where the tab bar used to be. */}
+      {segment !== "community" && (
+      <View style={{ flex: 1, marginTop: 12 }}>
       {segment === "players" && (
         <PlayersDashboardContent
           onPressPlayer={(userId, sport) =>
@@ -257,6 +298,8 @@ export default function CommunityScreen() {
           onReply={(rootId) => navigation.navigate("CommentThread", { rootId })}
           onOpenProfile={(userId) => navigation.navigate("PlayerProfile", { userId })}
         />
+      )}
+      </View>
       )}
     </View>
   );
