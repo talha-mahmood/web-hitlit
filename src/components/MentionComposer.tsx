@@ -150,7 +150,11 @@ export default function MentionComposer({
             onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
             selection={selection}
             placeholder={placeholder}
-            className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
+            className="flex-1 border border-border rounded-full px-4 text-ink"
+            // Fixed line height + vertical centering keeps the placeholder
+            // (and a single line of typed text) dead-center in the field
+            // instead of drifting up/down; extra lines still grow it.
+            style={{ minHeight: 44, paddingVertical: 11, fontSize: 14, lineHeight: 20, textAlignVertical: "center", includeFontPadding: false }}
             maxLength={1000}
             multiline
           />

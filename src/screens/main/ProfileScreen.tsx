@@ -295,9 +295,9 @@ export default function ProfileScreen() {
           <Pressable
             onPress={() => navigation.navigate("AccountSettings")}
             className="items-center justify-center bg-white rounded-full"
-            style={{ width: 50, height: 50, ...CARD_SHADOW }}
+            style={{ width: 40, height: 40, ...CARD_SHADOW }}
           >
-            <Ionicons name="settings-outline" size={24} color={colors.primaryDark} />
+            <Ionicons name="settings-outline" size={20} color={colors.primaryDark} />
           </Pressable>
         </View>
       </View>
