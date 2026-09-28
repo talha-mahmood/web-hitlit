@@ -29,17 +29,22 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#14532D" }}>
+    <View className="flex-1" style={{ backgroundColor: "#FFFFFF" }}>
       <View className="flex-1 items-center justify-center px-6">
         <View
           className="w-full items-center rounded-3xl px-6 py-8"
           style={{
             backgroundColor: "white",
+            // A denser border + a deeper, tighter shadow than the app's usual
+            // cardShadow — gives the sign-in card a raised, 3D look against
+            // the now-white page instead of just floating on green.
+            borderWidth: 1.5,
+            borderColor: "rgba(15, 23, 42, 0.12)",
             shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.18,
-            shadowRadius: 20,
-            elevation: 8,
+            shadowOffset: { width: 0, height: 14 },
+            shadowOpacity: 0.28,
+            shadowRadius: 22,
+            elevation: 14,
           }}
         >
           <Image
@@ -84,7 +89,7 @@ export default function LoginScreen() {
           )}
         </View>
 
-        <Text className="text-white text-xs text-center mt-6 px-4" style={{ opacity: 0.85 }}>
+        <Text className="text-muted text-xs text-center mt-6 px-4">
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </Text>
       </View>
