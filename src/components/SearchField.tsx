@@ -133,7 +133,7 @@ export default function SearchField({
               {prefix}
             </Text>
             <Animated.View style={placeholderStyle}>
-              <Animated.Text style={{ color: colors.muted, fontSize: 14 }} numberOfLines={1}>
+              <Animated.Text style={{ color: colors.muted, fontSize: 14, fontFamily: "Poppins-Regular" }} numberOfLines={1}>
                 {variants[index % variants.length]}
               </Animated.Text>
             </Animated.View>

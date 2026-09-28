@@ -1,6 +1,9 @@
 import "./global.css";
 import "./src/lib/alertPolyfill";
 import "./src/lib/activityIndicatorPolyfill";
+import { POPPINS_FONTS } from "./src/lib/fontPolyfill";
+import { View } from "react-native";
+import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -18,6 +21,15 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts(POPPINS_FONTS);
+
+  // Hold the first render until Poppins is ready so text never flashes in
+  // the system font first. If loading somehow fails, fall through rather
+  // than leave the app on a blank screen (text then uses the system font).
+  if (!fontsLoaded && !fontError) {
+    return <View style={{ flex: 1, backgroundColor: "#F0FDF4" }} />;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
