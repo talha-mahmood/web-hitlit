@@ -38,8 +38,10 @@ export function HomeSportTile({
           height: width,
           borderRadius: 18,
           padding: 10,
-          borderWidth: selected ? 2.5 : 1,
-          borderColor: selected ? colors.primary : colors.border,
+          // Only the selected tile has a visible border. Unselected tiles keep
+          // the same width but transparent, so nothing shifts on select.
+          borderWidth: 2.5,
+          borderColor: selected ? colors.primary : "transparent",
         }}
       >
         {photo ? (
