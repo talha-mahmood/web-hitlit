@@ -4,7 +4,7 @@ import type { Database } from "../../types/database.types";
 
 export type SportBreakdownEntry = { sportId: string; sportName: string; count: number };
 export type UpcomingEntry = { id: string; title: string; gameDate: string; startTime: string; sportName: string | null };
-export type ActiveSquadEntry = { id: string; name: string };
+export type ActiveSquadEntry = { id: string; name: string; sportId: string | null };
 
 export type ProfileStats = {
   // Scored games only: matches with a recorded result (via a scorecard or
@@ -56,7 +56,10 @@ function mostCommonSkillLevel(
   return best as Database["public"]["Enums"]["skill_level_type"] | null;
 }
 
-export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
+// `sportId` narrows every count to that one sport (games, tournaments, hosted,
+// hours, scored matches, squads, sport breakdown) — used when the Profile's
+// sport filter is on.
+export async function fetchProfileStats(userId: string, sportId?: string): Promise<ProfileStats> {
   const [historyRes, squadsRes, gamesRes, tournamentsRes, favoritesRes, skillLevelsRes] = await Promise.all([
     supabase
       .from("game_history")
@@ -64,7 +67,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
       .eq("user_id", userId),
     supabase
       .from("squad_members")
-      .select("squad_id, squads(id, name)")
+      .select("squad_id, squads(id, name, sport_id)")
       .eq("user_id", userId)
       .eq("status", "ACTIVE"),
     supabase
@@ -93,7 +96,8 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
   if (favoritesRes.error) throw new Error(favoritesRes.error.message);
   if (skillLevelsRes.error) throw new Error(skillLevelsRes.error.message);
 
-  const history = (historyRes.data ?? []) as unknown as HistoryRow[];
+  const allHistory = (historyRes.data ?? []) as unknown as HistoryRow[];
+  const history = sportId ? allHistory.filter((r) => r.sport_id === sportId) : allHistory;
 
   const sportCounts = new Map<string, { sportName: string; count: number }>();
   let hoursPlayedTotal = 0;
@@ -124,7 +128,9 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
 
   const activeSquads: ActiveSquadEntry[] = (squadsRes.data ?? [])
     .map((r) => r.squads)
-    .filter((s): s is { id: string; name: string } => !!s);
+    .filter((s): s is { id: string; name: string; sport_id: string | null } => !!s)
+    .filter((s) => !sportId || s.sport_id === sportId)
+    .map((s) => ({ id: s.id, name: s.name, sportId: s.sport_id }));
 
   const upcomingGames: UpcomingEntry[] = (gamesRes.data ?? [])
     .map((r) => r.games)
@@ -164,7 +170,10 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
     .eq("user_id", userId);
   if (matchResultsError) throw new Error(matchResultsError.message);
 
-  const scoredRows = matchResultRows ?? [];
+  // A scored match belongs to the sport of the game it was played in.
+  const sportByGameId = new Map<string, string | null>();
+  for (const row of allHistory) sportByGameId.set(row.game_id, row.sport_id);
+  const scoredRows = (matchResultRows ?? []).filter((m) => !sportId || sportByGameId.get(m.game_id) === sportId);
   const scoredGamesTotal = scoredRows.length;
   const scoredWinsTotal = scoredRows.filter((m) => m.result === "WON").length;
   const scoredRegularGamesTotal = scoredRows.filter((m) => gameTypeByGameId.get(m.game_id) !== "TOURNAMENT").length;

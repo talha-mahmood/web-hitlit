@@ -4,11 +4,11 @@ import { fetchProfileStats } from "../lib/api/profileStats";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
 
-export function useProfileStats(userId: string | undefined) {
+export function useProfileStats(userId: string | undefined, sportId?: string) {
   const qc = useQueryClient();
   const query = useQuery({
-    queryKey: ["profileStats", userId],
-    queryFn: () => fetchProfileStats(userId as string),
+    queryKey: ["profileStats", userId, sportId ?? "all"],
+    queryFn: () => fetchProfileStats(userId as string, sportId),
     enabled: !!userId,
     staleTime: 30_000,
   });

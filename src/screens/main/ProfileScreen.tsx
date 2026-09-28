@@ -14,11 +14,13 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
+import { usePlayerPublicProfile } from "../../hooks/usePlayers";
+import { useFollowState } from "../../hooks/usePlayerFollows";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import PieChart from "../../components/PieChart";
 import { getSportIcon } from "../../lib/sportIcons";
 import { pickImages, uploadImage } from "../../lib/upload";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import type { Database } from "../../types/database.types";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -221,7 +223,48 @@ export default function ProfileScreen() {
     }, [navigation])
   );
 
-  const { data: stats, isLoading } = useProfileStats(userId);
+  const [filterSportId, setFilterSportId] = useState<string | undefined>(undefined);
+  const [filterSportName, setFilterSportName] = useState<string | undefined>(undefined);
+  // Every card below (rating, stat grid, sports chart, activity, Games Win)
+  // follows the selected sport, so they're all fetched narrowed to it.
+  const { data: stats, isLoading } = useProfileStats(userId, filterSportId);
+  // The same public-profile numbers other players see on this person's
+  // Top Players detail page (Games Win, sport totals, Sports Played, followers).
+  // Tapping a "Sports Played" card narrows Games Win + the sport totals to that
+  // one sport; tapping it again clears the filter.
+  const { data: player } = usePlayerPublicProfile(userId, filterSportId);
+  // The Sports Played list is the sport selector, so it always lists every
+  // sport (the filtered profile above only returns the selected one).
+  const { data: allSportsProfile } = usePlayerPublicProfile(userId);
+  const sportsPlayed = allSportsProfile?.sportBreakdown ?? [];
+  const { data: followState } = useFollowState(userId, userId);
+  const handleSelectSportCard = (sportId: string, sportName: string) => {
+    if (filterSportId === sportId) {
+      setFilterSportId(undefined);
+      setFilterSportName(undefined);
+    } else {
+      setFilterSportId(sportId);
+      setFilterSportName(sportName);
+    }
+  };
+  const matchesWon = player?.matchesWonTotal ?? 0;
+  const matchesPlayed = player?.matchesPlayedTotal ?? 0;
+  const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
+  let winTag: string | null = null;
+  let winCaption = "Play more scored games to build this up.";
+  if (matchesPlayed > 0) {
+    if (winPercentage === 100) {
+      winTag = "Perfect!";
+      winCaption = "Great performance! Keep it up!";
+    } else if (winPercentage >= 70) {
+      winTag = "Great!";
+      winCaption = "Strong performance — keep it going!";
+    } else if (winPercentage >= 40) {
+      winCaption = "Solid effort — keep grinding!";
+    } else {
+      winCaption = "Room to improve — keep playing!";
+    }
+  }
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -352,6 +395,14 @@ export default function ProfileScreen() {
                 <Text style={{ color: "#BBF7D0" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
+            {(followState?.followerCount ?? 0) > 0 && (
+              <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
+                <Ionicons name="people-outline" size={12} color="#BBF7D0" />
+                <Text style={{ color: "#BBF7D0" }} className="text-xs">
+                  {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
+                </Text>
+              </View>
+            )}
           </View>
           <Pressable
             onPress={() => navigation.navigate("AccountSettings")}
@@ -538,6 +589,139 @@ export default function ProfileScreen() {
               </LinearGradient>
             </View>
 
+            {/* Games Win — same card as on a player's Top Players detail page */}
+            <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+                  >
+                    <Ionicons name="locate" size={20} color={colors.primaryDark} />
+                  </View>
+                  <View>
+                    <Text className="text-ink font-extrabold text-xl">
+                      {matchesWon} / {matchesPlayed}
+                    </Text>
+                    <Text className="text-muted text-xs mt-0.5">
+                      {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
+                    </Text>
+                  </View>
+                </View>
+                <View className="items-end">
+                  <Text className="font-extrabold text-lg" style={{ color: colors.primaryDark }}>
+                    {winPercentage}%
+                  </Text>
+                  {winTag && (
+                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: colors.primaryLight }}>
+                      <Text className="text-[10px] font-bold" style={{ color: colors.primaryDark }}>
+                        {winTag}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.primaryLight, overflow: "hidden" }}>
+                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+              </View>
+              <Text className="text-muted text-xs mt-2">{winCaption}</Text>
+            </View>
+
+            {/* Sport-specific totals — only once filtered to that one sport */}
+            {player && filterSportName?.toLowerCase() === "cricket" && (
+              <View className="flex-row mb-4" style={{ gap: 12 }}>
+                <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                  >
+                    <MaterialCommunityIcons name="cricket" size={22} color={colors.primaryDark} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-ink font-extrabold text-xl">{player.totalRuns}</Text>
+                    <Text className="text-muted text-xs mt-0.5">Total Runs</Text>
+                  </View>
+                </View>
+                <View className="flex-1 bg-white rounded-2xl p-4 flex-row items-center" style={{ ...cardShadow, gap: 10 }}>
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                  >
+                    <MaterialCommunityIcons name="bowling" size={22} color={colors.primaryDark} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-ink font-extrabold text-xl">{player.totalWickets}</Text>
+                    <Text className="text-muted text-xs mt-0.5">Total Wickets</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            {player && filterSportName?.toLowerCase() === "football" && (
+              <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+                >
+                  <MaterialCommunityIcons name="soccer" size={22} color={colors.primaryDark} />
+                </View>
+                <View>
+                  <Text className="text-ink font-extrabold text-xl">{player.totalGoals}</Text>
+                  <Text className="text-muted text-xs mt-0.5">Total Goals</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Sports Played — tap one to filter Games Win and the sport totals above */}
+            {sportsPlayed.length > 0 && (
+              <View className="mb-6">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-base font-bold text-ink">Sports Played</Text>
+                  <View
+                    className="flex-row items-center rounded-full px-2.5 py-1"
+                    style={{ backgroundColor: colors.primaryLight, gap: 4 }}
+                  >
+                    <Ionicons name="bar-chart" size={12} color={colors.primaryDark} />
+                    <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
+                      {sportsPlayed.length} {sportsPlayed.length === 1 ? "Sport" : "Sports"}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ gap: 8 }}>
+                  {sportsPlayed.map((sp) => {
+                    const { icon, bg, fg } = getSportIcon(sp.sportName);
+                    const selected = filterSportId === sp.sportId;
+                    return (
+                      <Pressable
+                        key={sp.sportId}
+                        onPress={() => handleSelectSportCard(sp.sportId, sp.sportName)}
+                        className="flex-row items-center bg-white rounded-2xl p-3"
+                        style={{
+                          ...cardShadow,
+                          borderWidth: selected ? 1.5 : 0,
+                          borderColor: selected ? colors.primary : "transparent",
+                        }}
+                      >
+                        <View
+                          className="items-center justify-center rounded-xl mr-3"
+                          style={{ width: 46, height: 46, backgroundColor: bg }}
+                        >
+                          <MaterialCommunityIcons name={icon} size={22} color={fg} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+                            {sp.sportName}
+                          </Text>
+                          <Text className="text-muted text-xs mt-0.5">
+                            {sp.count} {sp.count === 1 ? "game" : "games"}
+                          </Text>
+                        </View>
+                        {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
           </>
         )}
 
