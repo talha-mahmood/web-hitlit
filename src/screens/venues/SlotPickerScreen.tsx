@@ -208,11 +208,15 @@ export default function SlotPickerScreen() {
                       <Text
                         className={`font-bold ${booked ? "text-muted" : isSelected ? "text-white" : "text-ink"}`}
                         style={{ fontSize: 12.5 }}
-                        numberOfLines={2}
+                        numberOfLines={1}
                         adjustsFontSizeToFit
-                        minimumFontScale={0.85}
+                        minimumFontScale={0.5}
                       >
-                        {slot.label}
+                        {/* Non-breaking spaces + a single line + shrink-to-fit:
+                            the time range can never wrap onto a second line on
+                            any screen width — on a narrow card the text just
+                            scales down to fit instead. */}
+                        {slot.label.replace(/ /g, " ")}
                       </Text>
                       {booked ? (
                         <Text className="text-xs text-muted mt-0.5">Booked</Text>
