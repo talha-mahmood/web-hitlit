@@ -186,18 +186,6 @@ export default function HomeScreen() {
 
   const promoSlides: PromoSlide[] = [
     {
-      key: "tournaments",
-      title: "Compete & Win Big",
-      subtitle: "Join tournaments across your city and prove your game.",
-      cta: "View Tournaments",
-      icon: "trophy",
-      bgColor: "#111827",
-      accentColor: "#F59E0B",
-      // A picture-only slide (no tap action) — replaces the old
-      // "Compete & Win Big" text card.
-      image: require("../../../assets/Slider-images/first_slider_image.png"),
-    },
-    {
       key: "venues",
       title: "Book Premium Turfs",
       subtitle: "Top-rated venues, instant booking, zero hassle.",
