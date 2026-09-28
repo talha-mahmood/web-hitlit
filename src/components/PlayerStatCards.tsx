@@ -108,6 +108,7 @@ export type PlayerStatCardsData = {
   activeSquads: number;
   hoursPlayed: number;
   participationScore: number;
+  followerCount: number;
   // Scored non-tournament games — the "Regular Games" activity bar.
   regularGamesPlayed: number;
   matchesWon: number;
@@ -142,6 +143,7 @@ export default function PlayerStatCards({
     activeSquads,
     hoursPlayed,
     participationScore,
+    followerCount,
     regularGamesPlayed,
     matchesWon,
     matchesPlayed,
@@ -151,19 +153,9 @@ export default function PlayerStatCards({
   const ratingTier = getRatingTierInfo(rating);
   const winPercentage = matchesPlayed > 0 ? Math.min(100, Math.round((matchesWon / matchesPlayed) * 100)) : 0;
   let winTag: string | null = null;
-  let winCaption = "Play more scored games to build this up.";
   if (matchesPlayed > 0) {
-    if (winPercentage === 100) {
-      winTag = "Perfect!";
-      winCaption = "Great performance! Keep it up!";
-    } else if (winPercentage >= 70) {
-      winTag = "Great!";
-      winCaption = "Strong performance — keep it going!";
-    } else if (winPercentage >= 40) {
-      winCaption = "Solid effort — keep grinding!";
-    } else {
-      winCaption = "Room to improve — keep playing!";
-    }
+    if (winPercentage === 100) winTag = "Perfect!";
+    else if (winPercentage >= 70) winTag = "Great!";
   }
   // Percentages are each sport's share of the chart's own total, so every one
   // is between 0 and 100 and together they make up the whole pie.
@@ -225,40 +217,54 @@ export default function PlayerStatCards({
           <ActivityIndicator color={colors.primary} className="my-8" />
         ) : (
           <>
-            {/* Games Win — right under the rating card so it stands out */}
-            <View
-              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24 }}
-            >
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center flex-1 mr-2" style={{ gap: 10 }}>
+            {/* Games Win + Followers — two compact cards side by side, right under the rating card */}
+            <View className="flex-row items-stretch mb-6" style={{ gap: 12 }}>
+              <View
+                style={{ flex: 1, backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14 }}
+              >
+                <View className="flex-row items-center justify-between mb-2">
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 40, height: 40, backgroundColor: "#F0FDF4" }}
+                    style={{ width: 34, height: 34, backgroundColor: "#F0FDF4" }}
                   >
-                    <Ionicons name="locate" size={20} color="#16A34A" />
+                    <Ionicons name="locate" size={17} color="#16A34A" />
                   </View>
-                  <View>
-                    <Text className="text-ink font-extrabold text-xl">
-                      {matchesWon} / {matchesPlayed}
-                    </Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>
-                      {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
-                    </Text>
+                  <View className="items-end">
+                    <Text className="text-ink font-extrabold text-base">{winPercentage}%</Text>
+                    {winTag && (
+                      <View className="rounded-full px-2 py-0.5 mt-0.5" style={{ backgroundColor: "#F3F4F6" }}>
+                        <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-                <View className="items-end">
-                  <Text className="text-ink font-extrabold text-lg">{winPercentage}%</Text>
-                  {winTag && (
-                    <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#F3F4F6" }}>
-                      <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
-                    </View>
-                  )}
+                <Text className="text-ink font-extrabold text-xl">
+                  {matchesWon} / {matchesPlayed}
+                </Text>
+                <Text className="text-xs mt-0.5 mb-2" style={{ color: colors.muted }} numberOfLines={1}>
+                  {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
+                </Text>
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", marginTop: "auto" }}>
+                  <View style={{ height: 6, borderRadius: 3, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
                 </View>
               </View>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
-                <View style={{ height: 8, borderRadius: 4, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+
+              <View
+                style={{ flex: 1, backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14 }}
+              >
+                <View className="mb-2">
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 34, height: 34, backgroundColor: "#EFF6FF" }}
+                  >
+                    <Ionicons name="people" size={17} color="#2563EB" />
+                  </View>
+                </View>
+                <Text className="text-ink font-extrabold text-xl">{followerCount}</Text>
+                <Text className="text-xs mt-0.5" style={{ color: colors.muted }} numberOfLines={1}>
+                  Followers
+                </Text>
               </View>
-              <Text className="text-xs mt-2" style={{ color: colors.muted }}>{winCaption}</Text>
             </View>
 
             {/* Stat grid */}

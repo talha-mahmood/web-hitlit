@@ -184,6 +184,7 @@ export default function PlayerProfileScreen() {
               activeSquads: player.activeSquads,
               hoursPlayed: player.hoursPlayedTotal,
               participationScore,
+              followerCount: followState?.followerCount ?? 0,
               regularGamesPlayed: player.regularGamesPlayed,
               matchesWon,
               matchesPlayed,
