@@ -32,14 +32,15 @@ export function HomeSportTile({
   return (
     <Pressable onPress={onPress} style={{ width, alignItems: "center" }}>
       <View
-        className="items-center justify-center overflow-hidden bg-white"
+        className="items-center justify-center overflow-hidden"
         style={{
           width,
           height: width,
           borderRadius: 18,
           padding: 10,
-          borderWidth: selected ? 2.5 : 1,
-          borderColor: selected ? colors.primary : colors.border,
+          // No border on the tiles at all — the selected one is shown by a
+          // soft green tint (plus its green bold label) instead.
+          backgroundColor: selected ? colors.primaryLight : "white",
         }}
       >
         {photo ? (
