@@ -2,8 +2,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 import { supabase } from "./supabase";
 
-// Generalizes the avatar-upload flow from ProfileSetupScreen for
-// multi-image, non-square uploads (venue/court photos).
+// Generalizes the single-avatar-upload flow used elsewhere (e.g. Profile's
+// own avatar picker) for multi-image, non-square uploads (venue/court photos).
 
 export async function pickImages(opts: {
   allowsMultipleSelection?: boolean;

@@ -8,6 +8,13 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileState = {
   profile: Profile | null;
   isLoading: boolean;
+  // True for the brief window right after a fresh Apple sign-in while
+  // appleAuth.ts is saving the one-time name Apple just handed over. Lets
+  // RootNavigator hold the splash screen until that save has actually
+  // landed in the store, so a freshly-loaded profile is never missing a
+  // name Apple already gave us. See appleAuth.ts.
+  pendingNameCapture: boolean;
+  setPendingNameCapture: (value: boolean) => void;
   fetchProfile: (userId: string) => Promise<void>;
   updateProfile: (
     userId: string,
@@ -21,23 +28,26 @@ type ProfileState = {
   clear: () => void;
 };
 
-// A profile has a display name once the user (or the Google/Apple identity
-// trigger) has set one — gates ProfileSetupScreen (name/avatar).
-export function hasProfileName(profile: Profile | null): boolean {
-  return !!profile?.full_name && profile.full_name.trim().length > 0;
-}
-
-// A profile counts as fully onboarded once it also has the phone number and
+// A profile counts as fully onboarded once it has the phone number and
 // gender we require post-auth — gates CompleteDetailsScreen. Google/Apple
 // don't hand us these, so a brand-new sign-in stops here until filled in;
 // a returning user who already filled them in skips straight past.
+//
+// Deliberately does NOT require a display name: there used to be a
+// dedicated screen asking for it, but Apple's own App Review guidelines
+// (4.x, Sign in with Apple) reject apps that re-ask for a name Apple
+// already supplied — and no equivalent screen for other providers either,
+// since a missing name is handled gracefully everywhere it's shown (falls
+// back to "Profile"/"?") and can always be set later in Account Settings.
 export function isProfileComplete(profile: Profile | null): boolean {
-  return hasProfileName(profile) && !!profile?.phone && !!profile?.gender;
+  return !!profile?.phone && !!profile?.gender;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
   profile: null,
   isLoading: true,
+  pendingNameCapture: false,
+  setPendingNameCapture: (value) => set({ pendingNameCapture: value }),
   fetchProfile: async (userId: string) => {
     set({ isLoading: true });
     // A thrown network error here (not just a normal Postgrest {error}

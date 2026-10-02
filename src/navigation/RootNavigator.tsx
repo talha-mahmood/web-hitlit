@@ -4,13 +4,12 @@ import { NavigationContainer, DefaultTheme, createNavigationContainerRef, type P
 import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
-import { useProfileStore, hasProfileName, isProfileComplete } from "../store/profileStore";
+import { useProfileStore, isProfileComplete } from "../store/profileStore";
 import SplashScreen from "../screens/SplashScreen";
 import AuthNavigator from "./AuthNavigator";
 import MainTabNavigator from "./MainTabNavigator";
 import AdminNavigator from "./AdminNavigator";
 import SuperAdminNavigator from "./SuperAdminNavigator";
-import ProfileSetupScreen from "../screens/onboarding/ProfileSetupScreen";
 import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
@@ -29,6 +28,9 @@ export default function RootNavigator() {
 
   const profile = useProfileStore((s) => s.profile);
   const isProfileLoading = useProfileStore((s) => s.isLoading);
+  // Set while appleAuth.ts is saving the one-time name Apple just handed
+  // over on a fresh sign-in — see profileStore.ts for why this exists.
+  const pendingNameCapture = useProfileStore((s) => s.pendingNameCapture);
   const fetchProfile = useProfileStore((s) => s.fetchProfile);
   const subscribeToProfile = useProfileStore((s) => s.subscribeToProfile);
   const clearProfile = useProfileStore((s) => s.clear);
@@ -109,13 +111,8 @@ export default function RootNavigator() {
   let content;
   if (!session) {
     content = <AuthNavigator />;
-  } else if (isProfileLoading) {
+  } else if (isProfileLoading || pendingNameCapture) {
     content = <SplashScreen />;
-  } else if (!hasProfileName(profile)) {
-    // Identity setup (name/avatar) is role-agnostic — owners and
-    // superadmins go through the same onboarding as everyone else before
-    // landing in their respective dashboard below.
-    content = <ProfileSetupScreen />;
   } else if (!isProfileComplete(profile)) {
     // Google/Apple sign-in doesn't give us a phone number or gender — a
     // brand-new account stops here to fill those in; a returning account
