@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { OFFLINE_PATTERN } from "../friendlyError";
 import type { Database } from "../../types/database.types";
 import type { MatchFormat, PlayMode, PointEvent, Player } from "../tennisScoring";
 
@@ -13,6 +14,9 @@ const MATCH_DETAIL_SELECT = "*, tennis_points(*)";
 // PostgREST error text is never something a player should see.
 export function friendlyTennisError(err: unknown, fallback: string): string {
   const message = err instanceof Error ? err.message : "";
+  if (OFFLINE_PATTERN.test(message)) {
+    return "You're offline — please check your internet connection and try again.";
+  }
   if (/duplicate key value|violates unique constraint/i.test(message)) {
     return "That point may have already been recorded — pull to refresh and check the score before scoring the next one.";
   }

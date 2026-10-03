@@ -32,7 +32,7 @@ type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 const RUN_OPTIONS = [0, 1, 2, 3, 4, 6];
 const WIDE_OPTIONS = [0, 1, 2, 3, 4, 5];
 const NOBALL_BAT_OPTIONS = [0, 1, 2, 3, 4, 6];
-const BYE_OPTIONS = [1, 2, 3, 4];
+const BYE_OPTIONS = [0, 1, 2, 3, 4];
 const EXTRA_TYPES: { label: string; value: ExtraType; icon: keyof typeof Ionicons.glyphMap }[] = [
   { label: "Wide", value: "WIDE", icon: "swap-horizontal-outline" },
   { label: "No Ball", value: "NOBALL", icon: "ban-outline" },

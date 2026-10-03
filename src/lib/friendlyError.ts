@@ -12,8 +12,29 @@ const KNOWN_CONSTRAINT_MESSAGES: Record<string, string> = {
   games_time_check: "End time must be after the start time. Please check the times and try again.",
 };
 
+// Every way "no internet" shows up as a thrown error across iOS, Android
+// and web — React Native's fetch ("Network request failed"), Safari/WebKit
+// ("Load failed"), Node-style DNS/socket errors Supabase's client can
+// surface (getaddrinfo ENOTFOUND, ECONNREFUSED, ECONNRESET), a request that
+// never got a response (timeout/AbortError), and the plain-English iOS
+// message. Checked first, and before anything else gets a chance to leak a
+// raw Supabase/Postgres error — a dropped connection is by far the most
+// common reason any request fails, and users should never see "fetch
+// failed" or a database error for what's just their own internet being off.
+// Exported so the sport-specific friendly-error helpers (cricket.ts,
+// football.ts, etc. — they each add one scoring-specific message on top of
+// the same base checks as this file) catch the same offline cases.
+export const OFFLINE_PATTERN =
+  /network request failed|fetch failed|failed to fetch|load failed|network error|the internet connection appears to be offline|could not connect to the server|no internet|is offline|getaddrinfo|econnrefused|econnreset|enotfound|etimedout|request timed out|timed out|aborterror/i;
+
 export function getFriendlyErrorMessage(err: unknown, fallback: string): string {
   const message = err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  const name = err instanceof Error ? err.name : "";
+  if (!message && !name) return fallback;
+
+  if (OFFLINE_PATTERN.test(message) || OFFLINE_PATTERN.test(name)) {
+    return "You're offline — please check your internet connection and try again.";
+  }
   if (!message) return fallback;
 
   for (const constraint in KNOWN_CONSTRAINT_MESSAGES) {
@@ -32,9 +53,6 @@ export function getFriendlyErrorMessage(err: unknown, fallback: string): string 
     )
   ) {
     return fallback;
-  }
-  if (/network request failed|fetch failed|failed to fetch/i.test(message)) {
-    return "Network error — please check your connection and try again.";
   }
   return message;
 }

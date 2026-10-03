@@ -29,6 +29,7 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<ScorecardStackParamList, "BadmintonLiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "BadmintonLiveScoring">;
@@ -206,7 +207,7 @@ export default function BadmintonLiveScoringScreen() {
       });
       await generateAndShareMatchReport(html);
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Could not generate the match report.");
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the match report."));
     } finally {
       setGeneratingReport(false);
     }

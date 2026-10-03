@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { OFFLINE_PATTERN } from "../friendlyError";
 import type { Database } from "../../types/database.types";
 import type { BallEvent, ExtraType, WicketType } from "../cricketScoring";
 
@@ -14,6 +15,9 @@ export type CricketBallRow = Database["public"]["Tables"]["cricket_balls"]["Row"
 // already read fine and pass through untouched.
 export function friendlyCricketError(err: unknown, fallback: string): string {
   const message = err instanceof Error ? err.message : "";
+  if (OFFLINE_PATTERN.test(message)) {
+    return "You're offline — please check your internet connection and try again.";
+  }
   if (/duplicate key value|violates unique constraint/i.test(message)) {
     return "That ball may have already been recorded — pull to refresh and check the score before scoring the next one.";
   }
