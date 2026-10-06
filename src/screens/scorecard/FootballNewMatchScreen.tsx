@@ -10,6 +10,8 @@ import { friendlyFootballError } from "../../lib/api/football";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
+import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
+import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 
@@ -76,18 +78,29 @@ function AddPlayersField({
   players,
   onPlayersChange,
   playersLocked,
+  otherTeamPlayers,
 }: {
   players: string[];
   onPlayersChange: (players: string[]) => void;
   playersLocked?: boolean;
+  // The sibling team's current roster — a name can't be reused across
+  // teams, not just within this one.
+  otherTeamPlayers: string[];
 }) {
   const [draft, setDraft] = useState("");
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const addPlayer = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
+    if (isDuplicateName(trimmed, [...players, ...otherTeamPlayers])) {
+      setAddError("Someone with this name is already in the match.");
+      return;
+    }
     onPlayersChange([...players, trimmed]);
     setDraft("");
+    setAddError(null);
   };
 
   return (
@@ -98,7 +111,10 @@ function AddPlayersField({
           <View className="flex-1">
             <FieldInput
               value={draft}
-              onChangeText={setDraft}
+              onChangeText={(v) => {
+                setDraft(v);
+                setAddError(null);
+              }}
               placeholder="Add player name"
               onSubmitEditing={addPlayer}
               returnKeyType="done"
@@ -113,6 +129,23 @@ function AddPlayersField({
             <Ionicons name="add" size={20} color="white" />
           </Pressable>
         </View>
+      )}
+      {addError && (
+        <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+          {addError}
+        </Text>
+      )}
+      {!playersLocked && (
+        <Pressable
+          onPress={() => setShowGroupModal(true)}
+          className="flex-row items-center justify-center rounded-xl py-2.5 mt-2.5"
+          style={{ gap: 6, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+        >
+          <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
+          <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+            Add From a Group
+          </Text>
+        </Pressable>
       )}
       {players.length > 0 && (
         <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
@@ -132,6 +165,13 @@ function AddPlayersField({
           ))}
         </View>
       )}
+
+      <AddPlayersFromGroupModal
+        visible={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        existingNames={[...players, ...otherTeamPlayers]}
+        onAdd={(names) => onPlayersChange([...players, ...names])}
+      />
     </>
   );
 }
@@ -169,6 +209,8 @@ export default function FootballNewMatchScreen() {
   const isValid =
     teamAName.trim().length > 0 &&
     teamBName.trim().length > 0 &&
+    !namesClash(teamAName, teamBName) &&
+    !hasDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
     !!requiresWinner &&
     isMatchDurationValid &&
     isExtraTimeDurationValid;
@@ -224,7 +266,12 @@ export default function FootballNewMatchScreen() {
             editable={!prefill}
             containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
           />
-          <AddPlayersField players={teamAPlayers} onPlayersChange={setTeamAPlayers} playersLocked={!!prefill} />
+          {namesClash(teamAName, teamBName) && (
+            <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+              Team A and Team B can't have the same name.
+            </Text>
+          )}
+          <AddPlayersField players={teamAPlayers} onPlayersChange={setTeamAPlayers} playersLocked={!!prefill} otherTeamPlayers={teamBPlayers} />
         </CardSection>
 
         <CardSection icon="shirt-outline" title="Team B">
@@ -236,7 +283,12 @@ export default function FootballNewMatchScreen() {
             editable={!prefill}
             containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
           />
-          <AddPlayersField players={teamBPlayers} onPlayersChange={setTeamBPlayers} playersLocked={!!prefill} />
+          {namesClash(teamAName, teamBName) && (
+            <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+              Team A and Team B can't have the same name.
+            </Text>
+          )}
+          <AddPlayersField players={teamBPlayers} onPlayersChange={setTeamBPlayers} playersLocked={!!prefill} otherTeamPlayers={teamAPlayers} />
         </CardSection>
 
         <CardSection icon="location-outline" title="Venue">

@@ -10,6 +10,8 @@ import { friendlyTableTennisError } from "../../lib/api/tableTennis";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
+import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
+import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
 import type { PlayMode, Team } from "../../lib/tableTennisScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
@@ -84,6 +86,8 @@ function TeamCard({
   players,
   onPlayersChange,
   locked,
+  otherTeamName,
+  otherTeamPlayers,
 }: {
   letter: "A" | "B";
   name: string;
@@ -92,7 +96,30 @@ function TeamCard({
   players: [string, string];
   onPlayersChange: (players: [string, string]) => void;
   locked?: boolean;
+  // The sibling team's current name/roster — a name can't be reused across
+  // teams, not just within this one.
+  otherTeamName: string;
+  otherTeamPlayers: [string, string];
 }) {
+  const isDoubles = playMode === "DOUBLES";
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const emptySlotCount = players.filter((p) => !p.trim()).length;
+  const teamNameClash = namesClash(name, otherTeamName);
+  const slot0Duplicate = isDoubles && !!players[0].trim() && isDuplicateName(players[0], [players[1], ...otherTeamPlayers]);
+  const slot1Duplicate = isDoubles && !!players[1].trim() && isDuplicateName(players[1], [players[0], ...otherTeamPlayers]);
+
+  const handleAddFromGroup = (names: string[]) => {
+    const next: [string, string] = [...players];
+    let i = 0;
+    for (let slot = 0; slot < 2 && i < names.length; slot++) {
+      if (!next[slot].trim()) {
+        next[slot] = names[i];
+        i++;
+      }
+    }
+    onPlayersChange(next);
+  };
+
   return (
     <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
       <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
@@ -117,6 +144,23 @@ function TeamCard({
           editable={!locked}
           containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
         />
+        {teamNameClash && (
+          <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+            {isDoubles ? "Team A and Team B can't have the same name." : "Player A and Player B can't have the same name."}
+          </Text>
+        )}
+        {!isDoubles && !locked && (
+          <Pressable
+            onPress={() => setShowGroupModal(true)}
+            className="flex-row items-center justify-center rounded-xl py-2.5 mt-2.5"
+            style={{ gap: 6, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+          >
+            <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
+            <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+              Add From a Group
+            </Text>
+          </Pressable>
+        )}
 
         {playMode === "DOUBLES" && (
           <>
@@ -132,6 +176,11 @@ function TeamCard({
               containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
+            {slot0Duplicate && (
+              <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+                Someone with this name is already in the match.
+              </Text>
+            )}
             <Text className="text-ink font-semibold text-sm mb-2 mt-4">
               Player 2 <Text className="text-red-500">*</Text>
             </Text>
@@ -144,9 +193,34 @@ function TeamCard({
               containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
+            {slot1Duplicate && (
+              <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+                Someone with this name is already in the match.
+              </Text>
+            )}
+            {!locked && emptySlotCount > 0 && (
+              <Pressable
+                onPress={() => setShowGroupModal(true)}
+                className="flex-row items-center justify-center rounded-xl py-2.5 mt-2.5"
+                style={{ gap: 6, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+              >
+                <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
+                <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+                  Add From a Group
+                </Text>
+              </Pressable>
+            )}
           </>
         )}
       </View>
+
+      <AddPlayersFromGroupModal
+        visible={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        existingNames={isDoubles ? [...players.filter(Boolean), ...otherTeamPlayers.filter(Boolean)] : [name, otherTeamName].filter(Boolean)}
+        maxSelect={isDoubles ? emptySlotCount : 1}
+        onAdd={(names) => (isDoubles ? handleAddFromGroup(names) : onNameChange(names[0]))}
+      />
     </View>
   );
 }
@@ -195,7 +269,9 @@ export default function TableTennisNewMatchScreen() {
   const isValid =
     teamAName.trim().length > 0 &&
     teamBName.trim().length > 0 &&
+    !namesClash(teamAName, teamBName) &&
     doublesPlayersValid &&
+    (!isDoubles || !hasDuplicateNames([...teamAPlayers, ...teamBPlayers])) &&
     !!playMode &&
     !!firstServingTeam &&
     (!isDoubles || firstServerIndex !== null) &&
@@ -261,8 +337,8 @@ export default function TableTennisNewMatchScreen() {
 
         {playMode && (
           <>
-            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} locked={!!prefill} />
-            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} locked={!!prefill} />
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} playMode={playMode} players={teamAPlayers} onPlayersChange={setTeamAPlayers} locked={!!prefill} otherTeamName={teamBName} otherTeamPlayers={teamBPlayers} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} playMode={playMode} players={teamBPlayers} onPlayersChange={setTeamBPlayers} locked={!!prefill} otherTeamName={teamAName} otherTeamPlayers={teamAPlayers} />
           </>
         )}
 

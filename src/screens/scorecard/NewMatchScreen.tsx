@@ -11,6 +11,8 @@ import { friendlyCricketError } from "../../lib/api/cricket";
 import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
+import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
+import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
@@ -60,6 +62,8 @@ function TeamCard({
   onPlayersChange,
   nameLocked,
   playersLocked,
+  otherTeamName,
+  otherTeamPlayers,
 }: {
   letter: "A" | "B";
   players: string[];
@@ -68,15 +72,28 @@ function TeamCard({
   onPlayersChange: (players: string[]) => void;
   nameLocked?: boolean;
   playersLocked?: boolean;
+  // The sibling team's current name/roster — needed so a name can't be
+  // reused across teams, not just within this one.
+  otherTeamName: string;
+  otherTeamPlayers: string[];
 }) {
   const [draft, setDraft] = useState("");
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const addPlayer = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
+    if (isDuplicateName(trimmed, [...players, ...otherTeamPlayers])) {
+      setAddError("Someone with this name is already in the match.");
+      return;
+    }
     onPlayersChange([...players, trimmed]);
     setDraft("");
+    setAddError(null);
   };
+
+  const teamNameClash = namesClash(name, otherTeamName);
 
   return (
     <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
@@ -125,6 +142,11 @@ function TeamCard({
             ) : undefined
           }
         />
+        {teamNameClash && (
+          <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+            Team A and Team B can't have the same name.
+          </Text>
+        )}
 
         <Text className="text-ink font-semibold text-sm mb-2 mt-4">
           Team {letter} Players <Text className="text-red-500">*</Text>
@@ -134,7 +156,10 @@ function TeamCard({
           <View className="flex-1">
             <FieldInput
               value={draft}
-              onChangeText={setDraft}
+              onChangeText={(v) => {
+                setDraft(v);
+                setAddError(null);
+              }}
               placeholder="Add player name"
               onSubmitEditing={addPlayer}
               returnKeyType="done"
@@ -149,6 +174,23 @@ function TeamCard({
             <Ionicons name="add" size={20} color="white" />
           </Pressable>
         </View>
+        )}
+        {addError && (
+          <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
+            {addError}
+          </Text>
+        )}
+        {!playersLocked && (
+          <Pressable
+            onPress={() => setShowGroupModal(true)}
+            className="flex-row items-center justify-center rounded-xl py-2.5 mt-2.5"
+            style={{ gap: 6, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}
+          >
+            <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
+            <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+              Add From a Group
+            </Text>
+          </Pressable>
         )}
         {playersLocked && players.length < 2 && (
           <Text className="text-xs mt-1" style={{ color: colors.danger }}>
@@ -174,6 +216,13 @@ function TeamCard({
           </View>
         )}
       </View>
+
+      <AddPlayersFromGroupModal
+        visible={showGroupModal}
+        onClose={() => setShowGroupModal(false)}
+        existingNames={[...players, ...otherTeamPlayers]}
+        onAdd={(names) => onPlayersChange([...players, ...names])}
+      />
     </View>
   );
 }
@@ -200,8 +249,10 @@ export default function NewMatchScreen() {
   const isValid =
     teamAName.trim().length > 0 &&
     teamBName.trim().length > 0 &&
+    !namesClash(teamAName, teamBName) &&
     teamAPlayers.length >= 2 &&
     teamBPlayers.length >= 2 &&
+    !hasDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
     !!oversLimit &&
     parseInt(oversLimit, 10) > 0 &&
     !!tossWinner &&
@@ -334,8 +385,8 @@ export default function NewMatchScreen() {
           </View>
         )}
 
-        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} nameLocked={!!prefill} playersLocked={!!prefill} />
-        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} nameLocked={!!prefill} playersLocked={!!prefill} />
+        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} nameLocked={!!prefill} playersLocked={!!prefill} otherTeamName={teamBName} otherTeamPlayers={teamBPlayers} />
+        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} nameLocked={!!prefill} playersLocked={!!prefill} otherTeamName={teamAName} otherTeamPlayers={teamAPlayers} />
 
         <CardSection icon="location-outline" title="Venue">
           <FieldInput
