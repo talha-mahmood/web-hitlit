@@ -131,7 +131,7 @@ export function HomeSquadCard({
               {squad.name}
             </Text>
             <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-              {active.length}/{squad.max_players ?? "—"} players
+              {active.length}{squad.max_players ? `/${squad.max_players}` : ""} players
             </Text>
           </View>
         </View>
