@@ -183,14 +183,14 @@ function MyCommunityContent({
           <ImageCard
             width={CARD_WIDTH}
             height={imageHeight}
-            visual={<HeroVisual width={CARD_WIDTH} height={imageHeight} colorsFrom={["#22C55E", "#14532D"]} icon="message-text" accentIcons={["chat-processing", "account-group"]} />}
+            source={require("../../../assets/community-icons/community-chat.png")}
             onPress={onOpenChat}
             title="Community Chat"
           />
           <ImageCard
             width={CARD_WIDTH}
             height={imageHeight}
-            visual={<HeroVisual width={CARD_WIDTH} height={imageHeight} colorsFrom={["#16A34A", "#15803D"]} icon="trophy" accentIcons={["star", "medal"]} />}
+            source={require("../../../assets/community-icons/Top-Players.png")}
             onPress={onOpenPlayers}
             title="Top Players"
           />
