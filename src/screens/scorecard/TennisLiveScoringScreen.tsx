@@ -6,7 +6,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
-import { useTennisMatch, useAddTennisPoint, useDeleteLastTennisPoint, useCompleteTennisMatch } from "../../hooks/useTennis";
+import { useTennisMatch, useAddTennisPoint, useDeleteLastTennisPoint, useCompleteTennisMatch , useTennisPendingCount } from "../../hooks/useTennis";
+import { useNetworkStore } from "../../store/networkStore";
 import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import { friendlyTennisError, pointRowToEvent } from "../../lib/api/tennis";
 import { replayTennisMatch, formatSetScore, matchResultSummary, type TennisMatchConfig, type Player, type Indicator } from "../../lib/tennisScoring";
@@ -89,6 +90,8 @@ export default function TennisLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("TennisHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useTennisMatch(params.matchId);
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const pendingCount = useTennisPendingCount(params.matchId);
   const addPoint = useAddTennisPoint(params.matchId);
   const deleteLastPoint = useDeleteLastTennisPoint(params.matchId);
   const completeMatch = useCompleteTennisMatch();
@@ -349,6 +352,26 @@ export default function TennisLiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+        {(!isOnline || pendingCount > 0) && (
+          <View
+            className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+          >
+            <Ionicons
+              name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
+              size={16}
+              color={isOnline ? colors.primaryDark : "#92400E"}
+            />
+            <Text className="flex-1 text-xs font-semibold" style={{ color: isOnline ? colors.primaryDark : "#92400E" }}>
+              {isOnline
+                ? `Syncing ${pendingCount} point${pendingCount === 1 ? "" : "s"}…`
+                : pendingCount > 0
+                  ? `Offline — ${pendingCount} point${pendingCount === 1 ? "" : "s"} saved, will sync when back online`
+                  : "Offline — scoring is saved on this device and will sync when back online"}
+            </Text>
+          </View>
+        )}
+
         {/* Player cards, with a "VS" badge overlapping both */}
         <View style={{ position: "relative", marginBottom: 16 }}>
           <View className="flex-row items-stretch" style={{ gap: 10 }}>

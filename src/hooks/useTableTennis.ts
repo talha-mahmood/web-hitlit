@@ -7,7 +7,9 @@ import {
   deleteTableTennisMatch,
   addTableTennisRally,
   deleteLastTableTennisRally,
+  type TableTennisMatchDetail,
 } from "../lib/api/tableTennis";
+import { createOfflinePointScoring } from "../lib/offlinePointScoring";
 import type { Team } from "../lib/tableTennisScoring";
 
 export function useMyTableTennisMatches(userId: string | undefined) {
@@ -18,13 +20,25 @@ export function useMyTableTennisMatches(userId: string | undefined) {
   });
 }
 
+// Offline-aware add/delete/pending-count + the match query itself (which
+// flushes any queued points as soon as there's a connection) — see
+// offlinePointScoring.ts for why this is shared across the five point/rally
+// sports instead of hand-duplicated like their friendlyXError wording.
+const offline = createOfflinePointScoring<TableTennisMatchDetail>({
+  namespace: "tableTennis",
+  matchQueryKeyPrefix: "tableTennisMatch",
+  fetchMatch: fetchTableTennisMatch,
+  // The shared helper's queue only ever stores/replays whatever "winner"
+  // string this sport's own UI already validated and passed in, so this
+  // narrowing (Team -> string) is safe in practice.
+  addPoint: addTableTennisRally as (matchId: string, seq: number, winner: string) => Promise<{ id: string }>,
+  deleteLastPoint: deleteLastTableTennisRally,
+  getRows: (detail) => detail.table_tennis_rallies,
+  setRows: (detail, rows) => ({ ...detail, table_tennis_rallies: rows }),
+});
+
 export function useTableTennisMatch(matchId: string | undefined) {
-  return useQuery({
-    queryKey: ["tableTennisMatch", matchId],
-    queryFn: () => fetchTableTennisMatch(matchId as string),
-    enabled: !!matchId,
-    staleTime: 0,
-  });
+  return offline.useMatch(matchId);
 }
 
 export function useCreateTableTennisMatch() {
@@ -58,17 +72,13 @@ export function useDeleteTableTennisMatch() {
 }
 
 export function useAddTableTennisRally(matchId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ seq, winner }: { seq: number; winner: Team }) => addTableTennisRally(matchId, seq, winner),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tableTennisMatch", matchId] }),
-  });
+  return offline.useAddPoint(matchId);
 }
 
 export function useDeleteLastTableTennisRally(matchId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (seq: number) => deleteLastTableTennisRally(matchId, seq),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tableTennisMatch", matchId] }),
-  });
+  return offline.useDeleteLastPoint(matchId);
+}
+
+export function useTableTennisPendingCount(matchId: string | undefined): number {
+  return offline.usePendingPointCount(matchId);
 }

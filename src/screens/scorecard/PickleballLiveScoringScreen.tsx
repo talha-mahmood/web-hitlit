@@ -11,7 +11,9 @@ import {
   useAddPickleballRally,
   useDeleteLastPickleballRally,
   useCompletePickleballMatch,
+  usePickleballPendingCount,
 } from "../../hooks/usePickleball";
+import { useNetworkStore } from "../../store/networkStore";
 import { friendlyPickleballError, rallyRowToEvent } from "../../lib/api/pickleball";
 import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import {
@@ -93,6 +95,8 @@ export default function PickleballLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("PickleballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = usePickleballMatch(params.matchId);
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const pendingCount = usePickleballPendingCount(params.matchId);
   const addRally = useAddPickleballRally(params.matchId);
   const deleteLastRally = useDeleteLastPickleballRally(params.matchId);
   const completeMatch = useCompletePickleballMatch();
@@ -348,6 +352,26 @@ export default function PickleballLiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+        {(!isOnline || pendingCount > 0) && (
+          <View
+            className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+          >
+            <Ionicons
+              name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
+              size={16}
+              color={isOnline ? colors.primaryDark : "#92400E"}
+            />
+            <Text className="flex-1 text-xs font-semibold" style={{ color: isOnline ? colors.primaryDark : "#92400E" }}>
+              {isOnline
+                ? `Syncing ${pendingCount} rally${pendingCount === 1 ? "" : "s"}…`
+                : pendingCount > 0
+                  ? `Offline — ${pendingCount} rally${pendingCount === 1 ? "" : "s"} saved, will sync when back online`
+                  : "Offline — scoring is saved on this device and will sync when back online"}
+            </Text>
+          </View>
+        )}
+
         {/* Team cards, with a "VS" badge overlapping both */}
         <View style={{ position: "relative", marginBottom: 16 }}>
           <View className="flex-row items-stretch" style={{ gap: 10 }}>

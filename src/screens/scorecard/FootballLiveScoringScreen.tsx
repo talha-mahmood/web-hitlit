@@ -21,7 +21,9 @@ import {
   useResumeFootballMatch,
   useStartPenalties,
   useCompleteFootballMatch,
+  useFootballPendingCount,
 } from "../../hooks/useFootball";
+import { useNetworkStore } from "../../store/networkStore";
 import { friendlyFootballError, goalRowToEvent, penaltyKickRowToEvent, type RunningPhase } from "../../lib/api/football";
 import { useSyncScorecardMatchResult } from "../../hooks/useTournamentMatches";
 import {
@@ -133,6 +135,8 @@ export default function FootballLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("FootballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useFootballMatch(params.matchId);
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const pendingCount = useFootballPendingCount(params.matchId);
   const addGoal = useAddFootballGoal(params.matchId);
   const deleteLastGoal = useDeleteLastFootballGoal(params.matchId);
   const addPenaltyKick = useAddPenaltyKick(params.matchId);
@@ -586,6 +590,26 @@ export default function FootballLiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
+        {(!isOnline || pendingCount > 0) && (
+          <View
+            className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+          >
+            <Ionicons
+              name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
+              size={16}
+              color={isOnline ? colors.primaryDark : "#92400E"}
+            />
+            <Text className="flex-1 text-xs font-semibold" style={{ color: isOnline ? colors.primaryDark : "#92400E" }}>
+              {isOnline
+                ? `Syncing ${pendingCount} event${pendingCount === 1 ? "" : "s"}…`
+                : pendingCount > 0
+                  ? `Offline — ${pendingCount} event${pendingCount === 1 ? "" : "s"} saved, will sync when back online`
+                  : "Offline — goals are saved on this device and will sync when back online"}
+            </Text>
+          </View>
+        )}
+
         {/* Team crests + score */}
         <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
           {/* Corner accent triangles, team-colored */}

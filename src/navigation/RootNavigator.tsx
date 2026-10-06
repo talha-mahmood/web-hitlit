@@ -5,6 +5,7 @@ import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore, isProfileComplete } from "../store/profileStore";
+import { initNetworkListener } from "../store/networkStore";
 import SplashScreen from "../screens/SplashScreen";
 import AuthNavigator from "./AuthNavigator";
 import MainTabNavigator from "./MainTabNavigator";
@@ -39,6 +40,13 @@ export default function RootNavigator() {
     const unsubscribe = init();
     return unsubscribe;
   }, [init]);
+
+  // Starts listening for connectivity changes app-wide, regardless of
+  // which screen is open — live scoring's offline queues (useCricket.ts
+  // and friends) flush as soon as this flips back to online.
+  useEffect(() => {
+    initNetworkListener();
+  }, []);
 
   useEffect(() => {
     if (!session?.user.id) {

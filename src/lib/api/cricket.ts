@@ -43,6 +43,9 @@ export async function fetchMyCricketMatches(userId: string): Promise<CricketMatc
   return (data ?? []) as unknown as CricketMatchDetail[];
 }
 
+// Network-only — no offline fallback here. That lives in
+// fetchMatchWithOfflineFallback (matchSnapshot.ts), used by useCricketMatch,
+// which needs access to the live query cache to do it correctly.
 export async function fetchCricketMatch(matchId: string): Promise<CricketMatchDetail> {
   const { data, error } = await supabase
     .from("cricket_matches")
@@ -96,11 +99,16 @@ export async function createCricketMatch(params: {
 
 export async function startSecondInnings(
   matchId: string,
-  battingTeam: "A" | "B"
+  battingTeam: "A" | "B",
+  // Lets the caller pin the row to an id it already generated and is using
+  // locally (so scoring can continue offline before this insert has ever
+  // reached the server — see useCricket.ts) — omitted, the column's own
+  // gen_random_uuid() default applies, same as before this existed.
+  inningsId?: string
 ): Promise<{ inningsId: string }> {
   const { data, error } = await supabase
     .from("cricket_innings")
-    .insert({ match_id: matchId, innings_number: 2, batting_team: battingTeam })
+    .insert({ id: inningsId, match_id: matchId, innings_number: 2, batting_team: battingTeam })
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -115,10 +123,10 @@ export async function markInningsComplete(inningsId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function completeCricketMatch(matchId: string, resultSummary: string): Promise<void> {
+export async function completeCricketMatch(matchId: string, resultSummary: string, completedAt?: string): Promise<void> {
   const { error } = await supabase
     .from("cricket_matches")
-    .update({ status: "COMPLETED", result_summary: resultSummary, completed_at: new Date().toISOString() })
+    .update({ status: "COMPLETED", result_summary: resultSummary, completed_at: completedAt ?? new Date().toISOString() })
     .eq("id", matchId);
   if (error) throw new Error(error.message);
 }
@@ -128,22 +136,33 @@ export async function deleteCricketMatch(matchId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function addCricketBall(inningsId: string, seq: number, ball: BallEvent): Promise<void> {
-  const { error } = await supabase.from("cricket_balls").insert({
-    innings_id: inningsId,
-    seq,
-    striker_name: ball.strikerName,
-    non_striker_name: ball.nonStrikerName,
-    bowler_name: ball.bowlerName,
-    runs_batted: ball.runsBatted,
-    extra_type: ball.extraType,
-    extra_runs: ball.extraRuns,
-    is_wicket: ball.isWicket,
-    wicket_type: ball.wicketType,
-    dismissed_name: ball.dismissedName,
-    fielder_name: ball.fielderName,
-  });
+// Returns the inserted row's real id so the caller can swap it into the
+// already-showing optimistic row in place (see useAddCricketBall) instead
+// of having to refetch the whole match to find out what the server actually
+// assigned — refetching here raced a *second* refetch from whichever ball
+// got tapped next, and the two could resolve out of order, which is what
+// briefly reverted the score before self-correcting on the next one.
+export async function addCricketBall(inningsId: string, seq: number, ball: BallEvent): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from("cricket_balls")
+    .insert({
+      innings_id: inningsId,
+      seq,
+      striker_name: ball.strikerName,
+      non_striker_name: ball.nonStrikerName,
+      bowler_name: ball.bowlerName,
+      runs_batted: ball.runsBatted,
+      extra_type: ball.extraType,
+      extra_runs: ball.extraRuns,
+      is_wicket: ball.isWicket,
+      wicket_type: ball.wicketType,
+      dismissed_name: ball.dismissedName,
+      fielder_name: ball.fielderName,
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  return { id: data.id };
 }
 
 export async function deleteLastCricketBall(inningsId: string, seq: number): Promise<void> {

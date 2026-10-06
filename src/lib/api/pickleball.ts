@@ -36,6 +36,10 @@ export async function fetchMyPickleballMatches(userId: string): Promise<Pickleba
   return (data ?? []) as unknown as PickleballMatchDetail[];
 }
 
+// Network-only — no offline fallback here. That lives in
+// fetchMatchWithOfflineFallback (matchSnapshot.ts), used by the matching
+// useXMatch hook, which needs access to the live query cache to do it
+// correctly.
 export async function fetchPickleballMatch(matchId: string): Promise<PickleballMatchDetail> {
   const { data, error } = await supabase
     .from("pickleball_matches")
@@ -98,9 +102,19 @@ export async function deletePickleballMatch(matchId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function addPickleballRally(matchId: string, seq: number, winner: Team): Promise<void> {
-  const { error } = await supabase.from("pickleball_rallies").insert({ match_id: matchId, seq, winner });
+// Returns the inserted row's real id so the caller can swap it into the
+// already-showing optimistic row in place, instead of invalidating (and so
+// refetching) the whole match on every single point — which could race a
+// second refetch from whichever point got tapped next and occasionally
+// resolve out of order, briefly reverting the score before it self-corrected.
+export async function addPickleballRally(matchId: string, seq: number, winner: Team): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from("pickleball_rallies")
+    .insert({ match_id: matchId, seq, winner })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  return { id: data.id };
 }
 
 export async function deleteLastPickleballRally(matchId: string, seq: number): Promise<void> {

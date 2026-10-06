@@ -7,7 +7,9 @@ import {
   deletePadelMatch,
   addPadelPoint,
   deleteLastPadelPoint,
+  type PadelMatchDetail,
 } from "../lib/api/padel";
+import { createOfflinePointScoring } from "../lib/offlinePointScoring";
 import type { Team } from "../lib/padelScoring";
 
 export function useMyPadelMatches(userId: string | undefined) {
@@ -18,13 +20,25 @@ export function useMyPadelMatches(userId: string | undefined) {
   });
 }
 
+// Offline-aware add/delete/pending-count + the match query itself (which
+// flushes any queued points as soon as there's a connection) — see
+// offlinePointScoring.ts for why this is shared across the five point/rally
+// sports instead of hand-duplicated like their friendlyXError wording.
+const offline = createOfflinePointScoring<PadelMatchDetail>({
+  namespace: "padel",
+  matchQueryKeyPrefix: "padelMatch",
+  fetchMatch: fetchPadelMatch,
+  // The shared helper's queue only ever stores/replays whatever "winner"
+  // string this sport's own UI already validated and passed in, so this
+  // narrowing (Team -> string) is safe in practice.
+  addPoint: addPadelPoint as (matchId: string, seq: number, winner: string) => Promise<{ id: string }>,
+  deleteLastPoint: deleteLastPadelPoint,
+  getRows: (detail) => detail.padel_points,
+  setRows: (detail, rows) => ({ ...detail, padel_points: rows }),
+});
+
 export function usePadelMatch(matchId: string | undefined) {
-  return useQuery({
-    queryKey: ["padelMatch", matchId],
-    queryFn: () => fetchPadelMatch(matchId as string),
-    enabled: !!matchId,
-    staleTime: 0,
-  });
+  return offline.useMatch(matchId);
 }
 
 export function useCreatePadelMatch() {
@@ -58,17 +72,13 @@ export function useDeletePadelMatch() {
 }
 
 export function useAddPadelPoint(matchId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ seq, winner }: { seq: number; winner: Team }) => addPadelPoint(matchId, seq, winner),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["padelMatch", matchId] }),
-  });
+  return offline.useAddPoint(matchId);
 }
 
 export function useDeleteLastPadelPoint(matchId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (seq: number) => deleteLastPadelPoint(matchId, seq),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["padelMatch", matchId] }),
-  });
+  return offline.useDeleteLastPoint(matchId);
+}
+
+export function usePadelPendingCount(matchId: string | undefined): number {
+  return offline.usePendingPointCount(matchId);
 }

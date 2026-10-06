@@ -12,7 +12,9 @@ import {
   useStartSecondInnings,
   useMarkInningsComplete,
   useCompleteCricketMatch,
+  useCricketPendingCount,
 } from "../../hooks/useCricket";
+import { useNetworkStore } from "../../store/networkStore";
 import { useSyncCricketMatchResult } from "../../hooks/useTournamentMatches";
 import { ballRowToEvent, friendlyCricketError } from "../../lib/api/cricket";
 import {
@@ -282,6 +284,8 @@ export default function LiveScoringScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useCricketMatch(params.matchId);
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const pendingBallCount = useCricketPendingCount(params.matchId);
   const addBall = useAddCricketBall(params.matchId);
   const deleteLastBall = useDeleteLastCricketBall(params.matchId);
   const startSecondInnings = useStartSecondInnings(params.matchId);
@@ -481,6 +485,11 @@ export default function LiveScoringScreen() {
           onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not start 2nd innings.")),
         });
       },
+      // This used to fail silently offline — it no longer queues as an
+      // error (see useMarkInningsComplete), but a genuine failure still
+      // needs to say so instead of leaving the button looking like it did
+      // nothing.
+      onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not finish the innings.")),
     });
   };
 
@@ -509,6 +518,7 @@ export default function LiveScoringScreen() {
           }
         );
       },
+      onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not finish the innings.")),
     });
   };
 
@@ -597,6 +607,30 @@ export default function LiveScoringScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {/* Offline banner — scoring still works with no connection at all;
+            this just says so, and how much is waiting to sync once it's
+            back. Shown either while actually offline, or briefly after
+            reconnecting while any backlog is still flushing. */}
+        {(!isOnline || pendingBallCount > 0) && (
+          <View
+            className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+          >
+            <Ionicons
+              name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
+              size={16}
+              color={isOnline ? colors.primaryDark : "#92400E"}
+            />
+            <Text className="flex-1 text-xs font-semibold" style={{ color: isOnline ? colors.primaryDark : "#92400E" }}>
+              {isOnline
+                ? `Syncing ${pendingBallCount} ball${pendingBallCount === 1 ? "" : "s"}…`
+                : pendingBallCount > 0
+                  ? `Offline — ${pendingBallCount} ball${pendingBallCount === 1 ? "" : "s"} saved, will sync when back online`
+                  : "Offline — scoring is saved on this device and will sync when back online"}
+            </Text>
+          </View>
+        )}
+
         {/* Score header */}
         <View className="bg-white rounded-2xl border border-border p-4 mb-4" style={cardShadow}>
           <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>

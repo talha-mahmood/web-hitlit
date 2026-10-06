@@ -40,6 +40,10 @@ export async function fetchMyFootballMatches(userId: string): Promise<FootballMa
   return (data ?? []) as unknown as FootballMatchDetail[];
 }
 
+// Network-only — no offline fallback here. That lives in
+// fetchMatchWithOfflineFallback (matchSnapshot.ts), used by the matching
+// useXMatch hook, which needs access to the live query cache to do it
+// correctly.
 export async function fetchFootballMatch(matchId: string): Promise<FootballMatchDetail> {
   const { data, error } = await supabase
     .from("football_matches")
@@ -91,13 +95,16 @@ export async function createFootballMatch(params: {
 export type RunningPhase = "FIRST_HALF" | "SECOND_HALF" | "EXTRA_TIME_FIRST" | "EXTRA_TIME_SECOND";
 export type BreakPhase = "HALF_TIME" | "FULL_TIME" | "EXTRA_TIME_BREAK" | "EXTRA_TIME_FULL_TIME";
 
-const KICKOFF_COLUMN: Record<Exclude<RunningPhase, "FIRST_HALF">, string> = {
+// Exported so useFootball.ts's offline optimistic patches can set the exact
+// same column a real write would, instead of duplicating (and risking
+// drifting from) this mapping.
+export const KICKOFF_COLUMN: Record<Exclude<RunningPhase, "FIRST_HALF">, string> = {
   SECOND_HALF: "second_half_kickoff_at",
   EXTRA_TIME_FIRST: "extra_time_first_kickoff_at",
   EXTRA_TIME_SECOND: "extra_time_second_kickoff_at",
 };
 
-const ADDED_MINUTES_COLUMN: Record<RunningPhase, string> = {
+export const ADDED_MINUTES_COLUMN: Record<RunningPhase, string> = {
   FIRST_HALF: "first_half_added_minutes",
   SECOND_HALF: "second_half_added_minutes",
   EXTRA_TIME_FIRST: "extra_time_first_added_minutes",
@@ -110,10 +117,14 @@ const ADDED_MINUTES_COLUMN: Record<RunningPhase, string> = {
 // only actually begins counting once the host taps "Start Time".
 export async function startRunningPeriod(
   matchId: string,
-  phase: Exclude<RunningPhase, "FIRST_HALF">
+  phase: Exclude<RunningPhase, "FIRST_HALF">,
+  // Lets a caller pin this to the moment it actually happened (tap time)
+  // rather than whenever the write actually reaches the server — matters
+  // if this is queued offline and only sent once back online, same idea as
+  // completedAt on completeCricketMatch. Omitted, behaves exactly as before.
+  startedAt: string = new Date().toISOString()
 ): Promise<void> {
   const column = KICKOFF_COLUMN[phase];
-  const startedAt = new Date().toISOString();
   const { error } = await supabase
     .from("football_matches")
     .update({ phase, [column]: startedAt, paused_at: startedAt } as never)
@@ -138,7 +149,7 @@ export async function endRunningPeriod(
   if (error) throw new Error(error.message);
 }
 
-const RUNNING_KICKOFF_COLUMN: Record<RunningPhase, string> = {
+export const RUNNING_KICKOFF_COLUMN: Record<RunningPhase, string> = {
   FIRST_HALF: "first_half_kickoff_at",
   ...KICKOFF_COLUMN,
 };
@@ -146,11 +157,8 @@ const RUNNING_KICKOFF_COLUMN: Record<RunningPhase, string> = {
 // Freezes the display clock: the live screen stops advancing elapsed time
 // the instant this is recorded (it reads the frozen `paused_at` instead of
 // the live clock while set).
-export async function pauseFootballMatch(matchId: string): Promise<void> {
-  const { error } = await supabase
-    .from("football_matches")
-    .update({ paused_at: new Date().toISOString() })
-    .eq("id", matchId);
+export async function pauseFootballMatch(matchId: string, pausedAt: string = new Date().toISOString()): Promise<void> {
+  const { error } = await supabase.from("football_matches").update({ paused_at: pausedAt }).eq("id", matchId);
   if (error) throw new Error(error.message);
 }
 
@@ -174,7 +182,8 @@ export async function startPenalties(matchId: string): Promise<void> {
 
 export async function completeFootballMatch(
   matchId: string,
-  completion: { winnerTeam: Team | null; isDraw: boolean; resultSummary: string }
+  completion: { winnerTeam: Team | null; isDraw: boolean; resultSummary: string },
+  completedAt: string = new Date().toISOString()
 ): Promise<void> {
   const { error } = await supabase
     .from("football_matches")
@@ -184,7 +193,7 @@ export async function completeFootballMatch(
       winner_team: completion.winnerTeam,
       is_draw: completion.isDraw,
       result_summary: completion.resultSummary,
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt,
     })
     .eq("id", matchId);
   if (error) throw new Error(error.message);
@@ -195,6 +204,11 @@ export async function deleteFootballMatch(matchId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// Returns the inserted row's real id so the caller can swap it into the
+// already-showing optimistic row in place, instead of invalidating (and so
+// refetching) the whole match on every single goal — which could race a
+// second refetch from whichever goal got tapped next and occasionally
+// resolve out of order, briefly reverting the score before it self-corrected.
 export async function addFootballGoal(
   matchId: string,
   seq: number,
@@ -202,11 +216,14 @@ export async function addFootballGoal(
   phase: Phase,
   minuteLabel: string,
   scorerName?: string | null
-): Promise<void> {
-  const { error } = await supabase
+): Promise<{ id: string }> {
+  const { data, error } = await supabase
     .from("football_goals")
-    .insert({ match_id: matchId, seq, team, phase, minute_label: minuteLabel, scorer_name: scorerName ?? null });
+    .insert({ match_id: matchId, seq, team, phase, minute_label: minuteLabel, scorer_name: scorerName ?? null })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  return { id: data.id };
 }
 
 export async function deleteLastFootballGoal(matchId: string, seq: number): Promise<void> {
@@ -214,9 +231,15 @@ export async function deleteLastFootballGoal(matchId: string, seq: number): Prom
   if (error) throw new Error(error.message);
 }
 
-export async function addPenaltyKick(matchId: string, seq: number, team: Team, scored: boolean): Promise<void> {
-  const { error } = await supabase.from("football_penalty_kicks").insert({ match_id: matchId, seq, team, scored });
+// Same reasoning as addFootballGoal above.
+export async function addPenaltyKick(matchId: string, seq: number, team: Team, scored: boolean): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from("football_penalty_kicks")
+    .insert({ match_id: matchId, seq, team, scored })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  return { id: data.id };
 }
 
 export async function deleteLastPenaltyKick(matchId: string, seq: number): Promise<void> {
