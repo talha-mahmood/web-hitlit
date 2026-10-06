@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore, isProfileComplete } from "../store/profileStore";
-import { initNetworkListener } from "../store/networkStore";
+import { initNetworkListener, useNetworkStore } from "../store/networkStore";
+import { flushTournamentSyncQueue } from "../hooks/useTournamentMatches";
 import SplashScreen from "../screens/SplashScreen";
 import AuthNavigator from "./AuthNavigator";
 import MainTabNavigator from "./MainTabNavigator";
@@ -47,6 +49,21 @@ export default function RootNavigator() {
   useEffect(() => {
     initNetworkListener();
   }, []);
+
+  // Tournament-result sync (did Team A or Team B win) is the one offline
+  // queue that can't rely on its own match's screen still being open to
+  // flush it — a user who scores offline then backs out to the match list
+  // before reconnecting leaves nothing with that matchId mounted. This
+  // mirrors every other sport's own "flush whenever isOnline is true" effect
+  // (see useCricketMatch in useCricket.ts) but at the app root, so it covers
+  // both reconnecting from any screen and relaunching the app already online
+  // with leftovers queued from a previous offline session.
+  const qc = useQueryClient();
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  useEffect(() => {
+    if (!isOnline) return;
+    flushTournamentSyncQueue(qc);
+  }, [isOnline, qc]);
 
   useEffect(() => {
     if (!session?.user.id) {

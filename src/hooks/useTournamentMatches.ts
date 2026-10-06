@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import {
   fetchMatchesForTournament,
   generateMatches,
@@ -15,9 +15,54 @@ import {
 } from "../lib/api/tournamentMatches";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
+import { OFFLINE_PATTERN } from "../lib/friendlyError";
+import { enqueue, getAllQueued, removeFromQueue } from "../lib/offlineQueue";
+import { useNetworkStore } from "../store/networkStore";
 import type { Database } from "../types/database.types";
 
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
+
+function isOfflineError(err: unknown): boolean {
+  return err instanceof Error && OFFLINE_PATTERN.test(err.message);
+}
+
+// A finished match's result carries over to its tournament_matches row the
+// moment Live Scoring finishes it — but by the time a connection comes
+// back, the user has usually already left that match's screen (often for
+// the very match list this is meant to update), so nothing with that
+// match's id is still mounted to retry it the way every other sport's
+// per-match offline queue does. Queued here globally instead, by namespace
+// alone — see flushTournamentSyncQueue, wired into RootNavigator so it
+// fires on *any* reconnect regardless of which screen is open.
+const SYNC_NAMESPACE = "tournament-sync";
+
+type SyncPayload =
+  | { kind: "cricket"; cricketMatchId: string; teamAWon: boolean | null }
+  | { kind: "scorecard"; sport: ScorecardSport; scorecardMatchId: string; teamAWon: boolean | null };
+
+export async function flushTournamentSyncQueue(qc: QueryClient): Promise<void> {
+  const items = await getAllQueued<SyncPayload>(SYNC_NAMESPACE);
+  if (items.length === 0) return;
+  let flushedAny = false;
+  for (const item of items) {
+    try {
+      if (item.payload.kind === "cricket") {
+        await syncCricketMatchResult(item.payload.cricketMatchId, item.payload.teamAWon);
+      } else {
+        await syncScorecardMatchResult(item.payload.sport, item.payload.scorecardMatchId, item.payload.teamAWon);
+      }
+      await removeFromQueue(SYNC_NAMESPACE, item.localId);
+      flushedAny = true;
+    } catch (err) {
+      if (isOfflineError(err)) break; // still offline — leave the rest queued
+      // A genuine error on one sync (e.g. the match was deleted since) is
+      // this entry's problem alone — drop it and keep going with the rest
+      // rather than let one bad entry block every other match's sync.
+      await removeFromQueue(SYNC_NAMESPACE, item.localId);
+    }
+  }
+  if (flushedAny) qc.invalidateQueries({ queryKey: ["tournamentMatches"] });
+}
 
 export function useTournamentMatches(gameId: string) {
   const qc = useQueryClient();
@@ -110,8 +155,21 @@ export function useLinkCricketMatch(gameId: string) {
 export function useSyncCricketMatchResult() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cricketMatchId, teamAWon }: { cricketMatchId: string; teamAWon: boolean | null }) =>
-      syncCricketMatchResult(cricketMatchId, teamAWon),
+    mutationFn: async ({ cricketMatchId, teamAWon }: { cricketMatchId: string; teamAWon: boolean | null }) => {
+      if (!useNetworkStore.getState().isOnline) {
+        await enqueue(SYNC_NAMESPACE, cricketMatchId, { kind: "cricket", cricketMatchId, teamAWon } satisfies SyncPayload);
+        return;
+      }
+      try {
+        await syncCricketMatchResult(cricketMatchId, teamAWon);
+      } catch (err) {
+        if (isOfflineError(err)) {
+          await enqueue(SYNC_NAMESPACE, cricketMatchId, { kind: "cricket", cricketMatchId, teamAWon } satisfies SyncPayload);
+          return;
+        }
+        throw err;
+      }
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches"] }),
   });
 }
@@ -130,7 +188,7 @@ export function useLinkScorecardMatch(gameId: string) {
 export function useSyncScorecardMatchResult() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       sport,
       scorecardMatchId,
       teamAWon,
@@ -138,7 +196,22 @@ export function useSyncScorecardMatchResult() {
       sport: ScorecardSport;
       scorecardMatchId: string;
       teamAWon: boolean | null;
-    }) => syncScorecardMatchResult(sport, scorecardMatchId, teamAWon),
+    }) => {
+      const payload: SyncPayload = { kind: "scorecard", sport, scorecardMatchId, teamAWon };
+      if (!useNetworkStore.getState().isOnline) {
+        await enqueue(SYNC_NAMESPACE, scorecardMatchId, payload);
+        return;
+      }
+      try {
+        await syncScorecardMatchResult(sport, scorecardMatchId, teamAWon);
+      } catch (err) {
+        if (isOfflineError(err)) {
+          await enqueue(SYNC_NAMESPACE, scorecardMatchId, payload);
+          return;
+        }
+        throw err;
+      }
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches"] }),
   });
 }

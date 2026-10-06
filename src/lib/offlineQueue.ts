@@ -96,6 +96,19 @@ export async function getQueueForMatch<T>(namespace: string, matchId: string): P
   return items.filter((i) => i.matchId === matchId);
 }
 
+// Every match/point/goal queue above is only ever flushed by the one screen
+// that's currently showing that specific match (via useXMatch's own
+// reconnect effect), which works because that screen is still open when
+// the connection comes back. A tournament-result sync has no such
+// guarantee — the match it's for is typically finished and the user has
+// already navigated away (often straight to the match list) by the time
+// they reconnect, so nothing with that matchId is mounted to flush it. This
+// reads an entire namespace's queue across every match at once, for a
+// flush that runs globally (see RootNavigator) instead of per-screen.
+export async function getAllQueued<T>(namespace: string): Promise<QueuedItem<T>[]> {
+  return readAll<T>(namespace);
+}
+
 export async function removeFromQueue(namespace: string, localId: string): Promise<void> {
   return withLock(namespace, async () => {
     const items = await readAll(namespace);

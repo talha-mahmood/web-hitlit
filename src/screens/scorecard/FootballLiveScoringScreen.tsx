@@ -586,7 +586,6 @@ export default function FootballLiveScoringScreen() {
           </Text>
           <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Football</Text>
         </View>
-        <Ionicons name="ellipsis-vertical" size={18} color={colors.muted} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
