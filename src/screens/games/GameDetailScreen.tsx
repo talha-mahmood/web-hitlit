@@ -316,12 +316,14 @@ export default function GameDetailScreen() {
   // already settled the moment it's set.
   const isVenueBooked = hasLinkedVenue ? !!game.booking_id : hasCustomVenue;
   const showBookVenue = isTeamBased && isCreator && (hasLinkedVenue || hasCustomVenue);
-  // "Cancel This Game/Tournament" now stays visible alongside "Book Venue"
-  // until the venue is actually booked (not hidden the moment a venue is
-  // merely attached) — when both render at once the bottom CTA bar is
-  // taller, so the scroll content needs extra bottom padding or its last
-  // line ("Hosted by …") ends up hidden underneath it.
-  const showBothCreatorCTAs = isCreator && showBookVenue && !isVenueBooked;
+  // "Cancel This Game/Tournament" stays visible alongside "Book Venue" until
+  // the venue is actually booked (not hidden the moment a venue is merely
+  // attached) — both now render inline under "Hosted by" rather than in a
+  // fixed bottom bar, so there's no CTA-height padding to reserve for them.
+  // Only a non-host viewer of a non-team-based game still gets a fixed
+  // bottom bar (join/leave/request), which is what the scroll padding below
+  // now reserves space for.
+  const showsFixedBottomBar = isOpen && !isCreator && !isTeamBased;
 
   const skillLabel = !game.skill_level ? "Any Level" : game.skill_level === "BEGINNER" ? "Beginner" : game.skill_level === "INTERMEDIATE" ? "Intermediate" : game.skill_level === "ADVANCED" ? "Advanced" : "Pro";
   const skillPillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : colors.muted;
@@ -585,7 +587,7 @@ export default function GameDetailScreen() {
         <WaveDivider color={colors.background} height={30} />
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: showBothCreatorCTAs ? 190 : 120 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: showsFixedBottomBar ? 120 : 40 }}>
         {/* Pending host invite — shown regardless of game_type, since the
             normal bottom join CTA is hidden entirely for a tournament
             non-host (joining a tournament happens via a team below instead). */}
@@ -737,7 +739,7 @@ export default function GameDetailScreen() {
               </View>
               {emptySlots > 0 && !isCancelled && !hasEnded && (
                 <Pressable onPress={() => setShowSquadFillModal(true)} className="border border-primary rounded-lg py-2 items-center mb-3">
-                  <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Squad</Text>
+                  <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Group</Text>
                 </Pressable>
               )}
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
@@ -778,46 +780,58 @@ export default function GameDetailScreen() {
             <Text className="text-ink font-semibold text-sm">{game.profiles?.full_name ?? "Unknown"}</Text>
           </View>
         </View>
+
+        {/* Host management — Book Venue / Cancel — sits right under "Hosted
+            by" instead of pinned to the bottom of the screen, so it scrolls
+            with the rest of the details instead of floating over them. */}
+        {isCreator && isOpen && (showBookVenue || !isVenueBooked) && (
+          <View className="px-3.5 mt-4">
+            {cancelGame.isPending ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                {showBookVenue && (
+                  <Pressable
+                    onPress={() => {
+                      if (isVenueBooked) return;
+                      navigation.navigate("VenueDetail", { venueId: game.venue_id!, forGameId: game.id });
+                    }}
+                    disabled={isVenueBooked}
+                    className={`rounded-xl py-4 items-center mb-3 ${isVenueBooked ? "bg-gray-100" : "bg-primary"}`}
+                    style={isVenueBooked ? undefined : primaryButtonShadow}
+                  >
+                    <Text className={`font-semibold text-base ${isVenueBooked ? "text-muted" : "text-white"}`}>
+                      {isVenueBooked ? "Venue Booked" : "Book Venue"}
+                    </Text>
+                  </Pressable>
+                )}
+                {!isVenueBooked && (
+                  <Pressable
+                    onPress={handleCancel}
+                    className="flex-row items-center justify-between rounded-xl px-4 py-4"
+                    style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
+                  >
+                    <View className="flex-row items-center" style={{ gap: 10 }}>
+                      <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                      <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.danger} />
+                  </Pressable>
+                )}
+              </>
+            )}
+          </View>
+        )}
       </ScrollView>
 
-      {/* CTA — for team-based games (tournaments, and regular games created
-          with the team flow), non-host actions (create/join a team) live
-          inline in TournamentTeamsSection instead of a single bottom button */}
-      {isOpen && (isCreator || !isTeamBased) && (
+      {/* CTA — joiner actions only now (host management moved inline above,
+          under "Hosted by"). For team-based games (tournaments, and regular
+          games created with the team flow), non-host actions (create/join a
+          team) live inline in TournamentTeamsSection instead of here. */}
+      {showsFixedBottomBar && (
         <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
-          ) : isCreator ? (
-            <>
-              {showBookVenue && (
-                <Pressable
-                  onPress={() => {
-                    if (isVenueBooked) return;
-                    navigation.navigate("VenueDetail", { venueId: game.venue_id!, forGameId: game.id });
-                  }}
-                  disabled={isVenueBooked}
-                  className={`rounded-xl py-4 items-center mb-3 ${isVenueBooked ? "bg-gray-100" : "bg-primary"}`}
-                  style={isVenueBooked ? undefined : primaryButtonShadow}
-                >
-                  <Text className={`font-semibold text-base ${isVenueBooked ? "text-muted" : "text-white"}`}>
-                    {isVenueBooked ? "Venue Booked" : "Book Venue"}
-                  </Text>
-                </Pressable>
-              )}
-              {!isVenueBooked && (
-                <Pressable
-                  onPress={handleCancel}
-                  className="flex-row items-center justify-between rounded-xl px-4 py-4"
-                  style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
-                >
-                  <View className="flex-row items-center" style={{ gap: 10 }}>
-                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                    <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.danger} />
-                </Pressable>
-              )}
-            </>
           ) : hasJoined ? (
             <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
               <Text className="text-danger font-semibold">Leave Game</Text>
@@ -868,7 +882,7 @@ export default function GameDetailScreen() {
           userId={userId}
           requiredCount={emptySlots}
           submitting={squadFillSlots.isPending}
-          title="Fill Open Spots With Your Squad"
+          title="Fill Open Spots With Your Group"
           onSubmit={(squadId, memberUserIds) => {
             squadFillSlots.mutate(
               { squadId, memberUserIds },

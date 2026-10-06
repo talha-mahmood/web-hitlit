@@ -15,6 +15,7 @@ import {
   useRejectMember,
   useRemoveMember,
   useSetSquadJoinBlocked,
+  useSetMemberHost,
 } from "../../hooks/useSquads";
 import { useSquadChatUnreadCount } from "../../hooks/useSquadMessages";
 import { usePendingSquadInvites, useRespondToSquadInvite } from "../../hooks/useSquadTeamFill";
@@ -122,12 +123,17 @@ function MemberAvatar({
   name,
   avatar,
   isOwner,
-  onRemove,
+  isHost,
+  onOpenMenu,
 }: {
   name: string | null;
   avatar: string | null;
   isOwner: boolean;
-  onRemove?: () => void;
+  isHost?: boolean;
+  // Opens the "Remove Member" / "Make Group Host" picker — only passed for
+  // members a host/owner is actually allowed to manage (never the owner's
+  // own row).
+  onOpenMenu?: () => void;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
@@ -140,21 +146,32 @@ function MemberAvatar({
             <Text className="text-primary font-bold text-base">{initials}</Text>
           </View>
         )}
-        {onRemove && (
+        {onOpenMenu && (
           <Pressable
-            onPress={onRemove}
+            onPress={onOpenMenu}
             hitSlop={8}
-            className="absolute -top-1 -right-1 bg-danger rounded-full w-5 h-5 items-center justify-center border-2 border-white"
+            className="absolute -top-1 -right-1 bg-white rounded-full w-5 h-5 items-center justify-center border border-border"
+            style={{
+              shadowColor: "#0F172A",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 3,
+              elevation: 2,
+            }}
           >
-            <Ionicons name="close" size={11} color="white" />
+            <Ionicons name="ellipsis-vertical" size={11} color={colors.ink} />
           </Pressable>
         )}
       </View>
-      {isOwner && (
+      {isOwner ? (
         <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Captain</Text>
         </View>
-      )}
+      ) : isHost ? (
+        <View className="bg-primary-dark rounded-full px-1.5 py-0.5 mt-1">
+          <Text className="text-white text-xs font-medium">Host</Text>
+        </View>
+      ) : null}
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Member").split(" ")[0]}
       </Text>
@@ -254,6 +271,7 @@ export default function SquadDetailScreen() {
   const approveMember = useApproveMember(params.squadId);
   const rejectMember = useRejectMember(params.squadId);
   const removeMember = useRemoveMember(params.squadId);
+  const setMemberHost = useSetMemberHost(params.squadId);
   const setJoinBlocked = useSetSquadJoinBlocked();
   const { data: mySquadInvite } = useMyPendingSquadInvite(params.squadId, userId);
   const createInvite = useCreateSquadInvite(params.squadId);
@@ -273,7 +291,7 @@ export default function SquadDetailScreen() {
   if (error || !squad) {
     return (
       <View className="flex-1 bg-white items-center justify-center px-6">
-        <Text className="text-ink font-semibold text-base mb-2">Squad not found</Text>
+        <Text className="text-ink font-semibold text-base mb-2">Group not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
         </Pressable>
@@ -292,6 +310,11 @@ export default function SquadDetailScreen() {
   const myMemberRecord = userId
     ? squad.squad_members.find((m) => m.user_id === userId && m.status === "ACTIVE")
     : null;
+  // A promoted host — same authority as the owner everywhere below, enforced
+  // server-side by RLS policies that accept either squad_owner_id or an
+  // ACTIVE squad_members row with role='host'.
+  const isHost = myMemberRecord?.role === "host";
+  const canManage = isOwner || isHost;
   const myPendingRecord = userId
     ? squad.squad_members.find((m) => m.user_id === userId && m.status === "PENDING")
     : null;
@@ -329,8 +352,8 @@ export default function SquadDetailScreen() {
     Alert.alert(
       nextBlocked ? "Block New Join Requests?" : "Unblock New Join Requests?",
       nextBlocked
-        ? "No one will be able to request to join this squad until you unblock it."
-        : "Players will be able to request to join this squad again.",
+        ? "No one will be able to request to join this group until you unblock it."
+        : "Players will be able to request to join this group again.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -352,7 +375,7 @@ export default function SquadDetailScreen() {
 
   const handleLeave = () => {
     if (!userId) return;
-    Alert.alert("Leave Squad", "Are you sure you want to leave?", [
+    Alert.alert("Leave Group", "Are you sure you want to leave?", [
       { text: "Stay", style: "cancel" },
       {
         text: "Leave",
@@ -372,7 +395,7 @@ export default function SquadDetailScreen() {
 
   const handleCancelRequest = () => {
     if (!userId) return;
-    Alert.alert("Cancel Request", "Withdraw your request to join this squad?", [
+    Alert.alert("Cancel Request", "Withdraw your request to join this group?", [
       { text: "Keep Request", style: "cancel" },
       {
         text: "Withdraw",
@@ -430,7 +453,7 @@ export default function SquadDetailScreen() {
   const handleRemove = (squadMemberId: string, name: string | null) => {
     Alert.alert(
       "Remove Member",
-      `Remove ${name ?? "this member"} from the squad? They won't be able to rejoin without sending a new request.`,
+      `Remove ${name ?? "this member"} from the group? They won't be able to rejoin without sending a new request.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -447,8 +470,44 @@ export default function SquadDetailScreen() {
     );
   };
 
+  const handleManageMember = (squadMemberId: string, name: string | null, currentlyHost: boolean) => {
+    const label = name ?? "this member";
+    Alert.alert(
+      currentlyHost ? "Remove as Host?" : "Make Group Host?",
+      currentlyHost
+        ? `${label} will lose host privileges and go back to being a regular member.`
+        : `${label} will be able to manage members, edit the group, and everything else a host can do.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: currentlyHost ? "Remove Host" : "Make Host",
+          style: currentlyHost ? "destructive" : "default",
+          onPress: () => {
+            setMemberHost.mutate(
+              { squadMemberId, isHost: !currentlyHost },
+              {
+                onError: (err) =>
+                  Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update host status.")),
+              }
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  // The three-dot button on a member's avatar — picks between the two
+  // existing actions below, each of which still shows its own confirmation.
+  const handleOpenMemberMenu = (squadMemberId: string, name: string | null, currentlyHost: boolean) => {
+    Alert.alert(name ?? "Member", undefined, [
+      { text: "Cancel", style: "cancel" },
+      { text: currentlyHost ? "Remove as Host" : "Make Group Host", onPress: () => handleManageMember(squadMemberId, name, currentlyHost) },
+      { text: "Remove Member", style: "destructive", onPress: () => handleRemove(squadMemberId, name) },
+    ]);
+  };
+
   const handleDisband = () => {
-    Alert.alert("Disband Squad", "This will permanently disband the squad for everyone. This cannot be undone.", [
+    Alert.alert("Disband Group", "This will permanently disband the group for everyone. This cannot be undone.", [
       { text: "Keep", style: "cancel" },
       {
         text: "Disband",
@@ -563,7 +622,7 @@ export default function SquadDetailScreen() {
                 <Text style={{ color: sportIconInfo.fg, fontSize: 12, fontWeight: "700" }}>{squad.sports.name}</Text>
               </View>
             )}
-            {isOwner && (
+            {canManage && (
               <Pressable
                 onPress={handleToggleJoinBlocked}
                 disabled={setJoinBlocked.isPending}
@@ -629,7 +688,7 @@ export default function SquadDetailScreen() {
         {mySquadInvite && (
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
             <Text className="text-ink font-semibold text-sm mb-1">
-              {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this squad
+              {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this group
             </Text>
             <Text className="text-muted text-xs mb-3">Accept to join instantly — no approval needed.</Text>
             <View className="flex-row" style={{ gap: 8 }}>
@@ -669,10 +728,10 @@ export default function SquadDetailScreen() {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center" style={{ gap: 6 }}>
-                  <Text className="text-ink font-bold text-base">Squad Details</Text>
+                  <Text className="text-ink font-bold text-base">Group Details</Text>
                   <BlinkingEyeIcon size={16} />
                 </View>
-                <Text className="text-muted text-xs mt-0.5">View complete squad information</Text>
+                <Text className="text-muted text-xs mt-0.5">View complete group information</Text>
               </View>
               <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
             </Pressable>
@@ -684,7 +743,7 @@ export default function SquadDetailScreen() {
                 {(isOwner || hasJoined) && (
                   <InfoRow
                     icon="pricetag-outline"
-                    label="Squad ID"
+                    label="Group ID"
                     value={squad.squad_code}
                     action={
                       <Pressable
@@ -730,7 +789,7 @@ export default function SquadDetailScreen() {
                 <Ionicons name="megaphone-outline" size={19} color={colors.primaryDark} />
               </View>
               <View className="flex-1">
-                <Text className="text-ink font-bold text-base mb-1">About this squad</Text>
+                <Text className="text-ink font-bold text-base mb-1">About this group</Text>
                 <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
               </View>
             </View>
@@ -780,33 +839,37 @@ export default function SquadDetailScreen() {
             </View>
           </View>
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
-            {activeMembers.map((m) => (
-              <MemberAvatar
-                key={m.id}
-                name={m.profiles?.full_name ?? null}
-                avatar={m.profiles?.avatar ?? null}
-                isOwner={m.user_id === squad.squad_owner_id}
-                onRemove={
-                  isOwner && m.user_id !== squad.squad_owner_id && !isApprovingOrRejecting
-                    ? () => handleRemove(m.id, m.profiles?.full_name ?? null)
-                    : undefined
-                }
-              />
-            ))}
+            {activeMembers.map((m) => {
+              const rowIsOwner = m.user_id === squad.squad_owner_id;
+              return (
+                <MemberAvatar
+                  key={m.id}
+                  name={m.profiles?.full_name ?? null}
+                  avatar={m.profiles?.avatar ?? null}
+                  isOwner={rowIsOwner}
+                  isHost={m.role === "host"}
+                  onOpenMenu={
+                    canManage && !rowIsOwner && !isApprovingOrRejecting
+                      ? () => handleOpenMemberMenu(m.id, m.profiles?.full_name ?? null, m.role === "host")
+                      : undefined
+                  }
+                />
+              );
+            })}
             {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
               <EmptySlot key={`empty-${i}`} />
             ))}
           </View>
         </View>
 
-        {/* Game/tournament invites — owner only, accept to open the fill-team flow on that game */}
-        {isOwner && (gameInvites?.length ?? 0) > 0 && (
+        {/* Game/tournament invites — owner/host only, accept to open the fill-team flow on that game */}
+        {canManage && (gameInvites?.length ?? 0) > 0 && (
           <View className="px-3.5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-1">
               Game Invites ({gameInvites!.length})
             </Text>
             <Text className="text-muted text-xs mb-2">
-              A host invited your squad to join their game or tournament.
+              A host invited your group to join their game or tournament.
             </Text>
             {gameInvites!.map((invite) => (
               <View
@@ -842,8 +905,8 @@ export default function SquadDetailScreen() {
           </View>
         )}
 
-        {/* Pending join requests — owner only, shows requester's skill + location */}
-        {isOwner && pendingRequests.length > 0 && (
+        {/* Pending join requests — owner/host only, shows requester's skill + location */}
+        {canManage && pendingRequests.length > 0 && (
           <View className="px-3.5 mt-6">
             <Text className="text-ink font-semibold text-sm mb-1">
               Join Requests ({pendingRequests.length})
@@ -865,7 +928,7 @@ export default function SquadDetailScreen() {
             ))}
             {isFull && (
               <Text className="text-orange-600 text-xs mt-2">
-                Squad is full — reject remaining requests or remove a member to approve more.
+                Group is full — reject remaining requests or remove a member to approve more.
               </Text>
             )}
           </View>
@@ -898,8 +961,8 @@ export default function SquadDetailScreen() {
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
-        ) : isOwner ? (
-          <>
+        ) : canManage ? (
+          <View style={{ gap: 8 }}>
             <Pressable
               onPress={handleDisband}
               className="flex-row items-center justify-between rounded-xl px-4 py-4"
@@ -907,17 +970,25 @@ export default function SquadDetailScreen() {
             >
               <View className="flex-row items-center" style={{ gap: 10 }}>
                 <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <Text className="text-danger font-semibold">Delete This Squad</Text>
+                <Text className="text-danger font-semibold">Delete This Group</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.danger} />
             </Pressable>
-          </>
+            {/* The original owner has no "leave" concept — only a promoted
+                host, who's still a regular member underneath, can step down
+                without disbanding the squad for everyone else. */}
+            {isHost && (
+              <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
+                <Text className="text-danger font-semibold">Leave Group</Text>
+              </Pressable>
+            )}
+          </View>
         ) : hasJoined ? (
           <Pressable
             onPress={handleLeave}
             className="border border-danger rounded-xl py-4 items-center"
           >
-            <Text className="text-danger font-semibold">Leave Squad</Text>
+            <Text className="text-danger font-semibold">Leave Group</Text>
           </Pressable>
         ) : hasRequested ? (
           <View style={{ gap: 8 }}>
@@ -935,7 +1006,7 @@ export default function SquadDetailScreen() {
           </View>
         ) : isClosedToJoins ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center">
-            <Text className="text-muted font-semibold">Squad is Full</Text>
+            <Text className="text-muted font-semibold">Group is Full</Text>
           </View>
         ) : isGenderRestricted ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center px-6">

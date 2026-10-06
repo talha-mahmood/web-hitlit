@@ -17,6 +17,8 @@ const SPORT_ICON_MAP: Record<string, SportIconInfo> = {
   football: { icon: "soccer", bg: "#EFF6FF", fg: "#2563EB" },
   futsal: { icon: "soccer", bg: "#F0F9FF", fg: "#0284C7" },
   cricket: { icon: "cricket", bg: "#FFFBEB", fg: "#D97706" },
+  "hard ball": { icon: "cricket", bg: "#FFFBEB", fg: "#D97706" },
+  "tape ball": { icon: "cricket", bg: "#ECFDF5", fg: "#0D9488" },
   pickleball: { icon: "table-tennis", bg: "#ECFEFF", fg: "#0891B2" },
   basketball: { icon: "basketball", bg: "#FFF7ED", fg: "#EA580C" },
   tennis: { icon: "tennis", bg: "#FEFCE8", fg: "#CA8A04" },

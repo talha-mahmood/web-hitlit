@@ -18,6 +18,7 @@ export type SquadListItem = SquadRow & {
     id: string;
     status: SquadMemberRow["status"];
     user_id: string;
+    role: SquadMemberRow["role"];
     profiles: { avatar: string | null; full_name: string | null } | null;
   }[];
 };
@@ -63,7 +64,7 @@ export type UpdateSquadParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar, latitude, longitude), squad_members(id, status, user_id, profiles(avatar, full_name))";
+  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar, latitude, longitude), squad_members(id, status, user_id, role, profiles(avatar, full_name))";
 
 const DETAIL_SELECT =
   "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";
@@ -96,18 +97,35 @@ export async function fetchSquads(
   return (data ?? []) as SquadListItem[];
 }
 
-// Squads the user owns, for pickers like "fill this empty team with my
-// squad" — needs squad_members embedded (already in LIST_SELECT) so the
-// caller can filter to ACTIVE members and check the squad is big enough.
-export async function fetchMyOwnedSquads(ownerId: string): Promise<SquadListItem[]> {
-  const { data, error } = await supabase
-    .from("squads")
-    .select(LIST_SELECT)
-    .eq("squad_owner_id", ownerId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as SquadListItem[];
+// Squads the user owns OR hosts, for pickers like "fill this empty team
+// with my squad" — needs squad_members embedded (already in LIST_SELECT) so
+// the caller can filter to ACTIVE members and check the squad is big
+// enough. A host has the same authority as the owner here too (the
+// squad_fill_* RPCs this feeds into accept either), so it has to look
+// beyond just squad_owner_id — same two-query-then-merge shape as
+// fetchMySquads below, since PostgREST can't filter squads by a joined
+// table's column in one request.
+export async function fetchMyOwnedSquads(userId: string): Promise<SquadListItem[]> {
+  const [ownedRes, hostedRes] = await Promise.all([
+    supabase.from("squads").select(LIST_SELECT).eq("squad_owner_id", userId).is("deleted_at", null),
+    supabase
+      .from("squad_members")
+      .select(`squads(${LIST_SELECT})`)
+      .eq("user_id", userId)
+      .eq("status", "ACTIVE")
+      .eq("role", "host"),
+  ]);
+  if (ownedRes.error) throw new Error(ownedRes.error.message);
+  if (hostedRes.error) throw new Error(hostedRes.error.message);
+
+  const merged = new Map<string, SquadListItem>();
+  for (const s of (ownedRes.data ?? []) as SquadListItem[]) merged.set(s.id, s);
+  for (const row of (hostedRes.data ?? []) as unknown as { squads: SquadListItem | null }[]) {
+    if (row.squads && !row.squads.deleted_at) merged.set(row.squads.id, row.squads);
+  }
+  return Array.from(merged.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 // Every squad the user has a stake in — owned, or an active member of —
@@ -160,7 +178,7 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
     .single();
   if (error) {
     if (isUniqueViolation(error)) {
-      throw new Error("A squad with this name already exists. Please choose a different name.");
+      throw new Error("A group with this name already exists. Please choose a different name.");
     }
     throw new Error(error.message);
   }
@@ -193,7 +211,7 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
     .single();
   if (error) {
     if (isUniqueViolation(error)) {
-      throw new Error("Another squad already uses this name. Please choose a different name.");
+      throw new Error("Another group already uses this name. Please choose a different name.");
     }
     throw new Error(error.message);
   }
@@ -248,6 +266,21 @@ export async function removeMember(squadMemberId: string): Promise<void> {
   const { error } = await supabase
     .from("squad_members")
     .update({ status: "REMOVED" })
+    .eq("id", squadMemberId);
+  if (error) throw new Error(error.message);
+}
+
+// Promotes/demotes a member to/from "host" — a host has the exact same
+// authority as the squad owner everywhere in the app (approve/reject/remove
+// members, edit squad, invite, disband, and promote/demote other hosts),
+// enforced server-side by RLS policies that check for an ACTIVE
+// squad_members row with role='host' alongside the squad_owner_id check.
+// The original owner's own authority never runs through this role column,
+// so it can't be revoked this way.
+export async function setMemberHost(squadMemberId: string, isHost: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("squad_members")
+    .update({ role: isHost ? "host" : "member" })
     .eq("id", squadMemberId);
   if (error) throw new Error(error.message);
 }

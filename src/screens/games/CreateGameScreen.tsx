@@ -22,6 +22,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
+import { isCricketFamily } from "../../lib/api/sports";
 import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
@@ -455,7 +456,7 @@ export default function CreateGameScreen() {
         : [{ label: "Everyone", value: "mixed" }];
   // Cricket's smallest real side is more than a single player — hide the
   // "1" cell from Players per Team for this sport only.
-  const isCricketSport = (selectedSportName ?? "").toLowerCase().includes("cricket");
+  const isCricketSport = isCricketFamily(selectedSportName);
   const isFootballSport = (selectedSportName ?? "").toLowerCase().includes("football");
   // Every other sport (padel, tennis, badminton, pickleball, table tennis)
   // only ever has a team of 1 or 2 — no point scrolling through the full

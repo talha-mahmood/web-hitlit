@@ -256,7 +256,13 @@ export default function SquadsListScreen() {
   const locationFiltered = locationTags.length > 0
     ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], locationTags))
     : squadsData;
-  const scoped = myOnly ? (locationFiltered ?? []).filter((s) => s.squad_owner_id === userId) : locationFiltered;
+  const scoped = myOnly
+    ? (locationFiltered ?? []).filter(
+        (s) =>
+          s.squad_owner_id === userId ||
+          s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE" && m.role === "host")
+      )
+    : locationFiltered;
   // Squads don't carry their own coordinates (just a typed-in location
   // label), so "near me" is measured from the squad owner's own registered
   // location instead — the closest real coordinates available today.
@@ -313,10 +319,10 @@ export default function SquadsListScreen() {
             )}
             <View className="flex-1">
               <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
-                Squads
+                Groups
               </Text>
               <Text style={{ fontSize: 12.5, marginTop: 1, color: "#BBF7D0" }} numberOfLines={1}>
-                Find and join exciting squads near you
+                Find and join exciting groups near you
               </Text>
             </View>
           </View>
@@ -340,7 +346,7 @@ export default function SquadsListScreen() {
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search squads..."
+          placeholder="Search groups..."
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}
@@ -361,7 +367,7 @@ export default function SquadsListScreen() {
             {(
               [
                 { key: "all", label: "All" },
-                { key: "mine", label: "My Squads" },
+                { key: "mine", label: "My Groups" },
               ] as const
             ).map((p) => {
               const active = listFilter === p.key;
@@ -518,33 +524,33 @@ export default function SquadsListScreen() {
             debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No squads found</Text>
+                <Text className="text-ink font-semibold text-base">No groups found</Text>
                 <Text className="text-muted text-sm text-center px-8">
                   {debouncedSearch && locationTags.length > 0
-                    ? `No squads match "${debouncedSearch}" near "${locationTags.join(", ")}".`
+                    ? `No groups match "${debouncedSearch}" near "${locationTags.join(", ")}".`
                     : locationTags.length > 0
-                      ? `No squads found near "${locationTags.join(", ")}".`
+                      ? `No groups found near "${locationTags.join(", ")}".`
                       : debouncedSearch
-                        ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
+                        ? `No groups match "${debouncedSearch}". Try a different name or group ID.`
                         : myOnly
-                          ? "You haven't created any squads yet."
+                          ? "You haven't created any groups yet."
                           : distanceKmFilter != null
-                            ? `No squads found within ${distanceKmFilter} km.`
-                            : "No squads match this sport filter yet."}
+                            ? `No groups found within ${distanceKmFilter} km.`
+                            : "No groups match this sport filter yet."}
                 </Text>
               </View>
             ) : (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="people-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No squads yet</Text>
+                <Text className="text-ink font-semibold text-base">No groups yet</Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  Create a squad to find regular playmates near you!
+                  Create a group to find regular playmates near you!
                 </Text>
                 <Pressable
                   onPress={() => navigation.navigate("CreateSquad")}
                   className="bg-primary rounded-xl px-6 py-3 mt-2"
                 >
-                  <Text className="text-white font-semibold">Create a Squad</Text>
+                  <Text className="text-white font-semibold">Create a Group</Text>
                 </Pressable>
               </View>
             )
@@ -568,7 +574,7 @@ export default function SquadsListScreen() {
         onSubmit={handleSubmitJoinRequest}
         submitting={joinSquad.isPending}
         title="Request to Join"
-        subtitle="The squad captain will see this and can approve or reject your request."
+        subtitle="The group captain will see this and can approve or reject your request."
       />
     </View>
   );

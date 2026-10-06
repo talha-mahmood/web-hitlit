@@ -18,7 +18,7 @@ export function useMyOwnedSquads(ownerId: string | undefined) {
 }
 
 // Owned + member-of squads — used by "Fill with my Squad" (unlike Create
-// Team's squad picker, which only ever registers a squad the user owns).
+// Team's squad picker above, which only offers squads the user owns or hosts).
 export function useMySquads(userId: string | undefined) {
   return useQuery({
     queryKey: ["mySquads", userId],

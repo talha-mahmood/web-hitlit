@@ -7,7 +7,8 @@ import { useMyOwnedSquads } from "../hooks/useSquadTeamFill";
 import type { SquadListItem } from "../lib/api/squads";
 
 // Shared by both "fill an empty tournament team" and "fill a regular game's
-// open slots with a squad" — same rule either way: the squad owner must
+// open slots with a squad" — same rule either way: the squad owner (or a
+// promoted host — see useMyOwnedSquads) must
 // select *exactly* `requiredCount` currently-active squad members, no more
 // no less (the RPC re-validates this server-side regardless).
 export default function SquadFillModal({
@@ -16,7 +17,7 @@ export default function SquadFillModal({
   userId,
   requiredCount,
   submitting,
-  title = "Fill With Your Squad",
+  title = "Fill With Your Group",
   onSubmit,
 }: {
   visible: boolean;
@@ -89,10 +90,10 @@ export default function SquadFillModal({
             <ActivityIndicator color={colors.primary} className="mt-6 mb-6" />
           ) : (
             <>
-              <Text className="text-muted text-xs font-semibold mt-2 mb-2">Choose a Squad</Text>
+              <Text className="text-muted text-xs font-semibold mt-2 mb-2">Choose a Group</Text>
               {eligibleSquads.length === 0 ? (
                 <Text className="text-muted text-sm mb-2">
-                  You don't own a squad with at least {requiredCount} active member{requiredCount === 1 ? "" : "s"}.
+                  You don't own a group with at least {requiredCount} active member{requiredCount === 1 ? "" : "s"}.
                 </Text>
               ) : (
                 <ScrollView

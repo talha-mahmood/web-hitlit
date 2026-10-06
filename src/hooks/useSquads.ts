@@ -12,6 +12,7 @@ import {
   approveMember,
   rejectMember,
   removeMember,
+  setMemberHost,
 } from "../lib/api/squads";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -190,6 +191,17 @@ export function useRemoveMember(squadId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["squad", squadId] });
       qc.invalidateQueries({ queryKey: ["squads"] });
+    },
+  });
+}
+
+export function useSetMemberHost(squadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ squadMemberId, isHost }: { squadMemberId: string; isHost: boolean }) =>
+      setMemberHost(squadMemberId, isHost),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["squad", squadId] });
     },
   });
 }

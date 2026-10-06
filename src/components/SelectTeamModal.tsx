@@ -128,7 +128,7 @@ export default function SelectTeamModal({
           <FieldInput value={teamName} onChangeText={setTeamName} placeholder="e.g. Thunder Strikers" maxLength={60} />
 
           <Text className="text-muted text-xs font-semibold mt-6 mb-2">
-            Select one from your existing squads
+            Select one from your existing groups
           </Text>
 
           {isLoading ? (
@@ -136,8 +136,8 @@ export default function SelectTeamModal({
           ) : eligibleSquads.length === 0 ? (
             <Text className="text-muted text-sm">
               {blockedByGenderOnly
-                ? `This is open to ${gameGender} players only — register a ${gameGender} squad to create a team.`
-                : `You don't own a squad with at least ${requiredCount} active member${requiredCount === 1 ? "" : "s"}.`}
+                ? `This is open to ${gameGender} players only — register a ${gameGender} group to create a team.`
+                : `You don't own a group with at least ${requiredCount} active member${requiredCount === 1 ? "" : "s"}.`}
             </Text>
           ) : (
             <View style={{ gap: 8 }}>
@@ -183,7 +183,7 @@ export default function SelectTeamModal({
               </Text>
               {hiddenInSquadCount > 0 && (
                 <Text className="text-muted text-xs mb-2">
-                  {hiddenInSquadCount} squad member{hiddenInSquadCount === 1 ? "" : "s"} already playing for
+                  {hiddenInSquadCount} group member{hiddenInSquadCount === 1 ? "" : "s"} already playing for
                   another team in this tournament {hiddenInSquadCount === 1 ? "isn't" : "aren't"} shown.
                 </Text>
               )}

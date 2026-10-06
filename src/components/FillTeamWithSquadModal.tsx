@@ -85,18 +85,18 @@ export default function FillTeamWithSquadModal({
             <Pressable onPress={onClose} hitSlop={10} style={{ position: "absolute", left: 0 }}>
               <Ionicons name="close" size={24} color="white" />
             </Pressable>
-            <Text className="text-white text-base font-bold">Fill With My Squad</Text>
+            <Text className="text-white text-base font-bold">Fill With My Group</Text>
           </View>
         </View>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 32 + insets.bottom }}>
-          <Text className="text-muted text-xs font-semibold mb-2">Select a squad</Text>
+          <Text className="text-muted text-xs font-semibold mb-2">Select a group</Text>
 
           {isLoading ? (
             <ActivityIndicator color={colors.primary} className="mt-4" />
           ) : eligibleSquads.length === 0 ? (
             <Text className="text-muted text-sm">
-              You don't have a squad with an eligible member to invite right now.
+              You don't have a group with an eligible member to invite right now.
             </Text>
           ) : (
             <View style={{ gap: 8 }}>

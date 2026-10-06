@@ -286,7 +286,7 @@ export default function NotificationsScreen() {
               <Ionicons name="notifications-outline" size={48} color={colors.border} />
               <Text className="text-ink font-semibold text-base">No notifications yet</Text>
               <Text className="text-muted text-sm text-center px-8">
-                You'll see updates here when something happens with your games, squads, or
+                You'll see updates here when something happens with your games, groups, or
                 tournaments.
               </Text>
             </View>

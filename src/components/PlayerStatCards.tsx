@@ -3,6 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import PieChart from "./PieChart";
 import { getRatingTierInfo } from "../lib/playerRating";
 import { getSportIcon } from "../lib/sportIcons";
+import { isCricketFamily } from "../lib/api/sports";
 import { colors, cardShadow } from "../constants/theme";
 
 // The white stat cards shown on both the Profile screen (your own numbers) and
@@ -272,7 +273,7 @@ export default function PlayerStatCards({
               <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={gamesPlayed} label="Games Played" />
               <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" />
               <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" />
-              <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={activeSquads} label="Active Squads" />
+              <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={activeSquads} label="Active Groups" />
               <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={hoursPlayed} label="Hours Played" />
               <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
             </View>
@@ -347,7 +348,7 @@ export default function PlayerStatCards({
             </View>
 
             {/* Sport-specific totals — only once filtered to that one sport */}
-            {totals && filterSportName?.toLowerCase() === "cricket" && (
+            {totals && isCricketFamily(filterSportName) && (
               <View className="flex-row mb-4" style={{ gap: 12 }}>
                 <View
                   style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}

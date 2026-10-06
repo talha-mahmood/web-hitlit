@@ -213,14 +213,14 @@ function MyCommunityContent({
             height={imageHeight}
             source={require("../../../assets/community-icons/create-squad.png")}
             onPress={() => navigation.navigate("CreateSquad")}
-            title="Create Squad"
+            title="Create Group"
           />
           <ImageCard
             width={CARD_WIDTH}
             height={imageHeight}
             source={require("../../../assets/community-icons/explore-squad.png")}
             onPress={() => navigation.navigate("SquadsList")}
-            title="Explore Squads"
+            title="Explore Groups"
           />
         </View>
       </ScrollView>

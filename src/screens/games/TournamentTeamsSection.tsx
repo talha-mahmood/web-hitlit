@@ -18,6 +18,7 @@ import { useSquadFillTournamentTeam } from "../../hooks/useSquadTeamFill";
 import { useCreateTeamInvite } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
+import { isCricketFamily } from "../../lib/api/sports";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import { useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
@@ -410,7 +411,7 @@ function TeamCard({
               style={{ gap: 6 }}
             >
               <Ionicons name="people-outline" size={15} color="white" />
-              <Text className="text-white font-bold text-xs">Fill with my Squad</Text>
+              <Text className="text-white font-bold text-xs">Fill with my Group</Text>
             </Pressable>
           )}
         </View>
@@ -459,7 +460,7 @@ function HeadToHeadMatchCard({
   // the match row exists (both teams approved).
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
-  const isCricketSport = sportName.includes("cricket");
+  const isCricketSport = isCricketFamily(sportName);
   // Once the match has a result (scored live or entered by hand) there's
   // nothing left to score, so neither scoring button is offered.
   const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";

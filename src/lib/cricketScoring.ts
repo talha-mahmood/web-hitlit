@@ -78,6 +78,28 @@ export type InningsState = {
   isComplete: boolean;
 };
 
+// Splits one innings' ball log into per-over chunks — an over ends after 6
+// legal deliveries, same rule the live screen already used inline for
+// "this over only"; shared here so Recent Balls can show every over, not
+// just the current one.
+export function groupBallsByOver(balls: BallEvent[]): BallEvent[][] {
+  const overs: BallEvent[][] = [];
+  let current: BallEvent[] = [];
+  let legalCount = 0;
+  for (const b of balls) {
+    current.push(b);
+    const isLegal = b.extraType !== "WIDE" && b.extraType !== "NOBALL";
+    if (isLegal) legalCount += 1;
+    if (legalCount === 6) {
+      overs.push(current);
+      current = [];
+      legalCount = 0;
+    }
+  }
+  if (current.length > 0) overs.push(current);
+  return overs;
+}
+
 export function formatOvers(legalBalls: number): string {
   const overs = Math.floor(legalBalls / 6);
   const balls = legalBalls % 6;

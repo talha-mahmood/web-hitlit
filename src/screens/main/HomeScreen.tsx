@@ -197,9 +197,9 @@ export default function HomeScreen() {
     },
     {
       key: "squads",
-      title: "Build Your Squad",
+      title: "Build Your Group",
       subtitle: "Find your regular crew and never play solo again.",
-      cta: "Find Squads",
+      cta: "Find Groups",
       icon: "people",
       bgColor: "#1E3A5F",
       accentColor: "#7DD3FC",
@@ -309,12 +309,12 @@ export default function HomeScreen() {
         />
 
         <NearbySection
-          title="Squads near you"
+          title="Groups near you"
           titleIcon="people"
           data={nearbySquads}
           isLoading={squadsLoading}
           emptyIcon="people-outline"
-          emptyLabel="No squads near you yet"
+          emptyLabel="No groups near you yet"
           keyExtractor={(s: SquadListItem) => s.id}
           renderItem={({ item }) => (
             <View style={{ width: VENUE_CARD_WIDTH }}>

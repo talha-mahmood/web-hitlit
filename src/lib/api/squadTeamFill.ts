@@ -64,7 +64,7 @@ export async function sendGameSquadInvite(gameId: string, squadId: string, invit
   });
   if (error) {
     if (isUniqueViolation(error)) {
-      throw new Error("This squad has already been invited to this game.");
+      throw new Error("This group has already been invited to this game.");
     }
     throw new Error(error.message);
   }

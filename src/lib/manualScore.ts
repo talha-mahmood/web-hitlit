@@ -1,4 +1,5 @@
 import type { ScorecardPrefill, ScorecardSport } from "./api/tournamentMatches";
+import { isCricketFamily } from "./api/sports";
 
 // The result a host types in by hand for a tournament match (instead of
 // live-scoring it) — stored as-is on the tournament match so its card can
@@ -13,7 +14,7 @@ export type ManualScoreParams = { sport: ManualSport; allowDraw: boolean; prefil
 
 export function manualSportForName(name: string): ManualSport | null {
   const key = name.trim().toLowerCase();
-  if (key.includes("cricket")) return "cricket";
+  if (isCricketFamily(key)) return "cricket";
   if (key === "table tennis") return "table_tennis";
   if (key === "padel" || key === "tennis" || key === "badminton" || key === "pickleball" || key === "football") return key;
   return null;

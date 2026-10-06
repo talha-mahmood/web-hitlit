@@ -16,7 +16,7 @@ const TYPE_FILTERS: { type: MentionEntityType | undefined; label: string; icon: 
   { type: "player", label: "Players", icon: "person-outline" },
   { type: "game", label: "Games", icon: "game-controller-outline" },
   { type: "tournament", label: "Tournaments", icon: "trophy-outline" },
-  { type: "squad", label: "Squads", icon: "people-outline" },
+  { type: "squad", label: "Groups", icon: "people-outline" },
 ];
 
 // Per-type accent — a small colored badge on every row so the type reads at
@@ -26,7 +26,7 @@ const TYPE_META: Record<MentionEntityType, { icon: keyof typeof MaterialCommunit
   player: { icon: "account", bg: "#EFF6FF", fg: "#2563EB", label: "Player" },
   game: { icon: "calendar-star", bg: "#F0FDF4", fg: colors.primaryDark, label: "Game" },
   tournament: { icon: "trophy", bg: "#FFFBEB", fg: "#D97706", label: "Tournament" },
-  squad: { icon: "account-group", bg: "#FDF2F8", fg: "#DB2777", label: "Squad" },
+  squad: { icon: "account-group", bg: "#FDF2F8", fg: "#DB2777", label: "Group" },
 };
 
 function SuggestionRow({ item, onPress }: { item: MentionSuggestion; onPress: () => void }) {

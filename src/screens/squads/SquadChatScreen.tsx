@@ -329,7 +329,7 @@ export default function SquadChatScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="font-extrabold text-ink" style={{ fontSize: 21 }} numberOfLines={1}>
-            Squad Chat
+            Group Chat
           </Text>
           {params.squadName ? (
             <View className="flex-row items-center mt-1" style={{ gap: 5 }}>
@@ -429,7 +429,7 @@ export default function SquadChatScreen() {
                 <ChatIcon size={40} />
               </View>
               <Text className="text-muted text-sm text-center">
-                No messages yet. Say hi to the squad!
+                No messages yet. Say hi to the group!
               </Text>
             </View>
           }
@@ -468,7 +468,7 @@ export default function SquadChatScreen() {
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder="Message the squad..."
+          placeholder="Message the group..."
           className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
           maxLength={500}
           multiline

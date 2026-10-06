@@ -7,7 +7,18 @@ export type Sport = Database["public"]["Tables"]["sports"]["Row"];
 // alphabetical, this is a deliberate, requested sequence. Any sport not
 // listed here (e.g. one added later) falls back to alphabetical, after
 // all the named ones.
-const SPORT_ORDER = ["Cricket", "Padel", "Football", "Badminton", "Pickleball", "Tennis"];
+const SPORT_ORDER = ["Hard Ball", "Tape Ball", "Padel", "Football", "Badminton", "Pickleball", "Tennis"];
+
+// "Hard Ball" and "Tape Ball" are both cricket under the hood — same
+// scoring rules, same minimum team size — just two separate `sports` rows
+// so they can be filtered independently everywhere a sport filter shows up.
+// "cricket" stays in the list too as a safety net for any sport named that
+// directly (e.g. a fresh seed, or before this split existed).
+const CRICKET_FAMILY_NAMES = ["cricket", "hard ball", "tape ball"];
+
+export function isCricketFamily(sportName: string | null | undefined): boolean {
+  return CRICKET_FAMILY_NAMES.includes((sportName ?? "").trim().toLowerCase());
+}
 
 export async function fetchSports(): Promise<Sport[]> {
   const { data, error } = await supabase

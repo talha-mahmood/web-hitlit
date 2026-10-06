@@ -125,7 +125,7 @@ export default function CommunityBanner({ width }: { width: number }) {
           HitLit Community
         </Text>
         <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#D3F6E0" }}>
-          {"Create Join Explore\nSquads & Games!"}
+          {"Create Join Explore\nGroups & Games!"}
         </Text>
 
         {/* Sport badges */}

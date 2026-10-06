@@ -20,6 +20,7 @@ import { computeRunRate } from "../../lib/cricketScoring";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import { manualSportForName } from "../../lib/manualScore";
+import { isCricketFamily } from "../../lib/api/sports";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import SelectScorerModal, { type ScorerCandidate } from "../../components/SelectScorerModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -1008,7 +1009,7 @@ export default function TournamentMatchesScreen() {
   // names/rosters/venue pre-filled and locked, letting the host pick the
   // rest of the match rules there (see handleGoToScorecard below).
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
-  const isCricketSport = sportName.includes("cricket");
+  const isCricketSport = isCricketFamily(sportName);
   const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
 
   const rosterByTeamId = new Map<string, string[]>();

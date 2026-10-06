@@ -62,7 +62,7 @@ async function searchSquads(term: string): Promise<MentionSuggestion[]> {
     entityType: "squad" as const,
     entityId: s.id,
     displayName: s.name,
-    subtitle: `Squad${s.sports?.name ? ` · ${s.sports.name}` : ""}`,
+    subtitle: `Group${s.sports?.name ? ` · ${s.sports.name}` : ""}`,
   }));
 }
 

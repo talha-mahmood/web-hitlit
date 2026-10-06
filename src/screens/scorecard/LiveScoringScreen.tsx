@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -23,6 +23,7 @@ import {
   computeRunRate,
   computeRequiredRunRate,
   matchResultSummary,
+  groupBallsByOver,
   type BallEvent,
   type ExtraType,
   type WicketType,
@@ -300,6 +301,7 @@ export default function LiveScoringScreen() {
   const [wicketType, setWicketType] = useState<WicketType | null>(null);
   const [wicketEnd, setWicketEnd] = useState<"striker" | "nonStriker" | null>(null);
   const [fielderName, setFielderName] = useState("");
+  const recentBallsScrollRef = useRef<ScrollView>(null);
 
   const currentInnings = useMemo(() => {
     if (!match) return undefined;
@@ -532,22 +534,16 @@ export default function LiveScoringScreen() {
   const requiredRunRate =
     target && inningsState ? computeRequiredRunRate(target, inningsState.runs, inningsState.legalBalls, match.overs_limit) : null;
 
-  // Only this over's deliveries — resets to empty right as a new over
-  // starts, rather than a rolling last-6 window that used to keep the
-  // previous over's balls on screen after the first ball of the next one.
-  const thisOverBalls: BallEvent[] = [];
-  {
-    let legalCount = 0;
-    for (const b of ballEvents) {
-      thisOverBalls.push(b);
-      const isLegal = b.extraType !== "WIDE" && b.extraType !== "NOBALL";
-      if (isLegal) legalCount += 1;
-      if (legalCount === 6) {
-        thisOverBalls.length = 0;
-        legalCount = 0;
-      }
-    }
-  }
+  // Every over of the current innings, oldest first — Recent Balls shows
+  // all of them side by side (one column per over) rather than just
+  // whichever over is in progress, so a user can scroll back through the
+  // innings instead of losing each over's balls the moment the next one starts.
+  // Not memoized: this runs after the loading early-return above, so a
+  // useMemo here would be called conditionally and break the Rules of Hooks
+  // (React would see a different hook count between the loading and loaded
+  // renders) — and grouping a single innings' balls is cheap enough that it
+  // doesn't need memoizing anyway.
+  const ballsByOver = groupBallsByOver(ballEvents);
 
   const runsNeeded = target && inningsState ? Math.max(target - inningsState.runs, 0) : null;
   const ballsLeft = target && inningsState ? Math.max(match.overs_limit * 6 - inningsState.legalBalls, 0) : null;
@@ -758,52 +754,68 @@ export default function LiveScoringScreen() {
               </View>
             </View>
 
-            {/* Recent balls (this over) */}
+            {/* Recent balls — every over of this innings, oldest to newest,
+                scrolled horizontally so previous overs stay reachable
+                instead of disappearing once the next one starts. */}
             <View className="bg-white rounded-2xl border border-border p-3.5 mt-4" style={cardShadow}>
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-ink font-bold text-base">Recent Balls</Text>
                 <View className="flex-row items-center" style={{ gap: 3 }}>
-                  <Text className="text-muted text-sm font-medium">This Over</Text>
-                  <Ionicons name="chevron-down" size={14} color={colors.muted} />
+                  <Text className="text-muted text-sm font-medium">Swipe for previous overs</Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.muted} />
                 </View>
               </View>
-              <View className="flex-row items-center flex-wrap" style={{ gap: 8 }}>
-                {Array.from({ length: Math.max(6, thisOverBalls.length) }).map((_, i) => {
-                  const b = thisOverBalls[i];
-                  if (!b) {
-                    return (
-                      <View
-                        key={i}
-                        className="items-center justify-center rounded-full"
-                        style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
-                      >
-                        <Text className="text-muted text-xs font-bold">-</Text>
+              <ScrollView
+                ref={recentBallsScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onContentSizeChange={() => recentBallsScrollRef.current?.scrollToEnd({ animated: true })}
+              >
+                <View className="flex-row items-start" style={{ gap: 14 }}>
+                  {(ballsByOver.length > 0 ? ballsByOver : [[]]).map((over, overIndex) => (
+                    <View key={overIndex} className="items-start">
+                      <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
+                      <View className="flex-row items-center" style={{ gap: 8 }}>
+                        {Array.from({ length: Math.max(6, over.length) }).map((_, i) => {
+                          const b = over[i];
+                          if (!b) {
+                            return (
+                              <View
+                                key={i}
+                                className="items-center justify-center rounded-full"
+                                style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+                              >
+                                <Text className="text-muted text-xs font-bold">-</Text>
+                              </View>
+                            );
+                          }
+                          return (
+                            <View
+                              key={i}
+                              className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
+                              style={{ width: 34, height: 34 }}
+                            >
+                              <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
+                                {b.isWicket
+                                  ? "W"
+                                  : b.extraType === "WIDE"
+                                    ? `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`
+                                    : b.extraType === "NOBALL"
+                                      ? `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`
+                                      : b.extraType === "BYE"
+                                        ? `B${b.extraRuns}`
+                                        : b.extraType === "LEGBYE"
+                                          ? `Lb${b.extraRuns}`
+                                          : b.runsBatted}
+                              </Text>
+                            </View>
+                          );
+                        })}
                       </View>
-                    );
-                  }
-                  return (
-                    <View
-                      key={i}
-                      className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
-                      style={{ width: 34, height: 34 }}
-                    >
-                      <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
-                        {b.isWicket
-                          ? "W"
-                          : b.extraType === "WIDE"
-                            ? `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`
-                            : b.extraType === "NOBALL"
-                              ? `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`
-                              : b.extraType === "BYE"
-                                ? `B${b.extraRuns}`
-                                : b.extraType === "LEGBYE"
-                                  ? `Lb${b.extraRuns}`
-                                  : b.runsBatted}
-                      </Text>
                     </View>
-                  );
-                })}
-              </View>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
 
             {/* Scoring pad — locked while a ball is being saved so a slow

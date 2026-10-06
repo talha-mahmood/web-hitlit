@@ -3439,7 +3439,7 @@ export type Database = {
         | "REMOVED"
         | "PENDING"
         | "DECLINED"
-      squad_role_type: "captain" | "member"
+      squad_role_type: "captain" | "member" | "host"
       tournament_format_type: "KNOCKOUT" | "LEAGUE" | "POOL"
       tournament_team_invite_status_type: "pending" | "accepted" | "declined"
       tournament_team_status_type:
@@ -3608,7 +3608,7 @@ export const Constants = {
         "PENDING",
         "DECLINED",
       ],
-      squad_role_type: ["captain", "member"],
+      squad_role_type: ["captain", "member", "host"],
       tournament_format_type: ["KNOCKOUT", "LEAGUE", "POOL"],
       tournament_team_invite_status_type: ["pending", "accepted", "declined"],
       tournament_team_status_type: [
