@@ -9,7 +9,16 @@ import * as Clipboard from "expo-clipboard";
 import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
-import { useMyPendingGameInvite, useCreateGameInvite, useAcceptGameInvite, useDeclineGameInvite } from "../../hooks/useInvites";
+import {
+  useMyPendingGameInvite,
+  useCreateGameInvite,
+  useAcceptGameInvite,
+  useDeclineGameInvite,
+  useMyPendingTeamInvite,
+  useAcceptTeamInvite,
+  useDeclineTeamInvite,
+} from "../../hooks/useInvites";
+import { useDismissedInvites } from "../../lib/useDismissedInvites";
 import { useSquadFillGameSlots, useSendGameSquadInvite, useGameSquadInvitesForGame } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow, cardShadow } from "../../constants/theme";
@@ -255,6 +264,13 @@ export default function GameDetailScreen() {
   const createInvite = useCreateGameInvite(params.gameId);
   const acceptInvite = useAcceptGameInvite(params.gameId);
   const declineInvite = useDeclineGameInvite(params.gameId);
+  // A team invite (from "Invite Players"/"Fill with my Group" on a specific
+  // team, see TournamentTeamsSection) — same "you're invited" banner
+  // treatment as the game-level invite above, just for a specific team.
+  const { data: myTeamInvite } = useMyPendingTeamInvite(params.gameId, userId);
+  const acceptTeamInvite = useAcceptTeamInvite(params.gameId);
+  const declineTeamInvite = useDeclineTeamInvite(params.gameId);
+  const { isDismissed: isInviteDismissed, dismiss: dismissInvite } = useDismissedInvites();
 
   if (isLoading) {
     return (
@@ -460,6 +476,28 @@ export default function GameDetailScreen() {
     ]);
   };
 
+  const handleAcceptTeamInvite = () => {
+    if (!myTeamInvite) return;
+    acceptTeamInvite.mutate(myTeamInvite.id, {
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not accept invite.")),
+    });
+  };
+
+  const handleDeclineTeamInvite = () => {
+    if (!myTeamInvite) return;
+    Alert.alert("Decline Invite", `Decline the invite to join team "${myTeamInvite.tournament_teams?.name ?? ""}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Decline",
+        style: "destructive",
+        onPress: () =>
+          declineTeamInvite.mutate(myTeamInvite.id, {
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not decline invite.")),
+          }),
+      },
+    ]);
+  };
+
   const handleCopyGameCode = async () => {
     await Clipboard.setStringAsync(game.game_code);
     setCodeCopied(true);
@@ -591,11 +629,16 @@ export default function GameDetailScreen() {
         {/* Pending host invite — shown regardless of game_type, since the
             normal bottom join CTA is hidden entirely for a tournament
             non-host (joining a tournament happens via a team below instead). */}
-        {myGameInvite && (
+        {myGameInvite && !isInviteDismissed(myGameInvite.id) && (
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-            <Text className="text-ink font-semibold text-sm mb-1">
-              {myGameInvite.profiles?.full_name ?? "The host"} invited you to {isTournament ? "this tournament" : "this game"}
-            </Text>
+            <View className="flex-row items-start">
+              <Text className="text-ink font-semibold text-sm mb-1 flex-1 pr-2">
+                {myGameInvite.profiles?.full_name ?? "The host"} invited you to {isTournament ? "this tournament" : "this game"}
+              </Text>
+              <Pressable onPress={() => dismissInvite(myGameInvite.id)} hitSlop={8} className="-mt-1 -mr-1 p-1">
+                <Ionicons name="close" size={18} color={colors.muted} />
+              </Pressable>
+            </View>
             <Text className="text-muted text-xs mb-3">{isTeamBased ? "Accept to let them know you're in, then join a team below." : "Accept to join instantly — no approval needed."}</Text>
             <View className="flex-row" style={{ gap: 8 }}>
               <Pressable onPress={handleDeclineInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 border border-danger rounded-lg py-2.5 items-center">
@@ -603,6 +646,31 @@ export default function GameDetailScreen() {
               </Pressable>
               <Pressable onPress={handleAcceptInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 bg-primary rounded-lg py-2.5 items-center">
                 {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* Pending team invite — from "Invite Players"/"Fill with my Group"
+            on a specific team (see TournamentTeamsSection). Accepting joins
+            that team directly, no further action needed. */}
+        {myTeamInvite && !isInviteDismissed(myTeamInvite.id) && (
+          <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <View className="flex-row items-start">
+              <Text className="text-ink font-semibold text-sm mb-1 flex-1 pr-2">
+                {myTeamInvite.profiles?.full_name ?? "A host"} invited you to join team "{myTeamInvite.tournament_teams?.name ?? "a team"}" in this {isTournament ? "tournament" : "game"}
+              </Text>
+              <Pressable onPress={() => dismissInvite(myTeamInvite.id)} hitSlop={8} className="-mt-1 -mr-1 p-1">
+                <Ionicons name="close" size={18} color={colors.muted} />
+              </Pressable>
+            </View>
+            <Text className="text-muted text-xs mb-3">Accept to join the team instantly — no approval needed.</Text>
+            <View className="flex-row" style={{ gap: 8 }}>
+              <Pressable onPress={handleDeclineTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1 border border-danger rounded-lg py-2.5 items-center">
+                <Text className="text-danger font-semibold text-sm">Decline</Text>
+              </Pressable>
+              <Pressable onPress={handleAcceptTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1 bg-primary rounded-lg py-2.5 items-center">
+                {acceptTeamInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
               </Pressable>
             </View>
           </View>
@@ -806,16 +874,8 @@ export default function GameDetailScreen() {
                   </Pressable>
                 )}
                 {!isVenueBooked && (
-                  <Pressable
-                    onPress={handleCancel}
-                    className="flex-row items-center justify-between rounded-xl px-4 py-4"
-                    style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
-                  >
-                    <View className="flex-row items-center" style={{ gap: 10 }}>
-                      <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                      <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.danger} />
+                  <Pressable onPress={handleCancel} className="border border-danger rounded-xl py-4 items-center">
+                    <Text className="text-danger font-semibold">Cancel This {isTournament ? "Tournament" : "Game"}</Text>
                   </Pressable>
                 )}
               </>

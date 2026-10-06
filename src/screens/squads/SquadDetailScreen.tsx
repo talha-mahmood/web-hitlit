@@ -38,6 +38,7 @@ import type { Database } from "../../types/database.types";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { useDismissedInvites } from "../../lib/useDismissedInvites";
 
 type DetailRoute = RouteProp<SquadsStackParamList, "SquadDetail">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadDetail">;
@@ -274,6 +275,7 @@ export default function SquadDetailScreen() {
   const setMemberHost = useSetMemberHost(params.squadId);
   const setJoinBlocked = useSetSquadJoinBlocked();
   const { data: mySquadInvite } = useMyPendingSquadInvite(params.squadId, userId);
+  const { isDismissed: isInviteDismissed, dismiss: dismissInvite } = useDismissedInvites();
   const createInvite = useCreateSquadInvite(params.squadId);
   const acceptInvite = useAcceptSquadInvite(params.squadId);
   const declineInvite = useDeclineSquadInvite(params.squadId);
@@ -684,12 +686,17 @@ export default function SquadDetailScreen() {
         <WaveDivider color={colors.background} height={30} />
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
-        {mySquadInvite && (
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: hasJoined ? 40 : 120 }}>
+        {mySquadInvite && !isInviteDismissed(mySquadInvite.id) && (
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-            <Text className="text-ink font-semibold text-sm mb-1">
-              {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this group
-            </Text>
+            <View className="flex-row items-start">
+              <Text className="text-ink font-semibold text-sm mb-1 flex-1 pr-2">
+                {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this group
+              </Text>
+              <Pressable onPress={() => dismissInvite(mySquadInvite.id)} hitSlop={8} className="-mt-1 -mr-1 p-1">
+                <Ionicons name="close" size={18} color={colors.muted} />
+              </Pressable>
+            </View>
             <Text className="text-muted text-xs mb-3">Accept to join instantly — no approval needed.</Text>
             <View className="flex-row" style={{ gap: 8 }}>
               <Pressable
@@ -955,41 +962,42 @@ export default function SquadDetailScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Delete This Group / Leave Group — sit right under "Captained by"
+            instead of pinned to the bottom of the screen, so they scroll
+            with the rest of the details instead of floating over them. Only
+            the original owner can't leave (no "leave" concept for them —
+            disbanding is the only way out); a promoted host is still a
+            regular member underneath, so they get both buttons. */}
+        {(canManage || (hasJoined && !isOwner)) && (
+          <View className="px-3.5 mt-4" style={{ gap: 8 }}>
+            {canManage &&
+              (disbandSquad.isPending ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : (
+                <Pressable onPress={handleDisband} className="border border-danger rounded-xl py-4 items-center">
+                  <Text className="text-danger font-semibold">Delete This Group</Text>
+                </Pressable>
+              ))}
+            {hasJoined && !isOwner && (
+              leaveSquad.isPending ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : (
+                <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
+                  <Text className="text-danger font-semibold">Leave Group</Text>
+                </Pressable>
+              )
+            )}
+          </View>
+        )}
       </ScrollView>
 
-      {/* CTA */}
+      {/* CTA — only for people who aren't members yet (Delete/Leave moved
+          inline above, under "Captained by"). */}
+      {!hasJoined && (
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
-        ) : canManage ? (
-          <View style={{ gap: 8 }}>
-            <Pressable
-              onPress={handleDisband}
-              className="flex-row items-center justify-between rounded-xl px-4 py-4"
-              style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA" }}
-            >
-              <View className="flex-row items-center" style={{ gap: 10 }}>
-                <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                <Text className="text-danger font-semibold">Delete This Group</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.danger} />
-            </Pressable>
-            {/* The original owner has no "leave" concept — only a promoted
-                host, who's still a regular member underneath, can step down
-                without disbanding the squad for everyone else. */}
-            {isHost && (
-              <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
-                <Text className="text-danger font-semibold">Leave Group</Text>
-              </Pressable>
-            )}
-          </View>
-        ) : hasJoined ? (
-          <Pressable
-            onPress={handleLeave}
-            className="border border-danger rounded-xl py-4 items-center"
-          >
-            <Text className="text-danger font-semibold">Leave Group</Text>
-          </Pressable>
         ) : hasRequested ? (
           <View style={{ gap: 8 }}>
             <View className="bg-orange-50 rounded-xl py-3 items-center">
@@ -1025,6 +1033,7 @@ export default function SquadDetailScreen() {
           </Pressable>
         )}
       </View>
+      )}
 
       <JoinRequestModal
         visible={showJoinModal}

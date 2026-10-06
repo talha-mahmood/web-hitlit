@@ -16,6 +16,7 @@ import TeamCrest from "../../components/TeamCrest";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -358,6 +359,7 @@ export default function PadelLiveScoringScreen() {
             {isDoubles ? "Doubles" : "Singles"} · Padel
           </Text>
         </View>
+        <ScoringCodeBadge code={match.scoring_code} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>

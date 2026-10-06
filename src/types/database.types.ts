@@ -24,6 +24,7 @@ export type Database = {
           play_mode: string
           points_to_win: number
           result_summary: string | null
+          scoring_code: string | null
           status: string
           team_a_name: string
           team_a_players: string[]
@@ -44,6 +45,7 @@ export type Database = {
           play_mode: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name: string
           team_a_players?: string[]
@@ -64,6 +66,7 @@ export type Database = {
           play_mode?: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name?: string
           team_a_players?: string[]
@@ -641,6 +644,7 @@ export type Database = {
           id: string
           overs_limit: number
           result_summary: string | null
+          scoring_code: string | null
           status: string
           team_a_name: string
           team_a_players: string[]
@@ -657,6 +661,7 @@ export type Database = {
           id?: string
           overs_limit: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name: string
           team_a_players?: string[]
@@ -673,6 +678,7 @@ export type Database = {
           id?: string
           overs_limit?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name?: string
           team_a_players?: string[]
@@ -818,6 +824,7 @@ export type Database = {
           phase: string
           requires_winner: boolean
           result_summary: string | null
+          scoring_code: string | null
           second_half_added_minutes: number | null
           second_half_kickoff_at: string | null
           status: string
@@ -846,6 +853,7 @@ export type Database = {
           phase?: string
           requires_winner?: boolean
           result_summary?: string | null
+          scoring_code?: string | null
           second_half_added_minutes?: number | null
           second_half_kickoff_at?: string | null
           status?: string
@@ -874,6 +882,7 @@ export type Database = {
           phase?: string
           requires_winner?: boolean
           result_summary?: string | null
+          scoring_code?: string | null
           second_half_added_minutes?: number | null
           second_half_kickoff_at?: string | null
           status?: string
@@ -1564,6 +1573,7 @@ export type Database = {
           id: string
           play_mode: string
           result_summary: string | null
+          scoring_code: string | null
           status: string
           team_a_name: string
           team_a_players: string[]
@@ -1584,6 +1594,7 @@ export type Database = {
           id?: string
           play_mode?: string
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name: string
           team_a_players?: string[]
@@ -1604,6 +1615,7 @@ export type Database = {
           id?: string
           play_mode?: string
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name?: string
           team_a_players?: string[]
@@ -1741,6 +1753,7 @@ export type Database = {
           play_mode: string
           points_to_win: number
           result_summary: string | null
+          scoring_code: string | null
           scoring_mode: string
           status: string
           team_a_name: string
@@ -1760,6 +1773,7 @@ export type Database = {
           play_mode: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           scoring_mode: string
           status?: string
           team_a_name: string
@@ -1779,6 +1793,7 @@ export type Database = {
           play_mode?: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           scoring_mode?: string
           status?: string
           team_a_name?: string
@@ -2333,6 +2348,7 @@ export type Database = {
           play_mode: string
           points_to_win: number
           result_summary: string | null
+          scoring_code: string | null
           status: string
           team_a_name: string
           team_a_players: string[]
@@ -2352,6 +2368,7 @@ export type Database = {
           play_mode: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name: string
           team_a_players?: string[]
@@ -2371,6 +2388,7 @@ export type Database = {
           play_mode?: string
           points_to_win?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           team_a_name?: string
           team_a_players?: string[]
@@ -2536,6 +2554,7 @@ export type Database = {
           player_b_players: string[]
           player_b_server_index: number
           result_summary: string | null
+          scoring_code: string | null
           status: string
           user_id: string
           venue: string | null
@@ -2556,6 +2575,7 @@ export type Database = {
           player_b_players?: string[]
           player_b_server_index?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           user_id: string
           venue?: string | null
@@ -2576,6 +2596,7 @@ export type Database = {
           player_b_players?: string[]
           player_b_server_index?: number
           result_summary?: string | null
+          scoring_code?: string | null
           status?: string
           user_id?: string
           venue?: string | null

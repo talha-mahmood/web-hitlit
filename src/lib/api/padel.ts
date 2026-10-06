@@ -50,6 +50,21 @@ export async function fetchPadelMatch(matchId: string): Promise<PadelMatchDetail
   return data as unknown as PadelMatchDetail;
 }
 
+// "View Scoring" — looks up any match (not just the viewer's own) by its
+// short scoring_code, for the read-only FullScorecard view. Relies on the
+// padel_matches_select_any RLS policy (any signed-in user can SELECT),
+// unlike every other read in this file which is implicitly scoped to the
+// caller's own matches by the owner-only policy.
+export async function findPadelMatchByCode(code: string): Promise<{ id: string } | null> {
+  const { data, error } = await supabase
+    .from("padel_matches")
+    .select("id")
+    .eq("scoring_code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function createPadelMatch(params: {
   userId: string;
   teamAName: string;

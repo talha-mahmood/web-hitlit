@@ -40,6 +40,7 @@ import {
   type GoalEvent,
 } from "../../lib/footballScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -586,6 +587,7 @@ export default function FootballLiveScoringScreen() {
           </Text>
           <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Football</Text>
         </View>
+        <ScoringCodeBadge code={match.scoring_code} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>

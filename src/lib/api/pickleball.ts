@@ -50,6 +50,21 @@ export async function fetchPickleballMatch(matchId: string): Promise<PickleballM
   return data as unknown as PickleballMatchDetail;
 }
 
+// "View Scoring" — looks up any match (not just the viewer's own) by its
+// short scoring_code, for the read-only FullScorecard view. Relies on the
+// pickleball_matches_select_any RLS policy (any signed-in user can SELECT),
+// unlike every other read in this file which is implicitly scoped to the
+// caller's own matches by the owner-only policy.
+export async function findPickleballMatchByCode(code: string): Promise<{ id: string } | null> {
+  const { data, error } = await supabase
+    .from("pickleball_matches")
+    .select("id")
+    .eq("scoring_code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function createPickleballMatch(params: {
   userId: string;
   teamAName: string;

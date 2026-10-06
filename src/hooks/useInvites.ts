@@ -5,6 +5,7 @@ import {
   createTeamInvite,
   fetchMyPendingGameInvite,
   fetchMyPendingSquadInvite,
+  fetchMyPendingTeamInvite,
   acceptGameInvite,
   declineGameInvite,
   acceptSquadInvite,
@@ -49,6 +50,19 @@ export function useMyPendingGameInvite(gameId: string, userId: string | undefine
   return useQuery({
     queryKey: ["gameInvite", gameId, userId],
     queryFn: () => fetchMyPendingGameInvite(gameId, userId as string),
+    enabled: !!gameId && !!userId,
+    staleTime: 15_000,
+  });
+}
+
+// Drives the same kind of "you're invited" banner on the game/tournament
+// detail screen that game/squad invites already get — see
+// useAcceptTeamInvite/useDeclineTeamInvite below for why those now take an
+// optional gameId too.
+export function useMyPendingTeamInvite(gameId: string, userId: string | undefined) {
+  return useQuery({
+    queryKey: ["teamInvite", gameId, userId],
+    queryFn: () => fetchMyPendingTeamInvite(gameId, userId as string),
     enabled: !!gameId && !!userId,
     staleTime: 15_000,
   });
@@ -121,28 +135,30 @@ export function useCreateTeamInvite(gameId: string) {
   });
 }
 
-// Unlike game/squad invites (surfaced as a banner on that specific detail
-// screen), a team invite is only ever acted on from the Notifications
-// screen's inline Approve/Decline — the notification's own `data` already
-// carries gameId/teamId, so accepting/declining here just needs the invite
-// id and invalidates broadly rather than being scoped to one game/team.
-export function useAcceptTeamInvite() {
+// Acted on either from the Notifications screen's inline Approve/Decline
+// (no gameId — the notification's own `data` already carries gameId/teamId)
+// or from the "you're invited" banner on that specific game/tournament's
+// detail screen (gameId passed so its own teamInvite query refreshes too,
+// alongside the broader invalidation both call sites need).
+export function useAcceptTeamInvite(gameId?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (inviteId: string) => acceptTeamInvite(inviteId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      if (gameId) qc.invalidateQueries({ queryKey: ["teamInvite", gameId] });
     },
   });
 }
 
-export function useDeclineTeamInvite() {
+export function useDeclineTeamInvite(gameId?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (inviteId: string) => declineTeamInvite(inviteId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      if (gameId) qc.invalidateQueries({ queryKey: ["teamInvite", gameId] });
     },
   });
 }

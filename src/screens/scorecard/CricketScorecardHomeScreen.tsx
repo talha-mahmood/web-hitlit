@@ -7,19 +7,21 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useMyCricketMatches, useDeleteCricketMatch } from "../../hooks/useCricket";
-import { friendlyCricketError, ballRowToEvent, type CricketMatchDetail } from "../../lib/api/cricket";
+import { friendlyCricketError, ballRowToEvent, findCricketMatchByCode, type CricketMatchDetail } from "../../lib/api/cricket";
 import { replayInnings, formatOvers } from "../../lib/cricketScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
+import ViewScoringPanel from "../../components/ViewScoringPanel";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "CricketHome">;
-type TabKey = "all" | "live" | "completed";
+type TabKey = "all" | "live" | "completed" | "view";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All Matches" },
   { key: "live", label: "Live" },
   { key: "completed", label: "Completed" },
+  { key: "view", label: "View Scoring" },
 ];
 
 // Overs limit doesn't map to a single "official" format name in general, so
@@ -186,6 +188,12 @@ export default function CricketScorecardHomeScreen() {
     );
   };
 
+  const handleLookupScoringCode = async (code: string) => {
+    const result = await findCricketMatchByCode(code);
+    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    return result?.id ?? null;
+  };
+
   const allMatches = matches ?? [];
   const filteredMatches = allMatches.filter((m) => {
     if (activeTab === "live") return m.status === "IN_PROGRESS";
@@ -250,7 +258,9 @@ export default function CricketScorecardHomeScreen() {
         </View>
       </View>
 
-      {isLoading ? (
+      {activeTab === "view" ? (
+        <ViewScoringPanel onLookup={handleLookupScoringCode} />
+      ) : isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
         <FlatList

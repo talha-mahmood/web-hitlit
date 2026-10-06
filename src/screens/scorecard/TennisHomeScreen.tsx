@@ -7,19 +7,21 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
 import { useMyTennisMatches, useDeleteTennisMatch } from "../../hooks/useTennis";
-import { friendlyTennisError, pointRowToEvent, type TennisMatchDetail } from "../../lib/api/tennis";
+import { findTennisMatchByCode, friendlyTennisError, pointRowToEvent, type TennisMatchDetail } from "../../lib/api/tennis";
+import ViewScoringPanel from "../../components/ViewScoringPanel";
 import { replayTennisMatch, formatSetScore, type TennisMatchConfig, type Player } from "../../lib/tennisScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisHome">;
-type TabKey = "all" | "live" | "completed";
+type TabKey = "all" | "live" | "completed" | "view";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All Matches" },
   { key: "live", label: "Live" },
   { key: "completed", label: "Completed" },
+  { key: "view", label: "View Scoring" },
 ];
 
 export function computeMatchState(match: TennisMatchDetail) {
@@ -166,6 +168,12 @@ export default function TennisHomeScreen() {
     );
   };
 
+  const handleLookupScoringCode = async (code: string) => {
+    const result = await findTennisMatchByCode(code);
+    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    return result?.id ?? null;
+  };
+
   const allMatches = matches ?? [];
   const filteredMatches = allMatches.filter((m) => {
     if (activeTab === "live") return m.status === "IN_PROGRESS";
@@ -230,7 +238,9 @@ export default function TennisHomeScreen() {
         </View>
       </View>
 
-      {isLoading ? (
+      {activeTab === "view" ? (
+        <ViewScoringPanel onLookup={handleLookupScoringCode} />
+      ) : isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
         <FlatList

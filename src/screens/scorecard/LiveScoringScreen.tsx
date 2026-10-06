@@ -29,6 +29,7 @@ import {
   type WicketType,
 } from "../../lib/cricketScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 
@@ -591,14 +592,17 @@ export default function LiveScoringScreen() {
               </View>
             ) : null}
           </View>
-          <Pressable
-            onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })}
-            hitSlop={8}
-            className="items-center justify-center rounded-full"
-            style={{ width: 38, height: 38, borderWidth: 1, borderColor: "rgba(255,255,255,0.35)" }}
-          >
-            <Ionicons name="stats-chart" size={17} color="white" />
-          </Pressable>
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <ScoringCodeBadge code={match.scoring_code} variant="dark" />
+            <Pressable
+              onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })}
+              hitSlop={8}
+              className="items-center justify-center rounded-full"
+              style={{ width: 38, height: 38, borderWidth: 1, borderColor: "rgba(255,255,255,0.35)" }}
+            >
+              <Ionicons name="stats-chart" size={17} color="white" />
+            </Pressable>
+          </View>
         </View>
       </View>
 

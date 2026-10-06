@@ -51,6 +51,21 @@ export async function fetchTableTennisMatch(matchId: string): Promise<TableTenni
   return data as unknown as TableTennisMatchDetail;
 }
 
+// "View Scoring" — looks up any match (not just the viewer's own) by its
+// short scoring_code, for the read-only FullScorecard view. Relies on the
+// table_tennis_matches_select_any RLS policy (any signed-in user can SELECT),
+// unlike every other read in this file which is implicitly scoped to the
+// caller's own matches by the owner-only policy.
+export async function findTableTennisMatchByCode(code: string): Promise<{ id: string } | null> {
+  const { data, error } = await supabase
+    .from("table_tennis_matches")
+    .select("id")
+    .eq("scoring_code", code.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function createTableTennisMatch(params: {
   userId: string;
   teamAName: string;

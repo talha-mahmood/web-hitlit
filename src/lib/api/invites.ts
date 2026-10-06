@@ -8,14 +8,16 @@ export type GameInvite = Database["public"]["Tables"]["game_invites"]["Row"] & {
 export type SquadInvite = Database["public"]["Tables"]["squad_invites"]["Row"] & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
 };
-// A team invite's recipient sees it from Notifications (no per-screen
-// "you're invited" banner like game/squad invites get), so this type only
-// ever needs to travel as the notification's own `data` payload — no
-// dedicated fetch-by-team query, unlike GameInvite/SquadInvite above.
 export type TeamInvite = Database["public"]["Tables"]["tournament_team_invites"]["Row"];
+export type TeamInviteWithDetails = TeamInvite & {
+  tournament_teams: { id: string; name: string; game_id: string } | null;
+  profiles: { id: string; full_name: string | null; avatar: string | null } | null;
+};
 
 const GAME_INVITE_SELECT = "*, profiles!game_invites_invited_by_fkey(id, full_name, avatar)";
 const SQUAD_INVITE_SELECT = "*, profiles!squad_invites_invited_by_fkey(id, full_name, avatar)";
+const TEAM_INVITE_SELECT =
+  "*, tournament_teams!inner(id, name, game_id), profiles!tournament_team_invites_invited_by_fkey(id, full_name, avatar)";
 
 // Host-only (enforced by game_invites_insert_inviter RLS) — invites bypass
 // the normal request/approval flow entirely: accepting one joins the
@@ -74,6 +76,22 @@ export async function fetchMyPendingGameInvite(gameId: string, userId: string): 
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data as GameInvite | null;
+}
+
+// Same idea as fetchMyPendingGameInvite/fetchMyPendingSquadInvite, but a
+// team invite is scoped to a team, not the game directly — `!inner` lets
+// PostgREST filter this row-level query by the embedded team's game_id.
+export async function fetchMyPendingTeamInvite(gameId: string, userId: string): Promise<TeamInviteWithDetails | null> {
+  const { data, error } = await supabase
+    .from("tournament_team_invites")
+    .select(TEAM_INVITE_SELECT)
+    .eq("tournament_teams.game_id", gameId)
+    .eq("invited_user_id", userId)
+    .eq("status", "pending")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as unknown as TeamInviteWithDetails | null;
 }
 
 export async function fetchMyPendingSquadInvite(squadId: string, userId: string): Promise<SquadInvite | null> {
