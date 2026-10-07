@@ -11,8 +11,11 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScoringMode, PlayMode, Team } from "../../lib/pickleballScoring";
+
+// See NewMatchScreen.tsx (cricket) for why this carries a sourceId.
+type PlayerEntry = NamedEntry;
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 
@@ -102,27 +105,27 @@ function TeamCard({
   name: string;
   onNameChange: (v: string) => void;
   playMode: PlayMode;
-  players: [string, string];
-  onPlayersChange: (players: [string, string]) => void;
+  players: [PlayerEntry, PlayerEntry];
+  onPlayersChange: (players: [PlayerEntry, PlayerEntry]) => void;
   locked?: boolean;
   // The sibling team's current name/roster — a name can't be reused across
   // teams, not just within this one.
   otherTeamName: string;
-  otherTeamPlayers: [string, string];
+  otherTeamPlayers: [PlayerEntry, PlayerEntry];
 }) {
   const isDoubles = playMode === "DOUBLES";
   const [showGroupModal, setShowGroupModal] = useState(false);
-  const emptySlotCount = players.filter((p) => !p.trim()).length;
+  const emptySlotCount = players.filter((p) => !p.name.trim()).length;
   const teamNameClash = namesClash(name, otherTeamName);
-  const slot0Duplicate = isDoubles && !!players[0].trim() && isDuplicateName(players[0], [players[1], ...otherTeamPlayers]);
-  const slot1Duplicate = isDoubles && !!players[1].trim() && isDuplicateName(players[1], [players[0], ...otherTeamPlayers]);
+  const slot0Duplicate = isDoubles && !!players[0].name.trim() && entryCollides(players[0], [players[1], ...otherTeamPlayers]);
+  const slot1Duplicate = isDoubles && !!players[1].name.trim() && entryCollides(players[1], [players[0], ...otherTeamPlayers]);
 
-  const handleAddFromGroup = (names: string[]) => {
-    const next: [string, string] = [...players];
+  const handleAddFromGroup = (picked: { userId: string; name: string }[]) => {
+    const next: [PlayerEntry, PlayerEntry] = [...players];
     let i = 0;
-    for (let slot = 0; slot < 2 && i < names.length; slot++) {
-      if (!next[slot].trim()) {
-        next[slot] = names[i];
+    for (let slot = 0; slot < 2 && i < picked.length; slot++) {
+      if (!next[slot].name.trim()) {
+        next[slot] = { name: picked[i].name, sourceId: picked[i].userId };
         i++;
       }
     }
@@ -177,8 +180,8 @@ function TeamCard({
               Player 1 <Text className="text-red-500">*</Text>
             </Text>
             <FieldInput
-              value={players[0]}
-              onChangeText={(v) => onPlayersChange([v, players[1]])}
+              value={players[0].name}
+              onChangeText={(v) => onPlayersChange([{ name: v, sourceId: null }, players[1]])}
               placeholder="e.g. Alex"
               maxLength={40}
               editable={!locked}
@@ -194,8 +197,8 @@ function TeamCard({
               Player 2 <Text className="text-red-500">*</Text>
             </Text>
             <FieldInput
-              value={players[1]}
-              onChangeText={(v) => onPlayersChange([players[0], v])}
+              value={players[1].name}
+              onChangeText={(v) => onPlayersChange([players[0], { name: v, sourceId: null }])}
               placeholder="e.g. Jo"
               maxLength={40}
               editable={!locked}
@@ -226,9 +229,9 @@ function TeamCard({
       <AddPlayersFromGroupModal
         visible={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        existingNames={isDoubles ? [...players.filter(Boolean), ...otherTeamPlayers.filter(Boolean)] : [name, otherTeamName].filter(Boolean)}
+        excludedUserIds={isDoubles ? [...players, ...otherTeamPlayers].map((p) => p.sourceId).filter((id): id is string => !!id) : []}
         maxSelect={isDoubles ? emptySlotCount : 1}
-        onAdd={(names) => (isDoubles ? handleAddFromGroup(names) : onNameChange(names[0]))}
+        onAdd={(picked) => (isDoubles ? handleAddFromGroup(picked) : onNameChange(picked[0].name))}
       />
     </View>
   );
@@ -244,13 +247,13 @@ export default function PickleballNewMatchScreen() {
 
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
-  const [teamAPlayers, setTeamAPlayers] = useState<[string, string]>([
-    prefill?.teamAPlayers[0] ?? "",
-    prefill?.teamAPlayers[1] ?? "",
+  const [teamAPlayers, setTeamAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
+    { name: prefill?.teamAPlayers[0] ?? "", sourceId: null },
+    { name: prefill?.teamAPlayers[1] ?? "", sourceId: null },
   ]);
-  const [teamBPlayers, setTeamBPlayers] = useState<[string, string]>([
-    prefill?.teamBPlayers[0] ?? "",
-    prefill?.teamBPlayers[1] ?? "",
+  const [teamBPlayers, setTeamBPlayers] = useState<[PlayerEntry, PlayerEntry]>([
+    { name: prefill?.teamBPlayers[0] ?? "", sourceId: null },
+    { name: prefill?.teamBPlayers[1] ?? "", sourceId: null },
   ]);
   // When prefilled, team/player fields are locked to the tournament
   // roster — so Doubles can only be offered as a choice if that roster
@@ -267,7 +270,7 @@ export default function PickleballNewMatchScreen() {
 
   const isDoubles = playMode === "DOUBLES";
   const doublesPlayersValid =
-    !isDoubles || (teamAPlayers[0].trim().length > 0 && teamAPlayers[1].trim().length > 0 && teamBPlayers[0].trim().length > 0 && teamBPlayers[1].trim().length > 0);
+    !isDoubles || (teamAPlayers[0].name.trim().length > 0 && teamAPlayers[1].name.trim().length > 0 && teamBPlayers[0].name.trim().length > 0 && teamBPlayers[1].name.trim().length > 0);
 
   const pointsToWinNumber = parseInt(pointsToWin ?? "", 10);
   const isPointsToWinValid = !!pointsToWin && pointsToWinNumber > 0;
@@ -279,7 +282,7 @@ export default function PickleballNewMatchScreen() {
     teamBName.trim().length > 0 &&
     !namesClash(teamAName, teamBName) &&
     doublesPlayersValid &&
-    (!isDoubles || !hasDuplicateNames([...teamAPlayers, ...teamBPlayers])) &&
+    (!isDoubles || !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])) &&
     !!playMode &&
     !!scoringMode &&
     !!firstServingTeam &&
@@ -293,8 +296,8 @@ export default function PickleballNewMatchScreen() {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers: isDoubles ? teamAPlayers.map((p) => p.trim()).filter(Boolean) : [],
-        teamBPlayers: isDoubles ? teamBPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        teamAPlayers: isDoubles ? teamAPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
+        teamBPlayers: isDoubles ? teamBPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
         scoringMode,
         playMode,
         firstServingTeam,

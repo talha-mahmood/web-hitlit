@@ -11,8 +11,13 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
 import type { MatchFormat, PlayMode, Player } from "../../lib/tennisScoring";
+
+// See NewMatchScreen.tsx (cricket) for why this carries a sourceId — only
+// used for the doubles Player 1/Player 2 slots here, since the singles
+// Name field (also used as the doubles team label) stays plain text.
+type PlayerEntry = NamedEntry;
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 
@@ -100,29 +105,29 @@ function TeamCard({
   name: string;
   onNameChange: (v: string) => void;
   playMode: PlayMode;
-  players: [string, string];
-  onPlayersChange: (players: [string, string]) => void;
+  players: [PlayerEntry, PlayerEntry];
+  onPlayersChange: (players: [PlayerEntry, PlayerEntry]) => void;
   serverIndex: 0 | 1;
   onServerIndexChange: (v: 0 | 1) => void;
   locked?: boolean;
   // The sibling team's current name/roster — a name can't be reused across
   // teams, not just within this one.
   otherTeamName: string;
-  otherTeamPlayers: [string, string];
+  otherTeamPlayers: [PlayerEntry, PlayerEntry];
 }) {
   const isDoubles = playMode === "DOUBLES";
   const [showGroupModal, setShowGroupModal] = useState(false);
-  const emptySlotCount = players.filter((p) => !p.trim()).length;
+  const emptySlotCount = players.filter((p) => !p.name.trim()).length;
   const teamNameClash = namesClash(name, otherTeamName);
-  const slot0Duplicate = isDoubles && !!players[0].trim() && isDuplicateName(players[0], [players[1], ...otherTeamPlayers]);
-  const slot1Duplicate = isDoubles && !!players[1].trim() && isDuplicateName(players[1], [players[0], ...otherTeamPlayers]);
+  const slot0Duplicate = isDoubles && !!players[0].name.trim() && entryCollides(players[0], [players[1], ...otherTeamPlayers]);
+  const slot1Duplicate = isDoubles && !!players[1].name.trim() && entryCollides(players[1], [players[0], ...otherTeamPlayers]);
 
-  const handleAddFromGroup = (names: string[]) => {
-    const next: [string, string] = [...players];
+  const handleAddFromGroup = (picked: { userId: string; name: string }[]) => {
+    const next: [PlayerEntry, PlayerEntry] = [...players];
     let i = 0;
-    for (let slot = 0; slot < 2 && i < names.length; slot++) {
-      if (!next[slot].trim()) {
-        next[slot] = names[i];
+    for (let slot = 0; slot < 2 && i < picked.length; slot++) {
+      if (!next[slot].name.trim()) {
+        next[slot] = { name: picked[i].name, sourceId: picked[i].userId };
         i++;
       }
     }
@@ -177,8 +182,8 @@ function TeamCard({
               Player 1 <Text className="text-red-500">*</Text>
             </Text>
             <FieldInput
-              value={players[0]}
-              onChangeText={(v) => onPlayersChange([v, players[1]])}
+              value={players[0].name}
+              onChangeText={(v) => onPlayersChange([{ name: v, sourceId: null }, players[1]])}
               placeholder="e.g. Alex"
               maxLength={40}
               editable={!locked}
@@ -194,8 +199,8 @@ function TeamCard({
               Player 2 <Text className="text-red-500">*</Text>
             </Text>
             <FieldInput
-              value={players[1]}
-              onChangeText={(v) => onPlayersChange([players[0], v])}
+              value={players[1].name}
+              onChangeText={(v) => onPlayersChange([players[0], { name: v, sourceId: null }])}
               placeholder="e.g. Jo"
               maxLength={40}
               editable={!locked}
@@ -223,8 +228,8 @@ function TeamCard({
             <Text className="text-ink font-semibold text-sm mb-2 mt-4">Serves for {name.trim() || `Team ${letter}`}</Text>
             <PillRow
               options={([0, 1] as const)
-                .filter((i) => players[i].trim().length > 0)
-                .map((i) => ({ label: players[i].trim(), value: String(i) as "0" | "1" }))}
+                .filter((i) => players[i].name.trim().length > 0)
+                .map((i) => ({ label: players[i].name.trim(), value: String(i) as "0" | "1" }))}
               value={String(serverIndex) as "0" | "1"}
               onChange={(v) => onServerIndexChange(v === "0" ? 0 : 1)}
             />
@@ -235,9 +240,9 @@ function TeamCard({
       <AddPlayersFromGroupModal
         visible={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        existingNames={isDoubles ? [...players.filter(Boolean), ...otherTeamPlayers.filter(Boolean)] : [name, otherTeamName].filter(Boolean)}
+        excludedUserIds={isDoubles ? [...players, ...otherTeamPlayers].map((p) => p.sourceId).filter((id): id is string => !!id) : []}
         maxSelect={isDoubles ? emptySlotCount : 1}
-        onAdd={(names) => (isDoubles ? handleAddFromGroup(names) : onNameChange(names[0]))}
+        onAdd={(picked) => (isDoubles ? handleAddFromGroup(picked) : onNameChange(picked[0].name))}
       />
     </View>
   );
@@ -260,13 +265,13 @@ export default function TennisNewMatchScreen() {
   const [playMode, setPlayMode] = useState<PlayMode | null>(prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
   const [playerAName, setPlayerAName] = useState(prefill?.teamAName ?? "");
   const [playerBName, setPlayerBName] = useState(prefill?.teamBName ?? "");
-  const [playerAPlayers, setPlayerAPlayers] = useState<[string, string]>([
-    prefill?.teamAPlayers[0] ?? "",
-    prefill?.teamAPlayers[1] ?? "",
+  const [playerAPlayers, setPlayerAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
+    { name: prefill?.teamAPlayers[0] ?? "", sourceId: null },
+    { name: prefill?.teamAPlayers[1] ?? "", sourceId: null },
   ]);
-  const [playerBPlayers, setPlayerBPlayers] = useState<[string, string]>([
-    prefill?.teamBPlayers[0] ?? "",
-    prefill?.teamBPlayers[1] ?? "",
+  const [playerBPlayers, setPlayerBPlayers] = useState<[PlayerEntry, PlayerEntry]>([
+    { name: prefill?.teamBPlayers[0] ?? "", sourceId: null },
+    { name: prefill?.teamBPlayers[1] ?? "", sourceId: null },
   ]);
   const [playerAServerIndex, setPlayerAServerIndex] = useState<0 | 1>(0);
   const [playerBServerIndex, setPlayerBServerIndex] = useState<0 | 1>(0);
@@ -278,10 +283,10 @@ export default function TennisNewMatchScreen() {
   const isDoubles = playMode === "DOUBLES";
   const doublesPlayersValid =
     !isDoubles ||
-    (playerAPlayers[0].trim().length > 0 &&
-      playerAPlayers[1].trim().length > 0 &&
-      playerBPlayers[0].trim().length > 0 &&
-      playerBPlayers[1].trim().length > 0);
+    (playerAPlayers[0].name.trim().length > 0 &&
+      playerAPlayers[1].name.trim().length > 0 &&
+      playerBPlayers[0].name.trim().length > 0 &&
+      playerBPlayers[1].name.trim().length > 0);
 
   const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
   const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
@@ -291,7 +296,7 @@ export default function TennisNewMatchScreen() {
     playerBName.trim().length > 0 &&
     !namesClash(playerAName, playerBName) &&
     doublesPlayersValid &&
-    (!isDoubles || !hasDuplicateNames([...playerAPlayers, ...playerBPlayers])) &&
+    (!isDoubles || !hasBlockingDuplicateNames([...playerAPlayers, ...playerBPlayers])) &&
     !!playMode &&
     !!format &&
     !!firstServer &&
@@ -304,8 +309,8 @@ export default function TennisNewMatchScreen() {
         userId,
         playerAName: playerAName.trim(),
         playerBName: playerBName.trim(),
-        playerAPlayers: isDoubles ? playerAPlayers.map((p) => p.trim()).filter(Boolean) : [],
-        playerBPlayers: isDoubles ? playerBPlayers.map((p) => p.trim()).filter(Boolean) : [],
+        playerAPlayers: isDoubles ? playerAPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
+        playerBPlayers: isDoubles ? playerBPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
         format,
         firstServer,
         gamesPerSet: gamesPerSetNumber,

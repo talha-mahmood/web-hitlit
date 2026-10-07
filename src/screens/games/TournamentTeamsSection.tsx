@@ -63,27 +63,31 @@ function MemberAvatar({
   avatar,
   colorIndex,
   onRemove,
+  onPressAvatar,
 }: {
   name: string | null;
   avatar: string | null;
   colorIndex: number;
   onRemove?: () => void;
+  onPressAvatar?: () => void;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   const color = MEMBER_COLORS[colorIndex % MEMBER_COLORS.length];
   return (
     <View className="items-center" style={{ width: 56 }}>
       <View style={{ position: "relative" }}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-        ) : (
-          <View
-            className="w-10 h-10 rounded-full items-center justify-center"
-            style={{ backgroundColor: color }}
-          >
-            <Text className="text-white font-bold text-sm">{initials}</Text>
-          </View>
-        )}
+        <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+          ) : (
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{ backgroundColor: color }}
+            >
+              <Text className="text-white font-bold text-sm">{initials}</Text>
+            </View>
+          )}
+        </Pressable>
         <View
           style={{
             position: "absolute",
@@ -171,6 +175,7 @@ function TeamCard({
   // "the game" there instead.
   noun: "tournament" | "game";
 }) {
+  const navigation = useNavigation<Nav>();
   const joinedMembers = team.tournament_team_members.filter((m) => m.status === "JOINED");
   const myMembership = userId
     ? team.tournament_team_members.find((m) => m.user_id === userId)
@@ -279,6 +284,7 @@ function TeamCard({
                   ? () => onRemoveMember(m.id, m.profiles?.full_name ?? null)
                   : undefined
               }
+              onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: m.user_id })}
             />
           ))}
         </View>

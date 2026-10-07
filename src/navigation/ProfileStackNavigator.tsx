@@ -11,6 +11,7 @@ import TournamentMatchesScreen from "../screens/games/TournamentMatchesScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
+import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
 import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
 import BookingCheckoutScreen from "../screens/venues/BookingCheckoutScreen";
@@ -52,6 +53,11 @@ export type ProfileStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
+  // Reachable by tapping any member's avatar in a group/game/chat screen
+  // hosted here — same param shape as Home/CommunityStackNavigator's own
+  // PlayerProfile, so every screen shared across stacks can navigate to it
+  // the same way regardless of which tab it was opened from.
+  PlayerProfile: { userId: string; sportId?: string; sportName?: string };
   // Reachable from a tournament's "Book Venue" button (see GameDetailScreen)
   // and its "Go To Scorecard" button (see TournamentMatchesScreen) — hosted
   // here too so browsing/booking from Profile never jumps the tab
@@ -95,6 +101,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
+      <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />

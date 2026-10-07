@@ -26,6 +26,7 @@ import TableTennisNewMatchScreen from "../screens/scorecard/TableTennisNewMatchS
 import TableTennisLiveScoringScreen from "../screens/scorecard/TableTennisLiveScoringScreen";
 import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen";
 import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
+import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
@@ -61,6 +62,7 @@ export type GamesStackParamList = {
   TableTennisLiveScoring: { matchId: string };
   FootballNewMatch: { prefill?: ScorecardPrefill } | undefined;
   FootballLiveScoring: { matchId: string };
+  PlayerProfile: { userId: string; sportId?: string; sportName?: string };
 };
 
 const Stack = createNativeStackNavigator<GamesStackParamList>();
@@ -95,6 +97,7 @@ export default function GamesStackNavigator() {
       <Stack.Screen name="TableTennisLiveScoring" component={TableTennisLiveScoringScreen} />
       <Stack.Screen name="FootballNewMatch" component={FootballNewMatchScreen} />
       <Stack.Screen name="FootballLiveScoring" component={FootballLiveScoringScreen} />
+      <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
     </Stack.Navigator>
   );
 }

@@ -11,9 +11,12 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
+
+// See NewMatchScreen.tsx (cricket) for why this carries a sourceId.
+type PlayerEntry = NamedEntry;
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "FootballNewMatch">;
@@ -80,12 +83,12 @@ function AddPlayersField({
   playersLocked,
   otherTeamPlayers,
 }: {
-  players: string[];
-  onPlayersChange: (players: string[]) => void;
+  players: PlayerEntry[];
+  onPlayersChange: (players: PlayerEntry[]) => void;
   playersLocked?: boolean;
   // The sibling team's current roster — a name can't be reused across
   // teams, not just within this one.
-  otherTeamPlayers: string[];
+  otherTeamPlayers: PlayerEntry[];
 }) {
   const [draft, setDraft] = useState("");
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -94,11 +97,11 @@ function AddPlayersField({
   const addPlayer = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    if (isDuplicateName(trimmed, [...players, ...otherTeamPlayers])) {
+    if (entryCollides({ name: trimmed, sourceId: null }, [...players, ...otherTeamPlayers])) {
       setAddError("Someone with this name is already in the match.");
       return;
     }
-    onPlayersChange([...players, trimmed]);
+    onPlayersChange([...players, { name: trimmed, sourceId: null }]);
     setDraft("");
     setAddError(null);
   };
@@ -151,11 +154,11 @@ function AddPlayersField({
         <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
           {players.map((p, i) => (
             <View
-              key={`${p}-${i}`}
+              key={`${p.name}-${i}`}
               className="flex-row items-center bg-primary-light rounded-full pl-3 pr-2 py-1.5"
               style={{ gap: 6 }}
             >
-              <Text className="text-primary text-sm font-medium">{p}</Text>
+              <Text className="text-primary text-sm font-medium">{p.name}</Text>
               {!playersLocked && (
                 <Pressable onPress={() => onPlayersChange(players.filter((_, idx) => idx !== i))} hitSlop={6}>
                   <Ionicons name="close-circle" size={16} color={colors.primary} />
@@ -169,8 +172,8 @@ function AddPlayersField({
       <AddPlayersFromGroupModal
         visible={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        existingNames={[...players, ...otherTeamPlayers]}
-        onAdd={(names) => onPlayersChange([...players, ...names])}
+        excludedUserIds={[...players, ...otherTeamPlayers].map((p) => p.sourceId).filter((id): id is string => !!id)}
+        onAdd={(picked) => onPlayersChange([...players, ...picked.map((p) => ({ name: p.name, sourceId: p.userId }))])}
       />
     </>
   );
@@ -188,8 +191,12 @@ export default function FootballNewMatchScreen() {
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
   // Players come pre-filled from the tournament roster and are locked, same
   // as cricket's NewMatchScreen.
-  const [teamAPlayers, setTeamAPlayers] = useState<string[]>(prefill?.teamAPlayers ?? []);
-  const [teamBPlayers, setTeamBPlayers] = useState<string[]>(prefill?.teamBPlayers ?? []);
+  const [teamAPlayers, setTeamAPlayers] = useState<PlayerEntry[]>(
+    (prefill?.teamAPlayers ?? []).map((name) => ({ name, sourceId: null }))
+  );
+  const [teamBPlayers, setTeamBPlayers] = useState<PlayerEntry[]>(
+    (prefill?.teamBPlayers ?? []).map((name) => ({ name, sourceId: null }))
+  );
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
   const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
@@ -210,7 +217,7 @@ export default function FootballNewMatchScreen() {
     teamAName.trim().length > 0 &&
     teamBName.trim().length > 0 &&
     !namesClash(teamAName, teamBName) &&
-    !hasDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
+    !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
     !!requiresWinner &&
     isMatchDurationValid &&
     isExtraTimeDurationValid;
@@ -222,8 +229,8 @@ export default function FootballNewMatchScreen() {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers,
-        teamBPlayers,
+        teamAPlayers: teamAPlayers.map((p) => p.name),
+        teamBPlayers: teamBPlayers.map((p) => p.name),
         requiresWinner: needsExtraTime,
         halfDurationMinutes,
         // Not needed for a match that can end in a draw, but the column is

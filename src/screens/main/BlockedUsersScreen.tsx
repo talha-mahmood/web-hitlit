@@ -1,15 +1,19 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useBlockedUsers, useUnblockUser } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { BlockedUser } from "../../lib/api/moderation";
+import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
+type Nav = NativeStackNavigationProp<ProfileStackParamList, "BlockedUsers">;
+
 export default function BlockedUsersScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: blocked, isLoading } = useBlockedUsers(userId);
@@ -51,13 +55,15 @@ export default function BlockedUsersScreen() {
             const name = item.profiles?.full_name ?? "Player";
             return (
               <View className="flex-row items-center bg-white rounded-xl px-4 py-3 mb-2 border border-border">
-                {item.profiles?.avatar ? (
-                  <Image source={{ uri: item.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light mr-3" />
-                ) : (
-                  <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center mr-3">
-                    <Text className="text-primary font-bold">{name.charAt(0).toUpperCase()}</Text>
-                  </View>
-                )}
+                <Pressable onPress={() => navigation.navigate("PlayerProfile", { userId: item.blocked_id })}>
+                  {item.profiles?.avatar ? (
+                    <Image source={{ uri: item.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light mr-3" />
+                  ) : (
+                    <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center mr-3">
+                      <Text className="text-primary font-bold">{name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                  )}
+                </Pressable>
                 <Text className="flex-1 text-ink font-medium">{name}</Text>
                 <Pressable onPress={() => handleUnblock(item)} className="px-3 py-1.5 rounded-full border border-border">
                   <Text className="text-ink text-sm font-medium">Unblock</Text>

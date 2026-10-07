@@ -12,8 +12,15 @@ import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { isDuplicateName, namesClash, hasDuplicateNames } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
+
+// A roster entry typed by hand has no real identity behind it (sourceId:
+// null) — two of those with the same name are genuinely indistinguishable,
+// so that still blocks. One added via "Add From a Group" carries its real
+// squad_members row id, so it can share a display name with a different
+// real person without being treated as a duplicate (see matchNameValidation).
+type PlayerEntry = NamedEntry;
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "NewMatch">;
@@ -66,16 +73,16 @@ function TeamCard({
   otherTeamPlayers,
 }: {
   letter: "A" | "B";
-  players: string[];
+  players: PlayerEntry[];
   name: string;
   onNameChange: (v: string) => void;
-  onPlayersChange: (players: string[]) => void;
+  onPlayersChange: (players: PlayerEntry[]) => void;
   nameLocked?: boolean;
   playersLocked?: boolean;
   // The sibling team's current name/roster — needed so a name can't be
   // reused across teams, not just within this one.
   otherTeamName: string;
-  otherTeamPlayers: string[];
+  otherTeamPlayers: PlayerEntry[];
 }) {
   const [draft, setDraft] = useState("");
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -84,11 +91,13 @@ function TeamCard({
   const addPlayer = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    if (isDuplicateName(trimmed, [...players, ...otherTeamPlayers])) {
+    // Typed by hand, so it has no sourceId — can't be proven different from
+    // an existing same-named entry, so any collision here still blocks.
+    if (entryCollides({ name: trimmed, sourceId: null }, [...players, ...otherTeamPlayers])) {
       setAddError("Someone with this name is already in the match.");
       return;
     }
-    onPlayersChange([...players, trimmed]);
+    onPlayersChange([...players, { name: trimmed, sourceId: null }]);
     setDraft("");
     setAddError(null);
   };
@@ -201,11 +210,11 @@ function TeamCard({
           <View className="flex-row flex-wrap mt-3" style={{ gap: 8 }}>
             {players.map((p, i) => (
               <View
-                key={`${p}-${i}`}
+                key={`${p.name}-${i}`}
                 className="flex-row items-center bg-primary-light rounded-full pl-3 pr-2 py-1.5"
                 style={{ gap: 6 }}
               >
-                <Text className="text-primary text-sm font-medium">{p}</Text>
+                <Text className="text-primary text-sm font-medium">{p.name}</Text>
                 {!playersLocked && (
                   <Pressable onPress={() => onPlayersChange(players.filter((_, idx) => idx !== i))} hitSlop={6}>
                     <Ionicons name="close-circle" size={16} color={colors.primary} />
@@ -220,8 +229,8 @@ function TeamCard({
       <AddPlayersFromGroupModal
         visible={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        existingNames={[...players, ...otherTeamPlayers]}
-        onAdd={(names) => onPlayersChange([...players, ...names])}
+        excludedUserIds={[...players, ...otherTeamPlayers].map((p) => p.sourceId).filter((id): id is string => !!id)}
+        onAdd={(picked) => onPlayersChange([...players, ...picked.map((p) => ({ name: p.name, sourceId: p.userId }))])}
       />
     </View>
   );
@@ -238,9 +247,15 @@ export default function NewMatchScreen() {
 
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
-  // Players come pre-filled from the tournament roster and are locked.
-  const [teamAPlayers, setTeamAPlayers] = useState<string[]>(prefill?.teamAPlayers ?? []);
-  const [teamBPlayers, setTeamBPlayers] = useState<string[]>(prefill?.teamBPlayers ?? []);
+  // Players come pre-filled from the tournament roster and are locked. Those
+  // are plain names off the roster, not a verified group pick, so they
+  // start with no sourceId — same as typing them by hand.
+  const [teamAPlayers, setTeamAPlayers] = useState<PlayerEntry[]>(
+    (prefill?.teamAPlayers ?? []).map((name) => ({ name, sourceId: null }))
+  );
+  const [teamBPlayers, setTeamBPlayers] = useState<PlayerEntry[]>(
+    (prefill?.teamBPlayers ?? []).map((name) => ({ name, sourceId: null }))
+  );
   const [oversLimit, setOversLimit] = useState<string | null>(null);
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
@@ -252,7 +267,7 @@ export default function NewMatchScreen() {
     !namesClash(teamAName, teamBName) &&
     teamAPlayers.length >= 2 &&
     teamBPlayers.length >= 2 &&
-    !hasDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
+    !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
     !!oversLimit &&
     parseInt(oversLimit, 10) > 0 &&
     !!tossWinner &&
@@ -265,8 +280,8 @@ export default function NewMatchScreen() {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers,
-        teamBPlayers,
+        teamAPlayers: teamAPlayers.map((p) => p.name),
+        teamBPlayers: teamBPlayers.map((p) => p.name),
         oversLimit: parseInt(oversLimit, 10),
         tossWinner,
         tossDecision,

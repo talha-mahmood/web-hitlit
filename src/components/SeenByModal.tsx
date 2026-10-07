@@ -15,11 +15,13 @@ export default function SeenByModal({
   onClose,
   seenBy,
   isLoading,
+  onPressUser,
 }: {
   visible: boolean;
   onClose: () => void;
   seenBy: SeenByUser[];
   isLoading: boolean;
+  onPressUser?: (userId: string) => void;
 }) {
   const insets = useSafeAreaInsets();
 
@@ -46,7 +48,13 @@ export default function SeenByModal({
               {seenBy.map((u) => {
                 const initials = (u.fullName ?? "?").charAt(0).toUpperCase();
                 return (
-                  <View key={u.userId} className="flex-row items-center py-2.5" style={{ gap: 10 }}>
+                  <Pressable
+                    key={u.userId}
+                    onPress={onPressUser ? () => onPressUser(u.userId) : undefined}
+                    disabled={!onPressUser}
+                    className="flex-row items-center py-2.5"
+                    style={{ gap: 10 }}
+                  >
                     {u.avatar ? (
                       <Image source={{ uri: u.avatar }} className="w-9 h-9 rounded-full bg-primary-light" />
                     ) : (
@@ -58,7 +66,7 @@ export default function SeenByModal({
                       {u.fullName ?? "Player"}
                     </Text>
                     <Text className="text-muted text-xs">{formatSeenTime(u.lastReadAt)}</Text>
-                  </View>
+                  </Pressable>
                 );
               })}
             </ScrollView>

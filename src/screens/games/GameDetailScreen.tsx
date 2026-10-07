@@ -150,11 +150,11 @@ function InfoRow({
   );
 }
 
-function PlayerAvatar({ name, avatar, isCreator, onRemove }: { name: string | null; avatar: string | null; isCreator: boolean; onRemove?: () => void }) {
+function PlayerAvatar({ name, avatar, isCreator, onRemove, onPressAvatar }: { name: string | null; avatar: string | null; isCreator: boolean; onRemove?: () => void; onPressAvatar?: () => void }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 64 }}>
-      <View>
+      <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
         {avatar ? (
           <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
         ) : (
@@ -167,7 +167,7 @@ function PlayerAvatar({ name, avatar, isCreator, onRemove }: { name: string | nu
             <Ionicons name="close" size={11} color="white" />
           </Pressable>
         )}
-      </View>
+      </Pressable>
       {isCreator && (
         <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Host</Text>
@@ -196,18 +196,20 @@ function skillLevelLabel(skill: string | null): string {
   return skill.charAt(0).toUpperCase() + skill.slice(1);
 }
 
-function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject, disabled }: { name: string | null; avatar: string | null; skill: string | null; location: string | null; onApprove: () => void; onReject: () => void; disabled: boolean }) {
+function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject, onPressAvatar, disabled }: { name: string | null; avatar: string | null; skill: string | null; location: string | null; onApprove: () => void; onReject: () => void; onPressAvatar?: () => void; disabled: boolean }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="py-3 border-b border-border">
       <View className="flex-row items-center" style={{ gap: 12 }}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-        ) : (
-          <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-            <Text className="text-primary font-bold">{initials}</Text>
-          </View>
-        )}
+        <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+          ) : (
+            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+              <Text className="text-primary font-bold">{initials}</Text>
+            </View>
+          )}
+        </Pressable>
         <View className="flex-1">
           <Text className="text-ink font-medium text-sm" numberOfLines={1}>
             {name ?? "Player"}
@@ -812,7 +814,7 @@ export default function GameDetailScreen() {
               )}
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
                 {joinedPlayers.map((p) => (
-                  <PlayerAvatar key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} isCreator={p.user_id === game.creator_id} onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? null) : undefined} />
+                  <PlayerAvatar key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} isCreator={p.user_id === game.creator_id} onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? null) : undefined} onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: p.user_id })} />
                 ))}
                 {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
                   <EmptySlot key={`empty-${i}`} />
@@ -826,7 +828,7 @@ export default function GameDetailScreen() {
                 <Text className="text-ink font-semibold text-sm mb-1">Join Requests ({pendingRequests.length})</Text>
                 <Text className="text-muted text-xs mb-2">Approve players before they're added to the game.</Text>
                 {pendingRequests.map((p) => (
-                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} />
+                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: p.user_id })} />
                 ))}
                 {isFull && <Text className="text-orange-600 text-xs mt-2">Game is full — reject remaining requests or remove a player to approve more.</Text>}
               </View>
@@ -836,13 +838,18 @@ export default function GameDetailScreen() {
 
         {/* Host */}
         <View className="px-3.5 mt-6 flex-row items-center" style={{ gap: 12 }}>
-          {game.profiles?.avatar ? (
-            <Image source={{ uri: game.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-          ) : (
-            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold">{(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}</Text>
-            </View>
-          )}
+          <Pressable
+            onPress={() => game.profiles?.id && navigation.navigate("PlayerProfile", { userId: game.profiles.id })}
+            disabled={!game.profiles?.id}
+          >
+            {game.profiles?.avatar ? (
+              <Image source={{ uri: game.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-primary font-bold">{(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
+          </Pressable>
           <View>
             <Text className="text-muted text-xs">Hosted by</Text>
             <Text className="text-ink font-semibold text-sm">{game.profiles?.full_name ?? "Unknown"}</Text>

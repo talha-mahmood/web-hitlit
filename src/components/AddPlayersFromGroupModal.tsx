@@ -16,16 +16,26 @@ export default function AddPlayersFromGroupModal({
   visible,
   onClose,
   onAdd,
-  existingNames,
+  excludedUserIds,
   maxSelect = Infinity,
 }: {
   visible: boolean;
   onClose: () => void;
-  onAdd: (names: string[]) => void;
-  // Names already in the list (matched case-insensitively) — shown but
-  // can't be picked again, so the same person never ends up listed twice.
-  existingNames: string[];
-  // How many more names the caller can actually accept right now — e.g. 1
+  // Each pick carries its own real account id (profiles.id, i.e. the
+  // squad_members row's user_id — not the row id itself), so the match
+  // roster can tell two different real people apart even if they happen to
+  // share a display name (see matchNameValidation.ts) — unlike a manually
+  // typed name, which has no such identity behind it. Keying on the account
+  // id rather than the membership row also means the same person shows as
+  // already-added here even when picked from a *different* group they're
+  // also in.
+  onAdd: (picked: { userId: string; name: string }[]) => void;
+  // Accounts already added to this match (by user id, not name or
+  // membership row) — shown but can't be picked again here, regardless of
+  // which group they're being picked from. Someone else with the same
+  // display name has a different user id and stays pickable.
+  excludedUserIds: string[];
+  // How many more picks the caller can actually accept right now — e.g. 1
   // for a singles player field, or however many empty doubles slots are
   // left. Left unlimited for a free-form roster like cricket/football.
   maxSelect?: number;
@@ -46,7 +56,7 @@ export default function AddPlayersFromGroupModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, squads?.length]);
 
-  const existingLower = new Set(existingNames.map((n) => n.trim().toLowerCase()));
+  const excludedIds = new Set(excludedUserIds);
   const activeMembers = (selectedSquad?.squad_members ?? []).filter((m) => m.status === "ACTIVE");
 
   const toggleMember = (id: string) => {
@@ -62,12 +72,12 @@ export default function AddPlayersFromGroupModal({
   };
 
   const handleAdd = () => {
-    const names = activeMembers
+    const picked = activeMembers
       .filter((m) => selectedIds.has(m.id))
-      .map((m) => m.profiles?.full_name?.trim())
-      .filter((n): n is string => !!n);
-    if (names.length === 0) return;
-    onAdd(names);
+      .map((m) => ({ userId: m.user_id, name: m.profiles?.full_name?.trim() ?? "" }))
+      .filter((p) => !!p.name);
+    if (picked.length === 0) return;
+    onAdd(picked);
     onClose();
   };
 
@@ -132,7 +142,7 @@ export default function AddPlayersFromGroupModal({
                     <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={{ gap: 8 }}>
                       {activeMembers.map((m) => {
                         const name = m.profiles?.full_name?.trim() ?? "";
-                        const alreadyAdded = !!name && existingLower.has(name.toLowerCase());
+                        const alreadyAdded = excludedIds.has(m.user_id);
                         const selected = selectedIds.has(m.id);
                         return (
                           <Pressable

@@ -126,6 +126,7 @@ function MemberAvatar({
   isOwner,
   isHost,
   onOpenMenu,
+  onPressAvatar,
 }: {
   name: string | null;
   avatar: string | null;
@@ -135,11 +136,15 @@ function MemberAvatar({
   // members a host/owner is actually allowed to manage (never the owner's
   // own row).
   onOpenMenu?: () => void;
+  // Opens that member's player profile — a separate tap target from the
+  // menu button above, so managing a member and viewing their profile never
+  // collide.
+  onPressAvatar?: () => void;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 64 }}>
-      <View>
+      <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
         {avatar ? (
           <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
         ) : (
@@ -163,7 +168,7 @@ function MemberAvatar({
             <Ionicons name="ellipsis-vertical" size={11} color={colors.ink} />
           </Pressable>
         )}
-      </View>
+      </Pressable>
       {isOwner ? (
         <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Captain</Text>
@@ -203,6 +208,7 @@ function SquadPendingRequestRow({
   location,
   onApprove,
   onReject,
+  onPressAvatar,
   disabled,
 }: {
   name: string | null;
@@ -211,19 +217,22 @@ function SquadPendingRequestRow({
   location: string | null;
   onApprove: () => void;
   onReject: () => void;
+  onPressAvatar?: () => void;
   disabled: boolean;
 }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="py-3 border-b border-border">
       <View className="flex-row items-center" style={{ gap: 12 }}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-        ) : (
-          <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-            <Text className="text-primary font-bold">{initials}</Text>
-          </View>
-        )}
+        <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+          ) : (
+            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+              <Text className="text-primary font-bold">{initials}</Text>
+            </View>
+          )}
+        </Pressable>
         <View className="flex-1">
           <Text className="text-ink font-medium text-sm" numberOfLines={1}>
             {name ?? "Player"}
@@ -860,6 +869,7 @@ export default function SquadDetailScreen() {
                       ? () => handleOpenMemberMenu(m.id, m.profiles?.full_name ?? null, m.role === "host")
                       : undefined
                   }
+                  onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: m.user_id })}
                 />
               );
             })}
@@ -931,6 +941,7 @@ export default function SquadDetailScreen() {
                 disabled={isApprovingOrRejecting || isFull}
                 onApprove={() => handleApprove(m.id, m.profiles?.full_name ?? null)}
                 onReject={() => handleReject(m.id, m.profiles?.full_name ?? null)}
+                onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: m.user_id })}
               />
             ))}
             {isFull && (
@@ -943,18 +954,23 @@ export default function SquadDetailScreen() {
 
         {/* Owner */}
         <View className="px-3.5 mt-6 flex-row items-center" style={{ gap: 12 }}>
-          {squad.profiles?.avatar ? (
-            <Image
-              source={{ uri: squad.profiles.avatar }}
-              className="w-10 h-10 rounded-full bg-primary-light"
-            />
-          ) : (
-            <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold">
-                {(squad.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
+          <Pressable
+            onPress={() => squad.profiles?.id && navigation.navigate("PlayerProfile", { userId: squad.profiles.id })}
+            disabled={!squad.profiles?.id}
+          >
+            {squad.profiles?.avatar ? (
+              <Image
+                source={{ uri: squad.profiles.avatar }}
+                className="w-10 h-10 rounded-full bg-primary-light"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-primary font-bold">
+                  {(squad.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </Pressable>
           <View>
             <Text className="text-muted text-xs">Captained by</Text>
             <Text className="text-ink font-semibold text-sm">

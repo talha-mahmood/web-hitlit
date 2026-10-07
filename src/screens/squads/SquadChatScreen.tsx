@@ -106,6 +106,7 @@ function MessageBubble({
   onReply,
   onDelete,
   onJumpToParent,
+  onPressAvatar,
 }: {
   message: SquadMessage;
   isOwn: boolean;
@@ -115,6 +116,7 @@ function MessageBubble({
   onReply: () => void;
   onDelete: () => void;
   onJumpToParent: () => void;
+  onPressAvatar: () => void;
 }) {
   const name = message.profiles?.full_name ?? "Member";
   const initials = name.charAt(0).toUpperCase();
@@ -128,13 +130,15 @@ function MessageBubble({
     >
       {!isOwn && (
         <View style={{ position: "relative" }}>
-          {message.profiles?.avatar ? (
-            <Image source={{ uri: message.profiles.avatar }} className="w-11 h-11 rounded-full bg-primary-light" />
-          ) : (
-            <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center">
-              <Text className="text-primary font-bold text-sm">{initials}</Text>
-            </View>
-          )}
+          <Pressable onPress={onPressAvatar}>
+            {message.profiles?.avatar ? (
+              <Image source={{ uri: message.profiles.avatar }} className="w-11 h-11 rounded-full bg-primary-light" />
+            ) : (
+              <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center">
+                <Text className="text-primary font-bold text-sm">{initials}</Text>
+              </View>
+            )}
+          </Pressable>
           <View
             style={{
               position: "absolute",
@@ -380,6 +384,7 @@ export default function SquadChatScreen() {
               onReply={() => setReplyTarget(item)}
               onDelete={() => handleDelete(item)}
               onJumpToParent={() => item.parent_id && handleJumpToParent(item.parent_id)}
+              onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: item.sender_id })}
               onLongPress={() => {
                 if (!userId) return;
                 if (item.sender_id === userId) {
@@ -488,6 +493,7 @@ export default function SquadChatScreen() {
         onClose={() => setSeenByTarget(null)}
         seenBy={seenBy ?? []}
         isLoading={seenByLoading}
+        onPressUser={(id) => navigation.navigate("PlayerProfile", { userId: id })}
       />
     </KeyboardAvoidingView>
   );

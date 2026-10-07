@@ -4,6 +4,7 @@ import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
+import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 
 export type SquadsStackParamList = {
   SquadsList: undefined;
@@ -11,6 +12,7 @@ export type SquadsStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
+  PlayerProfile: { userId: string; sportId?: string; sportName?: string };
 };
 
 const Stack = createNativeStackNavigator<SquadsStackParamList>();
@@ -23,6 +25,7 @@ export default function SquadsStackNavigator() {
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
+      <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
     </Stack.Navigator>
   );
 }
