@@ -114,7 +114,7 @@ export function HomeSquadCard({
       style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, flex: 1 }}
       scaleTo={0.98}
     >
-      <View className="border border-border rounded-2xl bg-white p-3" style={{ minHeight: 108 }}>
+      <View className="border border-border rounded-2xl bg-white p-3">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           {photo ? (
             <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
