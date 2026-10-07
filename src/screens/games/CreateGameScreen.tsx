@@ -812,7 +812,7 @@ export default function CreateGameScreen() {
         />
         {venueId && (
           <Pressable
-            onPress={() => navigation.navigate("Venues", { screen: "VenueDetail", params: { venueId } })}
+            onPress={() => navigation.navigate("VenueDetail", { venueId })}
             className="flex-row items-center justify-between mt-2 px-1 py-1"
           >
             <Text className="text-primary text-sm font-medium">View venue details</Text>
