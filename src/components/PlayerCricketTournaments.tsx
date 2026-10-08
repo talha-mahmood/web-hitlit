@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { View, Text, Image, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, cardShadow } from "../constants/theme";
-import Bouncy from "./Bouncy";
+import { colors } from "../constants/theme";
+import PlayerCricketEntityCard from "./PlayerCricketEntityCard";
 import { supabase } from "../lib/supabase";
 import { usePlayerCricketMatches } from "./PlayerCricketOverview";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
@@ -68,28 +68,19 @@ export default function PlayerCricketTournaments({ fullName }: { fullName: strin
   return (
     <View className="mt-4">
       {tournaments.map((t) => (
-        <Bouncy
+        <PlayerCricketEntityCard
           key={t.gameId}
+          photoUrl={t.iconUrl}
+          fallbackIcon="trophy"
+          title={t.title}
+          subtitle={
+            t.gameDate
+              ? new Date(t.gameDate).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })
+              : null
+          }
+          sportName="cricket"
           onPress={() => navigation.navigate("GameDetail", { gameId: t.gameId })}
-          scaleTo={0.98}
-          style={{ ...cardShadow, borderRadius: 20, marginBottom: 12, overflow: "hidden" }}
-        >
-          <View style={{ height: 120, backgroundColor: "#1F2937", justifyContent: "flex-end" }}>
-            {t.iconUrl ? (
-              <Image source={{ uri: t.iconUrl }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" />
-            ) : (
-              <Ionicons name="trophy" size={40} color="rgba(255,255,255,0.25)" style={{ position: "absolute", right: 16, top: 16 }} />
-            )}
-            <View style={{ padding: 14, backgroundColor: "rgba(0,0,0,0.35)" }}>
-              <Text className="text-white font-bold text-base" numberOfLines={1}>{t.title}</Text>
-              {t.gameDate ? (
-                <Text className="text-white text-xs mt-1" style={{ opacity: 0.85 }}>
-                  {new Date(t.gameDate).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}
-                </Text>
-              ) : null}
-            </View>
-          </View>
-        </Bouncy>
+        />
       ))}
     </View>
   );

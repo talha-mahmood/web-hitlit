@@ -1,10 +1,8 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, cardShadow } from "../constants/theme";
-import TeamCrest from "./TeamCrest";
+import { colors } from "../constants/theme";
+import PlayerCricketEntityCard from "./PlayerCricketEntityCard";
 import { usePlayerCricketMatches } from "./PlayerCricketOverview";
-
-const CREST_COLORS = [colors.primary, "#1D4ED8", "#B91C1C", "#7C3AED", "#D97706", "#0F766E"];
 
 export default function PlayerCricketTeams({ fullName }: { fullName: string }) {
   const { data: matches, isLoading } = usePlayerCricketMatches(fullName);
@@ -29,13 +27,14 @@ export default function PlayerCricketTeams({ fullName }: { fullName: string }) {
   }
 
   return (
-    <View className="flex-row flex-wrap mt-4" style={{ gap: 16 }}>
-      {teams.map(([name, count], i) => (
-        <View key={name} className="items-center rounded-2xl p-3" style={{ ...cardShadow, backgroundColor: "white", width: 96 }}>
-          <TeamCrest color={CREST_COLORS[i % CREST_COLORS.length]} size={56} icon="cricket" />
-          <Text className="text-ink font-bold text-xs mt-2 text-center" numberOfLines={2}>{name.toUpperCase()}</Text>
-          <Text className="text-muted text-[10px] mt-0.5">{count} match{count === 1 ? "" : "es"}</Text>
-        </View>
+    <View className="mt-4">
+      {teams.map(([name, count]) => (
+        <PlayerCricketEntityCard
+          key={name}
+          title={name.toUpperCase()}
+          subtitle={`${count} match${count === 1 ? "" : "es"}`}
+          sportName="cricket"
+        />
       ))}
     </View>
   );

@@ -238,6 +238,7 @@ export default function SquadsListScreen() {
   // row as the Games list, minus its Date pill (squads aren't scheduled).
   const [listFilter, setListFilter] = useState<"all" | "mine">("all");
   const myOnly = listFilter === "mine";
+  const [groupTypeFilter, setGroupTypeFilter] = useState<"club" | "training_camp" | null>(null);
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
   const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
   const [distanceOpen, setDistanceOpen] = useState(false);
@@ -256,13 +257,14 @@ export default function SquadsListScreen() {
   const locationFiltered = locationTags.length > 0
     ? (squadsData ?? []).filter((s) => matchesLocationQuery([s.location], locationTags))
     : squadsData;
-  const scoped = myOnly
+  const myScoped = myOnly
     ? (locationFiltered ?? []).filter(
         (s) =>
           s.squad_owner_id === userId ||
           s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE" && m.role === "host")
       )
     : locationFiltered;
+  const scoped = groupTypeFilter ? (myScoped ?? []).filter((s) => s.group_type === groupTypeFilter) : myScoped;
   // Squads don't carry their own coordinates (just a typed-in location
   // label), so "near me" is measured from the squad owner's own registered
   // location instead — the closest real coordinates available today.
@@ -377,6 +379,37 @@ export default function SquadsListScreen() {
                   onPress={() => {
                     setDistanceOpen(false);
                     setListFilter(p.key);
+                  }}
+                  className="rounded-full"
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    backgroundColor: active ? colors.primary : "white",
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.border,
+                  }}
+                >
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
+                    {p.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            {/* "Club" / "Training Camp" — filter by the group's type (set at
+                creation), toggling off when tapped again. */}
+            {(
+              [
+                { key: "club", label: "Club" },
+                { key: "training_camp", label: "Training Camp" },
+              ] as const
+            ).map((p) => {
+              const active = groupTypeFilter === p.key;
+              return (
+                <Pressable
+                  key={p.key}
+                  onPress={() => {
+                    setDistanceOpen(false);
+                    setGroupTypeFilter(active ? null : p.key);
                   }}
                   className="rounded-full"
                   style={{
@@ -521,7 +554,7 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null ? (
+            debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null || groupTypeFilter ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No groups found</Text>
