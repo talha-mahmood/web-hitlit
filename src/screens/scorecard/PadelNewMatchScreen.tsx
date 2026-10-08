@@ -11,7 +11,7 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { MatchFormat, DeuceType, Team } from "../../lib/padelScoring";
 
 type PlayMode = "SINGLES" | "DOUBLES";
@@ -305,13 +305,21 @@ export default function PadelNewMatchScreen() {
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !deuceType || !firstServerTeam || !playMode) return;
+    // Two different real people can share a display name (allowed when
+    // picked from a group with distinct accounts) — the match row only
+    // stores plain name text, so same-named entries need a disambiguating
+    // suffix before saving or they'd be indistinguishable once scoring starts.
+    const { teamANames: disambiguatedA, teamBNames: disambiguatedB } = disambiguateRoster(
+      teamAPlayers.map((p) => ({ name: p.name.trim(), sourceId: p.sourceId })),
+      teamBPlayers.map((p) => ({ name: p.name.trim(), sourceId: p.sourceId }))
+    );
     createMatch.mutate(
       {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers: isDoubles ? teamAPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
-        teamBPlayers: isDoubles ? teamBPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
+        teamAPlayers: isDoubles ? disambiguatedA.filter(Boolean) : [],
+        teamBPlayers: isDoubles ? disambiguatedB.filter(Boolean) : [],
         format,
         deuceType,
         firstServerTeam,

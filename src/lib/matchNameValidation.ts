@@ -75,3 +75,31 @@ export function entryCollides(entry: NamedEntry, others: NamedEntry[]): boolean 
   if (!entry.sourceId) return true;
   return matches.some((o) => !o.sourceId || o.sourceId === entry.sourceId);
 }
+
+// Two different real people sharing a display name pass validation above
+// (hasBlockingDuplicateNames allows it when their sourceIds differ) — but
+// once a roster is submitted, every sport's match row only ever stores plain
+// name TEXT (team_a_players/team_b_players, striker_name, scorer_name, …):
+// sourceId is never persisted. The scoring engines (cricketScoring.ts and
+// its per-sport equivalents) key all of their state — battingStats,
+// bowlingStats, who's out, who's up next — by that name string, so two
+// identically-named players become indistinguishable the moment scoring
+// starts (e.g. the "select non-striker" list excludes both of them, since it
+// filters by name). Call this right before building the arrays sent to
+// create*Match(), on the full combined roster (both teams, same order
+// validation used) — it's a no-op for every name that's actually unique, and
+// only suffixes the 2nd+ occurrence of a name that's only still present
+// because it's backed by a distinct account ("Ali" / "Ali (2)"), so the
+// engine — and every picker built on top of it — can tell them apart.
+export function disambiguateRoster(teamA: NamedEntry[], teamB: NamedEntry[]): { teamANames: string[]; teamBNames: string[] } {
+  const seen = new Map<string, number>();
+  const assign = (entries: NamedEntry[]) =>
+    entries.map((e) => {
+      const key = normalizeName(e.name);
+      if (!key) return e.name;
+      const count = (seen.get(key) ?? 0) + 1;
+      seen.set(key, count);
+      return count === 1 ? e.name : `${e.name} (${count})`;
+    });
+  return { teamANames: assign(teamA), teamBNames: assign(teamB) };
+}

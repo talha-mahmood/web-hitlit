@@ -12,7 +12,7 @@ import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 // A roster entry typed by hand has no real identity behind it (sourceId:
@@ -277,13 +277,20 @@ export default function NewMatchScreen() {
 
   const handleCreate = () => {
     if (!isValid || !userId || !oversLimit || !format || !tossWinner || !tossDecision) return;
+    // Two different real people can share a display name (allowed when
+    // they're picked from a group with distinct accounts) — but the match
+    // row only stores plain name text, and the scoring engine tracks every
+    // stat by that text, so same-named entries need a disambiguating suffix
+    // before they're saved or they'd become impossible to tell apart once
+    // scoring starts (e.g. picking a non-striker with that name).
+    const { teamANames, teamBNames } = disambiguateRoster(teamAPlayers, teamBPlayers);
     createMatch.mutate(
       {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers: teamAPlayers.map((p) => p.name),
-        teamBPlayers: teamBPlayers.map((p) => p.name),
+        teamAPlayers: teamANames,
+        teamBPlayers: teamBNames,
         oversLimit: parseInt(oversLimit, 10),
         format,
         tossWinner,

@@ -11,7 +11,7 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 
@@ -224,13 +224,18 @@ export default function FootballNewMatchScreen() {
 
   const handleCreate = () => {
     if (!isValid || !userId || !requiresWinner) return;
+    // Two different real people can share a display name (allowed when
+    // picked from a group with distinct accounts) — the match row only
+    // stores plain name text, so same-named entries need a disambiguating
+    // suffix before saving or they'd be indistinguishable once scoring starts.
+    const { teamANames, teamBNames } = disambiguateRoster(teamAPlayers, teamBPlayers);
     createMatch.mutate(
       {
         userId,
         teamAName: teamAName.trim(),
         teamBName: teamBName.trim(),
-        teamAPlayers: teamAPlayers.map((p) => p.name),
-        teamBPlayers: teamBPlayers.map((p) => p.name),
+        teamAPlayers: teamANames,
+        teamBPlayers: teamBNames,
         requiresWinner: needsExtraTime,
         halfDurationMinutes,
         // Not needed for a match that can end in a draw, but the column is

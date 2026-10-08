@@ -11,7 +11,7 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
-import { namesClash, entryCollides, hasBlockingDuplicateNames, type NamedEntry } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { MatchFormat, PlayMode, Player } from "../../lib/tennisScoring";
 
 // See NewMatchScreen.tsx (cricket) for why this carries a sourceId — only
@@ -304,13 +304,21 @@ export default function TennisNewMatchScreen() {
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !firstServer || !playMode) return;
+    // Two different real people can share a display name (allowed when
+    // picked from a group with distinct accounts) — the match row only
+    // stores plain name text, so same-named entries need a disambiguating
+    // suffix before saving or they'd be indistinguishable once scoring starts.
+    const { teamANames: disambiguatedA, teamBNames: disambiguatedB } = disambiguateRoster(
+      playerAPlayers.map((p) => ({ name: p.name.trim(), sourceId: p.sourceId })),
+      playerBPlayers.map((p) => ({ name: p.name.trim(), sourceId: p.sourceId }))
+    );
     createMatch.mutate(
       {
         userId,
         playerAName: playerAName.trim(),
         playerBName: playerBName.trim(),
-        playerAPlayers: isDoubles ? playerAPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
-        playerBPlayers: isDoubles ? playerBPlayers.map((p) => p.name.trim()).filter(Boolean) : [],
+        playerAPlayers: isDoubles ? disambiguatedA.filter(Boolean) : [],
+        playerBPlayers: isDoubles ? disambiguatedB.filter(Boolean) : [],
         format,
         firstServer,
         gamesPerSet: gamesPerSetNumber,
