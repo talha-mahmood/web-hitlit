@@ -10,8 +10,12 @@ import {
   deleteCricketMatch,
   addCricketBall,
   deleteLastCricketBall,
+  abandonCricketMatch,
+  addRosterPlayer,
+  updateCricketMatchSettings,
   type CricketMatchDetail,
   type CricketBallRow,
+  type CricketMatchSettingsUpdate,
 } from "../lib/api/cricket";
 import { OFFLINE_PATTERN } from "../lib/friendlyError";
 import { fetchMatchWithOfflineFallback } from "../lib/matchSnapshot";
@@ -364,6 +368,40 @@ export function useDeleteCricketMatch() {
   return useMutation({
     mutationFn: (matchId: string) => deleteCricketMatch(matchId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cricketMatches"] }),
+  });
+}
+
+// Match Centre > More > Abandon. Online-only, same as useDeleteCricketMatch
+// above — an infrequent management action, not part of the ball-by-ball
+// offline-first scoring loop.
+export function useAbandonCricketMatch(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => abandonCricketMatch(matchId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cricketMatch", matchId] });
+      qc.invalidateQueries({ queryKey: ["cricketMatches"] });
+    },
+  });
+}
+
+// Match Centre > Select Batsman > Add/Create Player.
+export function useAddRosterPlayer(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ team, name, existingPlayers }: { team: "A" | "B"; name: string; existingPlayers: string[] }) =>
+      addRosterPlayer(matchId, team, name, existingPlayers),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cricketMatch", matchId] }),
+  });
+}
+
+// Match Centre > More > Overs/Format/Wickets, Change Target, Settings —
+// all edit plain cricket_matches columns, so they share one mutation.
+export function useUpdateCricketMatchSettings(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (updates: CricketMatchSettingsUpdate) => updateCricketMatchSettings(matchId, updates),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cricketMatch", matchId] }),
   });
 }
 

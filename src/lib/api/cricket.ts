@@ -153,6 +153,48 @@ export async function deleteCricketMatch(matchId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function abandonCricketMatch(matchId: string): Promise<void> {
+  const { error } = await supabase
+    .from("cricket_matches")
+    .update({ status: "ABANDONED", completed_at: new Date().toISOString() })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+// Mid-match roster addition (Match Centre > Select Batsman > Add/Create
+// Player) — appends a name to whichever side is currently batting. Players
+// are plain name text everywhere in this schema (see matchNameValidation's
+// disambiguateRoster), so this just appends to the same array the match was
+// created with.
+export async function addRosterPlayer(matchId: string, team: "A" | "B", name: string, existingPlayers: string[]): Promise<void> {
+  const nextRoster = [...existingPlayers, name];
+  const { error } = await supabase
+    .from("cricket_matches")
+    .update(team === "A" ? { team_a_players: nextRoster } : { team_b_players: nextRoster })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+export type CricketMatchSettingsUpdate = {
+  oversLimit?: number;
+  format?: "T10" | "T20" | "ODI" | "Club";
+  venue?: string | null;
+  targetOverride?: number | null;
+};
+
+export async function updateCricketMatchSettings(matchId: string, updates: CricketMatchSettingsUpdate): Promise<void> {
+  const { error } = await supabase
+    .from("cricket_matches")
+    .update({
+      ...(updates.oversLimit !== undefined ? { overs_limit: updates.oversLimit } : {}),
+      ...(updates.format !== undefined ? { format: updates.format } : {}),
+      ...(updates.venue !== undefined ? { venue: updates.venue } : {}),
+      ...(updates.targetOverride !== undefined ? { target_override: updates.targetOverride } : {}),
+    })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
 // Returns the inserted row's real id so the caller can swap it into the
 // already-showing optimistic row in place (see useAddCricketBall) instead
 // of having to refetch the whole match to find out what the server actually

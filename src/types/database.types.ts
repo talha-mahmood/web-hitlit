@@ -647,6 +647,7 @@ export type Database = {
           result_summary: string | null
           scoring_code: string | null
           status: string
+          target_override: number | null
           team_a_name: string
           team_a_players: string[]
           team_b_name: string
@@ -665,6 +666,7 @@ export type Database = {
           result_summary?: string | null
           scoring_code?: string | null
           status?: string
+          target_override?: number | null
           team_a_name: string
           team_a_players?: string[]
           team_b_name: string
@@ -683,6 +685,7 @@ export type Database = {
           result_summary?: string | null
           scoring_code?: string | null
           status?: string
+          target_override?: number | null
           team_a_name?: string
           team_a_players?: string[]
           team_b_name?: string

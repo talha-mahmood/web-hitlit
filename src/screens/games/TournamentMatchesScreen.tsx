@@ -150,7 +150,7 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
   const rates = cricketMatch.cricket_innings.map((inn) => {
     const balls = inn.cricket_balls.map(ballRowToEvent);
     const runs = balls.reduce((sum, b) => sum + b.runsBatted + b.extraRuns, 0);
-    const legalBalls = balls.filter((b) => b.extraType !== "WIDE" && b.extraType !== "NOBALL").length;
+    const legalBalls = balls.filter((b) => b.extraType !== "WIDE" && b.extraType !== "NOBALL" && b.extraType !== "PENALTY").length;
     return {
       battingTeam: inn.batting_team as "A" | "B",
       runRate: computeRunRate(runs, legalBalls),

@@ -38,6 +38,7 @@ function ballSymbol(ball: BallEvent): string {
   if (ball.extraType === "NOBALL") return ball.runsBatted > 0 ? `${ball.runsBatted}N` : "N";
   if (ball.extraType === "BYE") return `${ball.extraRuns}B`;
   if (ball.extraType === "LEGBYE") return `${ball.extraRuns}L`;
+  if (ball.extraType === "PENALTY") return `P${ball.extraRuns >= 0 ? "+" : ""}${ball.extraRuns}`;
   if (ball.isWicket) return "W";
   return `${ball.runsBatted}`;
 }
@@ -70,7 +71,7 @@ function buildOverRows(
 
   for (const ball of balls) {
     const prevBallsInOver = state.ballsInCurrentOver;
-    const isLegal = ball.extraType !== "WIDE" && ball.extraType !== "NOBALL";
+    const isLegal = ball.extraType !== "WIDE" && ball.extraType !== "NOBALL" && ball.extraType !== "PENALTY";
     state = applyBall(state, ball);
     symbols.push(ballSymbol(ball));
 

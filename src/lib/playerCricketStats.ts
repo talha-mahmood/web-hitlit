@@ -88,7 +88,7 @@ function replayAllInnings(match: CricketMatchDetail): InningsState[] {
           bowlingOrder: [],
           bowlingStats: {},
           fallOfWickets: [],
-          extras: { wide: 0, noball: 0, bye: 0, legbye: 0 },
+          extras: { wide: 0, noball: 0, bye: 0, legbye: 0, penalty: 0 },
           isComplete: false,
         } satisfies InningsState;
       }

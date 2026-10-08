@@ -13,8 +13,45 @@
 // wide/no-ball itself never rotates strike on its own), and always rotates
 // at the end of a completed over.
 
-export type ExtraType = "WIDE" | "NOBALL" | "BYE" | "LEGBYE" | null;
-export type WicketType = "BOWLED" | "CAUGHT" | "LBW" | "RUN_OUT" | "STUMPED" | "HIT_WICKET" | "RETIRED_OUT";
+// PENALTY adds runs straight to the team total without counting as a
+// delivery at all (see applyBall's early-return branch) — umpire-awarded
+// penalty/bonus runs, not tied to any specific ball bowled.
+export type ExtraType = "WIDE" | "NOBALL" | "BYE" | "LEGBYE" | "PENALTY" | null;
+// RETIRED_HURT is not a real dismissal (isOut stays false, no bowler credit,
+// wicket count doesn't increase) — it only clears the crease slot so a
+// replacement can come in; the retired batsman can be selected again later
+// and picks their own stats back up (see applyBall).
+export type WicketType =
+  | "BOWLED"
+  | "CAUGHT"
+  | "LBW"
+  | "RUN_OUT"
+  | "STUMPED"
+  | "HIT_WICKET"
+  | "RETIRED_OUT"
+  | "MANKAD"
+  | "RETIRED_HURT"
+  | "OVER_THE_FENCE"
+  | "ONE_HAND_ONE_BOUNCE"
+  | "OBSTRUCTING_THE_FIELD"
+  | "HIT_THE_BALL_TWICE"
+  | "TIMED_OUT";
+
+// Wicket types where the bowler gets credit for the dismissal — matches real
+// cricket law (run outs, retirements, obstructing the field, hit the ball
+// twice and timed out never credit the bowler) plus the two informal/
+// backyard-cricket types (Over The Fence, One Hand One Bounce), which are
+// treated like a catch since that's what they functionally are.
+const BOWLER_CREDIT_WICKETS = new Set<WicketType>([
+  "BOWLED",
+  "CAUGHT",
+  "LBW",
+  "STUMPED",
+  "HIT_WICKET",
+  "MANKAD",
+  "OVER_THE_FENCE",
+  "ONE_HAND_ONE_BOUNCE",
+]);
 
 export type BallEvent = {
   seq: number;
@@ -74,7 +111,7 @@ export type InningsState = {
   bowlingOrder: string[];
   bowlingStats: Record<string, BowlerStat>;
   fallOfWickets: FallOfWicket[];
-  extras: { wide: number; noball: number; bye: number; legbye: number };
+  extras: { wide: number; noball: number; bye: number; legbye: number; penalty: number };
   isComplete: boolean;
 };
 
@@ -88,7 +125,7 @@ export function groupBallsByOver(balls: BallEvent[]): BallEvent[][] {
   let legalCount = 0;
   for (const b of balls) {
     current.push(b);
-    const isLegal = b.extraType !== "WIDE" && b.extraType !== "NOBALL";
+    const isLegal = b.extraType !== "WIDE" && b.extraType !== "NOBALL" && b.extraType !== "PENALTY";
     if (isLegal) legalCount += 1;
     if (legalCount === 6) {
       overs.push(current);
@@ -168,6 +205,20 @@ function describeDismissal(ball: BallEvent): string {
       return ball.fielderName ? `run out (${ball.fielderName})` : "run out";
     case "RETIRED_OUT":
       return "retired out";
+    case "MANKAD":
+      return `run out (Mankad, ${ball.bowlerName})`;
+    case "RETIRED_HURT":
+      return "retired hurt";
+    case "OVER_THE_FENCE":
+      return "out (over the fence)";
+    case "ONE_HAND_ONE_BOUNCE":
+      return ball.fielderName ? `c ${ball.fielderName} (1 hand 1 bounce) b ${ball.bowlerName}` : "out (one hand, one bounce)";
+    case "OBSTRUCTING_THE_FIELD":
+      return "obstructing the field";
+    case "HIT_THE_BALL_TWICE":
+      return "hit the ball twice";
+    case "TIMED_OUT":
+      return "timed out";
     default:
       return "out";
   }
@@ -198,7 +249,7 @@ export function createInitialInningsState(
     bowlingOrder: [],
     bowlingStats: {},
     fallOfWickets: [],
-    extras: { wide: 0, noball: 0, bye: 0, legbye: 0 },
+    extras: { wide: 0, noball: 0, bye: 0, legbye: 0, penalty: 0 },
     isComplete: false,
   };
   ensureBatsman(state, openingStriker);
@@ -211,6 +262,15 @@ export function createInitialInningsState(
 export function applyBall(prev: InningsState, ball: BallEvent): InningsState {
   const state: InningsState = JSON.parse(JSON.stringify(prev));
   if (state.isComplete) return state;
+
+  // Penalty/bonus runs — a pure total adjustment, not a delivery: no
+  // striker/bowler stats, no legal-ball/over progress, no strike rotation,
+  // can't dismiss anyone. extraRuns may be negative (a correction).
+  if (ball.extraType === "PENALTY") {
+    state.runs += ball.extraRuns;
+    state.extras.penalty += ball.extraRuns;
+    return state;
+  }
 
   const bowler = ensureBowler(state, ball.bowlerName);
   const striker = ensureBatsman(state, ball.strikerName);
@@ -274,23 +334,31 @@ export function applyBall(prev: InningsState, ball: BallEvent): InningsState {
 
   if (ball.isWicket && ball.dismissedName) {
     const dismissed = state.battingStats[ball.dismissedName];
+    // Retired hurt isn't a real dismissal — the batsman stays "not out" and
+    // can be selected again later (picking their stats back up, since
+    // battingStats is keyed by name), it just clears their end for a
+    // replacement right now and doesn't cost the team a wicket.
+    const isRetiredHurt = ball.wicketType === "RETIRED_HURT";
     if (dismissed) {
-      dismissed.isOut = true;
+      if (!isRetiredHurt) dismissed.isOut = true;
       dismissed.outDescription = describeDismissal(ball);
     }
-    if (ball.wicketType !== "RUN_OUT" && ball.wicketType !== "RETIRED_OUT") {
-      bowler.wickets += 1;
+    if (!isRetiredHurt) {
+      if (ball.wicketType && BOWLER_CREDIT_WICKETS.has(ball.wicketType)) {
+        bowler.wickets += 1;
+      }
+      state.wickets += 1;
+      state.fallOfWickets.push({
+        wicketNumber: state.wickets,
+        teamScore: state.runs,
+        overs: formatOvers(state.legalBalls),
+        playerOut: ball.dismissedName,
+      });
     }
-    state.wickets += 1;
-    state.fallOfWickets.push({
-      wicketNumber: state.wickets,
-      teamScore: state.runs,
-      overs: formatOvers(state.legalBalls),
-      playerOut: ball.dismissedName,
-    });
-    // The dismissed batsman leaves their end open — the live-scoring UI is
-    // responsible for prompting for a replacement and filling striker/
-    // nonStriker back in via setNextBatsman() before the next ball.
+    // The dismissed (or retired) batsman leaves their end open — the
+    // live-scoring UI is responsible for prompting for a replacement and
+    // filling striker/nonStriker back in via setNextBatsman() before the
+    // next ball.
     if (ball.dismissedName === state.striker) state.striker = null;
     else if (ball.dismissedName === state.nonStriker) state.nonStriker = null;
   }
