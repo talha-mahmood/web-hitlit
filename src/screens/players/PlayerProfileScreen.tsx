@@ -12,7 +12,17 @@ import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import PlayerStatCards from "../../components/PlayerStatCards";
+import PlayerCricketOverview, { usePlayerCricketFigures } from "../../components/PlayerCricketOverview";
+import PlayerCricketStatistics from "../../components/PlayerCricketStatistics";
+import PlayerCricketMatches from "../../components/PlayerCricketMatches";
+import PlayerCricketTeams from "../../components/PlayerCricketTeams";
+import PlayerCricketTournaments from "../../components/PlayerCricketTournaments";
+import PlayerCricketClubs from "../../components/PlayerCricketClubs";
+import PlayerCricketInsights from "../../components/PlayerCricketInsights";
+import PlayerCricketCompare from "../../components/PlayerCricketCompare";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
+
+type ProfileTab = "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 type Route = RouteProp<HomeStackParamList, "PlayerProfile">;
@@ -34,6 +44,9 @@ export default function PlayerProfileScreen() {
   const { data: followState } = useFollowState(viewerId, route.params.userId);
   const toggleFollow = useToggleFollow(route.params.userId, viewerId);
   const isOwnProfile = viewerId === route.params.userId;
+  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
+  const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
+  const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
 
   const handleSelectSportCard = (sportId: string, sportName: string) => {
     if (filterSportId === sportId) {
@@ -169,38 +182,91 @@ export default function PlayerProfileScreen() {
       {isLoading || !player ? (
         <ActivityIndicator color={colors.primary} className="mt-10" />
       ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* The same cards as the Profile screen, filled with this player's numbers. */}
-          <PlayerStatCards
-            data={{
-              rating,
-              gamesPlayed: player.gamesPlayedTotal,
-              tournamentsPlayed: player.tournamentsPlayedTotal,
-              gamesHosted: player.gamesHostedTotal,
-              activeSquads: player.activeSquads,
-              hoursPlayed: player.hoursPlayedTotal,
-              participationScore,
-              followerCount: followState?.followerCount ?? 0,
-              regularGamesPlayed: player.regularGamesPlayed,
-              matchesWon,
-              matchesPlayed,
-              sportSegments: player.sportBreakdown.map((sp) => ({
-                label: sp.sportName,
-                value: sp.count,
-                color: getSportIcon(sp.sportName).fg,
-              })),
-              totals: { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals },
-            }}
-            filterSportId={filterSportId}
-            filterSportName={filterSportName}
-            sportsPlayed={allSportsProfile?.sportBreakdown ?? []}
-            onSelectSport={handleSelectSportCard}
-          />
-        </ScrollView>
+        <>
+          {hasCricketData ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="flex-grow-0"
+              contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8 }}
+            >
+              {([
+                ["overview", "Player Overview"],
+                ["statistics", "Statistics"],
+                ["matches", "Matches"],
+                ["teams", "Teams"],
+                ["tournaments", "Tournaments"],
+                ["clubs", "Clubs"],
+                ["insights", "Insights"],
+                ["compare", "Compare"],
+              ] as [ProfileTab, string][]).map(([key, label]) => (
+                <Pressable
+                  key={key}
+                  onPress={() => setActiveTab(key)}
+                  className="rounded-full px-4 py-2"
+                  style={{ backgroundColor: activeTab === key ? "#1F2937" : "#E5E7EB" }}
+                >
+                  <Text className="text-xs font-bold" style={{ color: activeTab === key ? "white" : "#374151" }}>
+                    {label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : null}
+
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ padding: 20, paddingTop: hasCricketData ? 0 : 20, paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {activeTab === "statistics" && hasCricketData && player.fullName ? (
+              <PlayerCricketStatistics fullName={player.fullName} />
+            ) : activeTab === "matches" && hasCricketData && player.fullName ? (
+              <PlayerCricketMatches fullName={player.fullName} />
+            ) : activeTab === "teams" && hasCricketData && player.fullName ? (
+              <PlayerCricketTeams fullName={player.fullName} />
+            ) : activeTab === "tournaments" && hasCricketData && player.fullName ? (
+              <PlayerCricketTournaments fullName={player.fullName} />
+            ) : activeTab === "clubs" && hasCricketData ? (
+              <PlayerCricketClubs userId={route.params.userId} />
+            ) : activeTab === "insights" && hasCricketData && player.fullName ? (
+              <PlayerCricketInsights fullName={player.fullName} />
+            ) : activeTab === "compare" && hasCricketData && player.fullName ? (
+              <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />
+            ) : (
+              <>
+                {/* The same cards as the Profile screen, filled with this player's numbers. */}
+                <PlayerStatCards
+                  data={{
+                    rating,
+                    gamesPlayed: player.gamesPlayedTotal,
+                    tournamentsPlayed: player.tournamentsPlayedTotal,
+                    gamesHosted: player.gamesHostedTotal,
+                    activeSquads: player.activeSquads,
+                    hoursPlayed: player.hoursPlayedTotal,
+                    participationScore,
+                    followerCount: followState?.followerCount ?? 0,
+                    regularGamesPlayed: player.regularGamesPlayed,
+                    matchesWon,
+                    matchesPlayed,
+                    sportSegments: player.sportBreakdown.map((sp) => ({
+                      label: sp.sportName,
+                      value: sp.count,
+                      color: getSportIcon(sp.sportName).fg,
+                    })),
+                    totals: { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals },
+                  }}
+                  filterSportId={filterSportId}
+                  filterSportName={filterSportName}
+                  sportsPlayed={allSportsProfile?.sportBreakdown ?? []}
+                  onSelectSport={handleSelectSportCard}
+                />
+
+                {player.fullName ? <PlayerCricketOverview fullName={player.fullName} /> : null}
+              </>
+            )}
+          </ScrollView>
+        </>
       )}
     </View>
   );

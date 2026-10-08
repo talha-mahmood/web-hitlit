@@ -24,14 +24,11 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "view", label: "View Scoring" },
 ];
 
-// Overs limit doesn't map to a single "official" format name in general, so
-// this only labels the counts that actually correspond to a recognized
-// format and otherwise just states the real overs count — never guesses.
-function formatTag(oversLimit: number): string {
-  if (oversLimit === 20) return "T20";
-  if (oversLimit === 10) return "T10";
-  if (oversLimit === 50) return "ODI";
-  return `${oversLimit} OV`;
+// The host picks the real format (T10/T20/One Day/Club Cricket) at match
+// creation — this just maps the stored value to its short list-badge label.
+function formatTag(format: string): string {
+  if (format === "ODI") return "OD";
+  return format;
 }
 
 // Score of whichever innings is currently (or was last) batting — derived
@@ -123,7 +120,7 @@ function MatchCard({
             <Text className="text-muted text-xs mt-0.5">{score ? `${score.oversLabel} overs` : "0.0 overs"}</Text>
             <View className="rounded-full px-2.5 py-0.5 mt-1.5" style={{ backgroundColor: colors.primaryLight }}>
               <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
-                {formatTag(match.overs_limit)}
+                {formatTag(match.format)}
               </Text>
             </View>
           </View>

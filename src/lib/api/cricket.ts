@@ -78,6 +78,7 @@ export async function createCricketMatch(params: {
   teamAPlayers: string[];
   teamBPlayers: string[];
   oversLimit: number;
+  format: "T10" | "T20" | "ODI" | "Club";
   tossWinner: "A" | "B";
   tossDecision: "BAT" | "BOWL";
   venue?: string;
@@ -91,6 +92,7 @@ export async function createCricketMatch(params: {
       team_a_players: params.teamAPlayers,
       team_b_players: params.teamBPlayers,
       overs_limit: params.oversLimit,
+      format: params.format,
       toss_winner: params.tossWinner,
       toss_decision: params.tossDecision,
       venue: params.venue?.trim() || null,

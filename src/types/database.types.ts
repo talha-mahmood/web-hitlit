@@ -641,6 +641,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          format: string
           id: string
           overs_limit: number
           result_summary: string | null
@@ -658,6 +659,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          format?: string
           id?: string
           overs_limit: number
           result_summary?: string | null
@@ -675,6 +677,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          format?: string
           id?: string
           overs_limit?: number
           result_summary?: string | null

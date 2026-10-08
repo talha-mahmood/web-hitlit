@@ -257,6 +257,7 @@ export default function NewMatchScreen() {
     (prefill?.teamBPlayers ?? []).map((name) => ({ name, sourceId: null }))
   );
   const [oversLimit, setOversLimit] = useState<string | null>(null);
+  const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
   const [venue, setVenue] = useState(prefill?.venue ?? "");
@@ -270,11 +271,12 @@ export default function NewMatchScreen() {
     !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
     !!oversLimit &&
     parseInt(oversLimit, 10) > 0 &&
+    !!format &&
     !!tossWinner &&
     !!tossDecision;
 
   const handleCreate = () => {
-    if (!isValid || !userId || !oversLimit || !tossWinner || !tossDecision) return;
+    if (!isValid || !userId || !oversLimit || !format || !tossWinner || !tossDecision) return;
     createMatch.mutate(
       {
         userId,
@@ -283,6 +285,7 @@ export default function NewMatchScreen() {
         teamAPlayers: teamAPlayers.map((p) => p.name),
         teamBPlayers: teamBPlayers.map((p) => p.name),
         oversLimit: parseInt(oversLimit, 10),
+        format,
         tossWinner,
         tossDecision,
         venue: venue.trim() || undefined,
@@ -427,6 +430,19 @@ export default function NewMatchScreen() {
             placeholder="e.g. 15"
             keyboardType="number-pad"
             maxLength={3}
+          />
+        </CardSection>
+
+        <CardSection icon="trophy-outline" title="Match Format">
+          <PillRow
+            options={[
+              { label: "T10", value: "T10" as const },
+              { label: "T20", value: "T20" as const },
+              { label: "One Day", value: "ODI" as const },
+              { label: "Club Cricket", value: "Club" as const },
+            ]}
+            value={format}
+            onChange={setFormat}
           />
         </CardSection>
 
