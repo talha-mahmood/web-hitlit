@@ -170,14 +170,31 @@ export default function PlayerProfileScreen() {
               </Text>
             ) : null}
             <Text className="text-muted text-xs mt-1">Play Together, Stay Active</Text>
-            <View
-              className="flex-row items-center self-start rounded-full px-3 py-1 mt-2"
-              style={{ backgroundColor: tier.bg, gap: 5 }}
-            >
-              <MaterialCommunityIcons name="crown" size={14} color={tier.color} />
-              <Text className="text-xs font-bold" style={{ color: tier.color }}>
-                {tier.label}
-              </Text>
+            <View className="flex-row items-center flex-wrap mt-2" style={{ gap: 8 }}>
+              <View
+                className="flex-row items-center self-start rounded-full px-3 py-1"
+                style={{ backgroundColor: tier.bg, gap: 5 }}
+              >
+                <MaterialCommunityIcons name="crown" size={14} color={tier.color} />
+                <Text className="text-xs font-bold" style={{ color: tier.color }}>
+                  {tier.label}
+                </Text>
+              </View>
+
+              {/* Sport filter — opens the same sport-select sheet the Top
+                  Players list's filter icon opens, shown as a dropdown pill
+                  right here (filling the space under the name) instead of a
+                  bare icon floating under the Follow button. */}
+              <Pressable
+                onPress={() => setSportSheetOpen(true)}
+                className="flex-row items-center self-start rounded-full px-3 py-1 bg-white"
+                style={{ gap: 5, borderWidth: 1, borderColor: colors.border }}
+              >
+                <Text className="text-xs font-bold text-ink" numberOfLines={1}>
+                  {filterSportName ?? "All Sports"}
+                </Text>
+                <Ionicons name="chevron-down" size={13} color={colors.ink} />
+              </Pressable>
             </View>
           </View>
           {!isOwnProfile && (
@@ -211,28 +228,6 @@ export default function PlayerProfileScreen() {
               )}
             </Pressable>
           )}
-        </View>
-
-        {/* Filter icon — opens the same sport-select sheet the Top Players
-            list's filter icon opens, replacing the old inline "Filter By
-            Sports" card list with the same pattern used elsewhere. */}
-        <View className="flex-row justify-end mt-3">
-          <Pressable
-            onPress={() => setSportSheetOpen(true)}
-            className="items-center justify-center bg-white"
-            style={{ width: 40, height: 40, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
-          >
-            <Ionicons name="options-outline" size={18} color={colors.ink} />
-            {filterSportId && (
-              <View
-                style={{
-                  position: "absolute", top: 5, right: 5,
-                  width: 7, height: 7, borderRadius: 3.5,
-                  backgroundColor: colors.primary,
-                }}
-              />
-            )}
-          </Pressable>
         </View>
       </View>
 
