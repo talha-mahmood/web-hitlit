@@ -7,10 +7,12 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { usePlayerPublicProfile } from "../../hooks/usePlayers";
 import { useFollowState, useToggleFollow } from "../../hooks/usePlayerFollows";
 import { useAuthStore } from "../../store/authStore";
+import { useSports } from "../../hooks/useSports";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
+import SelectSportModal from "../../components/SelectSportModal";
 import PlayerStatCards from "../../components/PlayerStatCards";
 import PlayerCricketOverview, { usePlayerCricketFigures } from "../../components/PlayerCricketOverview";
 import PlayerCricketStatistics from "../../components/PlayerCricketStatistics";
@@ -20,7 +22,24 @@ import PlayerCricketTournaments from "../../components/PlayerCricketTournaments"
 import PlayerCricketClubs from "../../components/PlayerCricketClubs";
 import PlayerCricketInsights from "../../components/PlayerCricketInsights";
 import PlayerCricketCompare from "../../components/PlayerCricketCompare";
+import PlayerSportOverview, { usePlayerGenericFigures } from "../../components/PlayerSportOverview";
+import PlayerSportStatistics from "../../components/PlayerSportStatistics";
+import PlayerSportMatches from "../../components/PlayerSportMatches";
+import PlayerSportTeams from "../../components/PlayerSportTeams";
+import PlayerSportTournaments from "../../components/PlayerSportTournaments";
+import PlayerSportClubs from "../../components/PlayerSportClubs";
+import PlayerSportInsights from "../../components/PlayerSportInsights";
+import PlayerSportCompare from "../../components/PlayerSportCompare";
+import { classifyGenericSport, type GenericSport } from "../../lib/genericSportStats";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
+
+const CRICKET_SPORT_NAMES = ["hard ball", "tape ball", "outdoor cricket"];
+
+function classifySportKind(sportName: string | null | undefined): "cricket" | GenericSport | null {
+  if (!sportName) return null;
+  if (CRICKET_SPORT_NAMES.includes(sportName.trim().toLowerCase())) return "cricket";
+  return classifyGenericSport(sportName);
+}
 
 type ProfileTab = "profile" | "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
 
@@ -46,7 +65,23 @@ export default function PlayerProfileScreen() {
   const isOwnProfile = viewerId === route.params.userId;
   const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
+  // Which sport's tabs to show: whatever's explicitly filtered, else cricket
+  // if this player has any (preserving the original behavior), else their
+  // most-played sport if it's one of the other scorecard sports. Basketball/
+  // Squash/Volleyball have no scorecard module at all, so they resolve to
+  // null — same as a player with no scorecard data of any kind.
+  const resolvedSportKind: "cricket" | GenericSport | null = filterSportName
+    ? classifySportKind(filterSportName)
+    : hasCricketData
+      ? "cricket"
+      : classifySportKind(player?.sportBreakdown?.[0]?.sportName);
+  const genericSport: GenericSport | null = resolvedSportKind && resolvedSportKind !== "cricket" ? resolvedSportKind : null;
+  const { data: genericFigures } = usePlayerGenericFigures(genericSport, player?.fullName);
+  const hasGenericData = !!genericFigures && genericFigures.length > 0;
+  const hasActiveSportData = resolvedSportKind === "cricket" ? hasCricketData : resolvedSportKind ? hasGenericData : false;
   const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
+  const [sportSheetOpen, setSportSheetOpen] = useState(false);
+  const { data: allSports } = useSports();
 
   const handleSelectSportCard = (sportId: string, sportName: string) => {
     if (filterSportId === sportId) {
@@ -177,13 +212,48 @@ export default function PlayerProfileScreen() {
             </Pressable>
           )}
         </View>
+
+        {/* Filter icon — opens the same sport-select sheet the Top Players
+            list's filter icon opens, replacing the old inline "Filter By
+            Sports" card list with the same pattern used elsewhere. */}
+        <View className="flex-row justify-end mt-3">
+          <Pressable
+            onPress={() => setSportSheetOpen(true)}
+            className="items-center justify-center bg-white"
+            style={{ width: 40, height: 40, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+          >
+            <Ionicons name="options-outline" size={18} color={colors.ink} />
+            {filterSportId && (
+              <View
+                style={{
+                  position: "absolute", top: 5, right: 5,
+                  width: 7, height: 7, borderRadius: 3.5,
+                  backgroundColor: colors.primary,
+                }}
+              />
+            )}
+          </Pressable>
+        </View>
       </View>
+
+      <SelectSportModal
+        visible={sportSheetOpen}
+        onClose={() => setSportSheetOpen(false)}
+        sports={allSports ?? []}
+        selectedSportId={filterSportId}
+        onApply={(id) => {
+          const match = id ? (allSports ?? []).find((s) => s.id === id) : undefined;
+          setFilterSportId(id);
+          setFilterSportName(match?.name);
+          setSportSheetOpen(false);
+        }}
+      />
 
       {isLoading || !player ? (
         <ActivityIndicator color={colors.primary} className="mt-10" />
       ) : (
         <>
-          {hasCricketData ? (
+          {hasActiveSportData ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -217,29 +287,40 @@ export default function PlayerProfileScreen() {
 
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ padding: 20, paddingTop: hasCricketData ? 0 : 20, paddingBottom: 40 }}
+            contentContainerStyle={{ padding: 20, paddingTop: hasActiveSportData ? 0 : 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {activeTab === "overview" && hasCricketData && player.fullName ? (
-              <PlayerCricketOverview fullName={player.fullName} />
-            ) : activeTab === "statistics" && hasCricketData && player.fullName ? (
-              <PlayerCricketStatistics fullName={player.fullName} />
-            ) : activeTab === "matches" && hasCricketData && player.fullName ? (
-              <PlayerCricketMatches fullName={player.fullName} />
-            ) : activeTab === "teams" && hasCricketData && player.fullName ? (
-              <PlayerCricketTeams fullName={player.fullName} />
-            ) : activeTab === "tournaments" && hasCricketData && player.fullName ? (
-              <PlayerCricketTournaments fullName={player.fullName} />
-            ) : activeTab === "clubs" && hasCricketData ? (
-              <PlayerCricketClubs userId={route.params.userId} />
-            ) : activeTab === "insights" && hasCricketData && player.fullName ? (
-              <PlayerCricketInsights fullName={player.fullName} />
-            ) : activeTab === "compare" && hasCricketData && player.fullName ? (
-              <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />
+            {activeTab !== "profile" && resolvedSportKind === "cricket" && player.fullName ? (
+              <>
+                {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}
+                {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} />}
+                {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} />}
+                {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} />}
+                {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} />}
+                {activeTab === "clubs" && <PlayerCricketClubs userId={route.params.userId} />}
+                {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} />}
+                {activeTab === "compare" && (
+                  <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />
+                )}
+              </>
+            ) : activeTab !== "profile" && genericSport && player.fullName ? (
+              <>
+                {activeTab === "overview" && <PlayerSportOverview sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "statistics" && <PlayerSportStatistics sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "matches" && <PlayerSportMatches sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "teams" && <PlayerSportTeams sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "tournaments" && <PlayerSportTournaments sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "clubs" && <PlayerSportClubs sport={genericSport} userId={route.params.userId} />}
+                {activeTab === "insights" && <PlayerSportInsights sport={genericSport} fullName={player.fullName} />}
+                {activeTab === "compare" && (
+                  <PlayerSportCompare sport={genericSport} fullName={player.fullName} displayName={player.fullName} />
+                )}
+              </>
             ) : (
               // "Player Profile" tab, and the only thing shown for players
-              // with no cricket data (the tab bar above is hidden for them,
-              // so activeTab never moves off its "profile" default).
+              // with no scorecard data for the resolved sport (the tab bar
+              // above is hidden for them, so activeTab never moves off its
+              // "profile" default).
               <PlayerStatCards
                 data={{
                   rating,
@@ -264,6 +345,7 @@ export default function PlayerProfileScreen() {
                 filterSportName={filterSportName}
                 sportsPlayed={allSportsProfile?.sportBreakdown ?? []}
                 onSelectSport={handleSelectSportCard}
+                hideSportsFilter
               />
             )}
           </ScrollView>

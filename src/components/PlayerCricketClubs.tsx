@@ -46,16 +46,19 @@ export default function PlayerCricketClubs({ userId }: { userId: string }) {
 
   return (
     <View className="mt-4">
-      {clubs.map((s) => (
-        <PlayerCricketEntityCard
-          key={s.id}
-          photoUrl={s.icon_url}
-          title={s.name}
-          subtitle={s.location}
-          sportName={s.sports?.name ?? "cricket"}
-          onPress={() => navigation.navigate("SquadDetail", { squadId: s.id })}
-        />
-      ))}
+      {clubs.map((s) => {
+        const activeCount = s.squad_members.filter((m) => m.status === "ACTIVE").length;
+        return (
+          <PlayerCricketEntityCard
+            key={s.id}
+            photoUrl={s.icon_url}
+            title={s.name}
+            subtitle={`${s.location ?? "Location not set"} · ${activeCount} member${activeCount === 1 ? "" : "s"}`}
+            sportName={s.sports?.name ?? "cricket"}
+            onPress={() => navigation.navigate("SquadDetail", { squadId: s.id })}
+          />
+        );
+      })}
     </View>
   );
 }

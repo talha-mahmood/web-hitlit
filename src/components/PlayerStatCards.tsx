@@ -128,6 +128,7 @@ export default function PlayerStatCards({
   filterSportName,
   sportsPlayed,
   onSelectSport,
+  hideSportsFilter = false,
 }: {
   data: PlayerStatCardsData;
   isLoading?: boolean;
@@ -135,6 +136,11 @@ export default function PlayerStatCards({
   filterSportName?: string;
   sportsPlayed: SportsPlayedEntry[];
   onSelectSport: (sportId: string, sportName: string) => void;
+  // The Player Profile screen (viewing someone else) replaces this in-card
+  // list with a filter icon in the hero instead — same filter, same modal,
+  // just surfaced like the Top Players list does it. The user's own Profile
+  // screen keeps this card as-is.
+  hideSportsFilter?: boolean;
 }) {
   const {
     rating,
@@ -398,7 +404,7 @@ export default function PlayerStatCards({
             )}
 
             {/* Sports Played — tap one to filter Games Win and the sport totals above */}
-            {sportsPlayed.length > 0 && (
+            {!hideSportsFilter && sportsPlayed.length > 0 && (
               <View className="mb-6">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-base font-bold text-ink">Filter By Sports</Text>

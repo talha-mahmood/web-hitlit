@@ -1,61 +1,85 @@
 import { View, Text, Image } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { cardShadow } from "../constants/theme";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { colors, cardShadow } from "../constants/theme";
 import Bouncy from "./Bouncy";
 import { getSportIcon } from "../lib/sportIcons";
+import { getSportImage } from "../lib/sportImages";
 
-// Shared card for the Clubs/Teams/Tournaments tabs on the Player Profile
-// screen — dark card, square photo/icon on the left, title + subtitle, and a
-// small sport-icon badge at the bottom, matching the reference screenshot.
-// There's no "country" concept anywhere in this app's data model, so unlike
-// the reference image this never invents a flag — only the real sport icon.
+// Compact variant of the same card DNA the Groups and Games/Tournaments
+// listing screens use (SquadCard / GameCard: white card, border-border,
+// rounded-[24px], cardShadow, sport picture tucked into a disc on the right,
+// icon+title row, subtitle row, pill row) — shrunk down so 3-4 fit on one
+// screen at once, for the read-only Clubs/Teams/Tournaments tabs on a
+// player's profile.
 export default function PlayerCricketEntityCard({
   photoUrl,
-  fallbackIcon = "cricket",
   title,
   subtitle,
+  subtitleIcon = "location-outline",
+  pillLabel,
   sportName = "cricket",
   onPress,
 }: {
   photoUrl?: string | null;
-  fallbackIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   subtitle?: string | null;
+  subtitleIcon?: keyof typeof Ionicons.glyphMap;
+  pillLabel?: string | null;
   sportName?: string;
   onPress?: () => void;
 }) {
-  const { icon, fg, bg } = getSportIcon(sportName);
+  const sportPhoto = getSportImage(sportName);
+  const sportGlyph = getSportIcon(sportName);
+
   return (
     <Bouncy
       onPress={onPress}
       scaleTo={0.98}
-      style={{ ...cardShadow, borderRadius: 20, marginBottom: 12, backgroundColor: "#111827" }}
+      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20, marginBottom: 10 }}
     >
-      <View className="flex-row items-center rounded-[20px] p-4" style={{ gap: 16 }}>
+      <View
+        className="border border-border overflow-hidden bg-white"
+        style={{ borderRadius: 20, position: "relative", minHeight: 108, paddingVertical: 12 }}
+      >
+        {/* Sport picture in a soft green disc, tucked into the right edge —
+            same treatment as the full listing cards, just smaller. */}
         <View
-          className="items-center justify-center overflow-hidden rounded-2xl"
-          style={{ width: 84, height: 84, backgroundColor: "rgba(255,255,255,0.08)" }}
+          pointerEvents="none"
+          className="items-center justify-center overflow-hidden"
+          style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: "#E4F7EA" }}
         >
-          {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          {sportPhoto ? (
+            <View style={{ width: 78, height: 44, marginRight: 16, mixBlendMode: "multiply" }}>
+              <Image source={sportPhoto} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+            </View>
           ) : (
-            <MaterialCommunityIcons name={fallbackIcon} size={32} color="rgba(255,255,255,0.4)" />
+            <MaterialCommunityIcons name={sportGlyph.icon} size={30} color={sportGlyph.fg} style={{ marginRight: 16, opacity: 0.8 }} />
           )}
         </View>
-        <View className="flex-1">
-          <Text className="text-white font-bold" style={{ fontSize: 17 }} numberOfLines={1}>
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, marginTop: 3 }} numberOfLines={1}>
-              {subtitle}
+
+        <View className="px-4" style={{ paddingRight: 72 }}>
+          <View className="flex-row items-center mb-1" style={{ gap: 7 }}>
+            {photoUrl ? (
+              <Image source={{ uri: photoUrl }} style={{ width: 22, height: 22, borderRadius: 6 }} resizeMode="cover" />
+            ) : null}
+            <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 15.5 }} numberOfLines={1}>
+              {title}
             </Text>
+          </View>
+
+          {subtitle ? (
+            <View className="flex-row items-center mb-2" style={{ gap: 5 }}>
+              <Ionicons name={subtitleIcon} size={12.5} color={colors.muted} />
+              <Text className="text-muted flex-1" style={{ fontSize: 12.5 }} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            </View>
           ) : null}
-          <View
-            className="items-center justify-center rounded-full mt-3"
-            style={{ width: 24, height: 24, backgroundColor: bg }}
-          >
-            <MaterialCommunityIcons name={icon} size={13} color={fg} />
+
+          <View className="bg-primary-light self-start px-2.5 py-1 rounded-full">
+            <Text className="text-primary font-bold" style={{ fontSize: 11 }} numberOfLines={1}>
+              {pillLabel ?? sportName}
+            </Text>
           </View>
         </View>
       </View>

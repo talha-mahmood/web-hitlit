@@ -33,6 +33,7 @@ export default function PlayerCricketTeams({ fullName }: { fullName: string }) {
           key={name}
           title={name.toUpperCase()}
           subtitle={`${count} match${count === 1 ? "" : "es"}`}
+          subtitleIcon="stats-chart-outline"
           sportName="cricket"
         />
       ))}

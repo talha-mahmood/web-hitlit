@@ -71,13 +71,14 @@ export default function PlayerCricketTournaments({ fullName }: { fullName: strin
         <PlayerCricketEntityCard
           key={t.gameId}
           photoUrl={t.iconUrl}
-          fallbackIcon="trophy"
           title={t.title}
           subtitle={
             t.gameDate
               ? new Date(t.gameDate).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })
               : null
           }
+          subtitleIcon="calendar-outline"
+          pillLabel="Tournament"
           sportName="cricket"
           onPress={() => navigation.navigate("GameDetail", { gameId: t.gameId })}
         />
