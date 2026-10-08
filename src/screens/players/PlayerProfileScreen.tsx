@@ -22,7 +22,7 @@ import PlayerCricketInsights from "../../components/PlayerCricketInsights";
 import PlayerCricketCompare from "../../components/PlayerCricketCompare";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
-type ProfileTab = "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
+type ProfileTab = "profile" | "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 type Route = RouteProp<HomeStackParamList, "PlayerProfile">;
@@ -46,7 +46,7 @@ export default function PlayerProfileScreen() {
   const isOwnProfile = viewerId === route.params.userId;
   const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
-  const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
 
   const handleSelectSportCard = (sportId: string, sportName: string) => {
     if (filterSportId === sportId) {
@@ -191,6 +191,7 @@ export default function PlayerProfileScreen() {
               contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 14, gap: 8 }}
             >
               {([
+                ["profile", "Player Profile"],
                 ["overview", "Player Overview"],
                 ["statistics", "Statistics"],
                 ["matches", "Matches"],
@@ -219,7 +220,9 @@ export default function PlayerProfileScreen() {
             contentContainerStyle={{ padding: 20, paddingTop: hasCricketData ? 0 : 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {activeTab === "statistics" && hasCricketData && player.fullName ? (
+            {activeTab === "overview" && hasCricketData && player.fullName ? (
+              <PlayerCricketOverview fullName={player.fullName} />
+            ) : activeTab === "statistics" && hasCricketData && player.fullName ? (
               <PlayerCricketStatistics fullName={player.fullName} />
             ) : activeTab === "matches" && hasCricketData && player.fullName ? (
               <PlayerCricketMatches fullName={player.fullName} />
@@ -234,36 +237,34 @@ export default function PlayerProfileScreen() {
             ) : activeTab === "compare" && hasCricketData && player.fullName ? (
               <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />
             ) : (
-              <>
-                {/* The same cards as the Profile screen, filled with this player's numbers. */}
-                <PlayerStatCards
-                  data={{
-                    rating,
-                    gamesPlayed: player.gamesPlayedTotal,
-                    tournamentsPlayed: player.tournamentsPlayedTotal,
-                    gamesHosted: player.gamesHostedTotal,
-                    activeSquads: player.activeSquads,
-                    hoursPlayed: player.hoursPlayedTotal,
-                    participationScore,
-                    followerCount: followState?.followerCount ?? 0,
-                    regularGamesPlayed: player.regularGamesPlayed,
-                    matchesWon,
-                    matchesPlayed,
-                    sportSegments: player.sportBreakdown.map((sp) => ({
-                      label: sp.sportName,
-                      value: sp.count,
-                      color: getSportIcon(sp.sportName).fg,
-                    })),
-                    totals: { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals },
-                  }}
-                  filterSportId={filterSportId}
-                  filterSportName={filterSportName}
-                  sportsPlayed={allSportsProfile?.sportBreakdown ?? []}
-                  onSelectSport={handleSelectSportCard}
-                />
-
-                {player.fullName ? <PlayerCricketOverview fullName={player.fullName} /> : null}
-              </>
+              // "Player Profile" tab, and the only thing shown for players
+              // with no cricket data (the tab bar above is hidden for them,
+              // so activeTab never moves off its "profile" default).
+              <PlayerStatCards
+                data={{
+                  rating,
+                  gamesPlayed: player.gamesPlayedTotal,
+                  tournamentsPlayed: player.tournamentsPlayedTotal,
+                  gamesHosted: player.gamesHostedTotal,
+                  activeSquads: player.activeSquads,
+                  hoursPlayed: player.hoursPlayedTotal,
+                  participationScore,
+                  followerCount: followState?.followerCount ?? 0,
+                  regularGamesPlayed: player.regularGamesPlayed,
+                  matchesWon,
+                  matchesPlayed,
+                  sportSegments: player.sportBreakdown.map((sp) => ({
+                    label: sp.sportName,
+                    value: sp.count,
+                    color: getSportIcon(sp.sportName).fg,
+                  })),
+                  totals: { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals },
+                }}
+                filterSportId={filterSportId}
+                filterSportName={filterSportName}
+                sportsPlayed={allSportsProfile?.sportBreakdown ?? []}
+                onSelectSport={handleSelectSportCard}
+              />
             )}
           </ScrollView>
         </>
