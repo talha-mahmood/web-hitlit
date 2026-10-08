@@ -2274,6 +2274,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           gender: Database["public"]["Enums"]["game_gender_type"]
+          group_type: string
           icon_url: string | null
           id: string
           join_requests_blocked: boolean
@@ -2292,6 +2293,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           gender?: Database["public"]["Enums"]["game_gender_type"]
+          group_type?: string
           icon_url?: string | null
           id?: string
           join_requests_blocked?: boolean
@@ -2310,6 +2312,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           gender?: Database["public"]["Enums"]["game_gender_type"]
+          group_type?: string
           icon_url?: string | null
           id?: string
           join_requests_blocked?: boolean

@@ -40,6 +40,8 @@ export type SquadDetail = SquadRow & {
   })[];
 };
 
+export type SquadGroupType = "group" | "club" | "training_camp";
+
 export type CreateSquadParams = {
   ownerId: string;
   name: string;
@@ -48,6 +50,7 @@ export type CreateSquadParams = {
   location: string;
   description: string;
   gender: Database["public"]["Enums"]["game_gender_type"];
+  groupType: SquadGroupType;
 };
 
 // Sport is intentionally excluded — same reasoning as games' UpdateGameParams:
@@ -173,6 +176,7 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
       location: params.location || null,
       description: params.description || null,
       gender: params.gender,
+      group_type: params.groupType,
     })
     .select()
     .single();

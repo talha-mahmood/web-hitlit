@@ -31,6 +31,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import type { SquadGroupType } from "../../lib/api/squads";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -161,6 +162,7 @@ export default function CreateSquadScreen() {
 
   const [name, setName] = useState("");
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [groupType, setGroupType] = useState<SquadGroupType>("group");
   const [sportId, setSportId] = useState<string | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
@@ -195,6 +197,7 @@ export default function CreateSquadScreen() {
         location: location.trim(),
         description: description.trim(),
         gender,
+        groupType,
       });
       // The icon bucket's RLS requires the squad to already exist (it checks
       // squad_owner_id via the squad row), so the upload can only happen
@@ -387,6 +390,19 @@ export default function CreateSquadScreen() {
               />
             </View>
           </View>
+        </FormCard>
+
+        {/* Group Type */}
+        <FormCard icon="albums" title="Group Type" hint="What kind of group is this?">
+          <ChipRow<SquadGroupType>
+            options={[
+              { label: "Group", value: "group" },
+              { label: "Club", value: "club" },
+              { label: "Training Camp", value: "training_camp" },
+            ]}
+            value={groupType}
+            onChange={setGroupType}
+          />
         </FormCard>
 
         {/* Sport */}
