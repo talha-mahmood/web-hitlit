@@ -8,6 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import SelectMatchPlayerModal from "../../components/SelectMatchPlayerModal";
 import {
   useFootballMatch,
@@ -474,17 +475,17 @@ export default function FootballLiveScoringScreen() {
           <Pressable
             onPress={handleGenerateMatchReport}
             disabled={generatingReport}
-            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-            style={{ gap: 6 }}
           >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+              {generatingReport ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
@@ -811,40 +812,52 @@ export default function FootballLiveScoringScreen() {
         )}
 
         {phase === "HALF_TIME" && (
-          <Pressable onPress={handleStartSecondHalf} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-            {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Second Half</Text>}
+          <Pressable onPress={handleStartSecondHalf} style={primaryButtonShadow}>
+            <GradientFill className="rounded-2xl py-4 items-center">
+              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Second Half</Text>}
+            </GradientFill>
           </Pressable>
         )}
 
         {phase === "FULL_TIME" && (
           <View style={{ gap: 10 }}>
             {scoreSummary.current.a === scoreSummary.current.b && match.requires_winner ? (
-              <Pressable onPress={handleStartExtraTime} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-                {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time</Text>}
+              <Pressable onPress={handleStartExtraTime} style={primaryButtonShadow}>
+                <GradientFill className="rounded-2xl py-4 items-center">
+                  {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time</Text>}
+                </GradientFill>
               </Pressable>
             ) : (
-              <Pressable onPress={handleFinishAsIs} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-                {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+              <Pressable onPress={handleFinishAsIs} style={primaryButtonShadow}>
+                <GradientFill className="rounded-2xl py-4 items-center">
+                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+                </GradientFill>
               </Pressable>
             )}
           </View>
         )}
 
         {phase === "EXTRA_TIME_BREAK" && (
-          <Pressable onPress={handleStartExtraTimeSecond} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-            {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time (2nd Half)</Text>}
+          <Pressable onPress={handleStartExtraTimeSecond} style={primaryButtonShadow}>
+            <GradientFill className="rounded-2xl py-4 items-center">
+              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time (2nd Half)</Text>}
+            </GradientFill>
           </Pressable>
         )}
 
         {phase === "EXTRA_TIME_FULL_TIME" && (
           <View style={{ gap: 10 }}>
             {scoreSummary.current.a === scoreSummary.current.b ? (
-              <Pressable onPress={handleStartPenalties} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-                {startPenalties.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Penalty Shootout</Text>}
+              <Pressable onPress={handleStartPenalties} style={primaryButtonShadow}>
+                <GradientFill className="rounded-2xl py-4 items-center">
+                  {startPenalties.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Penalty Shootout</Text>}
+                </GradientFill>
               </Pressable>
             ) : (
-              <Pressable onPress={handleFinishAsIs} className="rounded-2xl py-4 items-center bg-primary" style={primaryButtonShadow}>
-                {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+              <Pressable onPress={handleFinishAsIs} style={primaryButtonShadow}>
+                <GradientFill className="rounded-2xl py-4 items-center">
+                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+                </GradientFill>
               </Pressable>
             )}
           </View>
@@ -860,10 +873,12 @@ export default function FootballLiveScoringScreen() {
                 <View className="flex-row" style={{ gap: 10 }}>
                   <Pressable
                     onPress={() => handlePenaltyKick(penaltyKicks.length % 2 === 0 ? "A" : "B", true)}
-                    className="flex-1 rounded-2xl py-4 items-center bg-primary"
                     style={addPenaltyKick.isPending ? undefined : primaryButtonShadow}
+                    className="flex-1"
                   >
-                    <Text className="text-white font-bold text-sm">Scored</Text>
+                    <GradientFill className="rounded-2xl py-4 items-center">
+                      <Text className="text-white font-bold text-sm">Scored</Text>
+                    </GradientFill>
                   </Pressable>
                   <Pressable
                     onPress={() => handlePenaltyKick(penaltyKicks.length % 2 === 0 ? "A" : "B", false)}

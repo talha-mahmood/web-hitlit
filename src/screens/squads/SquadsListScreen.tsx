@@ -18,6 +18,7 @@ import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem } from "../../lib/api/squads";
 import type { Database } from "../../types/database.types";
@@ -113,12 +114,12 @@ function SquadCard({
                     <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
                   </View>
                 ) : (
-                  <View
-                    className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
+                  <GradientFill
+                    className="items-center justify-center rounded-2xl px-3 py-2"
                     style={{ minWidth: 78, ...primaryButtonShadow }}
                   >
                     <Text className="text-white font-bold text-sm">Join</Text>
-                  </View>
+                  </GradientFill>
                 )}
               </Bouncy>
             )}
@@ -301,9 +302,8 @@ export default function SquadsListScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -339,7 +339,7 @@ export default function SquadsListScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </GradientFill>
 
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
@@ -381,17 +381,21 @@ export default function SquadsListScreen() {
                     setListFilter(p.key);
                   }}
                   className="rounded-full"
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    backgroundColor: active ? colors.primary : "white",
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.border,
-                  }}
+                  style={{ borderWidth: 1, borderColor: active ? colors.primary : colors.border }}
                 >
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
-                    {p.label}
-                  </Text>
+                  {active ? (
+                    <GradientFill className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                      <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }}>
+                        {p.label}
+                      </Text>
+                    </GradientFill>
+                  ) : (
+                    <View className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "white" }}>
+                      <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }}>
+                        {p.label}
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               );
             })}
@@ -412,17 +416,21 @@ export default function SquadsListScreen() {
                     setGroupTypeFilter(active ? null : p.key);
                   }}
                   className="rounded-full"
-                  style={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    backgroundColor: active ? colors.primary : "white",
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.border,
-                  }}
+                  style={{ borderWidth: 1, borderColor: active ? colors.primary : colors.border }}
                 >
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
-                    {p.label}
-                  </Text>
+                  {active ? (
+                    <GradientFill className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                      <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }}>
+                        {p.label}
+                      </Text>
+                    </GradientFill>
+                  ) : (
+                    <View className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "white" }}>
+                      <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }}>
+                        {p.label}
+                      </Text>
+                    </View>
+                  )}
                 </Pressable>
               );
             })}
@@ -431,28 +439,24 @@ export default function SquadsListScreen() {
                 always-visible inline field. Right after All/My Squads. */}
             <Pressable
               onPress={() => setLocationOpen(true)}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: locationTags.length > 0 ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: locationTags.length > 0 ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: locationTags.length > 0 ? colors.primary : colors.border }}
             >
-              <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                {locationTags.length > 0
-                  ? locationTags.length === 1
-                    ? locationTags[0]
-                    : `${locationTags.length} locations`
-                  : "Location"}
-              </Text>
+              {locationTags.length > 0 ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="location-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    {locationTags.length === 1 ? locationTags[0] : `${locationTags.length} locations`}
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Location
+                  </Text>
+                </View>
+              )}
             </Pressable>
             {/* "Sports" — opens the same sport-select sheet the filter icon
                 next to the search box used to open. */}
@@ -461,24 +465,24 @@ export default function SquadsListScreen() {
                 setDistanceOpen(false);
                 setSportSheetOpen(true);
               }}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: selectedSportId ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: selectedSportId ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: selectedSportId ? colors.primary : colors.border }}
             >
-              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                Sports
-              </Text>
+              {selectedSportId ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="options-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    Sports
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="options-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Sports
+                  </Text>
+                </View>
+              )}
             </Pressable>
             {/* "Distance" — plain pill like Sports, opening a bottom sheet
                 instead of the small inline dropdown it used to expand into. */}
@@ -487,24 +491,24 @@ export default function SquadsListScreen() {
                 if (locationStatus !== "granted") requestLocation();
                 setDistanceOpen(true);
               }}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: distanceKmFilter != null ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: distanceKmFilter != null ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: distanceKmFilter != null ? colors.primary : colors.border }}
             >
-              <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
-              </Text>
+              {distanceKmFilter != null ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="navigate-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    {`${distanceKmFilter} km`}
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="navigate-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Distance
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </ScrollView>
         </View>
@@ -579,11 +583,10 @@ export default function SquadsListScreen() {
                 <Text className="text-muted text-sm text-center px-8">
                   Create a group to find regular playmates near you!
                 </Text>
-                <Pressable
-                  onPress={() => navigation.navigate("CreateSquad")}
-                  className="bg-primary rounded-xl px-6 py-3 mt-2"
-                >
-                  <Text className="text-white font-semibold">Create a Group</Text>
+                <Pressable onPress={() => navigation.navigate("CreateSquad")}>
+                  <GradientFill className="rounded-xl px-6 py-3 mt-2">
+                    <Text className="text-white font-semibold">Create a Group</Text>
+                  </GradientFill>
                 </Pressable>
               </View>
             )

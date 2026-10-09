@@ -10,6 +10,7 @@ import type { VenueReview } from "../../lib/api/venueReviews";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Route = RouteProp<VenueEditingParamList, "AdminReviews">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminReviews">;
@@ -155,15 +156,24 @@ export default function AdminReviewsScreen() {
             <Pressable
               onPress={handleSubmitResponse}
               disabled={respond.isPending || !responseText.trim()}
-              className={`rounded-xl py-4 items-center mt-4 ${responseText.trim() ? "bg-primary" : "bg-gray-200"}`}
               style={responseText.trim() ? primaryButtonShadow : undefined}
             >
-              {respond.isPending ? (
-                <ActivityIndicator color="white" />
+              {responseText.trim() ? (
+                <GradientFill className="rounded-xl py-4 items-center mt-4">
+                  {respond.isPending ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="font-semibold text-base text-white">Post Response</Text>
+                  )}
+                </GradientFill>
               ) : (
-                <Text className={`font-semibold text-base ${responseText.trim() ? "text-white" : "text-muted"}`}>
-                  Post Response
-                </Text>
+                <View className="rounded-xl py-4 items-center mt-4 bg-gray-200">
+                  {respond.isPending ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="font-semibold text-base text-muted">Post Response</Text>
+                  )}
+                </View>
               )}
             </Pressable>
           </View>

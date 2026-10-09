@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidin
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { SectionLabel } from "./GameFormControls";
 import FieldInput from "./FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../lib/nameValidation";
@@ -66,15 +67,16 @@ export default function CreateTeamModal({
             <Pressable
               onPress={handleCreate}
               disabled={!name.trim() || submitting}
-              className={`rounded-xl py-4 items-center mt-6 ${name.trim() ? "bg-primary" : "bg-gray-200"}`}
               style={name.trim() ? primaryButtonShadow : undefined}
             >
-              {submitting ? (
-                <ActivityIndicator color="white" />
+              {name.trim() ? (
+                <GradientFill className="rounded-xl py-4 items-center mt-6">
+                  {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-white">Create Team</Text>}
+                </GradientFill>
               ) : (
-                <Text className={`font-semibold text-base ${name.trim() ? "text-white" : "text-muted"}`}>
-                  Create Team
-                </Text>
+                <View className="rounded-xl py-4 items-center mt-6 bg-gray-200">
+                  {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-muted">Create Team</Text>}
+                </View>
               )}
             </Pressable>
           </View>

@@ -9,6 +9,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import FieldInput from "../../components/FieldInput";
+import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "CreateVenue">;
@@ -70,14 +71,15 @@ export default function CreateVenueScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={createVenue.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
           style={primaryButtonShadow}
         >
-          {createVenue.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-sm">Create</Text>
-          )}
+          <GradientFill className="rounded-xl px-4 py-2">
+            {createVenue.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-sm">Create</Text>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 

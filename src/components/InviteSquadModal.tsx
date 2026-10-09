@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, FlatList, KeyboardAvoi
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useSquads } from "../hooks/useSquads";
 import SearchField from "./SearchField";
 
@@ -86,12 +87,17 @@ export default function InviteSquadModal({
                       <Pressable
                         onPress={() => onInvite(item.id, item.name)}
                         disabled={submitting || alreadyInvited}
-                        className={`rounded-lg px-3 py-2 ${alreadyInvited ? "bg-gray-100" : "bg-primary"}`}
                         style={alreadyInvited ? undefined : primaryButtonShadow}
                       >
-                        <Text className={`text-xs font-semibold ${alreadyInvited ? "text-muted" : "text-white"}`}>
-                          {alreadyInvited ? "Invited" : "Invite"}
-                        </Text>
+                        {alreadyInvited ? (
+                          <View className="rounded-lg px-3 py-2 bg-gray-100">
+                            <Text className="text-xs font-semibold text-muted">Invited</Text>
+                          </View>
+                        ) : (
+                          <GradientFill className="rounded-lg px-3 py-2">
+                            <Text className="text-xs font-semibold text-white">Invite</Text>
+                          </GradientFill>
+                        )}
                       </Pressable>
                     </View>
                   );

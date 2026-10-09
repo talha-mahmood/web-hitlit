@@ -8,6 +8,7 @@ import { colors, primaryButtonShadow } from "../../constants/theme";
 import SportIconBadge from "../../components/SportIconBadge";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourts">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourts">;
@@ -53,13 +54,11 @@ export default function ManageCourtsScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Courts</Text>
-        <Pressable
-          onPress={() => navigation.navigate("EditCourt", { venueId: params.venueId })}
-          className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
-          style={{ gap: 4, ...primaryButtonShadow }}
-        >
-          <Ionicons name="add" size={14} color="white" />
-          <Text className="text-white text-xs font-semibold">Add</Text>
+        <Pressable onPress={() => navigation.navigate("EditCourt", { venueId: params.venueId })} style={primaryButtonShadow}>
+          <GradientFill className="flex-row items-center rounded-lg px-3 py-1.5" style={{ gap: 4 }}>
+            <Ionicons name="add" size={14} color="white" />
+            <Text className="text-white text-xs font-semibold">Add</Text>
+          </GradientFill>
         </Pressable>
       </View>
 

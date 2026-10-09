@@ -20,6 +20,7 @@ import type { MatchFormat, PlayMode, Player } from "../../lib/tennisScoring";
 type PlayerEntry = NamedEntry;
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TennisNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "TennisNewMatch">;
@@ -137,12 +138,9 @@ function TeamCard({
   return (
     <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
       <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
-        <View
-          className="items-center justify-center rounded-full"
-          style={{ width: 30, height: 30, backgroundColor: colors.primary }}
-        >
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 30, height: 30 }}>
           <Text className="text-white font-extrabold text-sm">{letter}</Text>
-        </View>
+        </GradientFill>
         <Text className="text-ink font-bold text-sm flex-1">{isDoubles ? `Team ${letter}` : `Player ${letter}`}</Text>
       </View>
 
@@ -444,16 +442,24 @@ export default function TennisNewMatchScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={!isValid || createMatch.isPending}
-          className={`flex-row items-center justify-center rounded-2xl py-4 mt-2 ${isValid ? "bg-primary" : "bg-gray-200"}`}
-          style={{ gap: 8, ...(isValid ? primaryButtonShadow : undefined) }}
+          style={isValid ? primaryButtonShadow : undefined}
         >
-          {createMatch.isPending ? (
-            <ActivityIndicator color="white" />
+          {isValid ? (
+            <GradientFill className="flex-row items-center justify-center rounded-2xl py-4 mt-2" style={{ gap: 8 }}>
+              {createMatch.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="play" size={16} color="white" />
+                  <Text className="font-bold text-base text-white">Start Match</Text>
+                </>
+              )}
+            </GradientFill>
           ) : (
-            <>
-              <Ionicons name="play" size={16} color={isValid ? "white" : colors.muted} />
-              <Text className={`font-bold text-base ${isValid ? "text-white" : "text-muted"}`}>Start Match</Text>
-            </>
+            <View className="flex-row items-center justify-center rounded-2xl py-4 mt-2 bg-gray-200" style={{ gap: 8 }}>
+              <Ionicons name="play" size={16} color={colors.muted} />
+              <Text className="font-bold text-base text-muted">Start Match</Text>
+            </View>
           )}
         </Pressable>
       </ScrollView>

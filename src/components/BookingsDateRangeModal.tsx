@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar, type DateData } from "react-native-calendars";
 import { colors } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { toLocalDateStr } from "../lib/slots";
 
 export type DateSelection = { start: string; end: string };
@@ -108,7 +109,7 @@ export default function BookingsDateRangeModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <StatusBar barStyle="light-content" />
       <View className="flex-1 bg-gray-100">
-        <View style={{ backgroundColor: colors.primary, paddingTop: insets.top + 12, paddingBottom: 20, paddingHorizontal: 20 }}>
+        <GradientFill style={{ paddingTop: insets.top + 12, paddingBottom: 20, paddingHorizontal: 20 }}>
           <View className="flex-row items-center justify-between mb-5">
             <Pressable onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={24} color="white" />
@@ -121,7 +122,7 @@ export default function BookingsDateRangeModal({
             SELECTED {start && start !== (end ?? start) ? "RANGE" : "DAY"}
           </Text>
           <Text className="text-white font-bold text-3xl mt-1">{rangeLabel}</Text>
-        </View>
+        </GradientFill>
 
         <Calendar
           current={start ?? toLocalDateStr(new Date())}

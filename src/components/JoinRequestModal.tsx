@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, KeyboardAvoidingView }
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import type { Database } from "../types/database.types";
 import { SectionLabel } from "./GameFormControls";
 import LocationPickerField from "./LocationPickerField";
@@ -24,6 +25,32 @@ function SkillPill({
   selected: boolean;
   onPress: () => void;
 }) {
+  const content = (
+    <>
+      <Ionicons name="bar-chart" size={15} color={selected ? "white" : colors.muted} />
+      <Text style={{ color: selected ? "white" : colors.ink, fontWeight: "700", fontSize: 13 }}>{label}</Text>
+    </>
+  );
+
+  if (selected) {
+    return (
+      <Pressable onPress={onPress} style={{ flex: 1, ...primaryButtonShadow }}>
+        <GradientFill
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            paddingVertical: 14,
+            borderRadius: 26,
+          }}
+        >
+          {content}
+        </GradientFill>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -35,14 +62,12 @@ function SkillPill({
         gap: 6,
         paddingVertical: 14,
         borderRadius: 26,
-        backgroundColor: selected ? colors.primary : "white",
-        borderWidth: selected ? 0 : 1.5,
+        backgroundColor: "white",
+        borderWidth: 1.5,
         borderColor: colors.border,
-        ...(selected ? primaryButtonShadow : null),
       }}
     >
-      <Ionicons name="bar-chart" size={15} color={selected ? "white" : colors.muted} />
-      <Text style={{ color: selected ? "white" : colors.ink, fontWeight: "700", fontSize: 13 }}>{label}</Text>
+      {content}
     </Pressable>
   );
 }
@@ -111,7 +136,7 @@ export default function JoinRequestModal({
                 }}
               >
                 <Ionicons name="people" size={24} color={colors.primaryDark} />
-                <View
+                <GradientFill
                   style={{
                     position: "absolute",
                     bottom: 4,
@@ -119,7 +144,6 @@ export default function JoinRequestModal({
                     width: 18,
                     height: 18,
                     borderRadius: 9,
-                    backgroundColor: colors.primary,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
@@ -127,7 +151,7 @@ export default function JoinRequestModal({
                   }}
                 >
                   <Ionicons name="add" size={11} color="white" />
-                </View>
+                </GradientFill>
               </View>
               <View style={{ flex: 1, marginLeft: 14, marginRight: 24 }}>
                 <Text style={{ fontSize: 20, fontWeight: "800", color: colors.ink }}>{title}</Text>
@@ -157,22 +181,31 @@ export default function JoinRequestModal({
             <Pressable
               onPress={handleSend}
               disabled={!canSend || submitting}
-              className="flex-row items-center justify-center py-4 mt-6"
-              style={{
-                borderRadius: 28,
-                backgroundColor: canSend ? colors.primary : "#E5E7EB",
-                ...(canSend ? primaryButtonShadow : null),
-              }}
+              className="mt-6"
+              style={canSend ? primaryButtonShadow : undefined}
             >
-              {submitting ? (
-                <ActivityIndicator color="white" />
+              {canSend ? (
+                <GradientFill className="flex-row items-center justify-center py-4" style={{ borderRadius: 28 }}>
+                  {submitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <Ionicons name="send" size={17} color="white" style={{ marginRight: 8 }} />
+                      <Text className="font-bold text-base text-white">Send Request</Text>
+                    </>
+                  )}
+                </GradientFill>
               ) : (
-                <>
-                  <Ionicons name="send" size={17} color={canSend ? "white" : colors.muted} style={{ marginRight: 8 }} />
-                  <Text className={`font-bold text-base ${canSend ? "text-white" : "text-muted"}`}>
-                    Send Request
-                  </Text>
-                </>
+                <View className="flex-row items-center justify-center py-4" style={{ borderRadius: 28, backgroundColor: "#E5E7EB" }}>
+                  {submitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <Ionicons name="send" size={17} color={colors.muted} style={{ marginRight: 8 }} />
+                      <Text className="font-bold text-base text-muted">Send Request</Text>
+                    </>
+                  )}
+                </View>
               )}
             </Pressable>
           </View>

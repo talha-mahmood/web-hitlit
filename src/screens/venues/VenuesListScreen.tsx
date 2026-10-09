@@ -18,6 +18,7 @@ import FieldInput from "../../components/FieldInput";
 import SelectSportModal from "../../components/SelectSportModal";
 import SelectDistanceModal from "../../components/SelectDistanceModal";
 import SelectLocationModal from "../../components/SelectLocationModal";
+import GradientFill from "../../components/GradientFill";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -109,13 +110,13 @@ function VenueListCard({
                   </View>
                 )}
               </View>
-              <View
-                className="flex-row items-center justify-center bg-primary rounded-2xl px-3 py-1.5"
+              <GradientFill
+                className="flex-row items-center justify-center rounded-2xl px-3 py-1.5"
                 style={{ gap: 4, ...primaryButtonShadow }}
               >
                 <Text className="text-white font-bold text-sm">View</Text>
                 <Ionicons name="arrow-forward" size={14} color="white" />
-              </View>
+              </GradientFill>
             </View>
           </View>
         </View>
@@ -190,9 +191,8 @@ export default function VenuesListScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -222,7 +222,7 @@ export default function VenuesListScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </GradientFill>
 
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
@@ -255,28 +255,24 @@ export default function VenuesListScreen() {
                 "My Games" leads it on the Games/Squads lists. */}
             <Pressable
               onPress={() => setLocationOpen(true)}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: locationTags.length > 0 ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: locationTags.length > 0 ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: locationTags.length > 0 ? colors.primary : colors.border }}
             >
-              <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                {locationTags.length > 0
-                  ? locationTags.length === 1
-                    ? locationTags[0]
-                    : `${locationTags.length} locations`
-                  : "Location"}
-              </Text>
+              {locationTags.length > 0 ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="location-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    {locationTags.length === 1 ? locationTags[0] : `${locationTags.length} locations`}
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Location
+                  </Text>
+                </View>
+              )}
             </Pressable>
             {/* "Sports" — opens the same sport-select sheet the filter icon
                 next to the search box used to open. */}
@@ -285,24 +281,24 @@ export default function VenuesListScreen() {
                 setDistanceOpen(false);
                 setSportSheetOpen(true);
               }}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: selectedSportId ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: selectedSportId ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: selectedSportId ? colors.primary : colors.border }}
             >
-              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                Sports
-              </Text>
+              {selectedSportId ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="options-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    Sports
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="options-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Sports
+                  </Text>
+                </View>
+              )}
             </Pressable>
             {/* "Distance" — plain pill like Sports, opening a bottom sheet
                 instead of the small inline dropdown it used to expand into. */}
@@ -311,24 +307,24 @@ export default function VenuesListScreen() {
                 if (locationStatus !== "granted") requestLocation();
                 setDistanceOpen(true);
               }}
-              className="flex-row items-center rounded-full"
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 5,
-                backgroundColor: distanceKmFilter != null ? colors.primary : "white",
-                borderWidth: 1,
-                borderColor: distanceKmFilter != null ? colors.primary : colors.border,
-              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: distanceKmFilter != null ? colors.primary : colors.border }}
             >
-              <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
-              </Text>
+              {distanceKmFilter != null ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="navigate-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    {`${distanceKmFilter} km`}
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="navigate-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Distance
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </ScrollView>
         </View>

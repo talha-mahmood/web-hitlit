@@ -25,6 +25,7 @@ import { NearbyEmptyRow } from "../../components/NearbyCards";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
 import WavingHandIcon from "../../components/WavingHandIcon";
+import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 
@@ -211,9 +212,8 @@ export default function HomeScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -259,7 +259,7 @@ export default function HomeScreen() {
             />
           </View>
         </View>
-      </View>
+      </GradientFill>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
       <View className="px-3.5" style={{ paddingTop: 20 }}>

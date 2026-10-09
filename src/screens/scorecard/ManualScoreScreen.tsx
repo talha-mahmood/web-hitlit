@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
+import GradientFill from "../../components/GradientFill";
 import { useEnterManualScore } from "../../hooks/useTournamentMatches";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { computeManualResult, isValidOversText, oversToDecimal, type ManualInnings, type ManualScore } from "../../lib/manualScore";
@@ -240,9 +241,9 @@ export default function ManualScoreScreen() {
           return (
             <View key={letter} className="bg-white rounded-2xl overflow-hidden mb-4 mt-4" style={cardShadow}>
               <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
-                <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: colors.primary }}>
+                <GradientFill className="items-center justify-center rounded-full" style={{ width: 30, height: 30 }}>
                   <Text className="text-white font-extrabold text-sm">{letter}</Text>
-                </View>
+                </GradientFill>
                 <Text className="text-ink font-bold text-sm flex-1">Team {letter}</Text>
               </View>
               <View className="px-4 pt-4 pb-4">
@@ -358,16 +359,30 @@ export default function ManualScoreScreen() {
         <Pressable
           onPress={handleSave}
           disabled={!isValid || enterScore.isPending}
-          className={`flex-row items-center justify-center rounded-2xl py-4 mt-4 ${isValid ? "bg-primary" : "bg-gray-200"}`}
-          style={{ gap: 8, ...(isValid ? primaryButtonShadow : undefined) }}
+          style={isValid ? primaryButtonShadow : undefined}
         >
-          {enterScore.isPending ? (
-            <ActivityIndicator color="white" />
+          {isValid ? (
+            <GradientFill className="flex-row items-center justify-center rounded-2xl py-4 mt-4" style={{ gap: 8 }}>
+              {enterScore.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark" size={16} color="white" />
+                  <Text className="font-bold text-base text-white">Save Score</Text>
+                </>
+              )}
+            </GradientFill>
           ) : (
-            <>
-              <Ionicons name="checkmark" size={16} color={isValid ? "white" : colors.muted} />
-              <Text className={`font-bold text-base ${isValid ? "text-white" : "text-muted"}`}>Save Score</Text>
-            </>
+            <View className="flex-row items-center justify-center rounded-2xl py-4 mt-4 bg-gray-200" style={{ gap: 8 }}>
+              {enterScore.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark" size={16} color={colors.muted} />
+                  <Text className="font-bold text-base text-muted">Save Score</Text>
+                </>
+              )}
+            </View>
           )}
         </Pressable>
       </ScrollView>

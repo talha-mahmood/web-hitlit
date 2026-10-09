@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { searchUsers, type UserSearchResult } from "../lib/api/users";
 import { aggregateGeneric, SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import { usePlayerGenericFigures } from "./PlayerSportOverview";
@@ -79,9 +80,9 @@ function PlayerSearch({ onSelect }: { onSelect: (u: UserSearchResult) => void })
               {u.avatar ? (
                 <Image source={{ uri: u.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
               ) : (
-                <View className="items-center justify-center rounded-full bg-primary" style={{ width: 32, height: 32 }}>
+                <GradientFill className="items-center justify-center rounded-full" style={{ width: 32, height: 32 }}>
                   <Text className="text-white text-xs font-bold">{(u.full_name ?? "?").charAt(0).toUpperCase()}</Text>
-                </View>
+                </GradientFill>
               )}
               <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{u.full_name ?? "Player"}</Text>
             </Pressable>

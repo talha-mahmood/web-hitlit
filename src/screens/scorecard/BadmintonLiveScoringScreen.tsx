@@ -25,6 +25,7 @@ import {
 } from "../../lib/badmintonScoring";
 import { getSportImage } from "../../lib/sportImages";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -233,17 +234,17 @@ export default function BadmintonLiveScoringScreen() {
           <Pressable
             onPress={handleGenerateMatchReport}
             disabled={generatingReport}
-            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-            style={{ gap: 6 }}
           >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+              {generatingReport ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
@@ -452,7 +453,7 @@ export default function BadmintonLiveScoringScreen() {
           </View>
           <View className="flex-row items-center mb-1.5">
             <View className="flex-row items-center" style={{ flex: 1.4, gap: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+              <GradientFill style={{ width: 8, height: 8, borderRadius: 4 }} />
               <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>{match.team_a_name}</Text>
             </View>
             {state.games.map((g, i) => (
@@ -500,7 +501,7 @@ export default function BadmintonLiveScoringScreen() {
         {/* Server */}
         <View className="bg-white rounded-2xl px-4 py-3 mb-4" style={cardShadow}>
           <View className="flex-row items-center" style={{ gap: 8 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+            <GradientFill style={{ width: 8, height: 8, borderRadius: 4 }} />
             <Text className="text-ink text-sm flex-1" numberOfLines={1}>
               <Text className="font-bold">SERVER: </Text>
               {servingPlayerName}

@@ -3,6 +3,7 @@ import { Modal, View, Text, Image, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { getSportIcon } from "../lib/sportIcons";
 import { getSportImage } from "../lib/sportImages";
 
@@ -103,12 +104,12 @@ export default function SelectSportModal({
                       {sport.name}
                     </Text>
                     {selected && (
-                      <View
+                      <GradientFill
                         className="items-center justify-center rounded-full"
-                        style={{ width: 20, height: 20, backgroundColor: colors.primary }}
+                        style={{ width: 20, height: 20 }}
                       >
                         <Ionicons name="checkmark" size={13} color="white" />
-                      </View>
+                      </GradientFill>
                     )}
                   </Pressable>
                 );
@@ -120,14 +121,12 @@ export default function SelectSportModal({
           </ScrollView>
 
           <View className="px-5 pt-3">
-            <Pressable
-              onPress={() => onApply(draft)}
-              className="items-center rounded-2xl bg-primary py-4"
-              style={primaryButtonShadow}
-            >
-              <Text className="text-white font-bold" style={{ fontSize: 16 }}>
-                Apply Filter
-              </Text>
+            <Pressable onPress={() => onApply(draft)} style={primaryButtonShadow}>
+              <GradientFill className="items-center rounded-2xl py-4">
+                <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                  Apply Filter
+                </Text>
+              </GradientFill>
             </Pressable>
           </View>
         </View>

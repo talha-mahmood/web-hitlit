@@ -28,6 +28,7 @@ import { colors, cardShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import AdminMenuOverlay from "../../components/AdminMenuOverlay";
 import RevenueBarChart from "../../components/RevenueBarChart";
+import GradientFill from "../../components/GradientFill";
 import SportIconBadge from "../../components/SportIconBadge";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getSportImage } from "../../lib/sportImages";
@@ -349,13 +350,11 @@ export default function AdminDashboardScreen() {
                 Rs {stats.todaysRevenue.toLocaleString()}
               </Text>
             </View>
-            <Pressable
-              onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}
-              className="flex-row items-center rounded-xl px-4 py-2.5"
-              style={{ backgroundColor: colors.primary, gap: 6 }}
-            >
-              <Ionicons name="calendar" size={14} color="white" />
-              <Text className="text-white font-semibold text-sm">Bookings</Text>
+            <Pressable onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}>
+              <GradientFill className="flex-row items-center rounded-xl px-4 py-2.5" style={{ gap: 6 }}>
+                <Ionicons name="calendar" size={14} color="white" />
+                <Text className="text-white font-semibold text-sm">Bookings</Text>
+              </GradientFill>
             </Pressable>
           </View>
 
@@ -643,13 +642,19 @@ export default function AdminDashboardScreen() {
                 {venue.court.map((c) => {
                   const active = c.id === hourlyCourtId;
                   return (
-                    <Pressable
-                      key={c.id}
-                      onPress={() => setHourlyCourtId(c.id)}
-                      className="rounded-full px-3 py-2"
-                      style={{ backgroundColor: active ? colors.primary : "white", borderWidth: 1, borderColor: active ? colors.primary : colors.border }}
-                    >
-                      <Text className={`text-sm font-medium ${active ? "text-white" : "text-ink"}`}>{c.name}</Text>
+                    <Pressable key={c.id} onPress={() => setHourlyCourtId(c.id)}>
+                      {active ? (
+                        <GradientFill className="rounded-full px-3 py-2">
+                          <Text className="text-sm font-medium text-white">{c.name}</Text>
+                        </GradientFill>
+                      ) : (
+                        <View
+                          className="rounded-full px-3 py-2"
+                          style={{ backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                        >
+                          <Text className="text-sm font-medium text-ink">{c.name}</Text>
+                        </View>
+                      )}
                     </Pressable>
                   );
                 })}

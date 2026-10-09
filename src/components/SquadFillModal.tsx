@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, ScrollView, Image } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useMyOwnedSquads } from "../hooks/useSquadTeamFill";
 import type { SquadListItem } from "../lib/api/squads";
 
@@ -110,16 +111,21 @@ export default function SquadFillModal({
                           setSelectedSquad(s);
                           setSelectedMemberIds(new Set());
                         }}
-                        className="rounded-xl px-3 py-2"
+                        className="rounded-xl"
                         style={{
                           borderWidth: 1.5,
                           borderColor: selected ? colors.primary : colors.border,
-                          backgroundColor: selected ? colors.primary : "white",
                         }}
                       >
-                        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                          {s.name}
-                        </Text>
+                        {selected ? (
+                          <GradientFill className="rounded-xl px-3 py-2">
+                            <Text className="text-sm font-medium text-white">{s.name}</Text>
+                          </GradientFill>
+                        ) : (
+                          <View className="rounded-xl px-3 py-2" style={{ backgroundColor: "white" }}>
+                            <Text className="text-sm font-medium text-ink">{s.name}</Text>
+                          </View>
+                        )}
                       </Pressable>
                     );
                   })}
@@ -170,15 +176,28 @@ export default function SquadFillModal({
                   <Pressable
                     onPress={handleSubmit}
                     disabled={!canSubmit || submitting}
-                    className={`rounded-xl py-4 items-center mt-6 ${canSubmit ? "bg-primary" : "bg-gray-200"}`}
                     style={canSubmit ? primaryButtonShadow : undefined}
                   >
-                    {submitting ? (
-                      <ActivityIndicator color="white" />
+                    {canSubmit ? (
+                      <GradientFill className="rounded-xl py-4 items-center mt-6">
+                        {submitting ? (
+                          <ActivityIndicator color="white" />
+                        ) : (
+                          <Text className="font-semibold text-base text-white">
+                            Register {requiredCount} Member{requiredCount === 1 ? "" : "s"}
+                          </Text>
+                        )}
+                      </GradientFill>
                     ) : (
-                      <Text className={`font-semibold text-base ${canSubmit ? "text-white" : "text-muted"}`}>
-                        Register {requiredCount} Member{requiredCount === 1 ? "" : "s"}
-                      </Text>
+                      <View className="rounded-xl py-4 items-center mt-6 bg-gray-200">
+                        {submitting ? (
+                          <ActivityIndicator color="white" />
+                        ) : (
+                          <Text className="font-semibold text-base text-muted">
+                            Register {requiredCount} Member{requiredCount === 1 ? "" : "s"}
+                          </Text>
+                        )}
+                      </View>
                     )}
                   </Pressable>
                 </>

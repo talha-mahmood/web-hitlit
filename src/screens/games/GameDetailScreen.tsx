@@ -37,6 +37,7 @@ import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColo
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { addMinutesWithOverflow } from "../../lib/gameFormHelpers";
 import WaveDivider from "../../components/WaveDivider";
+import GradientFill from "../../components/GradientFill";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -129,18 +130,32 @@ function InfoRow({
           )}
         </View>
         {pillColor ? (
-          <View
-            style={{
-              backgroundColor: pillColor,
-              alignSelf: "flex-start",
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-              marginTop: 4,
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
-          </View>
+          pillColor === colors.primary ? (
+            <GradientFill
+              style={{
+                alignSelf: "flex-start",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+            </GradientFill>
+          ) : (
+            <View
+              style={{
+                backgroundColor: pillColor,
+                alignSelf: "flex-start",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+            </View>
+          )
         ) : (
           <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
         )}
@@ -169,9 +184,9 @@ function PlayerAvatar({ name, avatar, isCreator, onRemove, onPressAvatar }: { na
         )}
       </Pressable>
       {isCreator && (
-        <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
+        <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Host</Text>
-        </View>
+        </GradientFill>
       )}
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Player").split(" ")[0]}
@@ -221,8 +236,10 @@ function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject,
         <Pressable onPress={onReject} disabled={disabled} className="border border-border rounded-lg px-3 py-1.5">
           <Text className="text-muted text-xs font-semibold">Reject</Text>
         </Pressable>
-        <Pressable onPress={onApprove} disabled={disabled} className="bg-primary rounded-lg px-3 py-1.5">
-          <Text className="text-white text-xs font-semibold">Approve</Text>
+        <Pressable onPress={onApprove} disabled={disabled}>
+          <GradientFill className="rounded-lg px-3 py-1.5">
+            <Text className="text-white text-xs font-semibold">Approve</Text>
+          </GradientFill>
         </Pressable>
       </View>
     </View>
@@ -646,8 +663,10 @@ export default function GameDetailScreen() {
               <Pressable onPress={handleDeclineInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 border border-danger rounded-lg py-2.5 items-center">
                 <Text className="text-danger font-semibold text-sm">Decline</Text>
               </Pressable>
-              <Pressable onPress={handleAcceptInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1 bg-primary rounded-lg py-2.5 items-center">
-                {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+              <Pressable onPress={handleAcceptInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1">
+                <GradientFill className="rounded-lg py-2.5 items-center">
+                  {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+                </GradientFill>
               </Pressable>
             </View>
           </View>
@@ -671,8 +690,10 @@ export default function GameDetailScreen() {
               <Pressable onPress={handleDeclineTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1 border border-danger rounded-lg py-2.5 items-center">
                 <Text className="text-danger font-semibold text-sm">Decline</Text>
               </Pressable>
-              <Pressable onPress={handleAcceptTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1 bg-primary rounded-lg py-2.5 items-center">
-                {acceptTeamInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+              <Pressable onPress={handleAcceptTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1">
+                <GradientFill className="rounded-lg py-2.5 items-center">
+                  {acceptTeamInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+                </GradientFill>
               </Pressable>
             </View>
           </View>
@@ -872,12 +893,18 @@ export default function GameDetailScreen() {
                       navigation.navigate("VenueDetail", { venueId: game.venue_id!, forGameId: game.id });
                     }}
                     disabled={isVenueBooked}
-                    className={`rounded-xl py-4 items-center mb-3 ${isVenueBooked ? "bg-gray-100" : "bg-primary"}`}
+                    className="mb-3"
                     style={isVenueBooked ? undefined : primaryButtonShadow}
                   >
-                    <Text className={`font-semibold text-base ${isVenueBooked ? "text-muted" : "text-white"}`}>
-                      {isVenueBooked ? "Venue Booked" : "Book Venue"}
-                    </Text>
+                    {isVenueBooked ? (
+                      <View className="rounded-xl py-4 items-center bg-gray-100">
+                        <Text className="font-semibold text-base text-muted">Venue Booked</Text>
+                      </View>
+                    ) : (
+                      <GradientFill className="rounded-xl py-4 items-center">
+                        <Text className="font-semibold text-base text-white">Book Venue</Text>
+                      </GradientFill>
+                    )}
                   </Pressable>
                 )}
                 {!isVenueBooked && (
@@ -917,8 +944,10 @@ export default function GameDetailScreen() {
               <Text className="text-muted font-semibold">Game is Full</Text>
             </View>
           ) : (
-            <Pressable onPress={handleJoin} className="bg-primary rounded-xl py-4 items-center" style={primaryButtonShadow}>
-              <Text className="text-white font-semibold text-base">{game.entry_fee > 0 ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}` : "Request to Join"}</Text>
+            <Pressable onPress={handleJoin} style={primaryButtonShadow}>
+              <GradientFill className="rounded-xl py-4 items-center">
+                <Text className="text-white font-semibold text-base">{game.entry_fee > 0 ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}` : "Request to Join"}</Text>
+              </GradientFill>
             </Pressable>
           )}
         </View>

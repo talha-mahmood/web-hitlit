@@ -4,8 +4,8 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import type { Session } from "@supabase/supabase-js";
 import { signInWithGoogle } from "../../lib/googleAuth";
 import { signInWithApple } from "../../lib/appleAuth";
-import { colors } from "../../constants/theme";
 import GoogleIcon from "../../components/GoogleIcon";
+import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 export default function LoginScreen() {
@@ -61,19 +61,21 @@ export default function LoginScreen() {
           <Pressable
             onPress={() => handleSignIn(signInWithGoogle)}
             disabled={isSigningIn}
-            className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-8 active:opacity-90"
-            style={{ backgroundColor: colors.primary, opacity: isSigningIn ? 0.7 : 1 }}
+            className="w-full active:opacity-90"
+            style={{ opacity: isSigningIn ? 0.7 : 1 }}
           >
-            {isSigningIn ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <View className="bg-white rounded-full items-center justify-center" style={{ width: 26, height: 26 }}>
-                  <GoogleIcon size={16} />
-                </View>
-                <Text className="text-white font-semibold text-base">Sign In with Google</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-8">
+              {isSigningIn ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <View className="bg-white rounded-full items-center justify-center" style={{ width: 26, height: 26 }}>
+                    <GoogleIcon size={16} />
+                  </View>
+                  <Text className="text-white font-semibold text-base">Sign In with Google</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
 
           {Platform.OS === "ios" && (

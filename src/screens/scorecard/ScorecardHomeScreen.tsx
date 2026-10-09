@@ -10,6 +10,7 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
+import GradientFill from "../../components/GradientFill";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -72,16 +73,18 @@ function SportCard({
           {subtitle}
         </Text>
       </View>
-      <View
-        className="items-center justify-center rounded-full"
-        style={
-          active
-            ? { width: 36, height: 36, backgroundColor: colors.primary, ...primaryButtonShadow }
-            : { width: 34, height: 34, backgroundColor: "#F1F3F5" }
-        }
-      >
-        <Ionicons name="chevron-forward" size={18} color={active ? "white" : colors.muted} />
-      </View>
+      {active ? (
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 36, height: 36, ...primaryButtonShadow }}>
+          <Ionicons name="chevron-forward" size={18} color="white" />
+        </GradientFill>
+      ) : (
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 34, height: 34, backgroundColor: "#F1F3F5" }}
+        >
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </View>
+      )}
     </View>
   );
 
@@ -122,19 +125,19 @@ function HeaderArt() {
     <View pointerEvents="none" className="flex-row items-center" style={{ gap: 4 }}>
       <Svg width={52} height={72} viewBox="0 0 52 72">
         {/* Scoreboard */}
-        <Rect x={6} y={2} width={40} height={28} rx={6} fill="#9AD8B0" />
-        <Rect x={10} y={6} width={32} height={20} rx={4} fill="#C4E9D2" stroke="#66B788" strokeWidth={1} />
-        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#3F9A63" textAnchor="middle">
+        <Rect x={6} y={2} width={40} height={28} rx={6} fill="#6FC694" />
+        <Rect x={10} y={6} width={32} height={20} rx={4} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
+        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#0E5C34" textAnchor="middle">
           0-0
         </SvgText>
-        <Rect x={13} y={30} width={4} height={10} rx={2} fill="#9AD8B0" />
-        <Rect x={35} y={30} width={4} height={10} rx={2} fill="#9AD8B0" />
+        <Rect x={13} y={30} width={4} height={10} rx={2} fill="#6FC694" />
+        <Rect x={35} y={30} width={4} height={10} rx={2} fill="#6FC694" />
         {/* Trophy */}
-        <Path d="M14 42h24v6c0 8-5 12-12 12s-12-4-12-12z" fill="#B7E2C6" stroke="#66B788" strokeWidth={1} />
-        <Path d="M14 44c-6 0-8 3-6 7 1 2 4 3 7 3M38 44c6 0 8 3 6 7-1 2-4 3-7 3" fill="none" stroke="#66B788" strokeWidth={1.5} />
-        <Rect x={23} y={60} width={6} height={5} fill="#9AD8B0" />
-        <Rect x={16} y={65} width={20} height={5} rx={2} fill="#9AD8B0" />
-        <Circle cx={8} cy={66} r={4.5} fill="#CDEBD8" stroke="#66B788" strokeWidth={1} />
+        <Path d="M14 42h24v6c0 8-5 12-12 12s-12-4-12-12z" fill="#9FDBB8" stroke="#1D9254" strokeWidth={1} />
+        <Path d="M14 44c-6 0-8 3-6 7 1 2 4 3 7 3M38 44c6 0 8 3 6 7-1 2-4 3-7 3" fill="none" stroke="#1D9254" strokeWidth={1.5} />
+        <Rect x={23} y={60} width={6} height={5} fill="#6FC694" />
+        <Rect x={16} y={65} width={20} height={5} rx={2} fill="#6FC694" />
+        <Circle cx={8} cy={66} r={4.5} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
       </Svg>
       <View>
         <Text
@@ -173,9 +176,8 @@ export default function ScorecardHomeScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -203,7 +205,7 @@ export default function ScorecardHomeScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </GradientFill>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 14 }} style={{ marginTop: 0 }}>
         <SportCard

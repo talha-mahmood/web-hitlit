@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import {
@@ -30,14 +31,14 @@ function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: stri
     );
   }
   return (
-    <View
-      className="bg-primary items-center justify-center"
+    <GradientFill
+      className="items-center justify-center"
       style={{ width: size, height: size, borderRadius: size / 2 }}
     >
       <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>
         {initials}
       </Text>
-    </View>
+    </GradientFill>
   );
 }
 
@@ -208,15 +209,20 @@ export default function CommunityChatContent({
         {DAY_FILTERS.map((d) => {
           const active = dayFilter === d;
           return (
-            <Pressable
-              key={d}
-              onPress={() => setDayFilter(active ? null : d)}
-              className="rounded-full px-3 py-1.5"
-              style={{ backgroundColor: active ? colors.primary : "#F3F4F6" }}
-            >
-              <Text className={`text-xs font-bold ${active ? "text-white" : "text-muted"}`}>
-                {d} Day{d === 1 ? "" : "s"}
-              </Text>
+            <Pressable key={d} onPress={() => setDayFilter(active ? null : d)}>
+              {active ? (
+                <GradientFill className="rounded-full px-3 py-1.5">
+                  <Text className="text-xs font-bold text-white">
+                    {d} Day{d === 1 ? "" : "s"}
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: "#F3F4F6" }}>
+                  <Text className="text-xs font-bold text-muted">
+                    {d} Day{d === 1 ? "" : "s"}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           );
         })}

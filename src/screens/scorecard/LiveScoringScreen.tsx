@@ -33,6 +33,7 @@ import {
 } from "../../lib/cricketScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import GradientFill from "../../components/GradientFill";
 import { resourcePercent, computeDuckworthLewis } from "../../lib/duckworthLewis";
 type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
@@ -242,15 +243,15 @@ function SelectPlayerPanel({
   return (
     <Modal visible animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-white">
-        <View
+        <GradientFill
           className="flex-row items-center px-4 pb-3"
-          style={{ paddingTop: 54, backgroundColor: colors.primary, gap: 12 }}
+          style={{ paddingTop: 54, gap: 12 }}
         >
           <Pressable onPress={onClose} hitSlop={8}>
             <Ionicons name="close" size={24} color="white" />
           </Pressable>
           <Text className="text-white font-bold text-lg flex-1">{title}</Text>
-        </View>
+        </GradientFill>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
           {names.map((name, i) => {
@@ -336,9 +337,10 @@ function SelectPlayerPanel({
                   setShowAdd(false);
                 }}
                 disabled={!addDraft.trim() || addPlayerPending}
-                className="bg-primary rounded-xl px-4 py-2.5"
               >
-                {addPlayerPending ? <ActivityIndicator size="small" color="white" /> : <Ionicons name="checkmark" size={18} color="white" />}
+                <GradientFill className="rounded-xl px-4 py-2.5">
+                  {addPlayerPending ? <ActivityIndicator size="small" color="white" /> : <Ionicons name="checkmark" size={18} color="white" />}
+                </GradientFill>
               </Pressable>
             </View>
           )}
@@ -347,8 +349,9 @@ function SelectPlayerPanel({
         <Pressable
           onPress={() => setShowAdd(true)}
           className="absolute bottom-0 left-0 right-0 items-center py-4"
-          style={{ backgroundColor: colors.primaryDark, paddingBottom: 28 }}
+          style={{ paddingBottom: 28 }}
         >
+          <GradientFill style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
           <Text className="text-white font-bold tracking-wide">ADD / CREATE PLAYER</Text>
         </Pressable>
       </View>
@@ -880,9 +883,9 @@ export default function LiveScoringScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      <View
+      <GradientFill
         className="overflow-hidden"
-        style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 12, paddingBottom: 4 }}
+        style={{ paddingTop: insets.top + 12, paddingBottom: 4 }}
       >
         <View
           pointerEvents="none"
@@ -922,7 +925,7 @@ export default function LiveScoringScreen() {
             </Pressable>
           ))}
         </ScrollView>
-      </View>
+      </GradientFill>
 
       {matchCentreTab === "scoring" ? (
         <>
@@ -1023,19 +1026,21 @@ export default function LiveScoringScreen() {
                   <Pressable
                     onPress={handleStartSecondInnings}
                     disabled={markInningsComplete.isPending || startSecondInnings.isPending}
-                    className="bg-primary rounded-xl px-5 py-3 mt-4"
                     style={primaryButtonShadow}
                   >
-                    <Text className="text-white font-semibold">Start 2nd Innings</Text>
+                    <GradientFill className="rounded-xl px-5 py-3 mt-4">
+                      <Text className="text-white font-semibold">Start 2nd Innings</Text>
+                    </GradientFill>
                   </Pressable>
                 ) : (
                   <Pressable
                     onPress={hasActiveInnings ? handleFinishMatch : () => navigation.replace("FullScorecard", { matchId: match.id })}
                     disabled={markInningsComplete.isPending || completeMatch.isPending}
-                    className="bg-primary rounded-xl px-5 py-3 mt-4"
                     style={primaryButtonShadow}
                   >
-                    <Text className="text-white font-semibold">View Final Scorecard</Text>
+                    <GradientFill className="rounded-xl px-5 py-3 mt-4">
+                      <Text className="text-white font-semibold">View Final Scorecard</Text>
+                    </GradientFill>
                   </Pressable>
                 )}
               </View>
@@ -1154,9 +1159,9 @@ export default function LiveScoringScreen() {
               saved so a slow network or a fast double-tap can never fire two
               deliveries for the same ball. */}
           {hasActiveInnings && !inningsOver && (
-            <View
+            <GradientFill
               pointerEvents={addBall.isPending ? "none" : "auto"}
-              style={{ backgroundColor: colors.primary, paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18, opacity: addBall.isPending ? 0.6 : 1 }}
+              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18, opacity: addBall.isPending ? 0.6 : 1 }}
             >
               {!readyToScore ? (
                 <>
@@ -1586,7 +1591,7 @@ export default function LiveScoringScreen() {
                   {cancelRow}
                 </>
               ) : null}
-            </View>
+            </GradientFill>
           )}
         </>
       ) : matchCentreTab === "scorecard" ? (

@@ -13,6 +13,7 @@ import {
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminNotifications">;
 
@@ -70,7 +71,7 @@ function NotificationCard({
           <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
             {notification.title}
           </Text>
-          {unread && <View className="w-2 h-2 rounded-full bg-primary ml-2" />}
+          {unread && <GradientFill className="w-2 h-2 rounded-full ml-2" />}
         </View>
         {notification.body && (
           <Text className="text-muted text-sm mt-1" numberOfLines={2}>

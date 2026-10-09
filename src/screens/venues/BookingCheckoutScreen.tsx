@@ -8,6 +8,7 @@ import { useLinkGameBooking } from "../../hooks/useGames";
 import { useAuthStore } from "../../store/authStore";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -227,32 +228,29 @@ export default function BookingCheckoutScreen() {
               Cash on arrival · Online payment coming soon
             </Text>
           </View>
-          <View
+          <GradientFill
             className="items-center justify-center rounded-full"
-            style={{ width: 26, height: 26, backgroundColor: colors.primary }}
+            style={{ width: 26, height: 26 }}
           >
             <Ionicons name="checkmark" size={16} color="white" />
-          </View>
+          </GradientFill>
         </View>
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-4 pb-8 pt-3">
-        <Pressable
-          onPress={handleConfirm}
-          disabled={createBooking.isPending}
-          className="bg-primary rounded-2xl py-4 flex-row items-center justify-center"
-          style={{ gap: 8, ...primaryButtonShadow }}
-        >
-          {createBooking.isPending ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <>
-              <Text className="text-white font-bold text-base">
-                Confirm Booking · Rs {totalAmount.toLocaleString()}
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="white" />
-            </>
-          )}
+        <Pressable onPress={handleConfirm} disabled={createBooking.isPending} style={primaryButtonShadow}>
+          <GradientFill className="rounded-2xl py-4 flex-row items-center justify-center" style={{ gap: 8 }}>
+            {createBooking.isPending ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <>
+                <Text className="text-white font-bold text-base">
+                  Confirm Booking · Rs {totalAmount.toLocaleString()}
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color="white" />
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
     </View>

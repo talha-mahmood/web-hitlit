@@ -32,6 +32,7 @@ import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import type { SquadGroupType } from "../../lib/api/squads";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
@@ -233,26 +234,24 @@ export default function CreateSquadScreen() {
             Build your team and find amazing players
           </Text>
         </View>
-        <Pressable
-          onPress={handleCreate}
-          disabled={createSquad.isPending}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 14,
-            paddingHorizontal: 22,
-            paddingVertical: 9,
-            minWidth: 66,
-            alignItems: "center",
-            ...primaryButtonShadow,
-          }}
-        >
-          {createSquad.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-bold" style={{ fontSize: 14.5 }}>
-              Post
-            </Text>
-          )}
+        <Pressable onPress={handleCreate} disabled={createSquad.isPending} style={primaryButtonShadow}>
+          <GradientFill
+            style={{
+              borderRadius: 14,
+              paddingHorizontal: 22,
+              paddingVertical: 9,
+              minWidth: 66,
+              alignItems: "center",
+            }}
+          >
+            {createSquad.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-bold" style={{ fontSize: 14.5 }}>
+                Post
+              </Text>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 
@@ -262,10 +261,9 @@ export default function CreateSquadScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Intro banner */}
-        {/* Same dark green ("#0E4429") as the custom-icon banner on Create Game. */}
-        <View
+        {/* Same brand gradient as the custom-icon banner on Create Game. */}
+        <GradientFill
           style={{
-            backgroundColor: "#0E4429",
             borderRadius: 18,
             paddingHorizontal: 18,
             paddingVertical: 16,
@@ -311,7 +309,7 @@ export default function CreateSquadScreen() {
               <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#86EFAC", marginTop: 1 }} />
             </View>
           </View>
-        </View>
+        </GradientFill>
 
         {/* Custom listing icon (optional) */}
         <FormCard
@@ -347,7 +345,7 @@ export default function CreateSquadScreen() {
                   <Ionicons name="image-outline" size={26} color={colors.muted} />
                 )}
               </View>
-              <View
+              <GradientFill
                 className="items-center justify-center"
                 style={{
                   position: "absolute",
@@ -356,13 +354,12 @@ export default function CreateSquadScreen() {
                   width: 20,
                   height: 20,
                   borderRadius: 10,
-                  backgroundColor: colors.primary,
                   borderWidth: 2,
                   borderColor: "white",
                 }}
               >
                 <Ionicons name="add" size={13} color="white" />
-              </View>
+              </GradientFill>
             </View>
             <View className="rounded-2xl" style={{ backgroundColor: "#DCFCE7", paddingHorizontal: 22, paddingVertical: 14 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 14.5 }}>

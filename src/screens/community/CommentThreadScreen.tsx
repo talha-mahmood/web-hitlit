@@ -15,6 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import {
@@ -47,14 +48,14 @@ function Avatar({ name, avatar, size = 36 }: { name: string | null; avatar: stri
     );
   }
   return (
-    <View
-      className="bg-primary items-center justify-center"
+    <GradientFill
+      className="items-center justify-center"
       style={{ width: size, height: size, borderRadius: size / 2 }}
     >
       <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>
         {initials}
       </Text>
-    </View>
+    </GradientFill>
   );
 }
 
@@ -226,15 +227,15 @@ export default function CommentThreadScreen() {
       keyboardVerticalOffset={insets.top}
     >
       {isFocused ? <StatusBar style="light" /> : null}
-      <View
+      <GradientFill
         className="flex-row items-center px-4 pb-4"
-        style={{ paddingTop: insets.top + 16, gap: 12, backgroundColor: "#14532D" }}
+        style={{ paddingTop: insets.top + 16, gap: 12 }}
       >
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color="white" />
         </Pressable>
         <Text className="text-white font-extrabold text-lg flex-1">Comment</Text>
-      </View>
+      </GradientFill>
 
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />

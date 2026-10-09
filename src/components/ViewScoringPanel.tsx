@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 
 // Shared by every sport's "View Scoring" tab (see e.g.
 // CricketScorecardHomeScreen) — looks up a match by the short scoring code
@@ -69,10 +70,11 @@ export default function ViewScoringPanel({
       <Pressable
         onPress={handleSubmit}
         disabled={loading || !code.trim()}
-        className="bg-primary rounded-xl py-4 items-center"
         style={{ ...primaryButtonShadow, opacity: loading || !code.trim() ? 0.6 : 1 }}
       >
-        {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">View Scorecard</Text>}
+        <GradientFill className="rounded-xl py-4 items-center">
+          {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">View Scorecard</Text>}
+        </GradientFill>
       </Pressable>
     </View>
   );

@@ -18,6 +18,7 @@ import {
 } from "../../lib/slots";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
+import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Route = RouteProp<VenueEditingParamList, "AdminSlots">;
@@ -120,17 +121,18 @@ export default function AdminSlotsScreen() {
             const d = new Date(day + "T12:00:00");
             const dayLabel = isToday ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" });
             return (
-              <Pressable
-                key={day}
-                onPress={() => setSelectedDate(day)}
-                className={`items-center justify-center w-14 h-16 rounded-xl ${
-                  isSelected ? "bg-primary" : "bg-white border border-border"
-                }`}
-              >
-                <Text className={`text-xs font-medium ${isSelected ? "text-white" : isToday ? "text-primary" : "text-muted"}`}>
-                  {dayLabel}
-                </Text>
-                <Text className={`text-lg font-bold mt-0.5 ${isSelected ? "text-white" : "text-ink"}`}>{d.getDate()}</Text>
+              <Pressable key={day} onPress={() => setSelectedDate(day)}>
+                {isSelected ? (
+                  <GradientFill className="items-center justify-center w-14 h-16 rounded-xl">
+                    <Text className="text-xs font-medium text-white">{dayLabel}</Text>
+                    <Text className="text-lg font-bold mt-0.5 text-white">{d.getDate()}</Text>
+                  </GradientFill>
+                ) : (
+                  <View className="items-center justify-center w-14 h-16 rounded-xl bg-white border border-border">
+                    <Text className={`text-xs font-medium ${isToday ? "text-primary" : "text-muted"}`}>{dayLabel}</Text>
+                    <Text className="text-lg font-bold mt-0.5 text-ink">{d.getDate()}</Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}

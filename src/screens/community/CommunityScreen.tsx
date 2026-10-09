@@ -8,6 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
+import GradientFill from "../../components/GradientFill";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
 import PlayersDashboardContent from "../players/PlayersDashboardContent";
 import CommunityChatContent from "./CommunityChatContent";
@@ -268,9 +269,8 @@ export default function CommunityScreen() {
       {/* Fixed header — stays on screen while only the content below switches. */}
       {/* Dark-green header: icon tile + title/subtitle, rounded at the bottom; the tab bar overlaps its lower edge. */}
       {isFocused ? <StatusBar style="light" /> : null}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -295,12 +295,12 @@ export default function CommunityScreen() {
           >
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
-          <View
+          <GradientFill
             className="items-center justify-center"
-            style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: "#4CAF6A" }}
+            style={{ width: 54, height: 54, borderRadius: 16 }}
           >
             <MaterialCommunityIcons name="account-group" size={32} color="white" />
-          </View>
+          </GradientFill>
           <View className="flex-1">
             <Text className="text-white font-extrabold" style={{ fontSize: 23 }}>
               {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
@@ -310,7 +310,7 @@ export default function CommunityScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </GradientFill>
 
       {segment === "community" && (
         <MyCommunityContent

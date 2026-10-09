@@ -21,6 +21,7 @@ import { useSeenBy } from "../../hooks/useChatReads";
 import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import { markSquadChatRead, type SquadMessage } from "../../lib/api/squadMessages";
 import ChatIcon from "../../components/ChatIcon";
@@ -121,6 +122,16 @@ function MessageBubble({
   const name = message.profiles?.full_name ?? "Member";
   const initials = name.charAt(0).toUpperCase();
   const isDeleted = !!message.deleted_at;
+  const bubbleContent = isDeleted ? (
+    <Text className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`} style={{ fontStyle: "italic" }}>
+      This message was deleted
+    </Text>
+  ) : (
+    <>
+      {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
+      <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
+    </>
+  );
 
   return (
     <Pressable
@@ -157,24 +168,21 @@ function MessageBubble({
       <View style={{ maxWidth: "75%" }}>
         {!isOwn && <Text className="text-ink text-sm font-bold mb-1 ml-1">{name}</Text>}
         <View style={{ position: "relative" }}>
-          <View
-            className={`px-3 py-2 rounded-2xl ${isOwn ? "bg-primary" : "bg-gray-100"}`}
-            style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
-          >
-            {isDeleted ? (
-              <Text
-                className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
-                style={{ fontStyle: "italic" }}
-              >
-                This message was deleted
-              </Text>
-            ) : (
-              <>
-                {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
-                <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
-              </>
-            )}
-          </View>
+          {isOwn ? (
+            <GradientFill
+              className="px-3 py-2 rounded-2xl"
+              style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
+            >
+              {bubbleContent}
+            </GradientFill>
+          ) : (
+            <View
+              className="px-3 py-2 rounded-2xl bg-gray-100"
+              style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
+            >
+              {bubbleContent}
+            </View>
+          )}
           {isOwn && !isDeleted && (
             <View
               className="items-center justify-center rounded-full"
@@ -481,10 +489,17 @@ export default function SquadChatScreen() {
         <Pressable
           onPress={handleSend}
           disabled={!draft.trim() || sendMessage.isPending}
-          className={`w-11 h-11 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
           style={draft.trim() ? cardShadow : undefined}
         >
-          <Ionicons name="send" size={17} color="white" />
+          {draft.trim() ? (
+            <GradientFill className="w-11 h-11 rounded-full items-center justify-center">
+              <Ionicons name="send" size={17} color="white" />
+            </GradientFill>
+          ) : (
+            <View className="w-11 h-11 rounded-full items-center justify-center bg-gray-200">
+              <Ionicons name="send" size={17} color="white" />
+            </View>
+          )}
         </Pressable>
       </View>
 

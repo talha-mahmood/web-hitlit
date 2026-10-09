@@ -11,6 +11,7 @@ import { useSports } from "../../hooks/useSports";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import Bouncy from "../../components/Bouncy";
 import SelectSportModal from "../../components/SelectSportModal";
 import PlayerStatCards from "../../components/PlayerStatCards";
@@ -144,14 +145,14 @@ export default function PlayerProfileScreen() {
                 style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: "white" }}
               />
             ) : (
-              <View
-                className="items-center justify-center bg-primary"
+              <GradientFill
+                className="items-center justify-center"
                 style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: "white" }}
               >
                 <Text className="text-3xl font-bold text-white">
                   {(player?.fullName ?? "?").charAt(0).toUpperCase()}
                 </Text>
-              </View>
+              </GradientFill>
             )}
             <View
               className="absolute items-center justify-center bg-white rounded-full"
@@ -201,30 +202,36 @@ export default function PlayerProfileScreen() {
             <Pressable
               onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
               disabled={toggleFollow.isPending || !viewerId}
-              className="flex-row items-center rounded-full px-4 py-2"
-              style={{
-                gap: 6,
-                backgroundColor: followState?.isFollowing ? "white" : colors.primary,
-                borderWidth: followState?.isFollowing ? 1 : 0,
-                borderColor: colors.border,
-              }}
             >
-              {toggleFollow.isPending ? (
-                <ActivityIndicator size="small" color={followState?.isFollowing ? colors.primary : "white"} />
+              {followState?.isFollowing ? (
+                <View
+                  className="flex-row items-center rounded-full px-4 py-2"
+                  style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                >
+                  {toggleFollow.isPending ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={16} color={colors.primaryDark} />
+                      <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
+                        Following
+                      </Text>
+                    </>
+                  )}
+                </View>
               ) : (
-                <>
-                  <Ionicons
-                    name={followState?.isFollowing ? "checkmark" : "add"}
-                    size={16}
-                    color={followState?.isFollowing ? colors.primaryDark : "white"}
-                  />
-                  <Text
-                    className="text-sm font-bold"
-                    style={{ color: followState?.isFollowing ? colors.primaryDark : "white" }}
-                  >
-                    {followState?.isFollowing ? "Following" : "Follow"}
-                  </Text>
-                </>
+                <GradientFill className="flex-row items-center rounded-full px-4 py-2" style={{ gap: 6 }}>
+                  {toggleFollow.isPending ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Ionicons name="add" size={16} color="white" />
+                      <Text className="text-sm font-bold" style={{ color: "white" }}>
+                        Follow
+                      </Text>
+                    </>
+                  )}
+                </GradientFill>
               )}
             </Pressable>
           )}

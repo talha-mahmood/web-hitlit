@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, Image, ScrollView, Ale
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useUserSearch } from "../hooks/useInvites";
 import type { UserSearchResult } from "../lib/api/users";
 import FieldInput from "./FieldInput";
@@ -129,21 +130,26 @@ export default function InviteUsersModal({
                         ID: {user.user_code}
                       </Text>
                     </View>
-                    <Pressable
-                      onPress={() => handleInvite(user)}
-                      disabled={isInvited || isInviting}
-                      className={`rounded-lg px-3 py-2 flex-row items-center ${isInvited ? "bg-green-50" : "bg-primary"}`}
-                      style={{ gap: 4 }}
-                    >
-                      {isInviting ? (
-                        <ActivityIndicator size="small" color={isInvited ? colors.primary : "white"} />
-                      ) : isInvited ? (
-                        <>
-                          <Ionicons name="checkmark" size={14} color={colors.primary} />
-                          <Text className="text-primary text-xs font-semibold">Invited</Text>
-                        </>
+                    <Pressable onPress={() => handleInvite(user)} disabled={isInvited || isInviting}>
+                      {isInvited ? (
+                        <View className="rounded-lg px-3 py-2 flex-row items-center bg-green-50" style={{ gap: 4 }}>
+                          {isInviting ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                          ) : (
+                            <>
+                              <Ionicons name="checkmark" size={14} color={colors.primary} />
+                              <Text className="text-primary text-xs font-semibold">Invited</Text>
+                            </>
+                          )}
+                        </View>
                       ) : (
-                        <Text className="text-white text-xs font-semibold">Invite</Text>
+                        <GradientFill className="rounded-lg px-3 py-2 flex-row items-center" style={{ gap: 4 }}>
+                          {isInviting ? (
+                            <ActivityIndicator size="small" color="white" />
+                          ) : (
+                            <Text className="text-white text-xs font-semibold">Invite</Text>
+                          )}
+                        </GradientFill>
                       )}
                     </Pressable>
                   </View>

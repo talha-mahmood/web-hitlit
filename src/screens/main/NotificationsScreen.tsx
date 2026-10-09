@@ -24,6 +24,7 @@ import {
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "Notifications">,
@@ -123,7 +124,7 @@ function NotificationCard({
           <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
             {notification.title}
           </Text>
-          {unread && <View className="w-2 h-2 rounded-full bg-primary ml-2" />}
+          {unread && <GradientFill className="w-2 h-2 rounded-full ml-2" />}
         </View>
         {notification.body && (
           <Text className="text-muted text-sm mt-1" numberOfLines={2}>
@@ -143,13 +144,15 @@ function NotificationCard({
             <Pressable
               onPress={inviteActions.onApprove}
               disabled={inviteActions.isResponding}
-              className="flex-1 bg-primary rounded-lg py-2 items-center"
+              className="flex-1"
             >
-              {inviteActions.isResponding ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-white text-xs font-semibold">Approve</Text>
-              )}
+              <GradientFill className="rounded-lg py-2 items-center">
+                {inviteActions.isResponding ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white text-xs font-semibold">Approve</Text>
+                )}
+              </GradientFill>
             </Pressable>
           </View>
         )}

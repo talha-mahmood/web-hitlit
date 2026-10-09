@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 
 // Bottom sheet for a list screen's Distance filter — same shape/interaction
 // as SelectSportModal (drag handle, title/subtitle, X, a list of options,
@@ -85,12 +86,18 @@ export default function SelectDistanceModal({
                   }}
                 >
                   <View className="flex-row items-center" style={{ gap: 12 }}>
-                    <View
-                      className="items-center justify-center rounded-full"
-                      style={{ width: 36, height: 36, backgroundColor: selected ? colors.primary : "#F3F4F6" }}
-                    >
-                      <Ionicons name="location" size={18} color={selected ? "white" : colors.muted} />
-                    </View>
+                    {selected ? (
+                      <GradientFill className="items-center justify-center rounded-full" style={{ width: 36, height: 36 }}>
+                        <Ionicons name="location" size={18} color="white" />
+                      </GradientFill>
+                    ) : (
+                      <View
+                        className="items-center justify-center rounded-full"
+                        style={{ width: 36, height: 36, backgroundColor: "#F3F4F6" }}
+                      >
+                        <Ionicons name="location" size={18} color={colors.muted} />
+                      </View>
+                    )}
                     <Text
                       className={selected ? "font-bold" : "font-semibold"}
                       style={{ fontSize: 15.5, color: selected ? colors.primaryDark : colors.ink }}
@@ -99,12 +106,12 @@ export default function SelectDistanceModal({
                     </Text>
                   </View>
                   {selected && (
-                    <View
+                    <GradientFill
                       className="items-center justify-center rounded-full"
-                      style={{ width: 20, height: 20, backgroundColor: colors.primary }}
+                      style={{ width: 20, height: 20 }}
                     >
                       <Ionicons name="checkmark" size={13} color="white" />
-                    </View>
+                    </GradientFill>
                   )}
                 </Pressable>
               );
@@ -112,14 +119,12 @@ export default function SelectDistanceModal({
           </ScrollView>
 
           <View className="px-5 pt-3">
-            <Pressable
-              onPress={() => onApply(draft)}
-              className="items-center rounded-2xl bg-primary py-4"
-              style={primaryButtonShadow}
-            >
-              <Text className="text-white font-bold" style={{ fontSize: 16 }}>
-                Apply Filter
-              </Text>
+            <Pressable onPress={() => onApply(draft)} style={primaryButtonShadow}>
+              <GradientFill className="items-center rounded-2xl py-4">
+                <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                  Apply Filter
+                </Text>
+              </GradientFill>
             </Pressable>
           </View>
         </View>

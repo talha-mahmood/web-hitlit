@@ -18,6 +18,7 @@ import { useFollowState } from "../../hooks/usePlayerFollows";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import PlayerStatCards from "../../components/PlayerStatCards";
 import { getSportIcon } from "../../lib/sportIcons";
+import GradientFill from "../../components/GradientFill";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { colors, cardShadow } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
@@ -213,9 +214,8 @@ export default function ProfileScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -255,12 +255,12 @@ export default function ProfileScreen() {
                 <ActivityIndicator color="#fff" size="small" />
               </View>
             ) : (
-              <View
-                className="absolute bottom-0 right-0 items-center justify-center rounded-full bg-primary"
+              <GradientFill
+                className="absolute bottom-0 right-0 items-center justify-center rounded-full"
                 style={{ width: 24, height: 24, borderWidth: 2, borderColor: "white" }}
               >
                 <Ionicons name="camera" size={12} color="white" />
-              </View>
+              </GradientFill>
             )}
           </Pressable>
           <View className="flex-1 mr-2">
@@ -300,7 +300,7 @@ export default function ProfileScreen() {
             <Ionicons name="settings-outline" size={20} color={colors.primaryDark} />
           </Pressable>
         </View>
-      </View>
+      </GradientFill>
 
       <ScrollView
         className="flex-1"
@@ -336,9 +336,10 @@ export default function ProfileScreen() {
             await signOutGoogle();
             signOutWithPushCleanup();
           }}
-          className="bg-primary rounded-xl py-4 items-center mt-2"
         >
-          <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
+          <GradientFill className="rounded-xl py-4 items-center mt-2">
+            <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
+          </GradientFill>
         </Pressable>
       </View>
 

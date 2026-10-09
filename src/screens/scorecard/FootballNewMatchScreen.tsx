@@ -11,6 +11,7 @@ import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
+import GradientFill from "../../components/GradientFill";
 import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import SportNewMatchHeader from "../../components/SportNewMatchHeader";
@@ -127,9 +128,16 @@ function AddPlayersField({
           <Pressable
             onPress={addPlayer}
             disabled={!draft.trim()}
-            className={`w-11 h-11 rounded-xl items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
           >
-            <Ionicons name="add" size={20} color="white" />
+            {draft.trim() ? (
+              <GradientFill className="w-11 h-11 rounded-xl items-center justify-center">
+                <Ionicons name="add" size={20} color="white" />
+              </GradientFill>
+            ) : (
+              <View className="w-11 h-11 rounded-xl items-center justify-center bg-gray-200">
+                <Ionicons name="add" size={20} color="white" />
+              </View>
+            )}
           </Pressable>
         </View>
       )}
@@ -383,16 +391,30 @@ export default function FootballNewMatchScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={!isValid || createMatch.isPending}
-          className={`flex-row items-center justify-center rounded-2xl py-4 mt-2 ${isValid ? "bg-primary" : "bg-gray-200"}`}
-          style={{ gap: 8, ...(isValid ? primaryButtonShadow : undefined) }}
+          style={isValid ? primaryButtonShadow : undefined}
         >
-          {createMatch.isPending ? (
-            <ActivityIndicator color="white" />
+          {isValid ? (
+            <GradientFill className="flex-row items-center justify-center rounded-2xl py-4 mt-2" style={{ gap: 8 }}>
+              {createMatch.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="play" size={16} color="white" />
+                  <Text className="font-bold text-base text-white">Kick Off</Text>
+                </>
+              )}
+            </GradientFill>
           ) : (
-            <>
-              <Ionicons name="play" size={16} color={isValid ? "white" : colors.muted} />
-              <Text className={`font-bold text-base ${isValid ? "text-white" : "text-muted"}`}>Kick Off</Text>
-            </>
+            <View className="flex-row items-center justify-center rounded-2xl py-4 mt-2 bg-gray-200" style={{ gap: 8 }}>
+              {createMatch.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="play" size={16} color={colors.muted} />
+                  <Text className="font-bold text-base text-muted">Kick Off</Text>
+                </>
+              )}
+            </View>
           )}
         </Pressable>
       </ScrollView>

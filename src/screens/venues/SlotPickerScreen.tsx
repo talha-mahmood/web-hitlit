@@ -14,6 +14,7 @@ import { useBookedSlots } from "../../hooks/useBookings";
 import { useCourtPriceRules } from "../../hooks/useVenues";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 import {
   toLocalDateStr,
@@ -130,24 +131,28 @@ export default function SlotPickerScreen() {
               <Pressable
                 key={day}
                 onPress={() => handleDateChange(day)}
-                className="items-center justify-center rounded-2xl"
+                className="rounded-2xl"
                 style={{
                   width: 56,
                   height: 64,
-                  backgroundColor: isSelected ? colors.primary : "white",
                   borderWidth: isSelected ? 0 : 1,
                   borderColor: colors.border,
                   ...(isSelected ? primaryShadow : cardShadow),
                 }}
               >
-                <Text
-                  className={`text-xs font-semibold ${isSelected ? "text-white" : isToday ? "text-primary" : "text-muted"}`}
-                >
-                  {dayLabel}
-                </Text>
-                <Text className={`text-lg font-extrabold mt-0.5 ${isSelected ? "text-white" : "text-ink"}`}>
-                  {dateNum}
-                </Text>
+                {isSelected ? (
+                  <GradientFill className="items-center justify-center rounded-2xl flex-1">
+                    <Text className="text-xs font-semibold text-white">{dayLabel}</Text>
+                    <Text className="text-lg font-extrabold mt-0.5 text-white">{dateNum}</Text>
+                  </GradientFill>
+                ) : (
+                  <View className="items-center justify-center rounded-2xl flex-1 bg-white">
+                    <Text className={`text-xs font-semibold ${isToday ? "text-primary" : "text-muted"}`}>
+                      {dayLabel}
+                    </Text>
+                    <Text className="text-lg font-extrabold mt-0.5 text-ink">{dateNum}</Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}
@@ -185,19 +190,8 @@ export default function SlotPickerScreen() {
                 const iconBg = booked ? "#F3F4F6" : isSelected ? "rgba(255,255,255,0.22)" : isSpecialPrice ? "#FEF3C7" : colors.primaryLight;
                 const iconColor = booked ? colors.muted : isSelected ? "white" : isSpecialPrice ? "#D97706" : colors.primaryDark;
 
-                return (
-                  <Pressable
-                    key={slot.start}
-                    disabled={booked}
-                    onPress={() => toggleSlot(slot)}
-                    style={{
-                      width: "47%",
-                      borderWidth: 1,
-                      borderColor: booked ? colors.border : isSelected ? colors.primary : isSpecialPrice ? "#FDE68A" : colors.border,
-                      backgroundColor: booked ? "#FAFAFA" : isSelected ? colors.primary : isSpecialPrice ? "#FFFBEB" : "white",
-                    }}
-                    className="flex-row items-center rounded-2xl px-2.5 py-3"
-                  >
+                const slotInner = (
+                  <>
                     <View
                       className="items-center justify-center rounded-full mr-2"
                       style={{ width: 28, height: 28, backgroundColor: iconBg, flexShrink: 0 }}
@@ -229,6 +223,31 @@ export default function SlotPickerScreen() {
                         </Text>
                       )}
                     </View>
+                  </>
+                );
+
+                return (
+                  <Pressable
+                    key={slot.start}
+                    disabled={booked}
+                    onPress={() => toggleSlot(slot)}
+                    className="rounded-2xl"
+                    style={{
+                      width: "47%",
+                      borderWidth: 1,
+                      borderColor: booked ? colors.border : isSelected ? colors.primary : isSpecialPrice ? "#FDE68A" : colors.border,
+                    }}
+                  >
+                    {isSelected ? (
+                      <GradientFill className="flex-row items-center rounded-2xl px-2.5 py-3">{slotInner}</GradientFill>
+                    ) : (
+                      <View
+                        className="flex-row items-center rounded-2xl px-2.5 py-3"
+                        style={{ backgroundColor: booked ? "#FAFAFA" : isSpecialPrice ? "#FFFBEB" : "white" }}
+                      >
+                        {slotInner}
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -263,12 +282,17 @@ export default function SlotPickerScreen() {
             });
           }}
           disabled={selectedSlots.length === 0}
-          className={`rounded-2xl py-4 items-center ${selectedSlots.length > 0 ? "bg-primary" : "bg-gray-200"}`}
           style={selectedSlots.length > 0 ? primaryShadow : undefined}
         >
-          <Text className={`font-bold text-base ${selectedSlots.length > 0 ? "text-white" : "text-muted"}`}>
-            {selectedSlots.length > 0 ? "Continue to Checkout" : "Select a time slot to continue"}
-          </Text>
+          {selectedSlots.length > 0 ? (
+            <GradientFill className="rounded-2xl py-4 items-center">
+              <Text className="font-bold text-base text-white">Continue to Checkout</Text>
+            </GradientFill>
+          ) : (
+            <View className="rounded-2xl py-4 items-center bg-gray-200">
+              <Text className="font-bold text-base text-muted">Select a time slot to continue</Text>
+            </View>
+          )}
         </Pressable>
       </View>
     </View>

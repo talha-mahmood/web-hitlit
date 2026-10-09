@@ -5,6 +5,7 @@ import { getRatingTierInfo } from "../lib/playerRating";
 import { getSportIcon } from "../lib/sportIcons";
 import { isCricketFamily } from "../lib/api/sports";
 import { colors, cardShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 
 // The white stat cards shown on both the Profile screen (your own numbers) and
 // a player's Top Players detail page (theirs): rating, Games Win, the stat
@@ -252,7 +253,7 @@ export default function PlayerStatCards({
                   {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                 </Text>
                 <View style={{ height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", marginTop: "auto" }}>
-                  <View style={{ height: 6, borderRadius: 3, width: `${winPercentage}%`, backgroundColor: colors.primary }} />
+                  <GradientFill style={{ height: 6, borderRadius: 3, width: `${winPercentage}%` }} />
                 </View>
               </View>
 

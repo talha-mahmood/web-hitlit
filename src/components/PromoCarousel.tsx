@@ -12,7 +12,9 @@ import {
   type NativeScrollEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../constants/theme";
+import GradientFill from "./GradientFill";
 
 export type PromoSlide = {
   key: string;
@@ -21,6 +23,10 @@ export type PromoSlide = {
   cta: string;
   icon: keyof typeof Ionicons.glyphMap;
   bgColor: string;
+  // Optional real gradient for the card background — when given, this
+  // renders instead of the flat `bgColor` fill (bgColor is still used as a
+  // plain reference color for text/icon contrast on top of accentColor).
+  bgGradient?: readonly [string, string, ...string[]];
   accentColor: string;
   // When set, the slide is just this picture, edge to edge (it carries its
   // own design), instead of the generated title/subtitle/CTA card — the
@@ -55,13 +61,16 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
   }
 
   return (
-    <Pressable
-      onPress={slide.onPress}
-      style={{ width, height: CARD_HEIGHT, backgroundColor: slide.bgColor }}
-      className="rounded-3xl overflow-hidden px-6 py-5 justify-between"
-    >
-      {/* Soft translucent "glow" shapes stand in for a gradient — no native
-          gradient library required, so this renders via plain hot-reload. */}
+    <Pressable onPress={slide.onPress} style={{ width, height: CARD_HEIGHT }}>
+      <LinearGradient
+        colors={slide.bgGradient ?? [slide.bgColor, slide.bgColor]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ width, height: CARD_HEIGHT }}
+        className="rounded-3xl overflow-hidden px-6 py-5 justify-between"
+      >
+      {/* Soft translucent "glow" shapes layer on top of the background for
+          extra depth. */}
       <View
         pointerEvents="none"
         style={{
@@ -119,6 +128,7 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
         </Text>
         <Ionicons name="arrow-forward" size={14} color={slide.bgColor} />
       </View>
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -171,17 +181,13 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
       />
       {slides.length > 1 && (
         <View className="flex-row justify-center mt-3" style={{ gap: 6 }}>
-          {slides.map((s, i) => (
-            <View
-              key={s.key}
-              style={{
-                width: i === activeIndex ? 18 : 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: i === activeIndex ? colors.primary : colors.border,
-              }}
-            />
-          ))}
+          {slides.map((s, i) =>
+            i === activeIndex ? (
+              <GradientFill key={s.key} style={{ width: 18, height: 6, borderRadius: 3 }} />
+            ) : (
+              <View key={s.key} style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border }} />
+            )
+          )}
         </View>
       )}
     </View>

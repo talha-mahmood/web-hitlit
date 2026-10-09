@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useMentionSearch } from "../hooks/useMentions";
 import MentionSuggestionsList from "./MentionSuggestionsList";
 import {
@@ -20,9 +21,9 @@ function Avatar({ name, avatar, size = 32 }: { name: string | null; avatar: stri
     return <Image source={{ uri: avatar }} style={{ width: size, height: size, borderRadius: size / 2 }} className="bg-primary-light" />;
   }
   return (
-    <View className="bg-primary items-center justify-center" style={{ width: size, height: size, borderRadius: size / 2 }}>
+    <GradientFill className="items-center justify-center" style={{ width: size, height: size, borderRadius: size / 2 }}>
       <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>{initials}</Text>
-    </View>
+    </GradientFill>
   );
 }
 
@@ -170,15 +171,23 @@ export default function MentionComposer({
             onSelect={handleSelect}
           />
         </View>
-        <Pressable
-          onPress={handleSubmit}
-          disabled={!canSubmit}
-          className={`w-10 h-10 rounded-full items-center justify-center ${canSubmit ? "bg-primary" : "bg-gray-200"}`}
-        >
-          {isBusy ? (
-            <ActivityIndicator size="small" color={canSubmit ? "white" : colors.muted} />
+        <Pressable onPress={handleSubmit} disabled={!canSubmit}>
+          {canSubmit ? (
+            <GradientFill className="w-10 h-10 rounded-full items-center justify-center">
+              {isBusy ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Ionicons name={editing ? "checkmark" : "send"} size={16} color="white" />
+              )}
+            </GradientFill>
           ) : (
-            <Ionicons name={editing ? "checkmark" : "send"} size={16} color={canSubmit ? "white" : colors.muted} />
+            <View className="w-10 h-10 rounded-full items-center justify-center bg-gray-200">
+              {isBusy ? (
+                <ActivityIndicator size="small" color={colors.muted} />
+              ) : (
+                <Ionicons name={editing ? "checkmark" : "send"} size={16} color={colors.muted} />
+              )}
+            </View>
           )}
         </Pressable>
       </View>

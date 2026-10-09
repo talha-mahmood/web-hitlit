@@ -28,6 +28,7 @@ import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
+import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { getSportIcon } from "../../lib/sportIcons";
 import {
@@ -277,16 +278,14 @@ function MatchRow({
         <View style={{ gap: 8, marginTop: 12 }}>
           {showScoringButtons && (
             <>
-              <Pressable
-                onPress={onGoToScorecard}
-                className="flex-row items-center justify-between bg-primary rounded-2xl px-4"
-                style={{ paddingVertical: 14, ...cardShadow }}
-              >
-                <View className="flex-row items-center" style={{ gap: 8 }}>
-                  <Ionicons name="clipboard-outline" size={17} color="white" />
-                  <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="white" />
+              <Pressable onPress={onGoToScorecard} style={cardShadow}>
+                <GradientFill className="flex-row items-center justify-between rounded-2xl px-4" style={{ paddingVertical: 14 }}>
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    <Ionicons name="clipboard-outline" size={17} color="white" />
+                    <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="white" />
+                </GradientFill>
               </Pressable>
               <Pressable
                 onPress={onEnterScoreManually}
@@ -388,17 +387,17 @@ function MatchesPanel({
           <Pressable
             onPress={() => generateMatches.mutate({ format, teams: approvedTeams })}
             disabled={generateMatches.isPending}
-            className="flex-row items-center justify-center bg-primary rounded-full py-3"
-            style={{ gap: 8 }}
           >
-            {generateMatches.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="git-network-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">Generate Matches</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+              {generateMatches.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="git-network-outline" size={16} color="white" />
+                  <Text className="text-white text-sm font-bold">Generate Matches</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         ) : (
           <Text className="text-muted text-xs">
@@ -465,19 +464,20 @@ function MatchesPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
           disabled={generateNextRound.isPending}
-          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
-          style={{ gap: 8 }}
+          className="mt-4"
         >
-          {generateNextRound.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Ionicons name="git-network-outline" size={16} color="white" />
-              <Text className="text-white text-sm font-bold">
-                Generate {knockoutRoundLabel(bracketWinners.length)} Matches
-              </Text>
-            </>
-          )}
+          <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+            {generateNextRound.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="git-network-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">
+                  Generate {knockoutRoundLabel(bracketWinners.length)} Matches
+                </Text>
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       )}
 
@@ -485,19 +485,20 @@ function MatchesPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: 2, teams: playoffTeams })}
           disabled={generateNextRound.isPending}
-          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
-          style={{ gap: 8 }}
+          className="mt-4"
         >
-          {generateNextRound.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Ionicons name="trophy-outline" size={16} color="white" />
-              <Text className="text-white text-sm font-bold">
-                Generate {knockoutRoundLabel(playoffTeams.length)} Playoffs (Top {playoffTeams.length})
-              </Text>
-            </>
-          )}
+          <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+            {generateNextRound.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="trophy-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">
+                  Generate {knockoutRoundLabel(playoffTeams.length)} Playoffs (Top {playoffTeams.length})
+                </Text>
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       )}
 
@@ -721,17 +722,17 @@ function PoolMatchesPanel({
               )
             }
             disabled={generatePoolMatches.isPending}
-            className="flex-row items-center justify-center bg-primary rounded-full py-3"
-            style={{ gap: 8 }}
           >
-            {generatePoolMatches.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="git-network-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">Generate Group Matches</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+              {generatePoolMatches.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="git-network-outline" size={16} color="white" />
+                  <Text className="text-white text-sm font-bold">Generate Group Matches</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         ) : (
           <Text className="text-muted text-xs">
@@ -877,19 +878,19 @@ function PoolPlayoffPanel({
           <Pressable
             onPress={() => generateNextRound.mutate({ round: 2, teams: qualifiers })}
             disabled={generateNextRound.isPending}
-            className="flex-row items-center justify-center bg-primary rounded-full py-3"
-            style={{ gap: 8 }}
           >
-            {generateNextRound.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="trophy-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">
-                  Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
-                </Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+              {generateNextRound.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="trophy-outline" size={16} color="white" />
+                  <Text className="text-white text-sm font-bold">
+                    Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
+                  </Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         )}
       </View>
@@ -937,19 +938,20 @@ function PoolPlayoffPanel({
         <Pressable
           onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
           disabled={generateNextRound.isPending}
-          className="flex-row items-center justify-center bg-primary rounded-full py-3 mt-4"
-          style={{ gap: 8 }}
+          className="mt-4"
         >
-          {generateNextRound.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Ionicons name="git-network-outline" size={16} color="white" />
-              <Text className="text-white text-sm font-bold">
-                Generate {knockoutRoundLabel(bracketWinners.length)} Matches
-              </Text>
-            </>
-          )}
+          <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+            {generateNextRound.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="git-network-outline" size={16} color="white" />
+                <Text className="text-white text-sm font-bold">
+                  Generate {knockoutRoundLabel(bracketWinners.length)} Matches
+                </Text>
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       )}
 

@@ -20,6 +20,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
 import PhoneNumberField from "../../components/PhoneNumberField";
@@ -251,19 +252,19 @@ export default function AccountSettingsScreen() {
           {!nameValid && name.length > 0 && (
             <Text className="text-red-500 text-xs mt-2">Name must be {NAME_REQUIREMENT_HINT}.</Text>
           )}
-          <Pressable
-            onPress={handleSaveName}
-            disabled={!nameChanged || !nameValid || savingName}
-            className={`relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 ${
-              nameChanged && nameValid ? "bg-primary" : "bg-gray-200"
-            }`}
-          >
-            {savingName ? (
-              <ActivityIndicator color="white" />
+          <Pressable onPress={handleSaveName} disabled={!nameChanged || !nameValid || savingName}>
+            {nameChanged && nameValid ? (
+              <GradientFill className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3">
+                {savingName ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-bold text-white">Save Name</Text>
+                )}
+              </GradientFill>
             ) : (
-              <Text className={`font-bold ${nameChanged && nameValid ? "text-white" : "text-muted"}`}>
-                Save Name
-              </Text>
+              <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
+                <Text className="font-bold text-muted">Save Name</Text>
+              </View>
             )}
           </Pressable>
         </SectionCard>
@@ -280,19 +281,19 @@ export default function AccountSettingsScreen() {
             onChangeNumber={setPhoneNumber}
             maxDigits={maxDigitsFor(phoneDial)}
           />
-          <Pressable
-            onPress={handleSavePhone}
-            disabled={!phoneChanged || !phoneValid || savingPhone}
-            className={`relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 ${
-              phoneChanged && phoneValid ? "bg-primary" : "bg-gray-200"
-            }`}
-          >
-            {savingPhone ? (
-              <ActivityIndicator color="white" />
+          <Pressable onPress={handleSavePhone} disabled={!phoneChanged || !phoneValid || savingPhone}>
+            {phoneChanged && phoneValid ? (
+              <GradientFill className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3">
+                {savingPhone ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-bold text-white">Save Phone Number</Text>
+                )}
+              </GradientFill>
             ) : (
-              <Text className={`font-bold ${phoneChanged && phoneValid ? "text-white" : "text-muted"}`}>
-                Save Phone Number
-              </Text>
+              <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
+                <Text className="font-bold text-muted">Save Phone Number</Text>
+              </View>
             )}
           </Pressable>
         </SectionCard>
@@ -310,24 +311,42 @@ export default function AccountSettingsScreen() {
                   key={option}
                   onPress={() => handleChangeVisibility(option)}
                   disabled={savingVisibility}
-                  className={`flex-1 flex-row items-center justify-center rounded-xl py-2.5 ${
-                    selected ? "bg-primary" : ""
-                  }`}
-                  style={{ gap: 6 }}
+                  className="flex-1"
                 >
-                  {savingVisibility && selected ? (
-                    <ActivityIndicator size="small" color="white" />
+                  {selected ? (
+                    <GradientFill
+                      className="flex-row items-center justify-center rounded-xl py-2.5"
+                      style={{ gap: 6 }}
+                    >
+                      {savingVisibility ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <>
+                          <Ionicons
+                            name={option === "public" ? "eye-outline" : "eye-off-outline"}
+                            size={15}
+                            color="white"
+                          />
+                          <Text className="text-sm font-bold text-white">
+                            {option === "public" ? "Public" : "Private"}
+                          </Text>
+                        </>
+                      )}
+                    </GradientFill>
                   ) : (
-                    <>
+                    <View
+                      className="flex-row items-center justify-center rounded-xl py-2.5"
+                      style={{ gap: 6 }}
+                    >
                       <Ionicons
                         name={option === "public" ? "eye-outline" : "eye-off-outline"}
                         size={15}
-                        color={selected ? "white" : colors.muted}
+                        color={colors.muted}
                       />
-                      <Text className={`text-sm font-bold ${selected ? "text-white" : "text-muted"}`}>
+                      <Text className="text-sm font-bold text-muted">
                         {option === "public" ? "Public" : "Private"}
                       </Text>
-                    </>
+                    </View>
                   )}
                 </Pressable>
               );

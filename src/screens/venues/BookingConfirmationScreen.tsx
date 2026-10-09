@@ -7,6 +7,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, heroShadow, primaryButtonShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type ConfirmRoute = RouteProp<VenuesStackParamList, "BookingConfirmation">;
@@ -108,12 +109,12 @@ export default function BookingConfirmationScreen() {
             className="items-center justify-center rounded-full mt-12"
             style={{ width: 112, height: 112, backgroundColor: colors.primaryLight }}
           >
-            <View
-              className="items-center justify-center rounded-full bg-primary"
+            <GradientFill
+              className="items-center justify-center rounded-full"
               style={{ width: 84, height: 84 }}
             >
               <Ionicons name="checkmark" size={44} color="white" />
-            </View>
+            </GradientFill>
           </View>
 
           <Text className="text-2xl font-extrabold text-ink mt-6 text-center">Booking Confirmed!</Text>
@@ -219,14 +220,12 @@ export default function BookingConfirmationScreen() {
       </ScrollView>
 
       <View className="px-4 pb-8 pt-3 border-t border-border" style={{ gap: 10 }}>
-        <Pressable
-          onPress={goToMyBookings}
-          className="bg-primary rounded-2xl py-4 flex-row items-center justify-center"
-          style={{ gap: 8, ...primaryButtonShadow }}
-        >
-          <Ionicons name="calendar-outline" size={18} color="white" />
-          <Text className="text-white font-bold text-base">View My Bookings</Text>
-          <Ionicons name="chevron-forward" size={18} color="white" />
+        <Pressable onPress={goToMyBookings} style={primaryButtonShadow}>
+          <GradientFill className="rounded-2xl py-4 flex-row items-center justify-center" style={{ gap: 8 }}>
+            <Ionicons name="calendar-outline" size={18} color="white" />
+            <Text className="text-white font-bold text-base">View My Bookings</Text>
+            <Ionicons name="chevron-forward" size={18} color="white" />
+          </GradientFill>
         </Pressable>
         <Pressable onPress={() => navigation.popToTop()} className="items-center py-3">
           <Text className="text-primary font-semibold">Back to Venues</Text>

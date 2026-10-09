@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,7 @@ import VenueSearchField from "../../components/VenueSearchField";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import { HomeSportTile } from "../../components/HomeWideCards";
+import GradientFill from "../../components/GradientFill";
 import { getSportImage } from "../../lib/sportImages";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import {
@@ -105,7 +106,6 @@ function chipStyle(selected: boolean, extra?: object) {
   return {
     borderWidth: 1.5,
     borderColor: selected ? colors.primary : colors.border,
-    backgroundColor: selected ? colors.primary : "white",
     ...(selected
       ? {
           shadowColor: colors.primary,
@@ -117,6 +117,29 @@ function chipStyle(selected: boolean, extra?: object) {
       : null),
     ...extra,
   };
+}
+
+// Shared fill for the Sport/Date/Time/Count chip Pressables below — a
+// selected chip renders the brand gradient, an unselected one stays flat
+// white, same look as before just with a real gradient instead of a flat
+// green.
+function ChipFill({
+  selected,
+  className,
+  children,
+}: {
+  selected: boolean;
+  className: string;
+  children: ReactNode;
+}) {
+  if (selected) {
+    return <GradientFill className={className}>{children}</GradientFill>;
+  }
+  return (
+    <View className={className} style={{ backgroundColor: "white" }}>
+      {children}
+    </View>
+  );
 }
 
 // Sport/Date/Start Time/Max Players use this same plain-Pressable chip (no
@@ -137,11 +160,13 @@ function DateChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="items-center px-3 py-2.5 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
-        <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
-          {label}
-        </Text>
+      <Pressable onPress={onPress} style={chipStyle(selected)}>
+        <ChipFill selected={selected} className="items-center px-3 py-2.5 rounded-2xl">
+          <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
+          <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
+            {label}
+          </Text>
+        </ChipFill>
       </Pressable>
     </Animated.View>
   );
@@ -159,10 +184,12 @@ function TimeChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="px-3 py-2.5 rounded-2xl" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-          {label}
-        </Text>
+      <Pressable onPress={onPress} style={chipStyle(selected)}>
+        <ChipFill selected={selected} className="px-3 py-2.5 rounded-2xl">
+          <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+            {label}
+          </Text>
+        </ChipFill>
       </Pressable>
     </Animated.View>
   );
@@ -182,8 +209,10 @@ function CountChipItem({
   const pulseStyle = useSelectPulse(selected);
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable onPress={onPress} className="w-12 py-2.5 rounded-2xl items-center" style={chipStyle(selected)}>
-        <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
+      <Pressable onPress={onPress} style={chipStyle(selected)}>
+        <ChipFill selected={selected} className="w-12 py-2.5 rounded-2xl items-center">
+          <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
+        </ChipFill>
       </Pressable>
     </Animated.View>
   );
@@ -273,16 +302,22 @@ function StepTracker({
         return (
           <Pressable key={s.key} onPress={() => onPressStep(s.key)} className="flex-1 items-center">
             <View className="flex-row items-center" style={{ gap: 5 }}>
-              <View
-                className="items-center justify-center rounded-full"
-                style={{ width: 20, height: 20, backgroundColor: done || current ? colors.primary : "#E5E7EB" }}
-              >
-                {done ? (
-                  <Ionicons name="checkmark" size={12} color="white" />
-                ) : (
-                  <Text className={`text-[11px] font-bold ${current ? "text-white" : "text-muted"}`}>{s.n}</Text>
-                )}
-              </View>
+              {done || current ? (
+                <GradientFill className="items-center justify-center rounded-full" style={{ width: 20, height: 20 }}>
+                  {done ? (
+                    <Ionicons name="checkmark" size={12} color="white" />
+                  ) : (
+                    <Text className="text-[11px] font-bold text-white">{s.n}</Text>
+                  )}
+                </GradientFill>
+              ) : (
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{ width: 20, height: 20, backgroundColor: "#E5E7EB" }}
+                >
+                  <Text className="text-[11px] font-bold text-muted">{s.n}</Text>
+                </View>
+              )}
               <Text
                 className={`text-xs ${current ? "font-bold text-ink" : done ? "text-ink" : "text-muted"}`}
                 numberOfLines={1}
@@ -290,15 +325,19 @@ function StepTracker({
                 {s.label}
               </Text>
             </View>
-            <View
-              style={{
-                height: 3,
-                borderRadius: 2,
-                marginTop: 6,
-                width: "100%",
-                backgroundColor: current ? colors.primary : "transparent",
-              }}
-            />
+            {current ? (
+              <GradientFill style={{ height: 3, borderRadius: 2, marginTop: 6, width: "100%" }} />
+            ) : (
+              <View
+                style={{
+                  height: 3,
+                  borderRadius: 2,
+                  marginTop: 6,
+                  width: "100%",
+                  backgroundColor: "transparent",
+                }}
+              />
+            )}
           </Pressable>
         );
       })}
@@ -642,10 +681,6 @@ export default function CreateGameScreen() {
             onPress={handleCreate}
             disabled={createGame.isPending}
             style={{
-              backgroundColor: colors.primary,
-              borderRadius: 12,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
               shadowColor: colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.25,
@@ -653,11 +688,13 @@ export default function CreateGameScreen() {
               elevation: 3,
             }}
           >
-            {createGame.isPending ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text className="text-white font-semibold text-sm">Post</Text>
-            )}
+            <GradientFill className="rounded-xl px-4 py-2">
+              {createGame.isPending ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className="text-white font-semibold text-sm">Post</Text>
+              )}
+            </GradientFill>
           </Pressable>
         </View>
         {isTournament && <StepTracker activeStep={activeStep} onPressStep={scrollToStep} />}
@@ -675,17 +712,18 @@ export default function CreateGameScreen() {
 
         {/* Custom icon banner — combines the icon-picker with a festive
             trophy/ribbon graphic, matching the reference design's single
-            merged banner. Background is the exact same dark green as the
-            Live Scoring header ("#0E4429"), so text/icons switch to white
-            here instead of the dark-on-light treatment used elsewhere. */}
+            merged banner. Background is the same brand gradient as the
+            Live Scoring header, so text/icons switch to white here instead
+            of the dark-on-light treatment used elsewhere. */}
         <Pressable
           onPress={async () => {
             const assets = await pickImages({});
             if (assets[0]) setIconAsset(assets[0]);
           }}
-          className="flex-row items-center rounded-2xl overflow-hidden mt-3 mb-1"
-          style={{ backgroundColor: "#0E4429", minHeight: 112, ...cardShadow }}
+          className="rounded-2xl overflow-hidden mt-3 mb-1"
+          style={{ ...cardShadow }}
         >
+        <GradientFill className="flex-row items-center" style={{ minHeight: 112 }}>
           <Ionicons
             name="ribbon"
             size={90}
@@ -724,16 +762,16 @@ export default function CreateGameScreen() {
                   />
                 ) : (
                   <View className="items-center justify-center rounded-xl bg-white" style={{ width: 34, height: 34 }}>
-                    <Ionicons name="camera" size={17} color="#0E4429" />
+                    <Ionicons name="camera" size={17} color="#07301D" />
                   </View>
                 )}
               </View>
-              <View
-                className="absolute items-center justify-center rounded-full bg-primary"
-                style={{ width: 18, height: 18, bottom: 0, right: 0, borderWidth: 2, borderColor: "#0E4429" }}
+              <GradientFill
+                className="absolute items-center justify-center rounded-full"
+                style={{ width: 18, height: 18, bottom: 0, right: 0, borderWidth: 2, borderColor: "#07301D" }}
               >
                 <Ionicons name="add" size={11} color="white" />
-              </View>
+              </GradientFill>
             </View>
             <View style={{ maxWidth: "62%" }}>
               <View className="flex-row items-center flex-wrap" style={{ gap: 4 }}>
@@ -749,6 +787,7 @@ export default function CreateGameScreen() {
               </Text>
             </View>
           </View>
+        </GradientFill>
         </Pressable>
 
         {/* Title */}
@@ -1125,10 +1164,8 @@ export default function CreateGameScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={createGame.isPending}
-          className="flex-row items-center justify-center rounded-2xl py-4 mt-6"
+          className="mt-6"
           style={{
-            gap: 8,
-            backgroundColor: colors.primary,
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.25,
@@ -1136,16 +1173,18 @@ export default function CreateGameScreen() {
             elevation: 3,
           }}
         >
-          {createGame.isPending ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <>
-              <Ionicons name="trophy" size={18} color="white" />
-              <Text className="text-white font-bold text-base">
-                {isTournament ? "Post Tournament" : "Post Game"}
-              </Text>
-            </>
-          )}
+          <GradientFill className="flex-row items-center justify-center rounded-2xl py-4" style={{ gap: 8 }}>
+            {createGame.isPending ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="trophy" size={18} color="white" />
+                <Text className="text-white font-bold text-base">
+                  {isTournament ? "Post Tournament" : "Post Game"}
+                </Text>
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

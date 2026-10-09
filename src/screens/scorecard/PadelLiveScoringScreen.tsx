@@ -13,6 +13,7 @@ import { friendlyPadelError, pointRowToEvent } from "../../lib/api/padel";
 import { replayPadelMatch, formatSetScore, matchResultSummary, type PadelMatchConfig, type Team } from "../../lib/padelScoring";
 import { getSportImage } from "../../lib/sportImages";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
@@ -239,20 +240,17 @@ export default function PadelLiveScoringScreen() {
             <Text className="text-ink font-extrabold text-base" numberOfLines={1}>Match Complete</Text>
             <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>Padel</Text>
           </View>
-          <Pressable
-            onPress={handleGenerateMatchReport}
-            disabled={generatingReport}
-            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-            style={{ gap: 6 }}
-          >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
-              </>
-            )}
+          <Pressable onPress={handleGenerateMatchReport} disabled={generatingReport}>
+            <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+              {generatingReport ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
@@ -465,7 +463,7 @@ export default function PadelLiveScoringScreen() {
           </View>
           <View className="flex-row items-center mb-1.5">
             <View className="flex-row items-center" style={{ flex: 1.4, gap: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+              <GradientFill style={{ width: 8, height: 8, borderRadius: 4 }} />
               <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>{match.team_a_name}</Text>
             </View>
             {state.sets.map((set, i) => (
@@ -526,17 +524,16 @@ export default function PadelLiveScoringScreen() {
               </Text>
               <View className="flex-row" style={{ gap: 8 }}>
                 {(["RIGHT", "LEFT"] as const).map((side) => (
-                  <Pressable
-                    key={side}
-                    onPress={() => setReceivingSide(side)}
-                    className="px-4 py-1.5 rounded-full"
-                    style={{
-                      backgroundColor: receivingSide === side ? colors.primary : "#F3F4F6",
-                    }}
-                  >
-                    <Text className={`text-xs font-bold ${receivingSide === side ? "text-white" : "text-ink"}`}>
-                      {side}
-                    </Text>
+                  <Pressable key={side} onPress={() => setReceivingSide(side)}>
+                    {receivingSide === side ? (
+                      <GradientFill className="px-4 py-1.5 rounded-full">
+                        <Text className="text-xs font-bold text-white">{side}</Text>
+                      </GradientFill>
+                    ) : (
+                      <View className="px-4 py-1.5 rounded-full" style={{ backgroundColor: "#F3F4F6" }}>
+                        <Text className="text-xs font-bold text-ink">{side}</Text>
+                      </View>
+                    )}
                   </Pressable>
                 ))}
               </View>
@@ -547,7 +544,7 @@ export default function PadelLiveScoringScreen() {
 
         {/* Server */}
         <View className="flex-row items-center bg-white rounded-2xl px-4 py-3" style={{ ...cardShadow, gap: 8 }}>
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+          <GradientFill style={{ width: 8, height: 8, borderRadius: 4 }} />
           <Text className="text-ink text-sm flex-1" numberOfLines={1}>
             <Text className="font-bold">SERVER: </Text>
             {isDoubles ? `${serverName} (${state.server.team === "A" ? match.team_a_name : match.team_b_name})` : serverName}

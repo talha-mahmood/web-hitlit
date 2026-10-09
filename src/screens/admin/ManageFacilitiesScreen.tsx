@@ -9,6 +9,7 @@ import { colors, heroShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Route = RouteProp<VenueEditingParamList, "ManageFacilities">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageFacilities">;
@@ -79,13 +80,11 @@ export default function ManageFacilitiesScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Amenities</Text>
-        <Pressable
-          onPress={() => setShowAdd(true)}
-          className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
-          style={{ gap: 4, ...primaryButtonShadow }}
-        >
-          <Ionicons name="add" size={14} color="white" />
-          <Text className="text-white text-xs font-semibold">Add</Text>
+        <Pressable onPress={() => setShowAdd(true)} style={primaryButtonShadow}>
+          <GradientFill className="flex-row items-center rounded-lg px-3 py-1.5" style={{ gap: 4 }}>
+            <Ionicons name="add" size={14} color="white" />
+            <Text className="text-white text-xs font-semibold">Add</Text>
+          </GradientFill>
         </Pressable>
       </View>
 
@@ -153,17 +152,14 @@ export default function ManageFacilitiesScreen() {
                 maxLength={200}
               />
 
-              <Pressable
-                onPress={handleAdd}
-                disabled={addFacility.isPending}
-                className="rounded-xl py-4 items-center bg-primary"
-                style={primaryButtonShadow}
-              >
-                {addFacility.isPending ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-base">Add Amenity</Text>
-                )}
+              <Pressable onPress={handleAdd} disabled={addFacility.isPending} style={primaryButtonShadow}>
+                <GradientFill className="rounded-xl py-4 items-center">
+                  {addFacility.isPending ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-semibold text-base">Add Amenity</Text>
+                  )}
+                </GradientFill>
               </Pressable>
             </View>
           </KeyboardAvoidingView>

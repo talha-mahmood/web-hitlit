@@ -10,6 +10,7 @@ import { ballRowToEvent, type CricketInnings, type CricketBallRow } from "../../
 import { replayInnings, formatOvers, computeRunRate, type InningsState } from "../../lib/cricketScoring";
 import { dayLabel } from "../../lib/badgeColors";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import { useProfileStore } from "../../store/profileStore";
 import { buildCricketMatchReportHtml } from "../../lib/matchReport/cricketReport";
@@ -246,17 +247,17 @@ export default function FullScorecardScreen() {
           <Pressable
             onPress={handleGenerateMatchReport}
             disabled={generatingReport}
-            className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-            style={{ gap: 6 }}
           >
-            {generatingReport ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="document-text-outline" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">Generate Match Report</Text>
-              </>
-            )}
+            <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+              {generatingReport ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                </>
+              )}
+            </GradientFill>
           </Pressable>
         )}
       </View>

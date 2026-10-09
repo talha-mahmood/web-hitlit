@@ -10,6 +10,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
+import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
@@ -47,11 +48,12 @@ export default function AllVenuesListScreen() {
           <Text className="text-2xl font-bold text-ink">All Venues</Text>
           <Pressable
             onPress={() => navigation.navigate("CreateVenue")}
-            className="flex-row items-center bg-primary rounded-lg px-3 py-2"
-            style={{ gap: 4, ...primaryButtonShadow }}
+            style={primaryButtonShadow}
           >
-            <Ionicons name="add" size={16} color="white" />
-            <Text className="text-white text-xs font-semibold">New Venue</Text>
+            <GradientFill className="flex-row items-center rounded-lg px-3 py-2" style={{ gap: 4 }}>
+              <Ionicons name="add" size={16} color="white" />
+              <Text className="text-white text-xs font-semibold">New Venue</Text>
+            </GradientFill>
           </Pressable>
         </View>
         <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["venue name"]} />

@@ -35,6 +35,7 @@ import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList>;
 
@@ -321,14 +322,11 @@ function TeamCard({
                   <Ionicons name="close" size={16} color={colors.danger} />
                   <Text className="text-danger font-bold text-sm">Reject</Text>
                 </Pressable>
-                <Pressable
-                  onPress={onApprove}
-                  disabled={disabled}
-                  className="flex-1 flex-row items-center justify-center rounded-full bg-primary py-3"
-                  style={{ gap: 6 }}
-                >
-                  <Ionicons name="checkmark" size={16} color="white" />
-                  <Text className="text-white font-bold text-sm">Approve</Text>
+                <Pressable onPress={onApprove} disabled={disabled} className="flex-1">
+                  <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 6 }}>
+                    <Ionicons name="checkmark" size={16} color="white" />
+                    <Text className="text-white font-bold text-sm">Approve</Text>
+                  </GradientFill>
                 </Pressable>
               </View>
             </>
@@ -367,14 +365,11 @@ function TeamCard({
               not just an empty one. Hidden the moment they're on any team in
               this tournament, and back once they leave it. */}
           {!isHost && canJoinTeam && onJoinTeam && (
-            <Pressable
-              onPress={onJoinTeam}
-              disabled={disabled}
-              className="flex-row items-center justify-center rounded-full bg-primary py-3.5 mt-3"
-              style={{ gap: 8 }}
-            >
-              <Ionicons name="add" size={17} color="white" />
-              <Text className="text-white font-bold text-sm">Join Team</Text>
+            <Pressable onPress={onJoinTeam} disabled={disabled} className="mt-3">
+              <GradientFill className="flex-row items-center justify-center rounded-full py-3.5" style={{ gap: 8 }}>
+                <Ionicons name="add" size={17} color="white" />
+                <Text className="text-white font-bold text-sm">Join Team</Text>
+              </GradientFill>
             </Pressable>
           )}
         </View>
@@ -410,14 +405,11 @@ function TeamCard({
             </Pressable>
           )}
           {onFillWithSquadMembers && (
-            <Pressable
-              onPress={onFillWithSquadMembers}
-              disabled={disabled}
-              className="flex-1 flex-row items-center justify-center rounded-full bg-primary py-3"
-              style={{ gap: 6 }}
-            >
-              <Ionicons name="people-outline" size={15} color="white" />
-              <Text className="text-white font-bold text-xs">Fill with my Group</Text>
+            <Pressable onPress={onFillWithSquadMembers} disabled={disabled} className="flex-1">
+              <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 6 }}>
+                <Ionicons name="people-outline" size={15} color="white" />
+                <Text className="text-white font-bold text-xs">Fill with my Group</Text>
+              </GradientFill>
             </Pressable>
           )}
         </View>
@@ -561,8 +553,10 @@ function HeadToHeadMatchCard({
         ) : null}
         {match ? <LinkedMatchScoreDetails match={match} /> : null}
         {canGoToScorecard && (
-          <Pressable onPress={handleGoToScorecard} className="bg-primary rounded-lg py-2 items-center mt-2">
-            <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+          <Pressable onPress={handleGoToScorecard} className="mt-2">
+            <GradientFill className="rounded-lg py-2 items-center">
+              <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+            </GradientFill>
           </Pressable>
         )}
         {canGoToScorecard && (
@@ -807,13 +801,11 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             </Pressable>
           )}
           {canCreateTeam && (
-            <Pressable
-              onPress={() => setShowCreateModal(true)}
-              className="flex-row items-center rounded-full bg-primary px-3 py-1.5"
-              style={{ gap: 4 }}
-            >
-              <Ionicons name="add" size={14} color="white" />
-              <Text className="text-white text-xs font-semibold">Create Team</Text>
+            <Pressable onPress={() => setShowCreateModal(true)}>
+              <GradientFill className="flex-row items-center rounded-full px-3 py-1.5" style={{ gap: 4 }}>
+                <Ionicons name="add" size={14} color="white" />
+                <Text className="text-white text-xs font-semibold">Create Team</Text>
+              </GradientFill>
             </Pressable>
           )}
         </View>

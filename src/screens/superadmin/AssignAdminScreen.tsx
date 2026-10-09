@@ -15,6 +15,7 @@ import {
 import type { AdminLookupResult } from "../../lib/api/superadmin";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";
+import GradientFill from "../../components/GradientFill";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -46,10 +47,11 @@ function EmailLookupRow({
       <Pressable
         onPress={onLookup}
         disabled={isLoading || !email.trim()}
-        className="bg-primary rounded-xl px-4 items-center justify-center"
         style={primaryButtonShadow}
       >
-        {isLoading ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Look up</Text>}
+        <GradientFill className="rounded-xl px-4 items-center justify-center">
+          {isLoading ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Look up</Text>}
+        </GradientFill>
       </Pressable>
     </View>
   );
@@ -79,8 +81,10 @@ function LookupResultCard({
         <Text className="text-ink font-semibold text-sm">{result.full_name || "No name set"}</Text>
         <Text className="text-muted text-xs mt-0.5">{result.email}</Text>
       </View>
-      <Pressable onPress={onConfirm} disabled={submitting} className="bg-primary rounded-lg px-3 py-2">
-        {submitting ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white text-xs font-semibold">{confirmLabel}</Text>}
+      <Pressable onPress={onConfirm} disabled={submitting}>
+        <GradientFill className="rounded-lg px-3 py-2">
+          {submitting ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white text-xs font-semibold">{confirmLabel}</Text>}
+        </GradientFill>
       </Pressable>
     </View>
   );

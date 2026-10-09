@@ -12,6 +12,7 @@ import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
+import GradientFill from "../../components/GradientFill";
 import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
@@ -110,12 +111,12 @@ function TeamCard({
         className="flex-row items-center px-4 py-3"
         style={{ gap: 10, backgroundColor: colors.primaryLight }}
       >
-        <View
+        <GradientFill
           className="items-center justify-center rounded-full"
-          style={{ width: 30, height: 30, backgroundColor: colors.primary }}
+          style={{ width: 30, height: 30 }}
         >
           <Text className="text-white font-extrabold text-sm">{letter}</Text>
-        </View>
+        </GradientFill>
         <Ionicons name="shirt-outline" size={18} color={colors.primaryDark} />
         <View className="flex-1">
           <Text className="text-ink font-bold text-sm">Team {letter}</Text>
@@ -178,9 +179,16 @@ function TeamCard({
           <Pressable
             onPress={addPlayer}
             disabled={!draft.trim()}
-            className={`w-11 h-11 rounded-xl items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
           >
-            <Ionicons name="add" size={20} color="white" />
+            {draft.trim() ? (
+              <GradientFill className="w-11 h-11 rounded-xl items-center justify-center">
+                <Ionicons name="add" size={20} color="white" />
+              </GradientFill>
+            ) : (
+              <View className="w-11 h-11 rounded-xl items-center justify-center bg-gray-200">
+                <Ionicons name="add" size={20} color="white" />
+              </View>
+            )}
           </Pressable>
         </View>
         )}
@@ -483,16 +491,30 @@ export default function NewMatchScreen() {
         <Pressable
           onPress={handleCreate}
           disabled={!isValid || createMatch.isPending}
-          className={`flex-row items-center justify-center rounded-2xl py-4 mt-2 ${isValid ? "bg-primary" : "bg-gray-200"}`}
-          style={{ gap: 8, ...(isValid ? primaryButtonShadow : undefined) }}
+          style={isValid ? primaryButtonShadow : undefined}
         >
-          {createMatch.isPending ? (
-            <ActivityIndicator color="white" />
+          {isValid ? (
+            <GradientFill className="flex-row items-center justify-center rounded-2xl py-4 mt-2" style={{ gap: 8 }}>
+              {createMatch.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="play" size={16} color="white" />
+                  <Text className="font-bold text-base text-white">Start Match</Text>
+                </>
+              )}
+            </GradientFill>
           ) : (
-            <>
-              <Ionicons name="play" size={16} color={isValid ? "white" : colors.muted} />
-              <Text className={`font-bold text-base ${isValid ? "text-white" : "text-muted"}`}>Start Match</Text>
-            </>
+            <View className="flex-row items-center justify-center rounded-2xl py-4 mt-2 bg-gray-200" style={{ gap: 8 }}>
+              {createMatch.isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="play" size={16} color={colors.muted} />
+                  <Text className="font-bold text-base text-muted">Start Match</Text>
+                </>
+              )}
+            </View>
           )}
         </Pressable>
       </ScrollView>

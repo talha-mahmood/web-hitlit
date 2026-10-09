@@ -14,6 +14,7 @@ import { pickImages, uploadImage } from "../../lib/upload";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourtImages">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourtImages">;
@@ -92,20 +93,17 @@ export default function ManageCourtImagesScreen() {
         <Text className="text-base font-bold text-ink flex-1" numberOfLines={1}>
           {params.courtName} · Photos
         </Text>
-        <Pressable
-          onPress={handleAddPhotos}
-          disabled={uploading}
-          className="flex-row items-center bg-primary rounded-lg px-3 py-1.5"
-          style={{ gap: 4 }}
-        >
-          {uploading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Ionicons name="add" size={14} color="white" />
-              <Text className="text-white text-xs font-semibold">Add</Text>
-            </>
-          )}
+        <Pressable onPress={handleAddPhotos} disabled={uploading}>
+          <GradientFill className="flex-row items-center rounded-lg px-3 py-1.5" style={{ gap: 4 }}>
+            {uploading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="add" size={14} color="white" />
+                <Text className="text-white text-xs font-semibold">Add</Text>
+              </>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 

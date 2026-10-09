@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,7 @@ import {
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -52,7 +53,6 @@ function chipStyle(selected: boolean, disabled?: boolean) {
   return {
     borderWidth: 1.5,
     borderColor: selected ? colors.primary : colors.border,
-    backgroundColor: selected ? colors.primary : disabled ? "#F9FAFB" : "white",
     ...(selected
       ? {
           shadowColor: colors.primary,
@@ -63,6 +63,31 @@ function chipStyle(selected: boolean, disabled?: boolean) {
         }
       : null),
   };
+}
+
+// Shared fill for the Date/Start Time/Max Players chip Pressables below — a
+// selected chip renders the brand gradient, an unselected one stays flat
+// white (or the disabled grey), same look as before just with a real
+// gradient instead of a flat green.
+function ChipFill({
+  selected,
+  disabled,
+  className,
+  children,
+}: {
+  selected: boolean;
+  disabled?: boolean;
+  className: string;
+  children: ReactNode;
+}) {
+  if (selected) {
+    return <GradientFill className={className}>{children}</GradientFill>;
+  }
+  return (
+    <View className={className} style={{ backgroundColor: disabled ? "#F9FAFB" : "white" }}>
+      {children}
+    </View>
+  );
 }
 
 function toHHMM(t: string): string {
@@ -209,7 +234,6 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
         <Pressable
           onPress={handleSave}
           disabled={updateGame.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
           style={{
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
@@ -218,11 +242,13 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
             elevation: 3,
           }}
         >
-          {updateGame.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-sm">Save</Text>
-          )}
+          <GradientFill className="rounded-xl px-4 py-2">
+            {updateGame.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-sm">Save</Text>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 
@@ -289,11 +315,12 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     setStartTime("");
                   }
                 }}
-                className="items-center px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
-                <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
-                <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{d.label}</Text>
+                <ChipFill selected={selected} className="items-center px-3 py-2 rounded-2xl">
+                  <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{d.day}</Text>
+                  <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{d.label}</Text>
+                </ChipFill>
               </Pressable>
             );
           })}
@@ -315,12 +342,13 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
               <Pressable
                 key={t.value}
                 onPress={() => setStartTime(t.value)}
-                className="px-3 py-2 rounded-2xl"
                 style={chipStyle(selected)}
               >
-                <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                  {t.label}
-                </Text>
+                <ChipFill selected={selected} className="px-3 py-2 rounded-2xl">
+                  <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                    {t.label}
+                  </Text>
+                </ChipFill>
               </Pressable>
             );
           })}
@@ -378,12 +406,13 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
                     key={n}
                     onPress={() => !disabled && setMaxPlayers(n)}
                     disabled={disabled}
-                    className="w-12 py-2 rounded-2xl items-center"
                     style={chipStyle(selected, disabled)}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
-                      {n}
-                    </Text>
+                    <ChipFill selected={selected} disabled={disabled} className="w-12 py-2 rounded-2xl items-center">
+                      <Text className={`text-sm font-medium ${selected ? "text-white" : disabled ? "text-border" : "text-ink"}`}>
+                        {n}
+                      </Text>
+                    </ChipFill>
                   </Pressable>
                 );
               })}

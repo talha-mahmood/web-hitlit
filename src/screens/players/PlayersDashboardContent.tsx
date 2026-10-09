@@ -6,6 +6,7 @@ import { useTopPlayers } from "../../hooks/usePlayers";
 import type { TopPlayer } from "../../lib/api/players";
 import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import SelectSportModal from "../../components/SelectSportModal";
 import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
@@ -41,7 +42,7 @@ function PlayerRow({
         )}
         <View className="flex-1 mr-2">
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.primary }} />
+            <GradientFill style={{ width: 7, height: 7, borderRadius: 3.5 }} />
             <Text className="text-ink font-bold text-sm" numberOfLines={1}>
               {player.fullName ?? "Player"}
             </Text>
@@ -145,11 +146,10 @@ export default function PlayersDashboardContent({
           >
             <Ionicons name="options-outline" size={20} color={colors.ink} />
             {sportId && (
-              <View
+              <GradientFill
                 style={{
                   position: "absolute", top: 6, right: 6,
                   width: 8, height: 8, borderRadius: 4,
-                  backgroundColor: colors.primary,
                 }}
               />
             )}

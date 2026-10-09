@@ -12,6 +12,7 @@ import ViewScoringPanel from "../../components/ViewScoringPanel";
 import { replayPadelMatch, formatSetScore, type PadelMatchConfig, type Team } from "../../lib/padelScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "PadelHome">;
@@ -192,11 +193,12 @@ export default function PadelHomeScreen() {
         </View>
         <Pressable
           onPress={() => navigation.navigate("PadelNewMatch")}
-          className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-          style={{ gap: 6, ...primaryButtonShadow }}
+          style={primaryButtonShadow}
         >
-          <Ionicons name="add" size={18} color="white" />
-          <Text className="text-white font-bold text-sm">New Match</Text>
+          <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+            <Ionicons name="add" size={18} color="white" />
+            <Text className="text-white font-bold text-sm">New Match</Text>
+          </GradientFill>
         </Pressable>
       </View>
 
@@ -222,14 +224,14 @@ export default function PadelHomeScreen() {
                   {tab.label}
                 </Text>
                 {tab.key === "all" && allMatches.length > 0 ? (
-                  <View
+                  <GradientFill
                     className="items-center justify-center rounded-full"
-                    style={{ minWidth: 16, height: 16, paddingHorizontal: 3, backgroundColor: colors.primaryDark }}
+                    style={{ minWidth: 16, height: 16, paddingHorizontal: 3 }}
                   >
                     <Text className="text-white font-bold" style={{ fontSize: 10 }}>
                       {allMatches.length}
                     </Text>
-                  </View>
+                  </GradientFill>
                 ) : null}
               </Pressable>
             );
@@ -281,11 +283,12 @@ export default function PadelHomeScreen() {
               </Text>
               <Pressable
                 onPress={() => navigation.navigate("PadelNewMatch")}
-                className="flex-row items-center bg-primary rounded-full px-6 py-3.5 mt-3"
-                style={{ gap: 8, ...primaryButtonShadow }}
+                style={primaryButtonShadow}
               >
-                <Ionicons name="add" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">New Match</Text>
+                <GradientFill className="flex-row items-center rounded-full px-6 py-3.5 mt-3" style={{ gap: 8 }}>
+                  <Ionicons name="add" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">New Match</Text>
+                </GradientFill>
               </Pressable>
             </View>
           }

@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ScrollView, TextInput } from "react-nativ
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { PAKISTAN_CITIES } from "../lib/pakistanCities";
 
 // Bottom sheet for a list screen's Location filter — same shape/interaction
@@ -101,8 +102,10 @@ export default function SelectLocationModal({
                 style={{ paddingVertical: 12 }}
               />
               {typed.length > 0 && (
-                <Pressable onPress={addTyped} hitSlop={8} className="flex-row items-center px-2 py-1 rounded-lg bg-primary">
-                  <Text className="text-white font-bold text-xs">Add</Text>
+                <Pressable onPress={addTyped} hitSlop={8}>
+                  <GradientFill className="flex-row items-center px-2 py-1 rounded-lg">
+                    <Text className="text-white font-bold text-xs">Add</Text>
+                  </GradientFill>
                 </Pressable>
               )}
             </View>
@@ -116,16 +119,16 @@ export default function SelectLocationModal({
                 </Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8, marginBottom: 16 }}>
                   {draft.map((tag) => (
-                    <Pressable
-                      key={tag}
-                      onPress={() => removeTag(tag)}
-                      className="flex-row items-center rounded-full bg-primary"
-                      style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6 }}
-                    >
-                      <Text className="text-white font-bold" style={{ fontSize: 13.5 }}>
-                        {tag}
-                      </Text>
-                      <Ionicons name="close" size={14} color="white" />
+                    <Pressable key={tag} onPress={() => removeTag(tag)}>
+                      <GradientFill
+                        className="flex-row items-center rounded-full"
+                        style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6 }}
+                      >
+                        <Text className="text-white font-bold" style={{ fontSize: 13.5 }}>
+                          {tag}
+                        </Text>
+                        <Ionicons name="close" size={14} color="white" />
+                      </GradientFill>
                     </Pressable>
                   ))}
                 </View>
@@ -142,23 +145,32 @@ export default function SelectLocationModal({
                   <Pressable
                     key={city}
                     onPress={() => toggleCity(city)}
-                    className="flex-row items-center rounded-full"
                     style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 9,
-                      gap: 6,
+                      borderRadius: 999,
                       borderWidth: 1.5,
                       borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: selected ? colors.primary : "white",
                     }}
                   >
-                    {selected && <Ionicons name="checkmark" size={13} color="white" />}
-                    <Text
-                      className={selected ? "font-bold" : "font-medium"}
-                      style={{ fontSize: 13.5, color: selected ? "white" : colors.ink }}
-                    >
-                      {city}
-                    </Text>
+                    {selected ? (
+                      <GradientFill
+                        className="flex-row items-center rounded-full"
+                        style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6 }}
+                      >
+                        <Ionicons name="checkmark" size={13} color="white" />
+                        <Text className="font-bold" style={{ fontSize: 13.5, color: "white" }}>
+                          {city}
+                        </Text>
+                      </GradientFill>
+                    ) : (
+                      <View
+                        className="flex-row items-center rounded-full"
+                        style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6, backgroundColor: "white" }}
+                      >
+                        <Text className="font-medium" style={{ fontSize: 13.5, color: colors.ink }}>
+                          {city}
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -166,14 +178,12 @@ export default function SelectLocationModal({
           </ScrollView>
 
           <View className="px-5 pt-3" style={{ gap: 8 }}>
-            <Pressable
-              onPress={() => onApply(draft)}
-              className="items-center rounded-2xl bg-primary py-4"
-              style={primaryButtonShadow}
-            >
-              <Text className="text-white font-bold" style={{ fontSize: 16 }}>
-                Apply Filter
-              </Text>
+            <Pressable onPress={() => onApply(draft)} style={primaryButtonShadow}>
+              <GradientFill className="items-center rounded-2xl py-4">
+                <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                  Apply Filter
+                </Text>
+              </GradientFill>
             </Pressable>
             {value.length > 0 && (
               <Pressable onPress={() => onApply([])} className="items-center py-2">

@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, ScrollView, Image } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useAuthStore } from "../store/authStore";
 import { useMySquads } from "../hooks/useSquadTeamFill";
 import type { SquadListItem } from "../lib/api/squads";
@@ -116,14 +117,20 @@ export default function AddPlayersFromGroupModal({
                         setSelectedSquad(s);
                         setSelectedIds(new Set());
                       }}
-                      className="rounded-xl px-3 py-2"
                       style={{
                         borderWidth: 1.5,
                         borderColor: selected ? colors.primary : colors.border,
-                        backgroundColor: selected ? colors.primary : "white",
                       }}
                     >
-                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{s.name}</Text>
+                      {selected ? (
+                        <GradientFill className="rounded-xl px-3 py-2">
+                          <Text className="text-sm font-medium text-white">{s.name}</Text>
+                        </GradientFill>
+                      ) : (
+                        <View className="rounded-xl px-3 py-2" style={{ backgroundColor: "white" }}>
+                          <Text className="text-sm font-medium text-ink">{s.name}</Text>
+                        </View>
+                      )}
                     </Pressable>
                   );
                 })}
@@ -184,12 +191,19 @@ export default function AddPlayersFromGroupModal({
                   <Pressable
                     onPress={handleAdd}
                     disabled={selectedIds.size === 0}
-                    className={`rounded-xl py-4 items-center mt-6 ${selectedIds.size > 0 ? "bg-primary" : "bg-gray-200"}`}
                     style={selectedIds.size > 0 ? primaryButtonShadow : undefined}
                   >
-                    <Text className={`font-semibold text-base ${selectedIds.size > 0 ? "text-white" : "text-muted"}`}>
-                      Add {selectedIds.size > 0 ? selectedIds.size : ""} Player{selectedIds.size === 1 ? "" : "s"}
-                    </Text>
+                    {selectedIds.size > 0 ? (
+                      <GradientFill className="rounded-xl py-4 items-center mt-6">
+                        <Text className="font-semibold text-base text-white">
+                          Add {selectedIds.size} Player{selectedIds.size === 1 ? "" : "s"}
+                        </Text>
+                      </GradientFill>
+                    ) : (
+                      <View className="rounded-xl py-4 items-center mt-6 bg-gray-200">
+                        <Text className="font-semibold text-base text-muted">Add Players</Text>
+                      </View>
+                    )}
                   </Pressable>
                 </>
               )}

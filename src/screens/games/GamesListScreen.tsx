@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
@@ -32,6 +32,7 @@ import BookingsDateRangeModal, { type DateSelection } from "../../components/Boo
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm } from "../../lib/distance";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
@@ -40,6 +41,35 @@ type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
 // "Create" text + its icon) so the card's Join CTA reads as the same size
 // even though its own label has no icon and varies ("Join"/"Joined"/"Requested").
 const JOIN_BUTTON_MIN_WIDTH = 96;
+
+// Shared fill for the filter-row pills below (All/My Games, Tournaments,
+// Location, Sports, Time, Distance) — an active pill renders the brand
+// gradient, an inactive one stays flat white, same look as before just with
+// a real gradient instead of a flat green.
+function FilterPillFill({
+  active,
+  className,
+  style,
+  children,
+}: {
+  active: boolean;
+  className?: string;
+  style?: object;
+  children: ReactNode;
+}) {
+  if (active) {
+    return (
+      <GradientFill className={className} style={style}>
+        {children}
+      </GradientFill>
+    );
+  }
+  return (
+    <View className={className} style={{ backgroundColor: "white", ...style }}>
+      {children}
+    </View>
+  );
+}
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const fmt = (t: string) =>
@@ -178,12 +208,12 @@ function GameCard({
                     <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
                   </View>
                 ) : (
-                  <View
-                    className="items-center justify-center bg-primary rounded-2xl px-3 py-2"
+                  <GradientFill
+                    className="items-center justify-center rounded-2xl px-3 py-2"
                     style={{ minWidth: 78, ...primaryButtonShadow }}
                   >
                     <Text className="text-white font-bold text-sm">Join</Text>
-                  </View>
+                  </GradientFill>
                 )}
               </Bouncy>
             )}
@@ -453,9 +483,8 @@ export default function GamesListScreen() {
     <View className="flex-1 bg-white">
       {isFocused ? <StatusBar style="light" /> : null}
       {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <View
+      <GradientFill
         style={{
-          backgroundColor: "#14532D",
           paddingTop: insets.top + 12,
           paddingBottom: 20,
           paddingHorizontal: 14,
@@ -491,7 +520,7 @@ export default function GamesListScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </GradientFill>
 
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
@@ -541,18 +570,17 @@ export default function GamesListScreen() {
                   setDistanceOpen(false);
                   setListFilter(p.key);
                 }}
-                className="rounded-full"
                 style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  backgroundColor: active ? colors.primary : "white",
+                  borderRadius: 999,
                   borderWidth: 1,
                   borderColor: active ? colors.primary : colors.border,
                 }}
               >
-                <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
-                  {p.label}
-                </Text>
+                <FilterPillFill active={active} className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
+                    {p.label}
+                  </Text>
+                </FilterPillFill>
               </Pressable>
             );
           })}
@@ -560,48 +588,52 @@ export default function GamesListScreen() {
               tournaments (never both mixed together). */}
           <Pressable
             onPress={() => setShowTournaments((v) => !v)}
-            className="flex-row items-center rounded-full"
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: showTournaments ? colors.primary : "white",
+              borderRadius: 999,
               borderWidth: 1,
               borderColor: showTournaments ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="trophy-outline" size={14} color={showTournaments ? "white" : colors.muted} />
-            <Text className="font-medium" style={{ fontSize: 13.5, color: showTournaments ? "white" : colors.muted }}>
-              Tournaments
-            </Text>
+            <FilterPillFill
+              active={showTournaments}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+            >
+              <Ionicons name="trophy-outline" size={14} color={showTournaments ? "white" : colors.muted} />
+              <Text className="font-medium" style={{ fontSize: 13.5, color: showTournaments ? "white" : colors.muted }}>
+                Tournaments
+              </Text>
+            </FilterPillFill>
           </Pressable>
           {/* "Location" — opens a bottom sheet with a free-text field plus
               city suggestions (multi-select), in place of the old
               always-visible inline field. Right after All/My Games. */}
           <Pressable
             onPress={() => setLocationOpen(true)}
-            className="flex-row items-center rounded-full"
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: locationTags.length > 0 ? colors.primary : "white",
+              borderRadius: 999,
               borderWidth: 1,
               borderColor: locationTags.length > 0 ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
-            <Text
-              className="font-medium"
-              style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
-              numberOfLines={1}
+            <FilterPillFill
+              active={locationTags.length > 0}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
             >
-              {locationTags.length > 0
-                ? locationTags.length === 1
-                  ? locationTags[0]
-                  : `${locationTags.length} locations`
-                : "Location"}
-            </Text>
+              <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                {locationTags.length > 0
+                  ? locationTags.length === 1
+                    ? locationTags[0]
+                    : `${locationTags.length} locations`
+                  : "Location"}
+              </Text>
+            </FilterPillFill>
           </Pressable>
           {/* "Sports" — opens the same sport-select sheet the filter icon
               next to the search box used to open. */}
@@ -610,24 +642,26 @@ export default function GamesListScreen() {
               setDistanceOpen(false);
               setSportSheetOpen(true);
             }}
-            className="flex-row items-center rounded-full"
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: selectedSportId ? colors.primary : "white",
+              borderRadius: 999,
               borderWidth: 1,
               borderColor: selectedSportId ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
-            <Text
-              className="font-medium"
-              style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
-              numberOfLines={1}
+            <FilterPillFill
+              active={!!selectedSportId}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
             >
-              Sports
-            </Text>
+              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                Sports
+              </Text>
+            </FilterPillFill>
           </Pressable>
           {/* "Time" — opens the same date-range calendar as the admin panel's
               Bookings tab (BookingsDateRangeModal); results are limited to
@@ -637,35 +671,37 @@ export default function GamesListScreen() {
               setDistanceOpen(false);
               setTimeModalOpen(true);
             }}
-            className="flex-row items-center rounded-full"
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: timeRange ? colors.primary : "white",
+              borderRadius: 999,
               borderWidth: 1,
               borderColor: timeRange ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.muted} />
-            <Text
-              className="font-medium"
-              style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted }}
-              numberOfLines={1}
+            <FilterPillFill
+              active={!!timeRange}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
             >
-              {timeRange
-                ? timeRange.start === timeRange.end
-                  ? formatShortDate(timeRange.start)
-                  : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`
-                : "Date"}
-            </Text>
-            {timeRange ? (
-              // Separate tap target from the pill itself — clears the range
-              // without reopening the calendar.
-              <Pressable onPress={() => setTimeRange(null)} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color="white" />
-              </Pressable>
-            ) : null}
+              <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                {timeRange
+                  ? timeRange.start === timeRange.end
+                    ? formatShortDate(timeRange.start)
+                    : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`
+                  : "Date"}
+              </Text>
+              {timeRange ? (
+                // Separate tap target from the pill itself — clears the range
+                // without reopening the calendar.
+                <Pressable onPress={() => setTimeRange(null)} hitSlop={8}>
+                  <Ionicons name="close-circle" size={16} color="white" />
+                </Pressable>
+              ) : null}
+            </FilterPillFill>
           </Pressable>
           {/* "Distance" — plain pill like Sports, opening a bottom sheet
               instead of the small inline dropdown it used to expand into. */}
@@ -677,24 +713,26 @@ export default function GamesListScreen() {
               if (locationStatus !== "granted") requestLocation();
               setDistanceOpen(true);
             }}
-            className="flex-row items-center rounded-full"
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              gap: 5,
-              backgroundColor: distanceKmFilter != null ? colors.primary : "white",
+              borderRadius: 999,
               borderWidth: 1,
               borderColor: distanceKmFilter != null ? colors.primary : colors.border,
             }}
           >
-            <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
-            <Text
-              className="font-medium"
-              style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
-              numberOfLines={1}
+            <FilterPillFill
+              active={distanceKmFilter != null}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
             >
-              {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
-            </Text>
+              <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
+              </Text>
+            </FilterPillFill>
           </Pressable>
         </ScrollView>
 </View>
@@ -779,11 +817,13 @@ export default function GamesListScreen() {
                 </Text>
                 <Pressable
                   onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
-                  className="bg-primary rounded-xl px-6 py-3 mt-2"
+                  className="mt-2"
                 >
-                  <Text className="text-white font-semibold">
-                    Create a {isTournamentList ? "Tournament" : "Game"}
-                  </Text>
+                  <GradientFill className="rounded-xl px-6 py-3">
+                    <Text className="text-white font-semibold">
+                      Create a {isTournamentList ? "Tournament" : "Game"}
+                    </Text>
+                  </GradientFill>
                 </Pressable>
               </View>
             )

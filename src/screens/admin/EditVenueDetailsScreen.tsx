@@ -21,6 +21,7 @@ import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GradientFill from "../../components/GradientFill";
 
 type Route = RouteProp<VenueEditingParamList, "EditVenueDetails">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditVenueDetails">;
@@ -140,17 +141,14 @@ export default function EditVenueDetailsScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Edit Venue</Text>
-        <Pressable
-          onPress={handleSave}
-          disabled={updateVenue.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
-          style={primaryButtonShadow}
-        >
-          {updateVenue.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-sm">Save</Text>
-          )}
+        <Pressable onPress={handleSave} disabled={updateVenue.isPending} style={primaryButtonShadow}>
+          <GradientFill className="rounded-xl px-4 py-2">
+            {updateVenue.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-sm">Save</Text>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 

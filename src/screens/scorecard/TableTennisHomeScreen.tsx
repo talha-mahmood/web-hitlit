@@ -12,6 +12,7 @@ import ViewScoringPanel from "../../components/ViewScoringPanel";
 import { replayTableTennisMatch, type TableTennisMatchConfig, type Team } from "../../lib/tableTennisScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
+import GradientFill from "../../components/GradientFill";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "TableTennisHome">;
@@ -190,13 +191,11 @@ export default function TableTennisHomeScreen() {
           <Text className="text-2xl font-bold text-ink">Table Tennis</Text>
           <Text className="text-muted text-sm mt-0.5">Track and manage all your matches</Text>
         </View>
-        <Pressable
-          onPress={() => navigation.navigate("TableTennisNewMatch")}
-          className="flex-row items-center bg-primary rounded-full px-4 py-2.5"
-          style={{ gap: 6, ...primaryButtonShadow }}
-        >
-          <Ionicons name="add" size={18} color="white" />
-          <Text className="text-white font-bold text-sm">New Match</Text>
+        <Pressable onPress={() => navigation.navigate("TableTennisNewMatch")} style={primaryButtonShadow}>
+          <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
+            <Ionicons name="add" size={18} color="white" />
+            <Text className="text-white font-bold text-sm">New Match</Text>
+          </GradientFill>
         </Pressable>
       </View>
 
@@ -222,14 +221,14 @@ export default function TableTennisHomeScreen() {
                   {tab.label}
                 </Text>
                 {tab.key === "all" && allMatches.length > 0 ? (
-                  <View
+                  <GradientFill
                     className="items-center justify-center rounded-full"
-                    style={{ minWidth: 16, height: 16, paddingHorizontal: 3, backgroundColor: colors.primaryDark }}
+                    style={{ minWidth: 16, height: 16, paddingHorizontal: 3 }}
                   >
                     <Text className="text-white font-bold" style={{ fontSize: 10 }}>
                       {allMatches.length}
                     </Text>
-                  </View>
+                  </GradientFill>
                 ) : null}
               </Pressable>
             );
@@ -279,13 +278,11 @@ export default function TableTennisHomeScreen() {
               <Text className="text-muted text-sm text-center px-10">
                 Create a new match to start keeping score{"\n"}and track your games here.
               </Text>
-              <Pressable
-                onPress={() => navigation.navigate("TableTennisNewMatch")}
-                className="flex-row items-center bg-primary rounded-full px-6 py-3.5 mt-3"
-                style={{ gap: 8, ...primaryButtonShadow }}
-              >
-                <Ionicons name="add" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">New Match</Text>
+              <Pressable onPress={() => navigation.navigate("TableTennisNewMatch")} style={primaryButtonShadow}>
+                <GradientFill className="flex-row items-center rounded-full px-6 py-3.5 mt-3" style={{ gap: 8 }}>
+                  <Ionicons name="add" size={18} color="white" />
+                  <Text className="text-white font-bold text-sm">New Match</Text>
+                </GradientFill>
               </Pressable>
             </View>
           }

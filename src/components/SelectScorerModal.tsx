@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ScrollView, ActivityIndicator } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 
 export type ScorerCandidate = { id: string; name: string; teamName: string };
 
@@ -81,14 +82,22 @@ export default function SelectScorerModal({
                       backgroundColor: isCurrent ? colors.primaryLight : "white",
                     }}
                   >
-                    <View
-                      className="items-center justify-center rounded-full"
-                      style={{ width: 36, height: 36, backgroundColor: isCurrent ? colors.primary : "#F3F4F6" }}
-                    >
-                      <Text className="font-bold text-sm" style={{ color: isCurrent ? "white" : colors.muted }}>
-                        {member.name.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
+                    {isCurrent ? (
+                      <GradientFill className="items-center justify-center rounded-full" style={{ width: 36, height: 36 }}>
+                        <Text className="font-bold text-sm" style={{ color: "white" }}>
+                          {member.name.charAt(0).toUpperCase()}
+                        </Text>
+                      </GradientFill>
+                    ) : (
+                      <View
+                        className="items-center justify-center rounded-full"
+                        style={{ width: 36, height: 36, backgroundColor: "#F3F4F6" }}
+                      >
+                        <Text className="font-bold text-sm" style={{ color: colors.muted }}>
+                          {member.name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
                     <View className="flex-1">
                       <Text className={isCurrent ? "font-bold" : "font-semibold"} style={{ fontSize: 14, color: isCurrent ? colors.primaryDark : colors.ink }} numberOfLines={1}>
                         {member.name}
@@ -100,12 +109,12 @@ export default function SelectScorerModal({
                     {isPicking ? (
                       <ActivityIndicator size="small" color={colors.primary} />
                     ) : isCurrent ? (
-                      <View
+                      <GradientFill
                         className="items-center justify-center rounded-full"
-                        style={{ width: 22, height: 22, backgroundColor: colors.primary }}
+                        style={{ width: 22, height: 22 }}
                       >
                         <Ionicons name="checkmark" size={14} color="white" />
-                      </View>
+                      </GradientFill>
                     ) : null}
                   </Pressable>
                 );

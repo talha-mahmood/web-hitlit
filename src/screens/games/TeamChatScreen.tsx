@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,7 @@ import ChatIcon from "../../components/ChatIcon";
 import SeenByModal from "../../components/SeenByModal";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { getSportIcon } from "../../lib/sportIcons";
+import GradientFill from "../../components/GradientFill";
 
 const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
 
@@ -98,6 +99,33 @@ function QuotedPreview({ parent, isOwn, onPress }: { parent: TeamMessage; isOwn:
   );
 }
 
+// Shared fill for the chat bubble below — the sender's own messages render
+// the brand gradient, everyone else's stay flat grey, same look as before
+// just with a real gradient instead of a flat green.
+function BubbleFill({
+  isOwn,
+  highlighted,
+  children,
+}: {
+  isOwn: boolean;
+  highlighted?: boolean;
+  children: ReactNode;
+}) {
+  const highlightStyle = highlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined;
+  if (isOwn) {
+    return (
+      <GradientFill className="px-3 py-2 rounded-2xl" style={highlightStyle}>
+        {children}
+      </GradientFill>
+    );
+  }
+  return (
+    <View className="px-3 py-2 rounded-2xl bg-gray-100" style={highlightStyle}>
+      {children}
+    </View>
+  );
+}
+
 function MessageBubble({
   message,
   isOwn,
@@ -158,10 +186,7 @@ function MessageBubble({
       <View style={{ maxWidth: "75%" }}>
         {!isOwn && <Text className="text-ink text-sm font-bold mb-1 ml-1">{name}</Text>}
         <View style={{ position: "relative" }}>
-          <View
-            className={`px-3 py-2 rounded-2xl ${isOwn ? "bg-primary" : "bg-gray-100"}`}
-            style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
-          >
+          <BubbleFill isOwn={isOwn} highlighted={isHighlighted}>
             {isDeleted ? (
               <Text
                 className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
@@ -175,7 +200,7 @@ function MessageBubble({
                 <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
               </>
             )}
-          </View>
+          </BubbleFill>
           {isOwn && !isDeleted && (
             <View
               className="items-center justify-center rounded-full"
@@ -477,10 +502,17 @@ export default function TeamChatScreen() {
         <Pressable
           onPress={handleSend}
           disabled={!draft.trim() || sendMessage.isPending}
-          className={`w-11 h-11 rounded-full items-center justify-center ${draft.trim() ? "bg-primary" : "bg-gray-200"}`}
           style={draft.trim() ? cardShadow : undefined}
         >
-          <Ionicons name="send" size={17} color="white" />
+          {draft.trim() ? (
+            <GradientFill className="w-11 h-11 rounded-full items-center justify-center">
+              <Ionicons name="send" size={17} color="white" />
+            </GradientFill>
+          ) : (
+            <View className="w-11 h-11 rounded-full items-center justify-center bg-gray-200">
+              <Ionicons name="send" size={17} color="white" />
+            </View>
+          )}
         </Pressable>
       </View>
 

@@ -28,6 +28,7 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, primaryButtonShadow, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
@@ -99,18 +100,32 @@ function InfoRow({
           )}
         </View>
         {pillColor ? (
-          <View
-            style={{
-              backgroundColor: pillColor,
-              alignSelf: "flex-start",
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-              marginTop: 4,
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
-          </View>
+          pillColor === colors.primary ? (
+            <GradientFill
+              style={{
+                alignSelf: "flex-start",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+            </GradientFill>
+          ) : (
+            <View
+              style={{
+                backgroundColor: pillColor,
+                alignSelf: "flex-start",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>{value}</Text>
+            </View>
+          )
         ) : (
           <Text className="text-ink text-sm font-medium mt-0.5">{value}</Text>
         )}
@@ -170,13 +185,13 @@ function MemberAvatar({
         )}
       </Pressable>
       {isOwner ? (
-        <View className="bg-primary rounded-full px-1.5 py-0.5 mt-1">
+        <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Captain</Text>
-        </View>
+        </GradientFill>
       ) : isHost ? (
-        <View className="bg-primary-dark rounded-full px-1.5 py-0.5 mt-1">
+        <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
           <Text className="text-white text-xs font-medium">Host</Text>
-        </View>
+        </GradientFill>
       ) : null}
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
         {(name ?? "Member").split(" ")[0]}
@@ -248,12 +263,10 @@ function SquadPendingRequestRow({
         >
           <Text className="text-muted text-xs font-semibold">Reject</Text>
         </Pressable>
-        <Pressable
-          onPress={onApprove}
-          disabled={disabled}
-          className="bg-primary rounded-lg px-3 py-1.5"
-        >
-          <Text className="text-white text-xs font-semibold">Approve</Text>
+        <Pressable onPress={onApprove} disabled={disabled}>
+          <GradientFill className="rounded-lg px-3 py-1.5">
+            <Text className="text-white text-xs font-semibold">Approve</Text>
+          </GradientFill>
         </Pressable>
       </View>
     </View>
@@ -656,21 +669,30 @@ export default function SquadDetailScreen() {
                         size={13}
                         color={squad.join_requests_blocked ? colors.primary : colors.danger}
                       />
-                      <View
-                        className="items-center justify-center rounded-full"
-                        style={{
-                          position: "absolute",
-                          right: -3,
-                          bottom: -3,
-                          width: 9,
-                          height: 9,
-                          backgroundColor: squad.join_requests_blocked ? colors.primary : colors.danger,
-                          borderWidth: 1,
-                          borderColor: "white",
-                        }}
-                      >
-                        <Ionicons name="ban" size={6} color="white" />
-                      </View>
+                      {squad.join_requests_blocked ? (
+                        <GradientFill
+                          className="items-center justify-center rounded-full"
+                          style={{ position: "absolute", right: -3, bottom: -3, width: 9, height: 9, borderWidth: 1, borderColor: "white" }}
+                        >
+                          <Ionicons name="ban" size={6} color="white" />
+                        </GradientFill>
+                      ) : (
+                        <View
+                          className="items-center justify-center rounded-full"
+                          style={{
+                            position: "absolute",
+                            right: -3,
+                            bottom: -3,
+                            width: 9,
+                            height: 9,
+                            backgroundColor: colors.danger,
+                            borderWidth: 1,
+                            borderColor: "white",
+                          }}
+                        >
+                          <Ionicons name="ban" size={6} color="white" />
+                        </View>
+                      )}
                     </View>
                     <Text
                       style={{
@@ -718,13 +740,15 @@ export default function SquadDetailScreen() {
               <Pressable
                 onPress={handleAcceptInvite}
                 disabled={declineInvite.isPending || acceptInvite.isPending}
-                className="flex-1 bg-primary rounded-lg py-2.5 items-center"
+                className="flex-1"
               >
-                {acceptInvite.isPending ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-sm">Accept</Text>
-                )}
+                <GradientFill className="rounded-lg py-2.5 items-center">
+                  {acceptInvite.isPending ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text className="text-white font-semibold text-sm">Accept</Text>
+                  )}
+                </GradientFill>
               </Pressable>
             </View>
           </View>
@@ -912,10 +936,11 @@ export default function SquadDetailScreen() {
                 <Pressable
                   onPress={() => handleRespondGameInvite(invite.id, true)}
                   disabled={respondToGameInvite.isPending}
-                  className="rounded-lg px-3 py-2 bg-primary"
                   style={primaryButtonShadow}
                 >
-                  <Text className="text-white text-xs font-semibold">Accept</Text>
+                  <GradientFill className="rounded-lg px-3 py-2">
+                    <Text className="text-white text-xs font-semibold">Accept</Text>
+                  </GradientFill>
                 </Pressable>
               </View>
             ))}
@@ -1040,12 +1065,10 @@ export default function SquadDetailScreen() {
             </Text>
           </View>
         ) : (
-          <Pressable
-            onPress={handleJoin}
-            className="bg-primary rounded-xl py-4 items-center"
-            style={primaryButtonShadow}
-          >
-            <Text className="text-white font-semibold text-base">Request to Join</Text>
+          <Pressable onPress={handleJoin} style={primaryButtonShadow}>
+            <GradientFill className="rounded-xl py-4 items-center">
+              <Text className="text-white font-semibold text-base">Request to Join</Text>
+            </GradientFill>
           </Pressable>
         )}
       </View>

@@ -6,6 +6,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import { DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
 import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
@@ -110,8 +111,8 @@ export default function CompleteDetailsScreen() {
     <KeyboardAvoidingView
       className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ backgroundColor: colors.primary }}
     >
+      <GradientFill className="flex-1">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
@@ -192,19 +193,27 @@ export default function CompleteDetailsScreen() {
                     <Pressable
                       key={opt.value}
                       onPress={() => setGender(opt.value)}
-                      className="flex-1 items-center rounded-xl py-3"
-                      style={{
-                        borderWidth: 1.5,
-                        borderColor: selected ? colors.primary : colors.border,
-                        backgroundColor: selected ? colors.primary : "white",
-                      }}
+                      className="flex-1"
                     >
-                      <Text
-                        className="text-sm"
-                        style={{ color: selected ? "white" : colors.ink, fontWeight: selected ? "700" : "500" }}
-                      >
-                        {opt.label}
-                      </Text>
+                      {selected ? (
+                        <GradientFill
+                          className="items-center rounded-xl py-3"
+                          style={{ borderWidth: 1.5, borderColor: colors.primary }}
+                        >
+                          <Text className="text-sm" style={{ color: "white", fontWeight: "700" }}>
+                            {opt.label}
+                          </Text>
+                        </GradientFill>
+                      ) : (
+                        <View
+                          className="items-center rounded-xl py-3"
+                          style={{ borderWidth: 1.5, borderColor: colors.border, backgroundColor: "white" }}
+                        >
+                          <Text className="text-sm" style={{ color: colors.ink, fontWeight: "500" }}>
+                            {opt.label}
+                          </Text>
+                        </View>
+                      )}
                     </Pressable>
                   );
                 })}
@@ -225,14 +234,16 @@ export default function CompleteDetailsScreen() {
             <Pressable
               onPress={handleContinue}
               disabled={isSaving || !isValid}
-              className="w-full flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-6 active:opacity-90"
-              style={{ backgroundColor: colors.primary, opacity: isValid ? 1 : 0.4 }}
+              className="w-full active:opacity-90"
+              style={{ opacity: isValid ? 1 : 0.4 }}
             >
-              {isSaving ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-semibold text-base">Continue</Text>
-              )}
+              <GradientFill className="flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-6">
+                {isSaving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-semibold text-base">Continue</Text>
+                )}
+              </GradientFill>
             </Pressable>
             {!isValid && (
               <Text className="text-muted text-xs text-center mt-3">
@@ -242,6 +253,7 @@ export default function CompleteDetailsScreen() {
           </View>
         </View>
       </ScrollView>
+      </GradientFill>
     </KeyboardAvoidingView>
   );
 }

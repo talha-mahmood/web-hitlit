@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, ActivityIndicator, ScrollView, Image } fr
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
 import { useMySquads } from "../hooks/useSquadTeamFill";
 import type { SquadListItem } from "../lib/api/squads";
 import type { Database } from "../types/database.types";
@@ -80,14 +81,14 @@ export default function FillTeamWithSquadModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-white">
-        <View className="px-4 pb-4" style={{ backgroundColor: "#0E4429", paddingTop: insets.top + 12 }}>
+        <GradientFill className="px-4 pb-4" style={{ paddingTop: insets.top + 12 }}>
           <View className="flex-row items-center justify-center">
             <Pressable onPress={onClose} hitSlop={10} style={{ position: "absolute", left: 0 }}>
               <Ionicons name="close" size={24} color="white" />
             </Pressable>
             <Text className="text-white text-base font-bold">Fill With My Group</Text>
           </View>
-        </View>
+        </GradientFill>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 32 + insets.bottom }}>
           <Text className="text-muted text-xs font-semibold mb-2">Select a group</Text>
@@ -187,16 +188,22 @@ export default function FillTeamWithSquadModal({
           <Pressable
             onPress={handleSubmit}
             disabled={!canSubmit || submitting}
-            className={`rounded-xl py-4 items-center mt-4 ${canSubmit ? "bg-primary" : "bg-gray-200"}`}
             style={canSubmit ? primaryButtonShadow : undefined}
           >
-            {submitting ? (
-              <ActivityIndicator color="white" />
+            {canSubmit ? (
+              <GradientFill className="rounded-xl py-4 items-center mt-4">
+                {submitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-semibold text-base text-white">
+                    SEND ({selectedMemberIds.size}) REQUEST{selectedMemberIds.size === 1 ? "" : "S"}
+                  </Text>
+                )}
+              </GradientFill>
             ) : (
-              <Text className={`font-semibold text-base ${canSubmit ? "text-white" : "text-muted"}`}>
-                SEND {selectedMemberIds.size > 0 ? `(${selectedMemberIds.size})` : ""} REQUEST
-                {selectedMemberIds.size === 1 ? "" : "S"}
-              </Text>
+              <View className="rounded-xl py-4 items-center mt-4 bg-gray-200">
+                {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-muted">SEND REQUESTS</Text>}
+              </View>
             )}
           </Pressable>
         </ScrollView>

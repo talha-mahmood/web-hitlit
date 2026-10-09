@@ -18,6 +18,7 @@ import { useSquadDetail, useUpdateSquad } from "../../hooks/useSquads";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { SquadDetail } from "../../lib/api/squads";
@@ -116,17 +117,14 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Edit Group</Text>
-        <Pressable
-          onPress={handleSave}
-          disabled={updateSquad.isPending}
-          className="bg-primary rounded-xl px-4 py-2"
-          style={primaryButtonShadow}
-        >
-          {updateSquad.isPending ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-sm">Save</Text>
-          )}
+        <Pressable onPress={handleSave} disabled={updateSquad.isPending} style={primaryButtonShadow}>
+          <GradientFill className="rounded-xl px-4 py-2">
+            {updateSquad.isPending ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-sm">Save</Text>
+            )}
+          </GradientFill>
         </Pressable>
       </View>
 
