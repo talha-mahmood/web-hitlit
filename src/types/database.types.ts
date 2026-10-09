@@ -649,8 +649,10 @@ export type Database = {
           status: string
           target_override: number | null
           team_a_name: string
+          team_a_penalty_runs: number
           team_a_players: string[]
           team_b_name: string
+          team_b_penalty_runs: number
           team_b_players: string[]
           toss_decision: string
           toss_winner: string
@@ -668,8 +670,10 @@ export type Database = {
           status?: string
           target_override?: number | null
           team_a_name: string
+          team_a_penalty_runs?: number
           team_a_players?: string[]
           team_b_name: string
+          team_b_penalty_runs?: number
           team_b_players?: string[]
           toss_decision: string
           toss_winner: string
@@ -687,8 +691,10 @@ export type Database = {
           status?: string
           target_override?: number | null
           team_a_name?: string
+          team_a_penalty_runs?: number
           team_a_players?: string[]
           team_b_name?: string
+          team_b_penalty_runs?: number
           team_b_players?: string[]
           toss_decision?: string
           toss_winner?: string

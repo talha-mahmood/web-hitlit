@@ -180,6 +180,8 @@ export type CricketMatchSettingsUpdate = {
   format?: "T10" | "T20" | "ODI" | "Club";
   venue?: string | null;
   targetOverride?: number | null;
+  teamAPenaltyRuns?: number;
+  teamBPenaltyRuns?: number;
 };
 
 export async function updateCricketMatchSettings(matchId: string, updates: CricketMatchSettingsUpdate): Promise<void> {
@@ -190,6 +192,8 @@ export async function updateCricketMatchSettings(matchId: string, updates: Crick
       ...(updates.format !== undefined ? { format: updates.format } : {}),
       ...(updates.venue !== undefined ? { venue: updates.venue } : {}),
       ...(updates.targetOverride !== undefined ? { target_override: updates.targetOverride } : {}),
+      ...(updates.teamAPenaltyRuns !== undefined ? { team_a_penalty_runs: updates.teamAPenaltyRuns } : {}),
+      ...(updates.teamBPenaltyRuns !== undefined ? { team_b_penalty_runs: updates.teamBPenaltyRuns } : {}),
     })
     .eq("id", matchId);
   if (error) throw new Error(error.message);

@@ -1,4 +1,4 @@
-import { Children, useMemo, useRef, useState } from "react";
+import { Children, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput, Share } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -33,6 +33,7 @@ import {
 } from "../../lib/cricketScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import { resourcePercent, computeDuckworthLewis } from "../../lib/duckworthLewis";
 type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 
@@ -142,6 +143,66 @@ function KeypadCell({
     <Pressable onPress={onPress} disabled={disabled} className="items-center justify-center py-4" style={{ opacity: disabled ? 0.5 : 1 }}>
       {children}
     </Pressable>
+  );
+}
+
+// A centered white card dialog (title, message, divider, button row) — the
+// reference's confirmation style for Abandon/End Innings/the "Not Allowed"
+// eligibility messages, distinct from the native Alert.alert look used
+// elsewhere, since this needs a disableable/counting button (Abandon) that a
+// native alert can't do.
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  disabledLabel,
+  onConfirm,
+  onCancel,
+  confirmDisabled,
+  singleButton,
+}: {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  // Shown on the confirm button instead of confirmLabel while
+  // confirmDisabled is true — e.g. Abandon's "Wait : 4" countdown.
+  disabledLabel?: string;
+  onConfirm?: () => void;
+  onCancel: () => void;
+  confirmDisabled?: boolean;
+  singleButton?: boolean;
+}) {
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={onCancel}>
+      <View className="flex-1 bg-black/40 items-center justify-center px-10">
+        <View className="bg-white rounded-2xl w-full overflow-hidden" style={{ maxWidth: 340 }}>
+          <View className="px-5 pt-5 pb-5">
+            <Text className="text-ink font-bold text-lg mb-2">{title}</Text>
+            <Text className="text-ink text-sm" style={{ lineHeight: 20 }}>{message}</Text>
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border }} />
+          <View className="flex-row">
+            {!singleButton && (
+              <Pressable
+                onPress={onConfirm}
+                disabled={confirmDisabled}
+                className="flex-1 items-center py-3.5"
+                style={{ borderRightWidth: 1, borderColor: colors.border }}
+              >
+                <Text className="font-bold" style={{ color: confirmDisabled ? colors.muted : colors.primaryDark }}>
+                  {confirmDisabled ? disabledLabel : confirmLabel}
+                </Text>
+              </Pressable>
+            )}
+            <Pressable onPress={onCancel} className="flex-1 items-center py-3.5">
+              <Text className="font-bold" style={{ color: colors.primaryDark }}>
+                {singleButton ? "Ok" : "Cancel"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -320,7 +381,7 @@ export default function LiveScoringScreen() {
   // reuse the extra-type values they already submit through; the rest are
   // Match-Centre-only panels (More menu, Bonus/More Runs, Retired Hurt, …).
   const [panel, setPanel] = useState<
-    ExtraType | "WICKET" | "MORE_RUNS" | "BONUS_RUNS" | "MORE_MENU" | "RETIRED_HURT" | "CHANGE_TARGET" | "OVERS_FORMAT" | "SETTINGS" | null
+    ExtraType | "WICKET" | "MORE_RUNS" | "BONUS_RUNS" | "MORE_MENU" | "RETIRED_HURT" | "PENALTY_TEAM" | "CHANGE_TARGET" | "OVERS_FORMAT" | "SETTINGS" | null
   >(null);
   const [wicketType, setWicketType] = useState<WicketType | null>(null);
   const [wicketEnd, setWicketEnd] = useState<"striker" | "nonStriker" | null>(null);
@@ -335,10 +396,26 @@ export default function LiveScoringScreen() {
   // match.
   const [benchedNames, setBenchedNames] = useState<Set<string>>(new Set());
   const [changeTargetDraft, setChangeTargetDraft] = useState("");
+  const [revisedOversDraft, setRevisedOversDraft] = useState("");
   const [oversDraft, setOversDraft] = useState("");
   const [formatDraft, setFormatDraft] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
   const [venueDraft, setVenueDraft] = useState("");
+  // Centered confirm-card dialogs (Abandon/End Innings/the two "Not Allowed"
+  // eligibility messages) — separate from `panel` since these float over
+  // everything rather than living in the bottom sheet.
+  const [dialog, setDialog] = useState<"ABANDON" | "END_INNINGS" | "TARGET_BLOCKED" | null>(null);
+  const ABANDON_WAIT_SECONDS = 4;
+  const [abandonCountdown, setAbandonCountdown] = useState(ABANDON_WAIT_SECONDS);
   const recentBallsScrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (dialog !== "ABANDON") return;
+    setAbandonCountdown(ABANDON_WAIT_SECONDS);
+    const interval = setInterval(() => {
+      setAbandonCountdown((c) => Math.max(c - 1, 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [dialog]);
 
   const currentInnings = useMemo(() => {
     if (!match) return undefined;
@@ -362,7 +439,8 @@ export default function LiveScoringScreen() {
     const opener1 = ballEvents[0]?.strikerName ?? pendingStriker ?? "";
     const opener2 = ballEvents[0]?.nonStrikerName ?? pendingNonStriker ?? "";
     if (!opener1 || !opener2) return null;
-    return replayInnings(ballEvents, battingTeam, match.overs_limit, battingPlayers.length, opener1, opener2);
+    const startingRuns = battingTeam === "A" ? match.team_a_penalty_runs : match.team_b_penalty_runs;
+    return replayInnings(ballEvents, battingTeam, match.overs_limit, battingPlayers.length, opener1, opener2, startingRuns);
   }, [ballEvents, battingTeam, match, battingPlayers.length, pendingStriker, pendingNonStriker]);
 
   // Only relevant chasing in the 2nd innings.
@@ -374,13 +452,15 @@ export default function LiveScoringScreen() {
     if (balls.length === 0) return null;
     const firstBattingTeam = first.batting_team as "A" | "B";
     const firstBattingPlayers = firstBattingTeam === "A" ? match.team_a_players : match.team_b_players;
+    const startingRuns = firstBattingTeam === "A" ? match.team_a_penalty_runs : match.team_b_penalty_runs;
     return replayInnings(
       balls,
       firstBattingTeam,
       match.overs_limit,
       firstBattingPlayers.length,
       balls[0].strikerName,
-      balls[0].nonStrikerName
+      balls[0].nonStrikerName,
+      startingRuns
     );
   }, [match, currentInnings]);
 
@@ -605,19 +685,49 @@ export default function LiveScoringScreen() {
     });
   };
 
-  const handleAbandon = () => {
-    Alert.alert("Abandon Match", "This ends the match right now with no result. This can't be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Abandon",
-        style: "destructive",
-        onPress: () =>
-          abandonMatch.mutate(undefined, {
-            onSuccess: () => navigation.replace("FullScorecard", { matchId: match.id }),
-            onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not abandon the match.")),
-          }),
-      },
-    ]);
+  const handleConfirmAbandon = () => {
+    abandonMatch.mutate(undefined, {
+      onSuccess: () => navigation.replace("FullScorecard", { matchId: match.id }),
+      onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not abandon the match.")),
+    });
+    setDialog(null);
+  };
+
+  const handleConfirmEndInnings = () => {
+    setDialog(null);
+    if (currentInnings?.innings_number === 1) handleStartSecondInnings();
+    else handleFinishMatch();
+  };
+
+  // Change Target only makes sense once there's a target to change — i.e.
+  // during the chase, not the first innings.
+  const handleOpenChangeTarget = () => {
+    if (currentInnings?.innings_number !== 2) {
+      setDialog("TARGET_BLOCKED");
+      return;
+    }
+    setPanel("CHANGE_TARGET");
+  };
+
+  const PENALTY_RUNS = 5;
+
+  // Awarding the currently-batting side goes straight into their live score
+  // (a PENALTY ball). Awarding the other side — who haven't batted yet —
+  // can't touch a score that doesn't exist yet, so it's banked on the match
+  // row and applied as a starting-runs credit the moment their innings
+  // begins (see replayInnings' startingRuns param above).
+  const handleAwardPenalty = (team: "A" | "B") => {
+    if (!battingTeam) return;
+    if (team === battingTeam) {
+      submitBall({ runsBatted: 0, extraType: "PENALTY", extraRuns: PENALTY_RUNS, isWicket: false, wicketType: null, dismissedName: null, fielderName: null });
+      return;
+    }
+    const current = team === "A" ? match.team_a_penalty_runs : match.team_b_penalty_runs;
+    updateSettings.mutate(
+      team === "A" ? { teamAPenaltyRuns: current + PENALTY_RUNS } : { teamBPenaltyRuns: current + PENALTY_RUNS },
+      { onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not award penalty runs.")) }
+    );
+    setPanel(null);
   };
 
   // `side` picks which roster this name is appended to — the batting side's
@@ -645,11 +755,34 @@ export default function LiveScoringScreen() {
       {
         onSuccess: () => {
           setChangeTargetDraft("");
+          setRevisedOversDraft("");
           setPanel(null);
         },
         onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not update the target.")),
       }
     );
+  };
+
+  // Team 1's resources used comes straight from their already-recorded
+  // innings (how many overs they actually got vs match.overs_limit, and how
+  // many wickets they lost) — no extra input needed, it's already real data.
+  // Team 2's resources available needs one new piece of information: the
+  // revised total overs for their (interrupted) innings, entered by the host.
+  const revisedOvers = parseFloat(revisedOversDraft);
+  const dlPreview =
+    firstInnings && inningsState && match && revisedOvers > 0
+      ? (() => {
+          const team1OversRemainingAtEnd = match.overs_limit - firstInnings.legalBalls / 6;
+          const r1 = 100 - resourcePercent(team1OversRemainingAtEnd, firstInnings.wickets, match.overs_limit, firstInnings.totalPlayers);
+          const team2OversRemaining = revisedOvers - inningsState.legalBalls / 6;
+          const r2 = resourcePercent(team2OversRemaining, inningsState.wickets, revisedOvers, inningsState.totalPlayers);
+          return computeDuckworthLewis(firstInnings.runs, r1, r2);
+        })()
+      : null;
+
+  const handleApplyDLTarget = () => {
+    if (!dlPreview) return;
+    setChangeTargetDraft(String(dlPreview.target));
   };
 
   const handleSaveOversFormat = () => {
@@ -735,6 +868,8 @@ export default function LiveScoringScreen() {
     setWicketType(null);
     setWicketEnd(null);
     setFielderName("");
+    setChangeTargetDraft("");
+    setRevisedOversDraft("");
   };
 
   const cancelRow = (
@@ -1194,22 +1329,12 @@ export default function LiveScoringScreen() {
                   <Text className="text-white font-bold text-lg mb-4">More</Text>
                   <View className="flex-row flex-wrap" style={{ gap: 10 }}>
                     {([
-                      { label: "Abandon", onPress: handleAbandon },
-                      {
-                        label: "End Innings",
-                        onPress: currentInnings?.innings_number === 1 ? handleStartSecondInnings : handleFinishMatch,
-                      },
-                      { label: "Penalty", onPress: () => setPanel("BONUS_RUNS") },
+                      { label: "Abandon", onPress: () => setDialog("ABANDON") },
+                      { label: "End Innings", onPress: () => setDialog("END_INNINGS") },
+                      { label: "Penalty", onPress: () => setPanel("PENALTY_TEAM") },
                       { label: "Retired Hurt", onPress: () => setPanel("RETIRED_HURT") },
-                      {
-                        label: "D / L",
-                        onPress: () =>
-                          Alert.alert(
-                            "Duckworth-Lewis",
-                            "This app doesn't compute a real D/L figure (it needs resource tables we don't have). Use Change Target to set a revised target by hand instead."
-                          ),
-                      },
-                      { label: "Change Target", onPress: () => setPanel("CHANGE_TARGET") },
+                      { label: "D / L", onPress: handleOpenChangeTarget },
+                      { label: "Change Target", onPress: handleOpenChangeTarget },
                       { label: "Overs/Format/Wickets", onPress: () => setPanel("OVERS_FORMAT") },
                       { label: "Settings", onPress: () => setPanel("SETTINGS") },
                     ] as { label: string; onPress: () => void; disabled?: boolean }[]).map((item) => (
@@ -1228,26 +1353,83 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "RETIRED_HURT" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Who's retiring hurt?</Text>
-                  <View className="flex-row" style={{ gap: 10 }}>
+                  <Text className="text-white font-bold text-lg mb-4">Retired Hurt</Text>
+                  <View className="flex-row justify-center" style={{ gap: 28 }}>
                     {effectiveStriker && (
-                      <Pressable onPress={() => handleRetiredHurt("striker")} className="flex-1 items-center rounded-xl py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-semibold">{effectiveStriker}</Text>
+                      <Pressable onPress={() => handleRetiredHurt("striker")} className="items-center" style={{ gap: 6 }}>
+                        <PlayerAvatar name={effectiveStriker} />
+                        <Text className="text-white font-semibold text-sm">{effectiveStriker}</Text>
                       </Pressable>
                     )}
                     {effectiveNonStriker && (
-                      <Pressable onPress={() => handleRetiredHurt("nonStriker")} className="flex-1 items-center rounded-xl py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-semibold">{effectiveNonStriker}</Text>
+                      <Pressable onPress={() => handleRetiredHurt("nonStriker")} className="items-center" style={{ gap: 6 }}>
+                        <PlayerAvatar name={effectiveNonStriker} />
+                        <Text className="text-white font-semibold text-sm">{effectiveNonStriker}</Text>
                       </Pressable>
                     )}
                   </View>
                   {cancelRow}
                 </>
-              ) : panel === "CHANGE_TARGET" ? (
+              ) : panel === "PENALTY_TEAM" ? (
                 <>
+                  <Text className="text-white font-bold text-lg mb-4">Award +{PENALTY_RUNS} Penalty runs to?</Text>
+                  <View className="flex-row justify-center" style={{ gap: 28 }}>
+                    {(["A", "B"] as const).map((team) => {
+                      const name = team === "A" ? match.team_a_name : match.team_b_name;
+                      return (
+                        <Pressable key={team} onPress={() => handleAwardPenalty(team)} className="items-center" style={{ gap: 6 }}>
+                          <View
+                            className="items-center justify-center rounded-full"
+                            style={{ width: 48, height: 48, backgroundColor: "rgba(255,255,255,0.15)", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                          >
+                            <MaterialCommunityIcons name="shield-account" size={24} color="white" />
+                          </View>
+                          <Text className="text-white font-semibold text-sm" numberOfLines={1}>{name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  {cancelRow}
+                </>
+              ) : panel === "CHANGE_TARGET" ? (
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
                   <Text className="text-white font-bold text-lg mb-1">Change Target</Text>
                   <Text className="text-white text-xs mb-4" style={{ opacity: 0.8 }}>
-                    A manual override — not a computed Duckworth-Lewis figure.
+                    Enter a revised overs count to compute a Duckworth-Lewis
+                    estimate, or type a target directly — this app's D/L curve
+                    is fitted to published reference points, not the
+                    official (commercially confidential) ICC table, so treat
+                    it as an estimate.
+                  </Text>
+
+                  <Text className="text-white text-xs font-semibold mb-1.5" style={{ opacity: 0.85 }}>
+                    Revised overs for this innings
+                  </Text>
+                  <TextInput
+                    value={revisedOversDraft}
+                    onChangeText={(t) => setRevisedOversDraft(t.replace(/[^0-9.]/g, ""))}
+                    placeholder={String(match.overs_limit)}
+                    placeholderTextColor="rgba(255,255,255,0.5)"
+                    keyboardType="decimal-pad"
+                    className="rounded-xl px-4 py-2.5 text-white font-semibold"
+                    style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                  />
+
+                  {dlPreview ? (
+                    <View className="rounded-xl mt-3 p-3" style={{ backgroundColor: "rgba(255,255,255,0.12)" }}>
+                      <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+                        Team 1 used {dlPreview.team1ResourcesUsed.toFixed(1)}% of resources · Team 2 has{" "}
+                        {dlPreview.team2ResourcesAvailable.toFixed(1)}% available
+                      </Text>
+                      <Text className="text-white font-extrabold text-xl mt-1">D/L Target: {dlPreview.target}</Text>
+                      <Pressable onPress={handleApplyDLTarget} className="bg-white rounded-lg py-2 items-center mt-2">
+                        <Text className="font-bold text-sm" style={{ color: colors.primaryDark }}>Use This Target</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+
+                  <Text className="text-white text-xs font-semibold mt-4 mb-1.5" style={{ opacity: 0.85 }}>
+                    Or set the target directly
                   </Text>
                   <TextInput
                     value={changeTargetDraft}
@@ -1266,7 +1448,7 @@ export default function LiveScoringScreen() {
                     <Text className="font-bold" style={{ color: colors.primaryDark }}>Save Target</Text>
                   </Pressable>
                   {cancelRow}
-                </>
+                </ScrollView>
               ) : panel === "OVERS_FORMAT" ? (
                 <>
                   <Text className="text-white font-bold text-lg mb-4">Overs / Format / Wickets</Text>
@@ -1548,6 +1730,35 @@ export default function LiveScoringScreen() {
           }}
           onAddPlayer={(name) => handleAddPlayer("bowling", name)}
           addPlayerPending={addRosterPlayer.isPending}
+        />
+      )}
+
+      {dialog === "ABANDON" && (
+        <ConfirmDialog
+          title="Abandon Match"
+          message="Do you want to abandon the match?"
+          confirmLabel="Abandon"
+          disabledLabel={`Wait : ${abandonCountdown}`}
+          confirmDisabled={abandonCountdown > 0}
+          onConfirm={handleConfirmAbandon}
+          onCancel={() => setDialog(null)}
+        />
+      )}
+      {dialog === "END_INNINGS" && (
+        <ConfirmDialog
+          title="End Innings"
+          message="Are you sure you want to end this innings?"
+          confirmLabel="End Innings"
+          onConfirm={handleConfirmEndInnings}
+          onCancel={() => setDialog(null)}
+        />
+      )}
+      {dialog === "TARGET_BLOCKED" && (
+        <ConfirmDialog
+          title="Not Allowed"
+          message="Target can be changed only after the first innings."
+          singleButton
+          onCancel={() => setDialog(null)}
         />
       )}
     </View>

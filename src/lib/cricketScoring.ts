@@ -229,13 +229,19 @@ export function createInitialInningsState(
   oversLimit: number,
   totalPlayers: number,
   openingStriker: string,
-  openingNonStriker: string
+  openingNonStriker: string,
+  // A standing penalty-runs credit awarded to this team before their
+  // innings even started (More > Penalty, picked for the side that wasn't
+  // batting yet) — folded straight into their starting total. Not counted
+  // in extras.penalty since it didn't happen on a tracked delivery of this
+  // innings.
+  startingRuns = 0
 ): InningsState {
   const state: InningsState = {
     battingTeam,
     oversLimit,
     totalPlayers,
-    runs: 0,
+    runs: startingRuns,
     wickets: 0,
     legalBalls: 0,
     striker: openingStriker,
@@ -406,9 +412,10 @@ export function replayInnings(
   oversLimit: number,
   totalPlayers: number,
   openingStriker: string,
-  openingNonStriker: string
+  openingNonStriker: string,
+  startingRuns = 0
 ): InningsState {
-  let state = createInitialInningsState(battingTeam, oversLimit, totalPlayers, openingStriker, openingNonStriker);
+  let state = createInitialInningsState(battingTeam, oversLimit, totalPlayers, openingStriker, openingNonStriker, startingRuns);
   for (const ball of balls) {
     state = applyBall(state, ball);
   }
