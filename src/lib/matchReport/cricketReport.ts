@@ -154,7 +154,7 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
         </tr>
       </table>
       <table style="margin-top:10px;">
-        <tr style="color:#0F8A8A; font-size:11px; font-weight:700;">
+        <tr style="color:#0E5C34; font-size:11px; font-weight:700;">
           <td style="padding-bottom:5px; border-bottom:1px solid #D1D5DB;">${escapeHtml(teamName)}</td>
           <td style="border-bottom:1px solid #D1D5DB;"></td>
           <td style="text-align:center; border-bottom:1px solid #D1D5DB;">R</td>
@@ -173,7 +173,7 @@ function inningsScorecardHtml(teamName: string, state: InningsState): string {
       ${
         bowlingRows
           ? `<table style="margin-top:10px;">
-        <tr style="color:#0F8A8A; font-size:11px; font-weight:700;">
+        <tr style="color:#0E5C34; font-size:11px; font-weight:700;">
           <td style="padding-bottom:5px; border-bottom:1px solid #D1D5DB;">Bowler</td>
           <td style="text-align:center; border-bottom:1px solid #D1D5DB;">O</td>
           <td style="text-align:center; border-bottom:1px solid #D1D5DB;">M</td>
@@ -259,8 +259,8 @@ export function buildCricketMatchReportHtml(
         const bowl = topBowlers[i] ? state.bowlingStats[topBowlers[i]] : null;
         return `
           <tr>
-            <td style="padding:5px 0; color:#0F8A8A;">${bat ? `${escapeHtml(bat.name)} ${bat.runs}${bat.isOut ? "" : "*"}(${bat.balls})` : ""}</td>
-            <td style="padding:5px 0; text-align:right; color:#0F8A8A;">${bowl ? `${escapeHtml(bowl.name)} ${bowl.wickets}-${bowl.runsConceded}` : ""}</td>
+            <td style="padding:5px 0; color:#0E5C34;">${bat ? `${escapeHtml(bat.name)} ${bat.runs}${bat.isOut ? "" : "*"}(${bat.balls})` : ""}</td>
+            <td style="padding:5px 0; text-align:right; color:#0E5C34;">${bowl ? `${escapeHtml(bowl.name)} ${bowl.wickets}-${bowl.runsConceded}` : ""}</td>
           </tr>`;
       }).join("");
       return `
@@ -281,7 +281,7 @@ export function buildCricketMatchReportHtml(
       ({ teamName, state }, i) => `
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:${innings.length > 1 ? "10px" : "0"};">
           <div style="text-align:center;">
-            ${teamCrestHtml(i === 0 ? "#16A34A" : "#1D4ED8", SPORT_EMOJI.cricket, 40)}
+            ${teamCrestHtml(i === 0 ? "#1D9254" : "#1D4ED8", SPORT_EMOJI.cricket, 40)}
             <div style="font-weight:700; font-size:11px; margin-top:4px;">${escapeHtml(teamName)}</div>
           </div>
           <div>
@@ -353,7 +353,7 @@ export function buildCricketMatchReportHtml(
     <div class="page-break"></div>
     <h2>Innings Scorecards</h2>
     ${innings.map(({ teamName, inn, state }) => `
-      <div style="margin-bottom:6px; font-weight:700; color:#0F8A8A;">${inn.innings_number === 1 ? "1st" : "2nd"} Innings — ${escapeHtml(teamName)}</div>
+      <div style="margin-bottom:6px; font-weight:700; color:#0E5C34;">${inn.innings_number === 1 ? "1st" : "2nd"} Innings — ${escapeHtml(teamName)}</div>
       ${inningsScorecardHtml(teamName, state)}
     `).join("")}
 

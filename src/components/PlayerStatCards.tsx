@@ -233,9 +233,9 @@ export default function PlayerStatCards({
                 <View className="flex-row items-center justify-between mb-2">
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 34, height: 34, backgroundColor: "#F0FDF4" }}
+                    style={{ width: 34, height: 34, backgroundColor: "#DCEFE4" }}
                   >
-                    <Ionicons name="locate" size={17} color="#16A34A" />
+                    <Ionicons name="locate" size={17} color="#1D9254" />
                   </View>
                   <View className="items-end">
                     <Text className="text-ink font-extrabold text-base">{winPercentage}%</Text>
@@ -280,7 +280,7 @@ export default function PlayerStatCards({
               <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={gamesPlayed} label="Games Played" />
               <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" />
               <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" />
-              <StatCard icon="people-outline" bg="#F0FDF4" fg="#16A34A" value={activeSquads} label="Active Groups" />
+              <StatCard icon="people-outline" bg="#DCEFE4" fg="#1D9254" value={activeSquads} label="Active Groups" />
               <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={hoursPlayed} label="Hours Played" />
               <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
             </View>
@@ -362,9 +362,9 @@ export default function PlayerStatCards({
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
+                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
                   >
-                    <MaterialCommunityIcons name="cricket" size={22} color="#16A34A" />
+                    <MaterialCommunityIcons name="cricket" size={22} color="#1D9254" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-ink font-extrabold text-xl">{totals.runs}</Text>
@@ -376,9 +376,9 @@ export default function PlayerStatCards({
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
+                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
                   >
-                    <MaterialCommunityIcons name="bowling" size={22} color="#16A34A" />
+                    <MaterialCommunityIcons name="bowling" size={22} color="#1D9254" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-ink font-extrabold text-xl">{totals.wickets}</Text>
@@ -393,9 +393,9 @@ export default function PlayerStatCards({
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#F0FDF4" }}
+                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
                   >
-                    <MaterialCommunityIcons name="soccer" size={22} color="#16A34A" />
+                    <MaterialCommunityIcons name="soccer" size={22} color="#1D9254" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-ink font-extrabold text-xl">{totals.goals}</Text>

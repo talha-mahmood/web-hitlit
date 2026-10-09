@@ -85,7 +85,7 @@ export function buildGenericMatchReportHtml(input: {
               <tr>
                 <td style="display:flex; align-items:center; gap:12px;">
                   <div style="text-align:center;">
-                    ${teamCrestHtml("#16A34A", emoji, 40)}
+                    ${teamCrestHtml("#1D9254", emoji, 40)}
                     <div style="font-weight:700; font-size:11px; margin-top:4px;">${escapeHtml(input.teamAName)}</div>
                   </div>
                   <div class="value">${escapeHtml(input.finalScoreA)}</div>

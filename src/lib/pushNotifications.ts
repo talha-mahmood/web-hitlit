@@ -31,7 +31,7 @@ async function ensureAndroidChannel() {
     name: "HitLit notifications",
     importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: "#16A34A",
+    lightColor: "#1D9254",
   });
 }
 

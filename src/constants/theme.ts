@@ -1,8 +1,8 @@
 // Central design tokens for the app. Keep colors/spacing here so screens stay consistent.
 export const colors = {
-  primary: "#16A34A",
-  primaryDark: "#15803D",
-  primaryLight: "#DCFCE7",
+  primary: "#1D9254",
+  primaryDark: "#0E5C34",
+  primaryLight: "#DCEFE4",
   ink: "#1A1A1A",
   muted: "#6B7280",
   border: "#E5E7EB",

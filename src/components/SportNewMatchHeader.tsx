@@ -271,7 +271,7 @@ function PadelArt() {
 function TennisArt() {
   return (
     <>
-      <Racket headW={36} headH={44} frame="#15803D" handle="#1F2937" handleH={22} rotate="-16deg" style={{ left: 16, bottom: 0 }} />
+      <Racket headW={36} headH={44} frame="#0E5C34" handle="#1F2937" handleH={22} rotate="-16deg" style={{ left: 16, bottom: 0 }} />
       <Ball size={26} color="#D9F99D" border="#65A30D" style={{ right: 4, bottom: 2 }} />
     </>
   );

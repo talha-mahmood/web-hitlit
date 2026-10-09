@@ -124,7 +124,7 @@ export default function CommunityBanner({ width }: { width: number }) {
         >
           HitLit Community
         </Text>
-        <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#D3F6E0" }}>
+        <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#8FD9AE" }}>
           {"Create Join Explore\nGroups & Games!"}
         </Text>
 
@@ -135,11 +135,11 @@ export default function CommunityBanner({ width }: { width: number }) {
 
         {/* Tagline */}
         <View pointerEvents="none" style={{ position: "absolute", right: 9, top: 8, transform: [{ rotate: "-9deg" }] }}>
-          <Text style={{ fontSize: 12, lineHeight: 13.5, fontStyle: "italic", fontWeight: "700", color: "#86EFAC" }}>
+          <Text style={{ fontSize: 12, lineHeight: 13.5, fontStyle: "italic", fontWeight: "700", color: "#8FD9AE" }}>
             {"More\nSports\nMore Friends"}
           </Text>
           <Svg width={62} height={6} viewBox="0 0 62 6" style={{ marginTop: 0 }}>
-            <Path d="M2 4c14-3 32-4 56-1" fill="none" stroke="#86EFAC" strokeWidth={1.6} strokeLinecap="round" />
+            <Path d="M2 4c14-3 32-4 56-1" fill="none" stroke="#8FD9AE" strokeWidth={1.6} strokeLinecap="round" />
           </Svg>
         </View>
         {[
@@ -157,7 +157,7 @@ export default function CommunityBanner({ width }: { width: number }) {
               width: p.w,
               height: 1.6,
               borderRadius: 1,
-              backgroundColor: "#86EFAC",
+              backgroundColor: "#8FD9AE",
               transform: [{ rotate: p.rotate }],
             }}
           />

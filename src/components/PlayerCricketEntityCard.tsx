@@ -46,7 +46,7 @@ export default function PlayerCricketEntityCard({
         <View
           pointerEvents="none"
           className="items-center justify-center overflow-hidden"
-          style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: "#E4F7EA" }}
+          style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: "#DCEFE4" }}
         >
           {sportPhoto ? (
             <View style={{ width: 78, height: 44, marginRight: 16, mixBlendMode: "multiply" }}>

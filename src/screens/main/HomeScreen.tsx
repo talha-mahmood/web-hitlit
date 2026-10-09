@@ -231,10 +231,10 @@ export default function HomeScreen() {
             {profile?.avatar ? (
               <Image
                 source={{ uri: profile.avatar }}
-                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#AEE7C3]"
+                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#8FD9AE]"
               />
             ) : (
-              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#AEE7C3]">
+              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#8FD9AE]">
                 <Text className="text-xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
@@ -247,7 +247,7 @@ export default function HomeScreen() {
                 </Text>
                 <WavingHandIcon size={22} />
               </View>
-              <Text style={{ fontSize: 14, color: "#BBF7D0", marginTop: 2 }}>What are you playing today?</Text>
+              <Text style={{ fontSize: 14, color: "#8FD9AE", marginTop: 2 }}>What are you playing today?</Text>
             </View>
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10 }}>

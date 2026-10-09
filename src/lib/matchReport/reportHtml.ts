@@ -10,7 +10,7 @@ export function escapeHtml(value: string | number): string {
     .replace(/>/g, "&gt;");
 }
 
-const TEAL = "#0F8A8A";
+const TEAL = "#0E5C34";
 const INK = "#1F2937";
 const MUTED = "#6B7280";
 const CARD_BG = "#F3F4F6";

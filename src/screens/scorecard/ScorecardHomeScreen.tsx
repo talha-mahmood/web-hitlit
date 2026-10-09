@@ -141,12 +141,12 @@ function HeaderArt() {
       </Svg>
       <View>
         <Text
-          style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#BBF7D0" }}
+          style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#8FD9AE" }}
         >
           {"Keep\nScore\nKeep Playing"}
         </Text>
         <Svg width={70} height={8} viewBox="0 0 70 8">
-          <Path d="M2 5c14-4 34-4 60-1" fill="none" stroke="#BBF7D0" strokeWidth={2} strokeLinecap="round" />
+          <Path d="M2 5c14-4 34-4 60-1" fill="none" stroke="#8FD9AE" strokeWidth={2} strokeLinecap="round" />
         </Svg>
       </View>
     </View>
@@ -200,7 +200,7 @@ export default function ScorecardHomeScreen() {
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
             <Text className="text-white font-bold" style={{ fontSize: 24 }} numberOfLines={1}>Scorecard</Text>
-            <Text style={{ fontSize: 13, marginTop: 2, color: "#BBF7D0" }} numberOfLines={1}>
+            <Text style={{ fontSize: 13, marginTop: 2, color: "#8FD9AE" }} numberOfLines={1}>
               Live score your game
             </Text>
           </View>

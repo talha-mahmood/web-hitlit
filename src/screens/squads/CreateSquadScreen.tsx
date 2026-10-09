@@ -106,7 +106,7 @@ function Chip({
         gap: 7,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? "#DCFCE7" : "white",
+        backgroundColor: selected ? "#DCEFE4" : "white",
       }}
     >
       <Text
@@ -281,7 +281,7 @@ export default function CreateSquadScreen() {
               </Text>
             </View>
             <View className="items-center justify-center" style={{ width: 70, height: 60 }}>
-              <MaterialCommunityIcons name="account-group" size={58} color="#4ADE80" />
+              <MaterialCommunityIcons name="account-group" size={58} color="#8FD9AE" />
               {[
                 { left: 2, top: 2, rotate: "-40deg" },
                 { left: 30, top: -4, rotate: "0deg" },
@@ -296,17 +296,17 @@ export default function CreateSquadScreen() {
                     width: 9,
                     height: 2.5,
                     borderRadius: 2,
-                    backgroundColor: "#86EFAC",
+                    backgroundColor: "#8FD9AE",
                     transform: [{ rotate: p.rotate }],
                   }}
                 />
               ))}
             </View>
             <View style={{ width: 78, transform: [{ rotate: "-9deg" }] }}>
-              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#86EFAC" }}>
+              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#8FD9AE" }}>
                 {"More\nPlayers\nMore Fun!"}
               </Text>
-              <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#86EFAC", marginTop: 1 }} />
+              <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#8FD9AE", marginTop: 1 }} />
             </View>
           </View>
         </GradientFill>
@@ -335,7 +335,7 @@ export default function CreateSquadScreen() {
                   borderRadius: 16,
                   borderWidth: 1.5,
                   borderStyle: "dashed",
-                  borderColor: "#86EFAC",
+                  borderColor: "#8FD9AE",
                   backgroundColor: "#F0FDF4",
                 }}
               >
@@ -361,7 +361,7 @@ export default function CreateSquadScreen() {
                 <Ionicons name="add" size={13} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#DCFCE7", paddingHorizontal: 22, paddingVertical: 14 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: "#DCEFE4", paddingHorizontal: 22, paddingVertical: 14 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 14.5 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>

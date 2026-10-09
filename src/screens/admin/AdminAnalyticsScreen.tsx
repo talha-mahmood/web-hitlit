@@ -281,7 +281,7 @@ export default function AdminAnalyticsScreen() {
                 />
                 <StatCard
                   icon="grid"
-                  iconBg="#DCFCE7"
+                  iconBg="#DCEFE4"
                   iconColor={colors.primaryDark}
                   label="Most Popular Court"
                   value={analytics.mostPopularCourt ?? "—"}

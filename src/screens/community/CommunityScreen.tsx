@@ -305,7 +305,7 @@ export default function CommunityScreen() {
             <Text className="text-white font-extrabold" style={{ fontSize: 23 }}>
               {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
             </Text>
-            <Text style={{ fontSize: 14, lineHeight: 19, color: "#BBF7D0", marginTop: 2 }}>
+            <Text style={{ fontSize: 14, lineHeight: 19, color: "#8FD9AE", marginTop: 2 }}>
               Play Together, Stay Active
             </Text>
           </View>

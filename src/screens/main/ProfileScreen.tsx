@@ -241,10 +241,10 @@ export default function ProfileScreen() {
             {profile?.avatar ? (
               <Image
                 source={{ uri: profile.avatar }}
-                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#AEE7C3]"
+                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#8FD9AE]"
               />
             ) : (
-              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#AEE7C3]">
+              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#8FD9AE]">
                 <Text className="text-xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
@@ -271,22 +271,22 @@ export default function ProfileScreen() {
               <Ionicons name="checkmark-circle" size={17} color="#4ADE80" />
             </View>
             <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
-              <Ionicons name="pricetag-outline" size={12} color="#BBF7D0" />
-              <Text style={{ color: "#BBF7D0" }} className="text-sm" numberOfLines={1}>
+              <Ionicons name="pricetag-outline" size={12} color="#8FD9AE" />
+              <Text style={{ color: "#8FD9AE" }} className="text-sm" numberOfLines={1}>
                 ID: {profile?.user_code ?? "—"}
               </Text>
-              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="#BBF7D0" />
+              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="#8FD9AE" />
             </Pressable>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="calendar-outline" size={12} color="#BBF7D0" />
-                <Text style={{ color: "#BBF7D0" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
+                <Ionicons name="calendar-outline" size={12} color="#8FD9AE" />
+                <Text style={{ color: "#8FD9AE" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
             {(followState?.followerCount ?? 0) > 0 && (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="people-outline" size={12} color="#BBF7D0" />
-                <Text style={{ color: "#BBF7D0" }} className="text-xs">
+                <Ionicons name="people-outline" size={12} color="#8FD9AE" />
+                <Text style={{ color: "#8FD9AE" }} className="text-xs">
                   {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
                 </Text>
               </View>
