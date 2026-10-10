@@ -195,8 +195,10 @@ function SquadCard({
               </View>
             )}
 
-            {/* Row 6: skill pill + creator */}
-            <View className="flex-row items-center mt-3">
+            {/* Row 6: skill pill + creator — rightGutter keeps the name
+                from ever growing under the sport-picture disc tucked into
+                the card's right edge. */}
+            <View className="flex-row items-center mt-3" style={{ ...rightGutter }}>
               {skillColor && skill && (
                 <View
                   className="flex-row items-center"
@@ -211,7 +213,7 @@ function SquadCard({
               {skillColor && skill ? (
                 <View style={{ width: 1, height: 22, backgroundColor: colors.border, marginHorizontal: 12 }} />
               ) : null}
-              <Ionicons name="person-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
+              <Ionicons name="person-outline" size={16} color={colors.muted} style={{ marginRight: 4 }} />
               <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {squad.profiles?.full_name ?? "Unknown"}
               </Text>
