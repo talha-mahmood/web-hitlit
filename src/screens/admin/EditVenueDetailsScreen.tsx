@@ -16,7 +16,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAdminVenueDetail, useUpdateVenue } from "../../hooks/useVenuesAdmin";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { detectCurrentCoordinates } from "../../lib/locationPicker";
+import { extractCoordsFromGoogleMapsLink } from "../../lib/googleMapsLink";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
@@ -43,9 +43,8 @@ export default function EditVenueDetailsScreen() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [rulesAndPolicies, setRulesAndPolicies] = useState("");
   const [isactive, setIsactive] = useState(true);
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [mapsLink, setMapsLink] = useState("");
+  const [savingLocation, setSavingLocation] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -60,27 +59,12 @@ export default function EditVenueDetailsScreen() {
       setWhatsappNumber(venue.whatsapp_number ?? "");
       setRulesAndPolicies(venue.rules_and_policies ?? "");
       setIsactive(venue.isactive);
-      setLatitude(venue.latitude != null ? String(venue.latitude) : "");
-      setLongitude(venue.longitude != null ? String(venue.longitude) : "");
+      setMapsLink(venue.maps_link ?? "");
       setInitialized(true);
     }
   }, [venue, initialized]);
 
-  const handleDetectLocation = async () => {
-    setDetectingLocation(true);
-    try {
-      const coords = await detectCurrentCoordinates();
-      setLatitude(String(coords.latitude));
-      setLongitude(String(coords.longitude));
-      if (coords.city && !city.trim()) setCity(coords.city);
-    } catch (err) {
-      Alert.alert("Couldn't Detect Location", getFriendlyErrorMessage(err, "Please try again."));
-    } finally {
-      setDetectingLocation(false);
-    }
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isValidName(name)) {
       Alert.alert("Invalid Name", `Venue name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
@@ -93,15 +77,19 @@ export default function EditVenueDetailsScreen() {
       Alert.alert("Invalid Time", "End time must be in HH:MM format, e.g. 23:00.");
       return;
     }
-    const trimmedLat = latitude.trim();
-    const trimmedLng = longitude.trim();
-    if (trimmedLat && Number.isNaN(Number(trimmedLat))) {
-      Alert.alert("Invalid Location", "Latitude must be a number.");
-      return;
-    }
-    if (trimmedLng && Number.isNaN(Number(trimmedLng))) {
-      Alert.alert("Invalid Location", "Longitude must be a number.");
-      return;
+    const trimmedLink = mapsLink.trim();
+    let coords: { lat: number; lng: number } | null = null;
+    if (trimmedLink) {
+      setSavingLocation(true);
+      coords = await extractCoordsFromGoogleMapsLink(trimmedLink);
+      setSavingLocation(false);
+      if (!coords) {
+        Alert.alert(
+          "Couldn't Read That Link",
+          "No location could be found in this Google Maps link. Open the pin in Google Maps, use Share, and paste that link here."
+        );
+        return;
+      }
     }
 
     updateVenue.mutate(
@@ -116,8 +104,9 @@ export default function EditVenueDetailsScreen() {
         whatsapp_number: whatsappNumber.trim() || null,
         rules_and_policies: rulesAndPolicies.trim() || null,
         isactive,
-        latitude: trimmedLat ? Number(trimmedLat) : null,
-        longitude: trimmedLng ? Number(trimmedLng) : null,
+        maps_link: trimmedLink || null,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
       },
       {
         onSuccess: () => navigation.goBack(),
@@ -144,9 +133,9 @@ export default function EditVenueDetailsScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <Text className="text-base font-bold text-ink flex-1">Edit Venue</Text>
-        <Pressable onPress={handleSave} disabled={updateVenue.isPending} style={primaryButtonShadow}>
+        <Pressable onPress={handleSave} disabled={updateVenue.isPending || savingLocation} style={primaryButtonShadow}>
           <GradientFill className="rounded-xl px-4 py-2">
-            {updateVenue.isPending ? (
+            {updateVenue.isPending || savingLocation ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text className="text-white font-semibold text-sm">Save</Text>
@@ -198,41 +187,20 @@ export default function EditVenueDetailsScreen() {
           maxLength={60}
         />
 
-        <View className="flex-row items-center justify-between mb-1.5">
-          <Text className="text-muted text-xs font-semibold">Map Location</Text>
-          <Pressable onPress={handleDetectLocation} disabled={detectingLocation} className="flex-row items-center" style={{ gap: 4 }}>
-            {detectingLocation ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Ionicons name="locate-outline" size={14} color={colors.primary} />
-            )}
-            <Text className="text-primary text-xs font-medium">
-              {detectingLocation ? "Detecting..." : "Use current location"}
-            </Text>
-          </Pressable>
-        </View>
+        <Text className="text-muted text-xs font-semibold mb-1.5">Google Maps Link</Text>
         <Text className="text-muted text-[11px] mb-2">
-          Sets where this venue shows up in "Venues near you" distance sorting. Stand at the venue and tap "Use
-          current location", or enter coordinates manually.
+          Open this venue's pin in Google Maps, tap Share, and paste the link here. Shown to customers so they can
+          open it directly, and also sets where this venue shows up in "Venues near you" distance sorting.
         </Text>
-        <View className="flex-row mb-4" style={{ gap: 12 }}>
-          <View className="flex-1">
-            <FieldInput
-              value={latitude}
-              onChangeText={setLatitude}
-              placeholder="Latitude"
-              keyboardType="numbers-and-punctuation"
-            />
-          </View>
-          <View className="flex-1">
-            <FieldInput
-              value={longitude}
-              onChangeText={setLongitude}
-              placeholder="Longitude"
-              keyboardType="numbers-and-punctuation"
-            />
-          </View>
-        </View>
+        <FieldInput
+          value={mapsLink}
+          onChangeText={setMapsLink}
+          placeholder="https://maps.google.com/..."
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          containerStyle={{ marginBottom: 16 }}
+        />
 
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">

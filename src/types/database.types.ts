@@ -3245,6 +3245,7 @@ export type Database = {
           isactive: boolean
           latitude: number | null
           longitude: number | null
+          maps_link: string | null
           name: string
           rating: number
           rules_and_policies: string | null
@@ -3267,6 +3268,7 @@ export type Database = {
           isactive?: boolean
           latitude?: number | null
           longitude?: number | null
+          maps_link?: string | null
           name: string
           rating?: number
           rules_and_policies?: string | null
@@ -3289,6 +3291,7 @@ export type Database = {
           isactive?: boolean
           latitude?: number | null
           longitude?: number | null
+          maps_link?: string | null
           name?: string
           rating?: number
           rules_and_policies?: string | null

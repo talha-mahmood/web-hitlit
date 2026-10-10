@@ -141,12 +141,26 @@ export default function VenueDetailScreen() {
           </View>
         </View>
 
-        <View className="flex-row items-center mt-2.5" style={{ gap: 6 }}>
-          <Ionicons name="location-outline" size={15} color={colors.muted} />
-          <Text className="text-muted flex-1" numberOfLines={1}>
-            {venue.address ? `${venue.address}, ${venue.city}` : venue.city}
-          </Text>
-        </View>
+        {venue.maps_link ? (
+          <Pressable
+            onPress={() => Linking.openURL(venue.maps_link as string)}
+            className="flex-row items-center mt-2.5"
+            style={{ gap: 6 }}
+          >
+            <Ionicons name="location-outline" size={15} color={colors.primary} />
+            <Text className="flex-1 font-medium" style={{ color: colors.primary }} numberOfLines={1}>
+              {venue.address ? `${venue.address}, ${venue.city}` : venue.city}
+            </Text>
+            <Ionicons name="open-outline" size={15} color={colors.primary} />
+          </Pressable>
+        ) : (
+          <View className="flex-row items-center mt-2.5" style={{ gap: 6 }}>
+            <Ionicons name="location-outline" size={15} color={colors.muted} />
+            <Text className="text-muted flex-1" numberOfLines={1}>
+              {venue.address ? `${venue.address}, ${venue.city}` : venue.city}
+            </Text>
+          </View>
+        )}
 
         {(venue.start_time || venue.end_time) && (
           <View className="flex-row items-center mt-1.5" style={{ gap: 6 }}>
