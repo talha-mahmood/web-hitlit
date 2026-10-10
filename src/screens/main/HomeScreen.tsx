@@ -245,7 +245,7 @@ export default function HomeScreen() {
                 <Text className="text-white font-bold" style={{ fontSize: 23 }}>
                   Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
                 </Text>
-                <WavingHandIcon size={22} />
+                <WavingHandIcon size={17} />
               </View>
               <Text style={{ fontSize: 14, color: "white", marginTop: 2 }}>What are you playing today?</Text>
             </View>
