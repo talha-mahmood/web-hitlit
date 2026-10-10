@@ -26,6 +26,12 @@ import GradientFill from "../../components/GradientFill";
 type Route = RouteProp<VenueEditingParamList, "EditVenueDetails">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "EditVenueDetails">;
 
+// Address/City are plain descriptive text — the venue's actual Google Maps
+// link belongs in the dedicated field above, not pasted in here by mistake.
+function looksLikeLink(value: string): boolean {
+  return /https?:\/\/|www\.|\.(com|net|org|gl|co|io|ly|me|app|pk)\b/i.test(value);
+}
+
 export default function EditVenueDetailsScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
@@ -67,6 +73,14 @@ export default function EditVenueDetailsScreen() {
   const handleSave = async () => {
     if (!isValidName(name)) {
       Alert.alert("Invalid Name", `Venue name must be ${NAME_REQUIREMENT_HINT}.`);
+      return;
+    }
+    if (looksLikeLink(address)) {
+      Alert.alert("Invalid Address", "Address can't contain a link. Paste the Google Maps link in the field below instead.");
+      return;
+    }
+    if (looksLikeLink(city)) {
+      Alert.alert("Invalid City", "City can't contain a link. Paste the Google Maps link in the field below instead.");
       return;
     }
     if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
