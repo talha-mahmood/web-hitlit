@@ -47,6 +47,7 @@ export default function EditVenueDetailsScreen() {
   const [endTime, setEndTime] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [rating, setRating] = useState("");
   const [rulesAndPolicies, setRulesAndPolicies] = useState("");
   const [isactive, setIsactive] = useState(true);
   const [mapsLink, setMapsLink] = useState("");
@@ -63,6 +64,7 @@ export default function EditVenueDetailsScreen() {
       setEndTime(venue.end_time?.slice(0, 5) ?? "");
       setContactPhone(venue.contact_phone ?? "");
       setWhatsappNumber(venue.whatsapp_number ?? "");
+      setRating(venue.rating > 0 ? String(venue.rating) : "");
       setRulesAndPolicies(venue.rules_and_policies ?? "");
       setIsactive(venue.isactive);
       setMapsLink(venue.maps_link ?? "");
@@ -91,6 +93,12 @@ export default function EditVenueDetailsScreen() {
       Alert.alert("Invalid Time", "End time must be in HH:MM format, e.g. 23:00.");
       return;
     }
+    const trimmedRating = rating.trim();
+    const ratingValue = trimmedRating ? Number(trimmedRating) : 0;
+    if (trimmedRating && (Number.isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5)) {
+      Alert.alert("Invalid Rating", "Rating must be a number between 0 and 5, e.g. 4.5.");
+      return;
+    }
     const trimmedLink = mapsLink.trim();
     let coords: { lat: number; lng: number } | null = null;
     if (trimmedLink) {
@@ -116,6 +124,7 @@ export default function EditVenueDetailsScreen() {
         end_time: endTime || null,
         contact_phone: contactPhone.trim() || null,
         whatsapp_number: whatsappNumber.trim() || null,
+        rating: ratingValue,
         rules_and_policies: rulesAndPolicies.trim() || null,
         isactive,
         maps_link: trimmedLink || null,
@@ -259,6 +268,17 @@ export default function EditVenueDetailsScreen() {
           keyboardType="phone-pad"
           containerStyle={{ marginBottom: 16 }}
           maxLength={20}
+        />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">Rating (optional)</Text>
+        <Text className="text-muted text-[11px] mb-2">A number from 0 to 5, e.g. 4.5. Shown to customers on this venue's page.</Text>
+        <FieldInput
+          value={rating}
+          onChangeText={(v) => setRating(v.replace(/[^\d.]/g, ""))}
+          placeholder="e.g. 4.5"
+          keyboardType="decimal-pad"
+          containerStyle={{ marginBottom: 16 }}
+          maxLength={3}
         />
 
         <Text className="text-muted text-xs font-semibold mb-1.5">Rules & Policies</Text>

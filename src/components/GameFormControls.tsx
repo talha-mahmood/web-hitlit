@@ -4,6 +4,7 @@ import { Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import { useSelectPulse } from "../lib/useSelectPulse";
+import GradientFill from "./GradientFill";
 
 export function SectionLabel({
   title,
@@ -57,45 +58,54 @@ function Pill<T extends string>({
   const pulseStyle = useSelectPulse(selected);
   const onGreen = variant === "onGreen";
 
+  const pillStyle = {
+    borderWidth: 1.5,
+    borderRadius: 16,
+    borderColor: onGreen
+      ? selected
+        ? "white"
+        : "rgba(255,255,255,0.45)"
+      : selected
+        ? colors.primary
+        : colors.border,
+    ...(selected
+      ? {
+          shadowColor: onGreen ? "#000" : colors.primary,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: onGreen ? 0.18 : 0.2,
+          shadowRadius: 6,
+          elevation: 2,
+        }
+      : null),
+  };
+
+  const label = (
+    <Text
+      className={`text-sm font-medium ${
+        onGreen ? (selected ? "text-primary" : "text-white") : selected ? "text-white" : "text-ink"
+      }`}
+    >
+      {option.label}
+    </Text>
+  );
+
+  // The brand gradient only ever stands in for the solid `colors.primary`
+  // fill (the default, white-background screens) — the "onGreen" variant's
+  // white/translucent-white treatment (for screens already on a colored
+  // background) is untouched.
   return (
     <Animated.View style={pulseStyle}>
-      <Pressable
-        onPress={() => onChange(option.value)}
-        className="px-4 py-2.5 rounded-2xl"
-        style={{
-          borderWidth: 1.5,
-          borderColor: onGreen
-            ? selected
-              ? "white"
-              : "rgba(255,255,255,0.45)"
-            : selected
-              ? colors.primary
-              : colors.border,
-          backgroundColor: onGreen
-            ? selected
-              ? "white"
-              : "rgba(255,255,255,0.14)"
-            : selected
-              ? colors.primary
-              : "white",
-          ...(selected
-            ? {
-                shadowColor: onGreen ? "#000" : colors.primary,
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: onGreen ? 0.18 : 0.2,
-                shadowRadius: 6,
-                elevation: 2,
-              }
-            : null),
-        }}
-      >
-        <Text
-          className={`text-sm font-medium ${
-            onGreen ? (selected ? "text-primary" : "text-white") : selected ? "text-white" : "text-ink"
-          }`}
-        >
-          {option.label}
-        </Text>
+      <Pressable onPress={() => onChange(option.value)} style={pillStyle}>
+        {!onGreen && selected ? (
+          <GradientFill className="px-4 py-2.5 rounded-2xl">{label}</GradientFill>
+        ) : (
+          <View
+            className="px-4 py-2.5 rounded-2xl"
+            style={{ backgroundColor: onGreen ? (selected ? "white" : "rgba(255,255,255,0.14)") : "white" }}
+          >
+            {label}
+          </View>
+        )}
       </Pressable>
     </Animated.View>
   );

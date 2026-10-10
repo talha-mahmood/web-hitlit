@@ -18,6 +18,7 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import MentionComposer from "../../components/MentionComposer";
 import MentionText from "../../components/MentionText";
 import type { Mention } from "../../lib/mentionParser";
+import { shareComment } from "../../lib/commentShareLink";
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -59,6 +60,7 @@ function CommentCard({
   onToggleLike: () => void;
   onOpenProfile: () => void;
 }) {
+  const onShare = () => shareComment(comment.id);
   const isEdited = comment.updated_at && comment.updated_at !== comment.created_at;
 
   const handleOpenMenu = () => {
@@ -105,6 +107,10 @@ function CommentCard({
             <Pressable onPress={onReply} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
               <Ionicons name="arrow-undo-outline" size={17} color={colors.primary} />
               <Text className="text-primary text-sm font-medium">Reply</Text>
+            </Pressable>
+            <Pressable onPress={onShare} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
+              <Ionicons name="share-social-outline" size={17} color={colors.muted} />
+              <Text className="text-muted text-sm font-medium">Share</Text>
             </Pressable>
           </View>
         </View>

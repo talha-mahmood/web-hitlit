@@ -8,9 +8,7 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Share,
 } from "react-native";
-import * as Linking from "expo-linking";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
@@ -34,6 +32,7 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import MentionComposer from "../../components/MentionComposer";
 import MentionText from "../../components/MentionText";
 import type { Mention } from "../../lib/mentionParser";
+import { shareComment } from "../../lib/commentShareLink";
 
 type Route = RouteProp<CommunityStackParamList, "CommentThread">;
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommentThread">;
@@ -161,19 +160,8 @@ export default function CommentThreadScreen() {
 
   const { data: thread, isLoading, error } = useCommentThread(params.rootId, userId);
 
-  // Deep-links straight to this comment: the root always opens plain, a
-  // reply opens with its id in `highlight` so the receiving screen can
-  // scroll to and highlight that specific reply (see the effect below).
-  const handleShareComment = async (commentId: string, isRootComment: boolean) => {
-    const url = Linking.createURL(`comment/${params.rootId}`, {
-      queryParams: isRootComment ? undefined : { highlight: commentId },
-    });
-    try {
-      await Share.share({ message: url, url });
-    } catch {
-      // User dismissed the share sheet — nothing to do.
-    }
-  };
+  const handleShareComment = (commentId: string, isRootComment: boolean) =>
+    shareComment(params.rootId, isRootComment ? undefined : commentId);
   const postComment = usePostComment();
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
