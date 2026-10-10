@@ -17,6 +17,7 @@ import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
 import SelectSportModal from "../../components/SelectSportModal";
 import SelectDistanceModal from "../../components/SelectDistanceModal";
+import SelectPriceModal, { type PriceRange } from "../../components/SelectPriceModal";
 import SelectLocationModal from "../../components/SelectLocationModal";
 import GradientFill from "../../components/GradientFill";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
@@ -157,6 +158,18 @@ export default function VenuesListScreen() {
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
   const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
   const [distanceOpen, setDistanceOpen] = useState(false);
+  // Price dropdown — same row as Distance, filtering on each venue's
+  // cheapest court (its "starting from" price).
+  const PRICE_RANGES: readonly PriceRange[] = [
+    { label: "Rs 1,000 - 2,000/hr", min: 1000, max: 2000 },
+    { label: "Rs 2,000 - 3,000/hr", min: 2000, max: 3000 },
+    { label: "Rs 3,000 - 4,000/hr", min: 3000, max: 4000 },
+    { label: "Rs 4,000 - 5,000/hr", min: 4000, max: 5000 },
+    { label: "Rs 5,000 - 6,000/hr", min: 5000, max: 6000 },
+    { label: "Above Rs 6,000/hr", min: 6000, max: null },
+  ];
+  const [priceRangeFilter, setPriceRangeFilter] = useState<PriceRange | null>(null);
+  const [priceOpen, setPriceOpen] = useState(false);
   const { coords: myCoords, status: locationStatus, requestLocation } = useDeviceLocation();
 
   // navigation.navigate() re-focuses this screen (already mounted in the
@@ -177,7 +190,7 @@ export default function VenuesListScreen() {
     sportId: selectedSportId,
     locations: locationTags.length > 0 ? locationTags : undefined,
   });
-  const venues =
+  const byDistance =
     distanceKmFilter != null && myCoords
       ? (venuesData ?? []).filter((v) => {
           const lat = v.latitude;
@@ -186,6 +199,17 @@ export default function VenuesListScreen() {
           return distanceKm(myCoords.latitude, myCoords.longitude, lat, lng) <= distanceKmFilter;
         })
       : venuesData;
+  const venues =
+    priceRangeFilter != null
+      ? (byDistance ?? []).filter((v) => {
+          const prices = v.court.map((c) => c.price_per_hour).filter((p): p is number => p != null);
+          if (prices.length === 0) return false;
+          // A venue qualifies if its cheapest court ("starting from" price)
+          // falls in the selected bracket.
+          const startingPrice = Math.min(...prices);
+          return startingPrice >= priceRangeFilter.min && (priceRangeFilter.max == null || startingPrice < priceRangeFilter.max);
+        })
+      : byDistance;
 
   return (
     <View className="flex-1 bg-white">
@@ -326,6 +350,29 @@ export default function VenuesListScreen() {
                 </View>
               )}
             </Pressable>
+            {/* "Price" — same pill treatment, filters on each venue's
+                cheapest court. */}
+            <Pressable
+              onPress={() => setPriceOpen(true)}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: priceRangeFilter != null ? colors.primary : colors.border }}
+            >
+              {priceRangeFilter != null ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Ionicons name="pricetag-outline" size={14} color="white" />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    Price
+                  </Text>
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                    Price
+                  </Text>
+                </View>
+              )}
+            </Pressable>
           </ScrollView>
         </View>
       </View>
@@ -364,6 +411,17 @@ export default function VenuesListScreen() {
         }}
       />
 
+      <SelectPriceModal
+        visible={priceOpen}
+        onClose={() => setPriceOpen(false)}
+        options={PRICE_RANGES}
+        selected={priceRangeFilter}
+        onApply={(range) => {
+          setPriceRangeFilter(range);
+          setPriceOpen(false);
+        }}
+      />
+
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
@@ -378,7 +436,9 @@ export default function VenuesListScreen() {
             <Text className="text-muted text-center mt-10">
               {distanceKmFilter != null
                 ? `No venues found within ${distanceKmFilter} km.`
-                : "No venues found. Try a different search, location, or sport."}
+                : priceRangeFilter != null
+                  ? `No venues found in ${priceRangeFilter.label.toLowerCase()}.`
+                  : "No venues found. Try a different search, location, or sport."}
             </Text>
           }
           renderItem={({ item, index }) => (
