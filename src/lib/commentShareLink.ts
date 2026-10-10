@@ -1,13 +1,18 @@
 import { Platform, Share } from "react-native";
-import * as Linking from "expo-linking";
+
+// A real https:// link (Universal Links on iOS, App Links on Android) —
+// unlike the app's own playoye:// scheme, this is what lets WhatsApp/SMS/etc
+// actually render it as a tappable link, and it opens the app directly on a
+// device that has it installed (see app.json's associatedDomains/
+// intentFilters, and deep-link-setup/ for the hosting side of this).
+const SHARE_LINK_DOMAIN = "https://hitlit.pk";
 
 // Deep-links straight to a comment: a shared post/root comment opens plain,
 // a shared reply opens with its id in `highlight` so the receiving screen
 // can scroll to and flash that specific reply (see CommentThreadScreen).
 export function buildCommentShareUrl(rootId: string, replyId?: string): string {
-  return Linking.createURL(`comment/${rootId}`, {
-    queryParams: replyId ? { highlight: replyId } : undefined,
-  });
+  const url = `${SHARE_LINK_DOMAIN}/comment/${rootId}`;
+  return replyId ? `${url}?highlight=${replyId}` : url;
 }
 
 export async function shareComment(rootId: string, replyId?: string): Promise<void> {
