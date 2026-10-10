@@ -1161,7 +1161,7 @@ export default function LiveScoringScreen() {
           {hasActiveInnings && !inningsOver && (
             <GradientFill
               pointerEvents={addBall.isPending ? "none" : "auto"}
-              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18, opacity: addBall.isPending ? 0.6 : 1 }}
+              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18 }}
             >
               {!readyToScore ? (
                 <>

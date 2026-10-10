@@ -557,7 +557,7 @@ export default function TennisLiveScoringScreen() {
             one is pressed, until that point is actually reflected in the
             total score. */}
         <View style={{ gap: 10, marginTop: points.length > 0 ? 0 : 16 }}>
-          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ opacity: addPoint.isPending ? 0.5 : 1, gap: 10 }}>
+          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ gap: 10 }}>
             <GradientActionButton
               onPress={() => handlePoint("A")}
               colors={[colors.primary, colors.primaryDark]}

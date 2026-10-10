@@ -547,7 +547,7 @@ export default function BadmintonLiveScoringScreen() {
             one is pressed, until that rally is actually reflected in the
             score. */}
         <View style={{ gap: 10 }}>
-          <View pointerEvents={addRally.isPending ? "none" : "auto"} style={{ opacity: addRally.isPending ? 0.5 : 1, gap: 10 }}>
+          <View pointerEvents={addRally.isPending ? "none" : "auto"} style={{ gap: 10 }}>
             <GradientActionButton
               onPress={() => handleRally("A")}
               colors={[colors.primary, colors.primaryDark]}

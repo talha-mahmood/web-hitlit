@@ -709,7 +709,7 @@ export default function FootballLiveScoringScreen() {
           <>
             <View
               pointerEvents={addGoal.isPending || isPaused || isRinging ? "none" : "auto"}
-              style={{ opacity: addGoal.isPending || isPaused || isRinging ? 0.5 : 1, gap: 10 }}
+              style={{ opacity: isPaused || isRinging ? 0.5 : 1, gap: 10 }}
             >
               <Pressable onPress={() => handleGoalTap("A")} style={addGoal.isPending || isPaused || isRinging ? undefined : primaryButtonShadow}>
                 <LinearGradient
@@ -749,7 +749,7 @@ export default function FootballLiveScoringScreen() {
               <Pressable
                 onPress={handleEndPeriodPress}
                 disabled={endRunningPeriod.isPending}
-                style={{ marginTop: 12, opacity: endRunningPeriod.isPending ? 0.5 : 1 }}
+                style={{ marginTop: 12 }}
               >
                 <LinearGradient
                   colors={[colors.danger, "#B91C1C"]}
@@ -777,7 +777,7 @@ export default function FootballLiveScoringScreen() {
               <Pressable
                 onPress={handleToggleClock}
                 disabled={pauseMatch.isPending || resumeMatch.isPending}
-                style={{ marginTop: 12, opacity: pauseMatch.isPending || resumeMatch.isPending ? 0.5 : 1 }}
+                style={{ marginTop: 12 }}
               >
                 <LinearGradient
                   colors={isPaused ? [colors.primary, colors.primaryDark] : ["#F59E0B", "#D97706"]}
@@ -865,7 +865,7 @@ export default function FootballLiveScoringScreen() {
 
         {phase === "PENALTIES" && (
           <>
-            <View pointerEvents={addPenaltyKick.isPending ? "none" : "auto"} style={{ opacity: addPenaltyKick.isPending ? 0.5 : 1, gap: 10 }}>
+            <View pointerEvents={addPenaltyKick.isPending ? "none" : "auto"} style={{ gap: 10 }}>
               <View style={{ gap: 8 }}>
                 <Text className="text-ink font-semibold text-sm text-center">
                   Next kick: {penaltyKicks.length % 2 === 0 ? match.team_a_name : match.team_b_name}

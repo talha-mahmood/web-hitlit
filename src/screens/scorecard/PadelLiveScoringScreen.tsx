@@ -589,7 +589,7 @@ export default function PadelLiveScoringScreen() {
             one is pressed, until that point is actually reflected in the
             total score, same as the cricket scorer's run buttons. */}
         <View style={{ gap: 10 }}>
-          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ opacity: addPoint.isPending ? 0.5 : 1, gap: 10 }}>
+          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ gap: 10 }}>
             <GradientActionButton
               onPress={() => handlePoint("A")}
               colors={[colors.primary, colors.primaryDark]}
