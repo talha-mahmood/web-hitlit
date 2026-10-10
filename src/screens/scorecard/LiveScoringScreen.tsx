@@ -406,7 +406,7 @@ export default function LiveScoringScreen() {
   // Centered confirm-card dialogs (Abandon/End Innings/the two "Not Allowed"
   // eligibility messages) — separate from `panel` since these float over
   // everything rather than living in the bottom sheet.
-  const [dialog, setDialog] = useState<"ABANDON" | "END_INNINGS" | "TARGET_BLOCKED" | null>(null);
+  const [dialog, setDialog] = useState<"ABANDON" | "END_INNINGS" | "TARGET_BLOCKED" | "RAIN_DL" | "RAIN_DL_CHASE" | null>(null);
   const ABANDON_WAIT_SECONDS = 4;
   const [abandonCountdown, setAbandonCountdown] = useState(ABANDON_WAIT_SECONDS);
   const mainOverScrollRef = useRef<ScrollView>(null);
@@ -472,6 +472,43 @@ export default function LiveScoringScreen() {
   const target = match?.target_override ?? (firstInnings ? firstInnings.runs + 1 : null);
   const chaseComplete = !!(target && inningsState && inningsState.runs >= target);
   const inningsOver = !!inningsState?.isComplete || chaseComplete;
+
+  // D/L verdict for a rain interruption mid-chase ("no further ball can be
+  // bowled"): compares team 2's actual score against the D/L par score at
+  // this exact point — the target scaled down by how much of team 2's
+  // resources have actually been used so far — not the full target, which
+  // assumes a complete, uninterrupted innings.
+  const rainDLChaseVerdict =
+    match && firstInnings && inningsState && target
+      ? (() => {
+          const team2FullResources = resourcePercent(match.overs_limit, 0, match.overs_limit, inningsState.totalPlayers);
+          const team2OversRemainingNow = match.overs_limit - inningsState.legalBalls / 6;
+          const team2ResourcesRemainingNow = resourcePercent(team2OversRemainingNow, inningsState.wickets, match.overs_limit, inningsState.totalPlayers);
+          const team2ResourcesUsedSoFar = Math.max(team2FullResources - team2ResourcesRemainingNow, 0);
+          const finalParScore = target - 1;
+          const parScore = team2FullResources > 0 ? finalParScore * (team2ResourcesUsedSoFar / team2FullResources) : 0;
+          const parRounded = Math.round(parScore);
+          const battingSecondName = inningsState.battingTeam === "A" ? match.team_a_name : match.team_b_name;
+          const battingFirstName = firstInnings.battingTeam === "A" ? match.team_a_name : match.team_b_name;
+          if (inningsState.runs > parRounded) {
+            const margin = inningsState.runs - parRounded;
+            return {
+              parScore: parRounded,
+              summary: `${battingSecondName} won by ${margin} run${margin === 1 ? "" : "s"} (D/L method)`,
+              teamAWon: inningsState.battingTeam === "A",
+            };
+          }
+          if (inningsState.runs < parRounded) {
+            const margin = parRounded - inningsState.runs;
+            return {
+              parScore: parRounded,
+              summary: `${battingFirstName} won by ${margin} run${margin === 1 ? "" : "s"} (D/L method)`,
+              teamAWon: firstInnings.battingTeam === "A",
+            };
+          }
+          return { parScore: parRounded, summary: "Match tied (D/L method)", teamAWon: null as boolean | null };
+        })()
+      : null;
 
   // "Start 2nd Innings" chains two mutations (mark innings 1 complete, then
   // — in its onSuccess — insert the innings 2 row). In the network gap
@@ -710,6 +747,55 @@ export default function LiveScoringScreen() {
       return;
     }
     setPanel("CHANGE_TARGET");
+  };
+
+  // D/L means rain has already stopped play right now — nothing to type
+  // in, it resolves automatically from the current state:
+  // - 1st innings: the overs actually bowled so far become the new
+  //   (reduced) overs limit, and the innings ends immediately with the
+  //   score as it stands.
+  // - 2nd innings (chasing): no further ball can be bowled, so the match
+  //   is decided right now by comparing team 2's score to the D/L par
+  //   score at this exact point.
+  // "Change Target" (a separate button) stays for when play will resume
+  // later with fewer overs and the host just needs to manually set a new
+  // target — that one still needs the chase to already be live.
+  const handleOpenDL = () => {
+    setDialog(currentInnings?.innings_number === 2 ? "RAIN_DL_CHASE" : "RAIN_DL");
+  };
+
+  const rainDLOvers = Math.floor((inningsState?.legalBalls ?? 0) / 6);
+
+  const handleConfirmRainDL = () => {
+    setDialog(null);
+    if (rainDLOvers < 1) {
+      Alert.alert("Not Enough Overs Bowled", "At least one full over must be bowled before D/L can set a reduced overs count.");
+      return;
+    }
+    updateSettings.mutate(
+      { oversLimit: rainDLOvers },
+      { onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not apply the D/L revision.")) }
+    );
+  };
+
+  const handleConfirmRainDLChase = () => {
+    setDialog(null);
+    if (!currentInnings || !rainDLChaseVerdict) return;
+    markInningsComplete.mutate(currentInnings.id, {
+      onSuccess: () => {
+        completeMatch.mutate(
+          { matchId: match.id, resultSummary: rainDLChaseVerdict.summary },
+          {
+            onSuccess: () => {
+              syncTournamentResult.mutate({ cricketMatchId: match.id, teamAWon: rainDLChaseVerdict.teamAWon });
+              navigation.replace("FullScorecard", { matchId: match.id });
+            },
+            onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not complete match.")),
+          }
+        );
+      },
+      onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not finish the innings.")),
+    });
   };
 
   const PENALTY_RUNS = 5;
@@ -1338,7 +1424,7 @@ export default function LiveScoringScreen() {
                       { label: "End Innings", onPress: () => setDialog("END_INNINGS") },
                       { label: "Penalty", onPress: () => setPanel("PENALTY_TEAM") },
                       { label: "Retired Hurt", onPress: () => setPanel("RETIRED_HURT") },
-                      { label: "D / L", onPress: handleOpenChangeTarget },
+                      { label: "D / L", onPress: handleOpenDL },
                       { label: "Change Target", onPress: handleOpenChangeTarget },
                       { label: "Overs/Format/Wickets", onPress: () => setPanel("OVERS_FORMAT") },
                       { label: "Settings", onPress: () => setPanel("SETTINGS") },
@@ -1710,6 +1796,24 @@ export default function LiveScoringScreen() {
           title="Not Allowed"
           message="Target can be changed only after the first innings."
           singleButton
+          onCancel={() => setDialog(null)}
+        />
+      )}
+      {dialog === "RAIN_DL" && (
+        <ConfirmDialog
+          title="Rain Stopped Play"
+          message={`This ends the innings right now at ${formatOvers(rainDLOvers * 6)} overs — the current score stands, and team 2 will be set the same reduced overs (the D/L target is then calculated once their innings starts).`}
+          confirmLabel="End Innings Now"
+          onConfirm={handleConfirmRainDL}
+          onCancel={() => setDialog(null)}
+        />
+      )}
+      {dialog === "RAIN_DL_CHASE" && rainDLChaseVerdict && (
+        <ConfirmDialog
+          title="Rain Stopped Play"
+          message={`No further ball can be bowled. At this point the D/L par score is ${rainDLChaseVerdict.parScore} — ${rainDLChaseVerdict.summary}. Confirm to end the match with this result.`}
+          confirmLabel="Confirm Result"
+          onConfirm={handleConfirmRainDLChase}
           onCancel={() => setDialog(null)}
         />
       )}
