@@ -291,8 +291,6 @@ export default function PlayerProfileScreen() {
             contentContainerStyle={{ padding: 20, paddingTop: hasActiveSportData ? 0 : 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {player.jerseyNumber != null && <JerseyNumberCard number={player.jerseyNumber} />}
-
             {activeTab !== "profile" && resolvedSportKind === "cricket" && player.fullName ? (
               <>
                 {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}
@@ -351,6 +349,8 @@ export default function PlayerProfileScreen() {
                 hideSportsFilter
               />
             )}
+
+            {player.jerseyNumber != null && <JerseyNumberCard number={player.jerseyNumber} />}
           </ScrollView>
         </>
       )}
