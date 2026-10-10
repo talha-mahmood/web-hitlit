@@ -73,12 +73,11 @@ const WICKET_TYPES: { label: string; value: WicketType }[] = [
   { label: "Timed Out", value: "TIMED_OUT" },
 ];
 
-const MATCH_CENTRE_TABS: { key: "scoring" | "scorecard" | "stats" | "superstars" | "balls"; label: string }[] = [
+const MATCH_CENTRE_TABS: { key: "scoring" | "scorecard" | "stats" | "superstars"; label: string }[] = [
   { key: "scoring", label: "Scoring" },
   { key: "scorecard", label: "Scorecard" },
   { key: "stats", label: "Stats" },
   { key: "superstars", label: "Super Stars" },
-  { key: "balls", label: "Balls" },
 ];
 
 // Short label for one delivery — "W" for a wicket, the usual Wd/Nb/B/Lb/P
@@ -391,7 +390,7 @@ export default function LiveScoringScreen() {
   const [wicketEnd, setWicketEnd] = useState<"striker" | "nonStriker" | null>(null);
   const [fielderName, setFielderName] = useState("");
   const [bonusSign, setBonusSign] = useState<1 | -1>(1);
-  const [matchCentreTab, setMatchCentreTab] = useState<"scoring" | "scorecard" | "stats" | "superstars" | "balls">("scoring");
+  const [matchCentreTab, setMatchCentreTab] = useState<"scoring" | "scorecard" | "stats" | "superstars">("scoring");
   const [selectBatsmanOpen, setSelectBatsmanOpen] = useState(false);
   const [selectBowlerOpen, setSelectBowlerOpen] = useState(false);
   // Which roster names are benched for this session — a scoring-convenience
@@ -410,7 +409,6 @@ export default function LiveScoringScreen() {
   const [dialog, setDialog] = useState<"ABANDON" | "END_INNINGS" | "TARGET_BLOCKED" | null>(null);
   const ABANDON_WAIT_SECONDS = 4;
   const [abandonCountdown, setAbandonCountdown] = useState(ABANDON_WAIT_SECONDS);
-  const recentBallsScrollRef = useRef<ScrollView>(null);
   const mainOverScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -910,7 +908,15 @@ export default function LiveScoringScreen() {
         {/* Match Centre tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, gap: 22 }}>
           {MATCH_CENTRE_TABS.map((t) => (
-            <Pressable key={t.key} onPress={() => setMatchCentreTab(t.key)} className="items-center pb-3">
+            <Pressable
+              key={t.key}
+              onPress={() =>
+                t.key === "scorecard"
+                  ? navigation.navigate("FullScorecard", { matchId: match.id })
+                  : setMatchCentreTab(t.key)
+              }
+              className="items-center pb-3"
+            >
               <Text
                 className="font-semibold text-sm"
                 style={{ color: matchCentreTab === t.key ? "white" : "rgba(255,255,255,0.5)" }}
@@ -953,22 +959,22 @@ export default function LiveScoringScreen() {
               <Text className="text-ink font-extrabold text-xl text-center" numberOfLines={1}>
                 {(battingTeamName ?? "").toUpperCase()}
               </Text>
-              <Text className="text-muted text-sm mt-0.5">
+              <Text className="text-muted text-sm font-bold mt-0.5">
                 {currentInnings?.innings_number === 2 ? "2nd Innings" : "1st Innings"}
               </Text>
-              <Text style={{ fontSize: 46, fontWeight: "800", color: colors.primary, marginTop: 2 }}>
+              <Text style={{ fontSize: 52, fontWeight: "800", color: colors.primary, marginTop: 2 }}>
                 {inningsState?.runs ?? 0}-{inningsState?.wickets ?? 0}
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-center flex-wrap mt-2" style={{ gap: 18 }}>
-              <Text className="text-muted text-sm">Extras - {extrasTotal}</Text>
-              <Text className="text-muted text-sm">
+            <View className="flex-row items-center justify-center flex-wrap mt-0.5" style={{ gap: 18 }}>
+              <Text className="text-muted text-sm font-bold">Extras - {extrasTotal}</Text>
+              <Text className="text-muted text-sm font-bold">
                 Overs - {formatOvers(inningsState?.legalBalls ?? 0)} / {match.overs_limit}
               </Text>
-              <Text className="text-muted text-sm">CRR - {runRate.toFixed(1)}</Text>
+              <Text className="text-muted text-sm font-bold">CRR - {runRate.toFixed(1)}</Text>
             </View>
-            <Text className="text-muted text-sm text-center mt-1">
+            <Text className="text-muted text-sm font-bold text-center mt-1">
               Partnership - {partnershipRuns}({partnershipBalls})
             </Text>
             {target ? (
@@ -1031,7 +1037,7 @@ export default function LiveScoringScreen() {
                   </View>
                   <View className="flex-row" style={{ gap: 14 }}>
                     {["R", "B", "4s", "6s", "SR"].map((h) => (
-                      <Text key={h} className="text-muted text-xs font-bold" style={{ width: 26, textAlign: "center" }}>
+                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: 26, textAlign: "center" }}>
                         {h}
                       </Text>
                     ))}
@@ -1045,16 +1051,25 @@ export default function LiveScoringScreen() {
                         className="flex-row items-center justify-between py-1.5"
                         style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
                       >
-                        <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>
-                          {row.name}
-                          {row.isStriker ? " *" : ""}
-                        </Text>
+                        {row.isStriker ? (
+                          <View className="flex-1 items-start">
+                            <GradientFill className="rounded-lg px-2.5 py-1">
+                              <Text className="text-white text-sm font-bold" numberOfLines={1}>
+                                {row.name} *
+                              </Text>
+                            </GradientFill>
+                          </View>
+                        ) : (
+                          <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>
+                            {row.name}
+                          </Text>
+                        )}
                         <View className="flex-row" style={{ gap: 14 }}>
-                          <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{row.stat?.runs ?? 0}</Text>
-                          <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{row.stat?.balls ?? 0}</Text>
-                          <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{row.stat?.fours ?? 0}</Text>
-                          <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{row.stat?.sixes ?? 0}</Text>
-                          <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>
+                          <Text className="font-semibold text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.runs ?? 0}</Text>
+                          <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.balls ?? 0}</Text>
+                          <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.fours ?? 0}</Text>
+                          <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.sixes ?? 0}</Text>
+                          <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>
                             {row.stat && row.stat.balls > 0 ? ((row.stat.runs / row.stat.balls) * 100).toFixed(1) : "0.0"}
                           </Text>
                         </View>
@@ -1073,7 +1088,7 @@ export default function LiveScoringScreen() {
                   </View>
                   <View className="flex-row" style={{ gap: 14 }}>
                     {["O", "M", "R", "W", "Eco"].map((h) => (
-                      <Text key={h} className="text-muted text-xs font-bold" style={{ width: 26, textAlign: "center" }}>
+                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: 26, textAlign: "center" }}>
                         {h}
                       </Text>
                     ))}
@@ -1086,11 +1101,11 @@ export default function LiveScoringScreen() {
                   >
                     <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{effectiveBowler}</Text>
                     <View className="flex-row" style={{ gap: 14 }}>
-                      <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{formatOvers(bowlerStat?.legalBalls ?? 0)}</Text>
-                      <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{bowlerStat?.maidens ?? 0}</Text>
-                      <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{bowlerStat?.runsConceded ?? 0}</Text>
-                      <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>{bowlerStat?.wickets ?? 0}</Text>
-                      <Text className="text-ink text-sm" style={{ width: 26, textAlign: "center" }}>
+                      <Text className="font-semibold text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{formatOvers(bowlerStat?.legalBalls ?? 0)}</Text>
+                      <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.maidens ?? 0}</Text>
+                      <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.runsConceded ?? 0}</Text>
+                      <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.wickets ?? 0}</Text>
+                      <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>
                         {bowlerStat && bowlerStat.legalBalls > 0 ? ((bowlerStat.runsConceded / bowlerStat.legalBalls) * 6).toFixed(1) : "0.0"}
                       </Text>
                     </View>
@@ -1580,18 +1595,6 @@ export default function LiveScoringScreen() {
             </GradientFill>
           )}
         </>
-      ) : matchCentreTab === "scorecard" ? (
-        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-          <Text className="text-ink font-bold text-base mb-3">Full Scorecard</Text>
-          <Pressable
-            onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })}
-            className="flex-row items-center justify-between bg-white rounded-2xl border border-border px-4 py-4"
-            style={cardShadow}
-          >
-            <Text className="text-ink font-semibold">Open full batting &amp; bowling scorecard</Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-          </Pressable>
-        </ScrollView>
       ) : matchCentreTab === "stats" ? (
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
           <View className="bg-white rounded-2xl border border-border p-4" style={cardShadow}>
@@ -1644,53 +1647,7 @@ export default function LiveScoringScreen() {
             );
           })()}
         </ScrollView>
-      ) : (
-        <View className="flex-1" style={{ paddingTop: 16, paddingBottom: 24 }}>
-          {/* One over per full-screen-width page — pagingEnabled snaps so
-              exactly one over is ever visible at a time, with no balls from
-              the previous or next over peeking in at the edges. */}
-          <ScrollView
-            ref={recentBallsScrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onContentSizeChange={() =>
-              recentBallsScrollRef.current?.scrollTo({ x: (ballsByOver.length - 1) * screenWidth, animated: true })
-            }
-          >
-            {(ballsByOver.length > 0 ? ballsByOver : [[]]).map((over, overIndex) => (
-              <View key={overIndex} style={{ width: screenWidth, paddingHorizontal: 16 }}>
-                <View className="bg-white rounded-2xl border border-border p-3.5" style={cardShadow}>
-                  <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    {Array.from({ length: Math.max(6, over.length) }).map((_, i) => {
-                      const b = over[i];
-                      if (!b) {
-                        return (
-                          <View key={i} className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}>
-                            <Text className="text-muted text-xs font-bold">-</Text>
-                          </View>
-                        );
-                      }
-                      return (
-                        <View
-                          key={i}
-                          className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
-                          style={{ width: 34, height: 34 }}
-                        >
-                          <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
-                            {ballLabel(b)}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      ) : null}
 
       {selectBatsmanOpen && (
         <SelectPlayerPanel
