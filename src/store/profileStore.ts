@@ -18,7 +18,9 @@ type ProfileState = {
   fetchProfile: (userId: string) => Promise<void>;
   updateProfile: (
     userId: string,
-    changes: Partial<Pick<Profile, "full_name" | "avatar" | "skill_level" | "phone" | "gender" | "date_of_birth" | "visibility">>
+    changes: Partial<
+      Pick<Profile, "full_name" | "avatar" | "skill_level" | "phone" | "gender" | "date_of_birth" | "visibility" | "jersey_number">
+    >
   ) => Promise<void>;
   // Keeps the store's own profile in sync live — e.g. a superadmin revoking
   // someone's venue-admin access (type 'owner' -> 'user') must be reflected

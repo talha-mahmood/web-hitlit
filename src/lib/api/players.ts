@@ -65,6 +65,7 @@ export type PlayerPublicProfile = {
   city: string | null;
   bio: string | null;
   skillLevel: SkillLevel | null;
+  jerseyNumber: number | null;
   gamesPlayedTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
@@ -95,7 +96,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
   const [profileRes, statsRes, extraRes] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, user_code, avatar, city, bio, skill_level")
+      .select("id, full_name, user_code, avatar, city, bio, skill_level, jersey_number")
       .eq("id", userId)
       .single(),
     supabase.rpc("get_player_public_stats", { p_user_id: userId, p_sport_id: sportId }).single(),
@@ -117,6 +118,7 @@ export async function fetchPlayerPublicProfile(userId: string, sportId?: string)
     city: profile.city,
     bio: profile.bio,
     skillLevel: profile.skill_level,
+    jerseyNumber: profile.jersey_number,
     gamesPlayedTotal: stats.matches_played,
     tournamentsPlayedTotal: stats.tournaments_played,
     gamesHostedTotal: stats.games_hosted,

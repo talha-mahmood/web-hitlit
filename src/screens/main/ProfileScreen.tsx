@@ -17,6 +17,9 @@ import { usePlayerPublicProfile } from "../../hooks/usePlayers";
 import { useFollowState } from "../../hooks/usePlayerFollows";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
 import PlayerStatCards from "../../components/PlayerStatCards";
+import JerseyNumberCard from "../../components/JerseyNumberCard";
+import SelectSportModal from "../../components/SelectSportModal";
+import { useSports } from "../../hooks/useSports";
 import { getSportIcon } from "../../lib/sportIcons";
 import GradientFill from "../../components/GradientFill";
 import { pickImages, uploadImage } from "../../lib/upload";
@@ -134,6 +137,8 @@ export default function ProfileScreen() {
 
   const [filterSportId, setFilterSportId] = useState<string | undefined>(undefined);
   const [filterSportName, setFilterSportName] = useState<string | undefined>(undefined);
+  const [sportSheetOpen, setSportSheetOpen] = useState(false);
+  const { data: allSports } = useSports();
   // Every card below (rating, stat grid, sports chart, activity, Games Win)
   // follows the selected sport, so they're all fetched narrowed to it.
   const { data: stats, isLoading } = useProfileStats(userId, filterSportId);
@@ -329,7 +334,24 @@ export default function ProfileScreen() {
           filterSportName={filterSportName}
           sportsPlayed={sportsPlayed}
           onSelectSport={handleSelectSportCard}
+          hideSportsFilter
+          onOpenSportFilter={() => setSportSheetOpen(true)}
         />
+
+        <SelectSportModal
+          visible={sportSheetOpen}
+          onClose={() => setSportSheetOpen(false)}
+          sports={allSports ?? []}
+          selectedSportId={filterSportId}
+          onApply={(id) => {
+            const match = id ? (allSports ?? []).find((s) => s.id === id) : undefined;
+            setFilterSportId(id);
+            setFilterSportName(match?.name);
+            setSportSheetOpen(false);
+          }}
+        />
+
+        {profile?.jersey_number != null && <JerseyNumberCard number={profile.jersey_number} />}
 
         <Pressable
           onPress={async () => {

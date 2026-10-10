@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Share,
 } from "react-native";
+import * as Linking from "expo-linking";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
@@ -68,6 +70,8 @@ function CommentBubble({
   onDelete,
   onToggleLike,
   onOpenProfile,
+  onShare,
+  isHighlighted,
 }: {
   comment: CommunityComment;
   isOwn: boolean;
@@ -77,6 +81,8 @@ function CommentBubble({
   onDelete: () => void;
   onToggleLike: () => void;
   onOpenProfile: () => void;
+  onShare: () => void;
+  isHighlighted?: boolean;
 }) {
   const isEdited = comment.updated_at && comment.updated_at !== comment.created_at;
 
@@ -90,7 +96,12 @@ function CommentBubble({
 
   return (
     <View
-      className={`rounded-2xl border p-3.5 mb-3 ${isRoot ? "bg-white border-border" : "bg-primary-light border-primary-light"}`}
+      className="rounded-2xl p-3.5 mb-3"
+      style={{
+        backgroundColor: isHighlighted ? colors.primaryLight : isRoot ? "white" : colors.primaryLight,
+        borderWidth: isHighlighted ? 2 : 1,
+        borderColor: isHighlighted ? colors.primary : isRoot ? colors.border : colors.primaryLight,
+      }}
     >
       <View className="flex-row items-start" style={{ gap: 10 }}>
         <Pressable onPress={onOpenProfile} hitSlop={4}>
@@ -127,6 +138,10 @@ function CommentBubble({
               <Ionicons name="arrow-undo-outline" size={16} color={colors.primary} />
               <Text className="text-primary text-xs font-medium">Reply</Text>
             </Pressable>
+            <Pressable onPress={onShare} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
+              <Ionicons name="share-social-outline" size={16} color={colors.muted} />
+              <Text className="text-muted text-xs font-medium">Share</Text>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -145,6 +160,20 @@ export default function CommentThreadScreen() {
   const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
 
   const { data: thread, isLoading, error } = useCommentThread(params.rootId, userId);
+
+  // Deep-links straight to this comment: the root always opens plain, a
+  // reply opens with its id in `highlight` so the receiving screen can
+  // scroll to and highlight that specific reply (see the effect below).
+  const handleShareComment = async (commentId: string, isRootComment: boolean) => {
+    const url = Linking.createURL(`comment/${params.rootId}`, {
+      queryParams: isRootComment ? undefined : { highlight: commentId },
+    });
+    try {
+      await Share.share({ message: url, url });
+    } catch {
+      // User dismissed the share sheet — nothing to do.
+    }
+  };
   const postComment = usePostComment();
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
@@ -152,6 +181,27 @@ export default function CommentThreadScreen() {
 
   const root = thread?.find((c) => c.id === params.rootId);
   const replies = (thread ?? []).filter((c) => c.id !== params.rootId);
+
+  // Opened from a shared comment link: scroll to that reply and flash a
+  // highlight around it for a few seconds so it's easy to spot in the list.
+  const flatListRef = useRef<FlatList<CommunityComment>>(null);
+  const [highlightedId, setHighlightedId] = useState<string | undefined>(params.highlightId);
+
+  useEffect(() => {
+    if (!params.highlightId || replies.length === 0) return;
+    const index = replies.findIndex((r) => r.id === params.highlightId);
+    if (index === -1) return;
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.3 });
+    }, 300);
+    const clearTimer = setTimeout(() => setHighlightedId(undefined), 3000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(clearTimer);
+    };
+    // Only run once per shared link — not on every `replies` refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.highlightId, replies.length > 0]);
 
   const handleSend = (body: string, mentions: Mention[]) => {
     if (!userId) return;
@@ -248,9 +298,11 @@ export default function CommentThreadScreen() {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={replies}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+          onScrollToIndexFailed={() => {}}
           ListHeaderComponent={
             <CommentBubble
               comment={root}
@@ -261,6 +313,7 @@ export default function CommentThreadScreen() {
               onDelete={() => handleDelete(root)}
               onToggleLike={() => handleToggleLike(root)}
               onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: root.user_id })}
+              onShare={() => handleShareComment(root.id, true)}
             />
           }
           renderItem={({ item }) => (
@@ -274,6 +327,8 @@ export default function CommentThreadScreen() {
                 onDelete={() => handleDelete(item)}
                 onToggleLike={() => handleToggleLike(item)}
                 onOpenProfile={() => navigation.navigate("PlayerProfile", { userId: item.user_id })}
+                onShare={() => handleShareComment(item.id, false)}
+                isHighlighted={item.id === highlightedId}
               />
             </View>
           )}

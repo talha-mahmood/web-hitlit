@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
+import * as Linking from "expo-linking";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore, isProfileComplete } from "../store/profileStore";
@@ -128,6 +129,40 @@ export default function RootNavigator() {
       if (retry) clearTimeout(retry);
     };
   }, [lastResponse, pushReady, profile?.type]);
+
+  // A shared "comment/<rootId>" link (see CommentThreadScreen's Share
+  // button) opens that comment thread directly, scrolled to and flashing
+  // the specific reply if one was shared — same retry-until-ready pattern
+  // as the push-notification handler above, since the nav tree may not be
+  // mounted yet (cold start) when the link arrives.
+  useEffect(() => {
+    const openCommentLink = (url: string) => {
+      const { path, queryParams } = Linking.parse(url);
+      const match = path?.match(/^comment\/([^/?]+)/);
+      if (!match) return;
+      const rootId = match[1];
+      const highlightId = typeof queryParams?.highlight === "string" ? queryParams.highlight : undefined;
+
+      let retry: ReturnType<typeof setTimeout> | undefined;
+      const open = () => {
+        if (!navigationRef.isReady()) {
+          retry = setTimeout(open, 300);
+          return;
+        }
+        navigationRef.navigate("Community", { screen: "CommentThread", params: { rootId, highlightId } });
+      };
+      open();
+      return () => {
+        if (retry) clearTimeout(retry);
+      };
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) openCommentLink(url);
+    });
+    const subscription = Linking.addEventListener("url", (event) => openCommentLink(event.url));
+    return () => subscription.remove();
+  }, []);
 
   if (isInitializing) {
     return <SplashScreen />;

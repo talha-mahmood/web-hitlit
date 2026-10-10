@@ -54,7 +54,7 @@ import type { ManualScoreParams } from "../lib/manualScore";
 // views, not one of the three segments.
 export type CommunityStackParamList = {
   CommunityHome: undefined;
-  CommentThread: { rootId: string };
+  CommentThread: { rootId: string; highlightId?: string };
   GamesList:
     | { sportId?: string; gameType?: Database["public"]["Enums"]["game_type_type"] }
     | undefined;

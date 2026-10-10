@@ -130,6 +130,7 @@ export default function PlayerStatCards({
   sportsPlayed,
   onSelectSport,
   hideSportsFilter = false,
+  onOpenSportFilter,
 }: {
   data: PlayerStatCardsData;
   isLoading?: boolean;
@@ -139,9 +140,13 @@ export default function PlayerStatCards({
   onSelectSport: (sportId: string, sportName: string) => void;
   // The Player Profile screen (viewing someone else) replaces this in-card
   // list with a filter icon in the hero instead — same filter, same modal,
-  // just surfaced like the Top Players list does it. The user's own Profile
-  // screen keeps this card as-is.
+  // just surfaced like the Top Players list does it.
   hideSportsFilter?: boolean;
+  // When given, the Rating card shows the same gradient "All Sports" pill
+  // Player Profile shows in its hero — tapping it should open that same
+  // sport-select sheet. Used by the user's own Profile screen now that it
+  // no longer shows the in-card sports list.
+  onOpenSportFilter?: () => void;
 }) {
   const {
     rating,
@@ -184,8 +189,18 @@ export default function PlayerStatCards({
             </View>
           </View>
           <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
-            Your Rating
+            Rating
           </Text>
+          {onOpenSportFilter && (
+            <Pressable onPress={onOpenSportFilter} className="self-start mb-3">
+              <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
+                <Text className="text-xs font-bold text-white" numberOfLines={1}>
+                  {filterSportName ?? "All Sports"}
+                </Text>
+                <Ionicons name="chevron-down" size={13} color="white" />
+              </GradientFill>
+            </Pressable>
+          )}
           <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
             <View className="flex-row items-center" style={{ gap: 10 }}>
               <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>

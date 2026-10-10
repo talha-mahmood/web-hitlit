@@ -15,6 +15,7 @@ import GradientFill from "../../components/GradientFill";
 import Bouncy from "../../components/Bouncy";
 import SelectSportModal from "../../components/SelectSportModal";
 import PlayerStatCards from "../../components/PlayerStatCards";
+import JerseyNumberCard from "../../components/JerseyNumberCard";
 import PlayerCricketOverview, { usePlayerCricketFigures } from "../../components/PlayerCricketOverview";
 import PlayerCricketStatistics from "../../components/PlayerCricketStatistics";
 import PlayerCricketMatches from "../../components/PlayerCricketMatches";
@@ -186,15 +187,13 @@ export default function PlayerProfileScreen() {
                   Players list's filter icon opens, shown as a dropdown pill
                   right here (filling the space under the name) instead of a
                   bare icon floating under the Follow button. */}
-              <Pressable
-                onPress={() => setSportSheetOpen(true)}
-                className="flex-row items-center self-start rounded-full px-3 py-1 bg-white"
-                style={{ gap: 5, borderWidth: 1, borderColor: colors.border }}
-              >
-                <Text className="text-xs font-bold text-ink" numberOfLines={1}>
-                  {filterSportName ?? "All Sports"}
-                </Text>
-                <Ionicons name="chevron-down" size={13} color={colors.ink} />
+              <Pressable onPress={() => setSportSheetOpen(true)} className="self-start">
+                <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
+                  <Text className="text-xs font-bold text-white" numberOfLines={1}>
+                    {filterSportName ?? "All Sports"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={13} color="white" />
+                </GradientFill>
               </Pressable>
             </View>
           </View>
@@ -292,6 +291,8 @@ export default function PlayerProfileScreen() {
             contentContainerStyle={{ padding: 20, paddingTop: hasActiveSportData ? 0 : 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
+            {player.jerseyNumber != null && <JerseyNumberCard number={player.jerseyNumber} />}
+
             {activeTab !== "profile" && resolvedSportKind === "cricket" && player.fullName ? (
               <>
                 {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}

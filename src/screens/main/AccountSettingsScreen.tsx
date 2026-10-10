@@ -96,6 +96,10 @@ export default function AccountSettingsScreen() {
   const initialPhone = splitPhone(profile?.phone ?? null);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [savingName, setSavingName] = useState(false);
+  const [jerseyNumber, setJerseyNumber] = useState(
+    profile?.jersey_number != null ? String(profile.jersey_number) : ""
+  );
+  const [savingJersey, setSavingJersey] = useState(false);
   const [phoneDial, setPhoneDial] = useState(initialPhone.dial);
   const [phoneNumber, setPhoneNumber] = useState(initialPhone.number);
   const [savingPhone, setSavingPhone] = useState(false);
@@ -108,6 +112,9 @@ export default function AccountSettingsScreen() {
 
   const nameChanged = name.trim() !== (profile?.full_name ?? "").trim();
   const nameValid = isValidName(name);
+
+  const jerseyChanged = jerseyNumber !== (profile?.jersey_number != null ? String(profile.jersey_number) : "");
+  const jerseyValid = jerseyNumber === "" || /^\d{1,3}$/.test(jerseyNumber);
 
   const phoneChanged = `${phoneDial}${phoneNumber}` !== (profile?.phone ?? "");
   const phoneValid = isPhoneDigitsValid(phoneDial, phoneNumber);
@@ -127,6 +134,19 @@ export default function AccountSettingsScreen() {
       Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
     } finally {
       setSavingName(false);
+    }
+  };
+
+  const handleSaveJersey = async () => {
+    if (!userId || !jerseyValid) return;
+    setSavingJersey(true);
+    try {
+      await updateProfile(userId, { jersey_number: jerseyNumber === "" ? null : Number(jerseyNumber) });
+      Alert.alert("Saved", "Your jersey number has been updated.");
+    } catch (err) {
+      Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
+    } finally {
+      setSavingJersey(false);
     }
   };
 
@@ -264,6 +284,34 @@ export default function AccountSettingsScreen() {
             ) : (
               <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
                 <Text className="font-bold text-muted">Save Name</Text>
+              </View>
+            )}
+          </Pressable>
+        </SectionCard>
+
+        <SectionCard icon="shirt-outline" title="Jersey Number" subtitle="Shown on your profile and player card.">
+          <FieldInput
+            value={jerseyNumber}
+            onChangeText={(v) => setJerseyNumber(v.replace(/[^\d]/g, "").slice(0, 3))}
+            placeholder="e.g. 11"
+            keyboardType="number-pad"
+            maxLength={3}
+          />
+          {!jerseyValid && (
+            <Text className="text-red-500 text-xs mt-2">Jersey number must be up to 3 digits.</Text>
+          )}
+          <Pressable onPress={handleSaveJersey} disabled={!jerseyChanged || !jerseyValid || savingJersey}>
+            {jerseyChanged && jerseyValid ? (
+              <GradientFill className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3">
+                {savingJersey ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-bold text-white">Save Jersey Number</Text>
+                )}
+              </GradientFill>
+            ) : (
+              <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
+                <Text className="font-bold text-muted">Save Jersey Number</Text>
               </View>
             )}
           </Pressable>

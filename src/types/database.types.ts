@@ -1906,6 +1906,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
           isactive: boolean
+          jersey_number: number | null
           latitude: number | null
           longitude: number | null
           phone: string | null
@@ -1929,6 +1930,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id: string
           isactive?: boolean
+          jersey_number?: number | null
           latitude?: number | null
           longitude?: number | null
           phone?: string | null
@@ -1952,6 +1954,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           isactive?: boolean
+          jersey_number?: number | null
           latitude?: number | null
           longitude?: number | null
           phone?: string | null
