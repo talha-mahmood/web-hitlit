@@ -105,6 +105,7 @@ function indexToLetters(i: number): string {
 function chipStyle(selected: boolean, extra?: object) {
   return {
     borderWidth: 1.5,
+    borderRadius: 16,
     borderColor: selected ? colors.primary : colors.border,
     ...(selected
       ? {
@@ -899,12 +900,13 @@ export default function CreateGameScreen() {
                   <Pressable
                     key={value}
                     onPress={() => setDurationDays(d)}
-                    className="px-4 py-2.5 rounded-2xl"
                     style={chipStyle(selected)}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {d} day
-                    </Text>
+                    <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
+                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                        {d} day
+                      </Text>
+                    </ChipFill>
                   </Pressable>
                 );
               })}
@@ -946,12 +948,13 @@ export default function CreateGameScreen() {
                   <Pressable
                     key={h}
                     onPress={() => setHoursPerDay(h)}
-                    className="px-4 py-2.5 rounded-2xl"
                     style={chipStyle(selected)}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {h === 1 ? "1 hr" : `${h} hrs`}
-                    </Text>
+                    <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
+                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                        {h === 1 ? "1 hr" : `${h} hrs`}
+                      </Text>
+                    </ChipFill>
                   </Pressable>
                 );
               })}
@@ -968,12 +971,13 @@ export default function CreateGameScreen() {
                   <Pressable
                     key={d}
                     onPress={() => setDuration(d)}
-                    className="px-4 py-2.5 rounded-2xl"
                     style={chipStyle(selected)}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
-                      {d === 1 ? "1 hr" : `${d} hrs`}
-                    </Text>
+                    <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
+                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                        {d === 1 ? "1 hr" : `${d} hrs`}
+                      </Text>
+                    </ChipFill>
                   </Pressable>
                 );
               })}

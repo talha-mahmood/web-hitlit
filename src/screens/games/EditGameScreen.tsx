@@ -52,6 +52,7 @@ type Gender = Database["public"]["Enums"]["game_gender_type"];
 function chipStyle(selected: boolean, disabled?: boolean) {
   return {
     borderWidth: 1.5,
+    borderRadius: 16,
     borderColor: selected ? colors.primary : colors.border,
     ...(selected
       ? {

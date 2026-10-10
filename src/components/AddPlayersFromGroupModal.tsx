@@ -119,6 +119,7 @@ export default function AddPlayersFromGroupModal({
                       }}
                       style={{
                         borderWidth: 1.5,
+                        borderRadius: 12,
                         borderColor: selected ? colors.primary : colors.border,
                       }}
                     >
