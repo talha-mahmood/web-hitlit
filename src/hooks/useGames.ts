@@ -14,6 +14,7 @@ import {
   fetchFavoriteGameIds,
   setFavoriteGame,
   linkGameBooking,
+  markGameVenueContacted,
 } from "../lib/api/games";
 import { useAuthStore } from "../store/authStore";
 import { supabase } from "../lib/supabase";
@@ -209,6 +210,16 @@ export function useLinkGameBooking() {
       linkGameBooking(gameId, bookingId),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["game", vars.gameId] });
+    },
+  });
+}
+
+export function useMarkGameVenueContacted() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (gameId: string) => markGameVenueContacted(gameId),
+    onSuccess: (_, gameId) => {
+      qc.invalidateQueries({ queryKey: ["game", gameId] });
     },
   });
 }

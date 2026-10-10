@@ -1320,6 +1320,7 @@ export type Database = {
             | Database["public"]["Enums"]["tournament_format_type"]
             | null
           updated_at: string
+          venue_contacted: boolean
           venue_id: string | null
           visibility: Database["public"]["Enums"]["game_visibility_type"]
         }
@@ -1362,6 +1363,7 @@ export type Database = {
             | Database["public"]["Enums"]["tournament_format_type"]
             | null
           updated_at?: string
+          venue_contacted?: boolean
           venue_id?: string | null
           visibility?: Database["public"]["Enums"]["game_visibility_type"]
         }
@@ -1404,6 +1406,7 @@ export type Database = {
             | Database["public"]["Enums"]["tournament_format_type"]
             | null
           updated_at?: string
+          venue_contacted?: boolean
           venue_id?: string | null
           visibility?: Database["public"]["Enums"]["game_visibility_type"]
         }

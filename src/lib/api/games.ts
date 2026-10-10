@@ -178,6 +178,14 @@ export async function linkGameBooking(gameId: string, bookingId: string): Promis
   if (error) throw new Error(error.message);
 }
 
+// No payment integration yet, so there's no real booking to link — this is
+// the stand-in that flips "Book Venue" to "Venue Booked" once the host has
+// actually messaged the venue on WhatsApp from the venue detail page.
+export async function markGameVenueContacted(gameId: string): Promise<void> {
+  const { error } = await supabase.from("games").update({ venue_contacted: true }).eq("id", gameId);
+  if (error) throw new Error(error.message);
+}
+
 export async function createGame(params: CreateGameParams): Promise<GameRow> {
   const { data, error } = await supabase
     .from("games")

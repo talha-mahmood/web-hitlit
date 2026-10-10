@@ -346,10 +346,12 @@ export default function GameDetailScreen() {
   // regular games created with the team flow).
   const hasLinkedVenue = !!game.venue_id;
   const hasCustomVenue = !!game.custom_venue_name;
-  // A real (dropdown-picked) venue needs an actual booking; a manually
-  // typed venue has no venue record to book against, so it's treated as
-  // already settled the moment it's set.
-  const isVenueBooked = hasLinkedVenue ? !!game.booking_id : hasCustomVenue;
+  // A real (dropdown-picked) venue needs an actual booking — or, since
+  // payment isn't integrated yet, counts as settled once the host has
+  // messaged the venue on WhatsApp from its detail page (venue_contacted).
+  // A manually typed venue has no venue record to book against, so it's
+  // treated as already settled the moment it's set.
+  const isVenueBooked = hasLinkedVenue ? !!game.booking_id || game.venue_contacted : hasCustomVenue;
   const showBookVenue = isTeamBased && isCreator && (hasLinkedVenue || hasCustomVenue);
   // "Cancel This Game/Tournament" stays visible alongside "Book Venue" until
   // the venue is actually booked (not hidden the moment a venue is merely

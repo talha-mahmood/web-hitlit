@@ -20,6 +20,7 @@ import { getAmenityIcon } from "../../lib/amenities";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getVenuePhoto } from "../../lib/venuePhotos";
+import { useMarkGameVenueContacted } from "../../hooks/useGames";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -42,6 +43,7 @@ export default function VenueDetailScreen() {
   const [activeImage, setActiveImage] = useState(0);
 
   const { data: venue, isLoading } = useVenueDetail(params.venueId);
+  const markVenueContacted = useMarkGameVenueContacted();
 
   const handleOpenWhatsApp = async (number: string) => {
     const url = toWhatsAppUrl(number);
@@ -51,6 +53,12 @@ export default function VenueDetailScreen() {
       return;
     }
     Linking.openURL(url);
+    // Opened from a game/tournament's "Book Venue" button — no payment
+    // integration yet, so actually messaging the venue here is what flips
+    // that button to "Venue Booked" once the host is back on that screen.
+    if (params.forGameId) {
+      markVenueContacted.mutate(params.forGameId);
+    }
   };
 
   const onScrollImages = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -260,21 +268,10 @@ export default function VenueDetailScreen() {
             const fallbackImage = getSportImage(sportName);
             const { icon, bg, fg } = getSportIcon(sportName);
             return (
-              <Pressable
+              // Not tappable — booking a slot needs a payment method, which
+              // isn't integrated yet. Shown as plain info only for now.
+              <View
                 key={court.id}
-                onPress={() =>
-                  navigation.navigate("SlotPicker", {
-                    courtId: court.id,
-                    courtName: court.name,
-                    pricePerHour: court.price_per_hour,
-                    venueName: venue.name,
-                    venueId: venue.id,
-                    venueStartTime: venue.start_time ?? "06:00:00",
-                    venueEndTime: venue.end_time ?? "23:00:00",
-                    forGameId: params.forGameId,
-                    sportName,
-                  })
-                }
                 className="flex-row items-center bg-white rounded-2xl px-3 py-3 mb-2.5"
                 style={{ borderWidth: 1, borderColor: colors.border }}
               >
@@ -302,8 +299,7 @@ export default function VenueDetailScreen() {
                 <Text className="font-extrabold text-sm" style={{ color: colors.primaryDark }} numberOfLines={1}>
                   Rs {court.price_per_hour}/hr
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.muted} style={{ marginLeft: 6 }} />
-              </Pressable>
+              </View>
             );
           })}
         </View>
