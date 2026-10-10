@@ -675,7 +675,7 @@ export default function CreateGameScreen() {
               {isTournament ? "Create Tournament" : "Host a Game"}
             </Text>
             <Text className="text-muted text-xs mt-0.5">
-              {isTournament ? "Bring players together. Create. Compete. Enjoy!" : "Set up your game and invite players."}
+              {isTournament ? "Bring players together and compete" : "Invite players to your game"}
             </Text>
           </View>
           <Pressable

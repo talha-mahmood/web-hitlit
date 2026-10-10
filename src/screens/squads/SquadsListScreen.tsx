@@ -326,7 +326,7 @@ export default function SquadsListScreen() {
                 Groups
               </Text>
               <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
-                Find and join exciting groups near you
+                Find and join groups nearby
               </Text>
             </View>
           </View>

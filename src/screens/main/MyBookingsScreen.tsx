@@ -186,7 +186,7 @@ export default function MyBookingsScreen() {
             <Text className="text-ink font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
               My Bookings
             </Text>
-            <Text className="text-muted text-sm mt-0.5">Manage and view all your bookings</Text>
+            <Text className="text-muted text-sm mt-0.5">View and manage bookings</Text>
           </View>
         </View>
       </View>

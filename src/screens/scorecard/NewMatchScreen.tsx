@@ -403,7 +403,7 @@ export default function NewMatchScreen() {
           </Pressable>
           <View className="flex-1">
             <Text className="text-2xl font-bold text-ink">New Match</Text>
-            <Text className="text-muted text-sm mt-0.5">Setup your match details and start scoring</Text>
+            <Text className="text-muted text-sm mt-0.5">Set up your match details</Text>
           </View>
         </View>
       </View>

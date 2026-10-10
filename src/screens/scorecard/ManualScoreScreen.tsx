@@ -228,7 +228,7 @@ export default function ManualScoreScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-2xl font-bold text-ink">Enter Score</Text>
-          <Text className="text-muted text-sm mt-0.5">Record the final score for this match</Text>
+          <Text className="text-muted text-sm mt-0.5">Record the final score</Text>
         </View>
       </View>
 

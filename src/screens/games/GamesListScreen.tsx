@@ -505,7 +505,7 @@ export default function GamesListScreen() {
                 {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
               </Text>
               <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
-                {isTournamentList ? "Find and join exciting tournaments near you" : "Find and join exciting games near you"}
+                {isTournamentList ? "Find and join tournaments nearby" : "Find and join games nearby"}
               </Text>
             </View>
           </View>

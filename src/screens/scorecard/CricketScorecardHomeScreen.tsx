@@ -207,7 +207,7 @@ export default function CricketScorecardHomeScreen() {
         </Pressable>
         <View className="flex-1">
           <Text className="text-2xl font-bold text-ink">Cricket</Text>
-          <Text className="text-muted text-sm mt-0.5">Track and manage all your matches</Text>
+          <Text className="text-muted text-sm mt-0.5">Track and manage matches</Text>
         </View>
         <Pressable
           onPress={() => navigation.navigate("NewMatch")}

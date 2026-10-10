@@ -218,7 +218,7 @@ export default function VenuesListScreen() {
               Venues
             </Text>
             <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
-              Find and book great venues near you
+              Find and book venues nearby
             </Text>
           </View>
         </View>

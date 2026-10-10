@@ -231,7 +231,7 @@ export default function CreateSquadScreen() {
             Create Group
           </Text>
           <Text className="text-muted" style={{ fontSize: 13, marginTop: 1 }}>
-            Build your team and find amazing players
+            Build a team, find players
           </Text>
         </View>
         <Pressable onPress={handleCreate} disabled={createSquad.isPending} style={primaryButtonShadow}>
