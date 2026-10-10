@@ -504,7 +504,7 @@ export default function GamesListScreen() {
               <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
                 {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
               </Text>
-              <Text style={{ fontSize: 12.5, marginTop: 1, color: "#8FD9AE" }} numberOfLines={1}>
+              <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
                 {isTournamentList ? "Find and join exciting tournaments near you" : "Find and join exciting games near you"}
               </Text>
             </View>

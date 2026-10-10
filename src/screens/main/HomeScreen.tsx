@@ -247,7 +247,7 @@ export default function HomeScreen() {
                 </Text>
                 <WavingHandIcon size={22} />
               </View>
-              <Text style={{ fontSize: 14, color: "#8FD9AE", marginTop: 2 }}>What are you playing today?</Text>
+              <Text style={{ fontSize: 14, color: "white", marginTop: 2 }}>What are you playing today?</Text>
             </View>
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10 }}>

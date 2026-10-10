@@ -124,7 +124,7 @@ export default function CommunityBanner({ width }: { width: number }) {
         >
           HitLit Community
         </Text>
-        <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "#8FD9AE" }}>
+        <Text style={{ position: "absolute", left: 17, top: 43, fontSize: 11.5, lineHeight: 15, color: "white" }}>
           {"Create Join Explore\nGroups & Games!"}
         </Text>
 
@@ -135,7 +135,7 @@ export default function CommunityBanner({ width }: { width: number }) {
 
         {/* Tagline */}
         <View pointerEvents="none" style={{ position: "absolute", right: 9, top: 8, transform: [{ rotate: "-9deg" }] }}>
-          <Text style={{ fontSize: 12, lineHeight: 13.5, fontStyle: "italic", fontWeight: "700", color: "#8FD9AE" }}>
+          <Text style={{ fontSize: 12, lineHeight: 13.5, fontStyle: "italic", fontWeight: "700", color: "white" }}>
             {"More\nSports\nMore Friends"}
           </Text>
           <Svg width={62} height={6} viewBox="0 0 62 6" style={{ marginTop: 0 }}>

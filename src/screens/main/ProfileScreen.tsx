@@ -271,22 +271,22 @@ export default function ProfileScreen() {
               <Ionicons name="checkmark-circle" size={17} color="#4ADE80" />
             </View>
             <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
-              <Ionicons name="pricetag-outline" size={12} color="#8FD9AE" />
-              <Text style={{ color: "#8FD9AE" }} className="text-sm" numberOfLines={1}>
+              <Ionicons name="pricetag-outline" size={12} color="white" />
+              <Text style={{ color: "white" }} className="text-sm" numberOfLines={1}>
                 ID: {profile?.user_code ?? "—"}
               </Text>
-              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="#8FD9AE" />
+              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="white" />
             </Pressable>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="calendar-outline" size={12} color="#8FD9AE" />
-                <Text style={{ color: "#8FD9AE" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
+                <Ionicons name="calendar-outline" size={12} color="white" />
+                <Text style={{ color: "white" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
             {(followState?.followerCount ?? 0) > 0 && (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="people-outline" size={12} color="#8FD9AE" />
-                <Text style={{ color: "#8FD9AE" }} className="text-xs">
+                <Ionicons name="people-outline" size={12} color="white" />
+                <Text style={{ color: "white" }} className="text-xs">
                   {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
                 </Text>
               </View>

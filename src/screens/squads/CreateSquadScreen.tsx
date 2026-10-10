@@ -303,7 +303,7 @@ export default function CreateSquadScreen() {
               ))}
             </View>
             <View style={{ width: 78, transform: [{ rotate: "-9deg" }] }}>
-              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "#8FD9AE" }}>
+              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "white" }}>
                 {"More\nPlayers\nMore Fun!"}
               </Text>
               <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#8FD9AE", marginTop: 1 }} />

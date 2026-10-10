@@ -217,7 +217,7 @@ export default function VenuesListScreen() {
             <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
               Venues
             </Text>
-            <Text style={{ fontSize: 12.5, marginTop: 1, color: "#8FD9AE" }} numberOfLines={1}>
+            <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
               Find and book great venues near you
             </Text>
           </View>
