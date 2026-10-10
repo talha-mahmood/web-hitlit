@@ -1,5 +1,5 @@
 import { Children, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput, Share } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput, Share, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -363,6 +363,7 @@ export default function LiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const { data: match, isLoading } = useCricketMatch(params.matchId);
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingBallCount = useCricketPendingCount(params.matchId);
@@ -963,34 +964,7 @@ export default function LiveScoringScreen() {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between mt-2 mb-3">
-              <Pressable
-                onPress={() => setPanel("OVERS_FORMAT")}
-                className="flex-row items-center rounded-full px-2.5 py-1.5"
-                style={{ gap: 6, backgroundColor: "#111827" }}
-              >
-                <Text className="text-white font-bold text-xs">{inningsState?.wickets ?? 0}</Text>
-                <Ionicons name="settings-outline" size={13} color="white" />
-              </Pressable>
-              <View className="flex-row" style={{ gap: 10 }}>
-                <Pressable
-                  onPress={() => setPanel("SETTINGS")}
-                  className="items-center justify-center rounded-full"
-                  style={{ width: 34, height: 34, backgroundColor: "#111827" }}
-                >
-                  <Ionicons name="volume-mute-outline" size={16} color="white" />
-                </Pressable>
-                <Pressable
-                  onPress={handleShare}
-                  className="items-center justify-center rounded-full"
-                  style={{ width: 34, height: 34, backgroundColor: "#111827" }}
-                >
-                  <Ionicons name="share-social-outline" size={16} color="white" />
-                </Pressable>
-              </View>
-            </View>
-
-            <View className="flex-row items-center justify-center flex-wrap" style={{ gap: 18 }}>
+            <View className="flex-row items-center justify-center flex-wrap mt-2" style={{ gap: 18 }}>
               <Text className="text-muted text-sm">Extras - {extrasTotal}</Text>
               <Text className="text-muted text-sm">
                 Overs - {formatOvers(inningsState?.legalBalls ?? 0)} / {match.overs_limit}
@@ -1342,6 +1316,7 @@ export default function LiveScoringScreen() {
                       { label: "Change Target", onPress: handleOpenChangeTarget },
                       { label: "Overs/Format/Wickets", onPress: () => setPanel("OVERS_FORMAT") },
                       { label: "Settings", onPress: () => setPanel("SETTINGS") },
+                      { label: "Share Match", onPress: handleShare },
                     ] as { label: string; onPress: () => void; disabled?: boolean }[]).map((item) => (
                       <Pressable
                         key={item.label}
@@ -1659,47 +1634,51 @@ export default function LiveScoringScreen() {
           })()}
         </ScrollView>
       ) : (
-        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-          <View className="bg-white rounded-2xl border border-border p-3.5" style={cardShadow}>
-            <ScrollView
-              ref={recentBallsScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              onContentSizeChange={() => recentBallsScrollRef.current?.scrollToEnd({ animated: true })}
-            >
-              <View className="flex-row items-start" style={{ gap: 14 }}>
-                {(ballsByOver.length > 0 ? ballsByOver : [[]]).map((over, overIndex) => (
-                  <View key={overIndex} className="items-start">
-                    <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
-                    <View className="flex-row items-center" style={{ gap: 8 }}>
-                      {Array.from({ length: Math.max(6, over.length) }).map((_, i) => {
-                        const b = over[i];
-                        if (!b) {
-                          return (
-                            <View key={i} className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}>
-                              <Text className="text-muted text-xs font-bold">-</Text>
-                            </View>
-                          );
-                        }
+        <View className="flex-1" style={{ paddingTop: 16, paddingBottom: 24 }}>
+          {/* One over per full-screen-width page — pagingEnabled snaps so
+              exactly one over is ever visible at a time, with no balls from
+              the previous or next over peeking in at the edges. */}
+          <ScrollView
+            ref={recentBallsScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onContentSizeChange={() =>
+              recentBallsScrollRef.current?.scrollTo({ x: (ballsByOver.length - 1) * screenWidth, animated: true })
+            }
+          >
+            {(ballsByOver.length > 0 ? ballsByOver : [[]]).map((over, overIndex) => (
+              <View key={overIndex} style={{ width: screenWidth, paddingHorizontal: 16 }}>
+                <View className="bg-white rounded-2xl border border-border p-3.5" style={cardShadow}>
+                  <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    {Array.from({ length: Math.max(6, over.length) }).map((_, i) => {
+                      const b = over[i];
+                      if (!b) {
                         return (
-                          <View
-                            key={i}
-                            className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
-                            style={{ width: 34, height: 34 }}
-                          >
-                            <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
-                              {ballLabel(b)}
-                            </Text>
+                          <View key={i} className="items-center justify-center rounded-full" style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}>
+                            <Text className="text-muted text-xs font-bold">-</Text>
                           </View>
                         );
-                      })}
-                    </View>
+                      }
+                      return (
+                        <View
+                          key={i}
+                          className={`items-center justify-center rounded-full ${b.isWicket ? "bg-red-500" : b.extraType ? "bg-yellow-100" : "bg-gray-100"}`}
+                          style={{ width: 34, height: 34 }}
+                        >
+                          <Text className={`text-xs font-bold ${b.isWicket ? "text-white" : "text-ink"}`}>
+                            {ballLabel(b)}
+                          </Text>
+                        </View>
+                      );
+                    })}
                   </View>
-                ))}
+                </View>
               </View>
-            </ScrollView>
-          </View>
-        </ScrollView>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       {selectBatsmanOpen && (
