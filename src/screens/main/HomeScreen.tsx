@@ -231,10 +231,10 @@ export default function HomeScreen() {
             {profile?.avatar ? (
               <Image
                 source={{ uri: profile.avatar }}
-                className="w-16 h-16 rounded-full bg-primary-light border-[3px] border-[#8FD9AE]"
+                className="w-16 h-16 rounded-full bg-primary-light"
               />
             ) : (
-              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center border-[3px] border-[#8FD9AE]">
+              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center">
                 <Text className="text-xl font-bold text-primary">
                   {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
                 </Text>
