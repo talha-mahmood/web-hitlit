@@ -411,6 +411,7 @@ export default function LiveScoringScreen() {
   const ABANDON_WAIT_SECONDS = 4;
   const [abandonCountdown, setAbandonCountdown] = useState(ABANDON_WAIT_SECONDS);
   const recentBallsScrollRef = useRef<ScrollView>(null);
+  const mainOverScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (dialog !== "ABANDON") return;
@@ -1096,30 +1097,44 @@ export default function LiveScoringScreen() {
                   </View>
                 )}
 
-                {/* Current over so far — the most recent ball highlighted,
-                    same balls the Balls tab's full log shows. */}
-                {(() => {
-                  const currentOver = ballsByOver[ballsByOver.length - 1] ?? [];
-                  if (currentOver.length === 0) return null;
-                  return (
-                    <View className="flex-row flex-wrap mt-4" style={{ gap: 8 }}>
-                      {currentOver.map((b, i) => {
-                        const isLast = i === currentOver.length - 1;
-                        return (
-                          <View
-                            key={i}
-                            className="items-center justify-center rounded-full"
-                            style={{ width: 32, height: 32, backgroundColor: isLast ? "#2563EB" : "#E5E7EB" }}
-                          >
-                            <Text className="font-bold text-xs" style={{ color: isLast ? "white" : colors.ink }}>
-                              {ballLabel(b)}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  );
-                })()}
+                {/* Overs so far — same one-over-per-page swipe as the Balls
+                    tab: exactly one over visible at a time, no balls from
+                    the previous or next over peeking in. Starts on the
+                    current over, with its most recent ball highlighted. */}
+                {ballsByOver.length > 0 && (
+                  <ScrollView
+                    ref={mainOverScrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    className="mt-4"
+                    onContentSizeChange={() =>
+                      mainOverScrollRef.current?.scrollTo({ x: (ballsByOver.length - 1) * (screenWidth - 32), animated: true })
+                    }
+                  >
+                    {ballsByOver.map((over, overIndex) => (
+                      <View key={overIndex} style={{ width: screenWidth - 32 }}>
+                        <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
+                        <View className="flex-row" style={{ gap: 8 }}>
+                          {over.map((b, i) => {
+                            const isLast = i === over.length - 1;
+                            return (
+                              <View
+                                key={i}
+                                className="items-center justify-center rounded-full"
+                                style={{ width: 32, height: 32, backgroundColor: isLast ? "#2563EB" : "#E5E7EB" }}
+                              >
+                                <Text className="font-bold text-xs" style={{ color: isLast ? "white" : colors.ink }}>
+                                  {ballLabel(b)}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
               </>
             )}
           </ScrollView>
