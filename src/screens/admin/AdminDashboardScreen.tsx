@@ -191,6 +191,15 @@ export default function AdminDashboardScreen() {
   const menuItems = [
     { key: "dashboard", icon: "grid-outline" as const, label: "Dashboard", onPress: () => setMenuOpen(false) },
     {
+      key: "editDetails",
+      icon: "create-outline" as const,
+      label: "Edit Venue Details",
+      onPress: () => {
+        setMenuOpen(false);
+        navigation.navigate("EditVenueDetails", { venueId: params.venueId });
+      },
+    },
+    {
       key: "bookings",
       icon: "calendar-outline" as const,
       label: "Bookings",

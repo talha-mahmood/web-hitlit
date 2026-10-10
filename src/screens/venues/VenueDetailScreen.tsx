@@ -9,6 +9,8 @@ import {
   useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Linking,
+  Alert,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,6 +26,15 @@ import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator
 type VenueDetailParams = { VenueDetail: { venueId: string; forGameId?: string } };
 type VenueDetailNav = NativeStackNavigationProp<VenuesStackParamList, "VenueDetail">;
 
+// Local Pakistani mobile numbers are entered as 03XXXXXXXXX in the admin
+// panel — wa.me needs the international form instead, without the leading
+// 0 and prefixed with the country code.
+function toWhatsAppUrl(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  const international = digits.startsWith("0") ? `92${digits.slice(1)}` : digits;
+  return `https://wa.me/${international}`;
+}
+
 export default function VenueDetailScreen() {
   const { params } = useRoute<RouteProp<VenueDetailParams, "VenueDetail">>();
   const navigation = useNavigation<VenueDetailNav>();
@@ -31,6 +42,16 @@ export default function VenueDetailScreen() {
   const [activeImage, setActiveImage] = useState(0);
 
   const { data: venue, isLoading } = useVenueDetail(params.venueId);
+
+  const handleOpenWhatsApp = async (number: string) => {
+    const url = toWhatsAppUrl(number);
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert("WhatsApp Not Available", "WhatsApp isn't installed on this device.");
+      return;
+    }
+    Linking.openURL(url);
+  };
 
   const onScrollImages = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -133,6 +154,28 @@ export default function VenueDetailScreen() {
             <Text className="text-muted">
               {venue.start_time} - {venue.end_time}
             </Text>
+          </View>
+        )}
+
+        {venue.whatsapp_number && (
+          <View className="mt-4">
+            <Text className="text-ink font-bold text-base mb-2">Book Venue Here</Text>
+            <Pressable
+              onPress={() => handleOpenWhatsApp(venue.whatsapp_number as string)}
+              className="flex-row items-center rounded-2xl px-4 py-3"
+              style={{ backgroundColor: colors.primaryLight, gap: 10 }}
+            >
+              <View
+                className="items-center justify-center rounded-full bg-white"
+                style={{ width: 38, height: 38 }}
+              >
+                <Ionicons name="logo-whatsapp" size={20} color={colors.primaryDark} />
+              </View>
+              <Text className="font-bold flex-1" style={{ color: colors.primaryDark, fontSize: 15.5 }}>
+                {venue.whatsapp_number}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+            </Pressable>
           </View>
         )}
 

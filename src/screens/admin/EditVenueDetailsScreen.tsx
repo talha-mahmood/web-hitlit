@@ -40,6 +40,7 @@ export default function EditVenueDetailsScreen() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [rulesAndPolicies, setRulesAndPolicies] = useState("");
   const [isactive, setIsactive] = useState(true);
   const [latitude, setLatitude] = useState("");
@@ -56,6 +57,7 @@ export default function EditVenueDetailsScreen() {
       setStartTime(venue.start_time?.slice(0, 5) ?? "");
       setEndTime(venue.end_time?.slice(0, 5) ?? "");
       setContactPhone(venue.contact_phone ?? "");
+      setWhatsappNumber(venue.whatsapp_number ?? "");
       setRulesAndPolicies(venue.rules_and_policies ?? "");
       setIsactive(venue.isactive);
       setLatitude(venue.latitude != null ? String(venue.latitude) : "");
@@ -111,6 +113,7 @@ export default function EditVenueDetailsScreen() {
         start_time: startTime || null,
         end_time: endTime || null,
         contact_phone: contactPhone.trim() || null,
+        whatsapp_number: whatsappNumber.trim() || null,
         rules_and_policies: rulesAndPolicies.trim() || null,
         isactive,
         latitude: trimmedLat ? Number(trimmedLat) : null,
@@ -260,6 +263,16 @@ export default function EditVenueDetailsScreen() {
         <FieldInput
           value={contactPhone}
           onChangeText={setContactPhone}
+          placeholder="e.g. 03001234567"
+          keyboardType="phone-pad"
+          containerStyle={{ marginBottom: 16 }}
+          maxLength={20}
+        />
+
+        <Text className="text-muted text-xs font-semibold mb-1.5">WhatsApp Number</Text>
+        <FieldInput
+          value={whatsappNumber}
+          onChangeText={setWhatsappNumber}
           placeholder="e.g. 03001234567"
           keyboardType="phone-pad"
           containerStyle={{ marginBottom: 16 }}

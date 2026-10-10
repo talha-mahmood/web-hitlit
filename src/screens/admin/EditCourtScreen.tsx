@@ -33,7 +33,6 @@ import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import GradientFill from "../../components/GradientFill";
-import LocationPickerField from "../../components/LocationPickerField";
 import SelectDropdownField from "../../components/SelectDropdownField";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -451,11 +450,6 @@ export default function EditCourtScreen() {
           style={{ height: 80, textAlignVertical: "top" }}
           containerStyle={{ marginBottom: 16 }}
         />
-
-        <Text className="text-muted text-xs font-semibold mb-1.5">Location (optional)</Text>
-        <View style={{ marginBottom: 16 }}>
-          <LocationPickerField value={location} onChange={setLocation} placeholder="e.g. Ground Floor, Block C" />
-        </View>
 
         <View className="flex-row items-center justify-between border border-border rounded-xl px-4 py-3">
           <View className="flex-1 mr-3">

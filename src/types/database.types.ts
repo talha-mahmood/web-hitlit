@@ -3251,6 +3251,7 @@ export type Database = {
           start_time: string | null
           updated_at: string
           venue_owner_id: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           address?: string | null
@@ -3272,6 +3273,7 @@ export type Database = {
           start_time?: string | null
           updated_at?: string
           venue_owner_id?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           address?: string | null
@@ -3293,6 +3295,7 @@ export type Database = {
           start_time?: string | null
           updated_at?: string
           venue_owner_id?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -3656,3 +3659,4 @@ export const Constants = {
     },
   },
 } as const
+

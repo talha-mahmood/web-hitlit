@@ -20,6 +20,7 @@ export type VenueUpdateInput = Partial<
     | "latitude"
     | "longitude"
     | "contact_phone"
+    | "whatsapp_number"
     | "rules_and_policies"
   >
 >;
