@@ -888,10 +888,6 @@ export default function LiveScoringScreen() {
         className="overflow-hidden"
         style={{ paddingTop: insets.top + 12, paddingBottom: 4 }}
       >
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,255,255,0.06)", top: -80, right: -50 }}
-        />
         <View className="flex-row items-center px-4" style={{ gap: 10 }}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
             <Ionicons name="arrow-back" size={22} color="white" />
