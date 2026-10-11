@@ -19,6 +19,9 @@ import MentionComposer from "../../components/MentionComposer";
 import MentionText from "../../components/MentionText";
 import type { Mention } from "../../lib/mentionParser";
 import { shareComment } from "../../lib/commentShareLink";
+import PollCreateModal from "../../components/PollCreateModal";
+import PollMessageCard from "../../components/PollMessageCard";
+import { useCreatePoll } from "../../hooks/usePolls";
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -46,6 +49,7 @@ function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: stri
 function CommentCard({
   comment,
   isOwn,
+  viewerId,
   onReply,
   onEdit,
   onDelete,
@@ -54,6 +58,7 @@ function CommentCard({
 }: {
   comment: CommunityComment;
   isOwn: boolean;
+  viewerId: string | undefined;
   onReply: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -94,7 +99,13 @@ function CommentCard({
             {formatCommunityTimeAgo(comment.created_at)}
             {isEdited ? " · Edited" : ""}
           </Text>
-          <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
+          {comment.poll_id ? (
+            <View className="mt-2">
+              <PollMessageCard pollId={comment.poll_id} fallbackQuestion={comment.body} viewerId={viewerId} fullWidth />
+            </View>
+          ) : (
+            <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
+          )}
           <View className="flex-row items-center mt-3" style={{ gap: 18 }}>
             <Pressable onPress={onToggleLike} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
               <Ionicons
@@ -136,12 +147,14 @@ export default function CommunityChatContent({
   // null = no age filter (show everything the 6-month retention still has).
   const [dayFilter, setDayFilter] = useState<1 | 2 | 3 | null>(null);
   const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
+  const [pollModalOpen, setPollModalOpen] = useState(false);
 
   const { data: comments, isLoading, error } = useCommunityFeed(userId);
   const postComment = usePostComment();
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
   const toggleLike = useToggleCommentLike();
+  const createPoll = useCreatePoll();
 
   const visibleComments = useMemo(() => {
     if (!dayFilter) return comments ?? [];
@@ -154,6 +167,23 @@ export default function CommunityChatContent({
     postComment.mutate(
       { userId, body, mentions },
       { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post comment.")) }
+    );
+  };
+
+  const handleCreatePoll = (question: string, options: string[]) => {
+    if (!userId) return;
+    createPoll.mutate(
+      { question, options, createdBy: userId },
+      {
+        onSuccess: (pollId) => {
+          setPollModalOpen(false);
+          postComment.mutate(
+            { userId, body: `📊 ${question}`, pollId },
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post the poll.")) }
+          );
+        },
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not create the poll.")),
+      }
     );
   };
 
@@ -201,6 +231,7 @@ export default function CommunityChatContent({
         dropdownPosition="below"
         onSend={handleSend}
         sending={postComment.isPending}
+        onPressPoll={() => setPollModalOpen(true)}
         editing={
           editingComment
             ? { messageId: editingComment.id, initialBody: editingComment.body, initialMentions: editingComment.mentions }
@@ -263,6 +294,7 @@ export default function CommunityChatContent({
             <CommentCard
               comment={item}
               isOwn={item.user_id === userId}
+              viewerId={userId}
               onReply={() => onReply(item.id)}
               onEdit={() => setEditingComment(item)}
               onDelete={() => handleDelete(item)}
@@ -272,6 +304,13 @@ export default function CommunityChatContent({
           )}
         />
       )}
+
+      <PollCreateModal
+        visible={pollModalOpen}
+        onClose={() => setPollModalOpen(false)}
+        onCreate={handleCreatePoll}
+        creating={createPoll.isPending || postComment.isPending}
+      />
     </View>
   );
 }

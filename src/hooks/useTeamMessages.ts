@@ -52,8 +52,8 @@ export function useTeamMessages(teamId: string) {
 
 export function useSendTeamMessage(teamId: string) {
   return useMutation({
-    mutationFn: ({ senderId, message, parentId }: { senderId: string; message: string; parentId?: string }) =>
-      sendTeamMessage(teamId, senderId, message, parentId),
+    mutationFn: ({ senderId, message, parentId, pollId }: { senderId: string; message: string; parentId?: string; pollId?: string }) =>
+      sendTeamMessage(teamId, senderId, message, parentId, pollId),
   });
 }
 

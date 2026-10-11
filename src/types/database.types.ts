@@ -308,6 +308,7 @@ export type Database = {
           id: string
           mentions: Json
           parent_id: string | null
+          poll_id: string | null
           root_id: string | null
           updated_at: string
           user_id: string
@@ -318,6 +319,7 @@ export type Database = {
           id?: string
           mentions?: Json
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           updated_at?: string
           user_id: string
@@ -328,6 +330,7 @@ export type Database = {
           id?: string
           mentions?: Json
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           updated_at?: string
           user_id?: string
@@ -338,6 +341,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
             referencedColumns: ["id"]
           },
           {
@@ -1114,6 +1124,7 @@ export type Database = {
           id: string
           message: string
           parent_id: string | null
+          poll_id: string | null
           root_id: string | null
           sender_id: string
           updated_at: string
@@ -1125,6 +1136,7 @@ export type Database = {
           id?: string
           message: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id: string
           updated_at?: string
@@ -1136,6 +1148,7 @@ export type Database = {
           id?: string
           message?: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id?: string
           updated_at?: string
@@ -1153,6 +1166,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "game_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_messages_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
             referencedColumns: ["id"]
           },
           {
@@ -1894,6 +1914,110 @@ export type Database = {
           },
         ]
       }
+      poll_options: {
+        Row: {
+          display_order: number
+          id: string
+          option_text: string
+          poll_id: string
+        }
+        Insert: {
+          display_order?: number
+          id?: string
+          option_text: string
+          poll_id: string
+        }
+        Update: {
+          display_order?: number
+          id?: string
+          option_text?: string
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+          voter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+          voter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          question: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          question: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polls_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -2225,6 +2349,7 @@ export type Database = {
           id: string
           message: string
           parent_id: string | null
+          poll_id: string | null
           root_id: string | null
           sender_id: string
           squad_id: string
@@ -2236,6 +2361,7 @@ export type Database = {
           id?: string
           message: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id: string
           squad_id: string
@@ -2247,6 +2373,7 @@ export type Database = {
           id?: string
           message?: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id?: string
           squad_id?: string
@@ -2258,6 +2385,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "squad_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_messages_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
             referencedColumns: ["id"]
           },
           {
@@ -2501,6 +2635,7 @@ export type Database = {
           id: string
           message: string
           parent_id: string | null
+          poll_id: string | null
           root_id: string | null
           sender_id: string
           team_id: string
@@ -2512,6 +2647,7 @@ export type Database = {
           id?: string
           message: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id: string
           team_id: string
@@ -2523,6 +2659,7 @@ export type Database = {
           id?: string
           message?: string
           parent_id?: string | null
+          poll_id?: string | null
           root_id?: string | null
           sender_id?: string
           team_id?: string
@@ -2534,6 +2671,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "team_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_messages_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
             referencedColumns: ["id"]
           },
           {
@@ -3324,6 +3468,7 @@ export type Database = {
       accept_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
       accept_squad_invite: { Args: { p_invite_id: string }; Returns: undefined }
       accept_team_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      can_view_poll: { Args: { p_poll_id: string }; Returns: boolean }
       create_notification: {
         Args: {
           p_body: string
@@ -3668,4 +3813,3 @@ export const Constants = {
     },
   },
 } as const
-

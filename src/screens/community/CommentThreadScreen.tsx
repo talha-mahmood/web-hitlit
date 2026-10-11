@@ -33,6 +33,7 @@ import MentionComposer from "../../components/MentionComposer";
 import MentionText from "../../components/MentionText";
 import type { Mention } from "../../lib/mentionParser";
 import { shareComment } from "../../lib/commentShareLink";
+import PollMessageCard from "../../components/PollMessageCard";
 
 type Route = RouteProp<CommunityStackParamList, "CommentThread">;
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommentThread">;
@@ -64,6 +65,7 @@ function CommentBubble({
   comment,
   isOwn,
   isRoot,
+  viewerId,
   onReply,
   onEdit,
   onDelete,
@@ -75,6 +77,7 @@ function CommentBubble({
   comment: CommunityComment;
   isOwn: boolean;
   isRoot: boolean;
+  viewerId: string | undefined;
   onReply: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -123,7 +126,13 @@ function CommentBubble({
             {formatCommunityTimeAgo(comment.created_at)}
             {isEdited ? " · Edited" : ""}
           </Text>
-          <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
+          {comment.poll_id ? (
+            <View className="mt-2">
+              <PollMessageCard pollId={comment.poll_id} fallbackQuestion={comment.body} viewerId={viewerId} fullWidth />
+            </View>
+          ) : (
+            <MentionText body={comment.body} mentions={comment.mentions} className="text-ink text-sm mt-2" />
+          )}
           <View className="flex-row items-center mt-2.5" style={{ gap: 18 }}>
             <Pressable onPress={onToggleLike} className="flex-row items-center" style={{ gap: 5 }} hitSlop={8}>
               <Ionicons
@@ -296,6 +305,7 @@ export default function CommentThreadScreen() {
               comment={root}
               isOwn={root.user_id === userId}
               isRoot
+              viewerId={userId}
               onReply={() => startReply(root.id, root.profiles?.full_name ?? "this comment")}
               onEdit={() => startEdit(root)}
               onDelete={() => handleDelete(root)}
@@ -310,6 +320,7 @@ export default function CommentThreadScreen() {
                 comment={item}
                 isOwn={item.user_id === userId}
                 isRoot={false}
+                viewerId={userId}
                 onReply={() => startReply(item.id, item.profiles?.full_name ?? "this reply")}
                 onEdit={() => startEdit(item)}
                 onDelete={() => handleDelete(item)}

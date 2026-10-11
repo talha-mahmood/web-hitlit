@@ -82,12 +82,14 @@ export function usePostComment() {
       body,
       mentions,
       parentId,
+      pollId,
     }: {
       userId: string;
       body: string;
       mentions?: Mention[];
       parentId?: string;
-    }) => postComment(userId, body, mentions ?? [], parentId),
+      pollId?: string;
+    }) => postComment(userId, body, mentions ?? [], parentId, pollId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["communityFeed"] });
       qc.invalidateQueries({ queryKey: ["commentThread"] });

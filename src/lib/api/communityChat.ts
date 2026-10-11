@@ -6,7 +6,7 @@ type CommentRow = Database["public"]["Tables"]["community_comments"]["Row"];
 
 export type CommunityComment = Pick<
   CommentRow,
-  "id" | "user_id" | "parent_id" | "root_id" | "body" | "created_at" | "updated_at"
+  "id" | "user_id" | "parent_id" | "root_id" | "body" | "created_at" | "updated_at" | "poll_id"
 > & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   likeCount: number;
@@ -21,7 +21,7 @@ export type CommunityComment = Pick<
 // relationship was found" error. Naming the FK constraint picks the direct
 // one explicitly.
 const COMMENT_SELECT =
-  "id, user_id, parent_id, root_id, body, created_at, updated_at, mentions, profiles!community_comments_user_id_fkey(id, full_name, avatar)";
+  "id, user_id, parent_id, root_id, body, created_at, updated_at, poll_id, mentions, profiles!community_comments_user_id_fkey(id, full_name, avatar)";
 
 // mentions comes back from PostgREST as plain jsonb — cast once, here,
 // rather than at every call site.
@@ -92,11 +92,12 @@ export async function postComment(
   userId: string,
   body: string,
   mentions: Mention[] = [],
-  parentId?: string
+  parentId?: string,
+  pollId?: string
 ): Promise<void> {
   const { error } = await supabase
     .from("community_comments")
-    .insert({ user_id: userId, body, mentions: mentions as unknown as Json, parent_id: parentId ?? null });
+    .insert({ user_id: userId, body, mentions: mentions as unknown as Json, parent_id: parentId ?? null, poll_id: pollId ?? null });
   if (error) throw new Error(error.message);
 }
 

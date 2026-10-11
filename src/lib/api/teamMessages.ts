@@ -7,13 +7,13 @@ type TeamMessageRow = Database["public"]["Tables"]["team_messages"]["Row"];
 
 export type TeamMessage = Pick<
   TeamMessageRow,
-  "id" | "team_id" | "sender_id" | "message" | "created_at" | "parent_id" | "deleted_at"
+  "id" | "team_id" | "sender_id" | "message" | "created_at" | "parent_id" | "deleted_at" | "poll_id"
 > & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
 };
 
 const MESSAGE_SELECT =
-  "id, team_id, sender_id, message, created_at, parent_id, deleted_at, profiles(id, full_name, avatar)";
+  "id, team_id, sender_id, message, created_at, parent_id, deleted_at, poll_id, profiles(id, full_name, avatar)";
 
 // One flat, chronological list — replies show inline (WhatsApp-style, with
 // a quoted preview of the message they're replying to) rather than in a
@@ -34,11 +34,12 @@ export async function sendTeamMessage(
   teamId: string,
   senderId: string,
   message: string,
-  parentId?: string
+  parentId?: string,
+  pollId?: string
 ): Promise<void> {
   const { error } = await supabase
     .from("team_messages")
-    .insert({ team_id: teamId, sender_id: senderId, message, parent_id: parentId ?? null });
+    .insert({ team_id: teamId, sender_id: senderId, message, parent_id: parentId ?? null, poll_id: pollId ?? null });
   if (error) throw new Error(error.message);
 }
 
@@ -104,6 +105,7 @@ export function subscribeToTeamMessages(
           created_at: row.created_at,
           parent_id: row.parent_id,
           deleted_at: row.deleted_at,
+          poll_id: row.poll_id,
           profiles: data ?? null,
         });
       }
@@ -121,6 +123,7 @@ export function subscribeToTeamMessages(
           created_at: row.created_at,
           parent_id: row.parent_id,
           deleted_at: row.deleted_at,
+          poll_id: row.poll_id,
           profiles: null,
         });
       }

@@ -384,7 +384,7 @@ export default function LiveScoringScreen() {
   // reuse the extra-type values they already submit through; the rest are
   // Match-Centre-only panels (More menu, Bonus/More Runs, Retired Hurt, …).
   const [panel, setPanel] = useState<
-    ExtraType | "WICKET" | "MORE_RUNS" | "BONUS_RUNS" | "MORE_MENU" | "RETIRED_HURT" | "PENALTY_TEAM" | "CHANGE_TARGET" | "OVERS_FORMAT" | "SETTINGS" | null
+    ExtraType | "WICKET" | "MORE_RUNS" | "BONUS_RUNS" | "MORE_MENU" | "RETIRED_HURT" | "PENALTY_TEAM" | "CHANGE_TARGET" | null
   >(null);
   const [wicketType, setWicketType] = useState<WicketType | null>(null);
   const [wicketEnd, setWicketEnd] = useState<"striker" | "nonStriker" | null>(null);
@@ -400,9 +400,6 @@ export default function LiveScoringScreen() {
   const [benchedNames, setBenchedNames] = useState<Set<string>>(new Set());
   const [changeTargetDraft, setChangeTargetDraft] = useState("");
   const [revisedOversDraft, setRevisedOversDraft] = useState("");
-  const [oversDraft, setOversDraft] = useState("");
-  const [formatDraft, setFormatDraft] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
-  const [venueDraft, setVenueDraft] = useState("");
   // Centered confirm-card dialogs (Abandon/End Innings/the two "Not Allowed"
   // eligibility messages) — separate from `panel` since these float over
   // everything rather than living in the bottom sheet.
@@ -872,31 +869,6 @@ export default function LiveScoringScreen() {
   const handleApplyDLTarget = () => {
     if (!dlPreview) return;
     setChangeTargetDraft(String(dlPreview.target));
-  };
-
-  const handleSaveOversFormat = () => {
-    const overs = parseInt(oversDraft, 10);
-    const updates: Parameters<typeof updateSettings.mutate>[0] = {};
-    if (overs > 0) updates.oversLimit = overs;
-    if (formatDraft) updates.format = formatDraft;
-    if (Object.keys(updates).length === 0) {
-      setPanel(null);
-      return;
-    }
-    updateSettings.mutate(updates, {
-      onSuccess: () => setPanel(null),
-      onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not update match settings.")),
-    });
-  };
-
-  const handleSaveVenue = () => {
-    updateSettings.mutate(
-      { venue: venueDraft.trim() || null },
-      {
-        onSuccess: () => setPanel(null),
-        onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not update the venue.")),
-      }
-    );
   };
 
   const toggleBench = (name: string) => {
@@ -1426,8 +1398,6 @@ export default function LiveScoringScreen() {
                       { label: "Retired Hurt", onPress: () => setPanel("RETIRED_HURT") },
                       { label: "D / L", onPress: handleOpenDL },
                       { label: "Change Target", onPress: handleOpenChangeTarget },
-                      { label: "Overs/Format/Wickets", onPress: () => setPanel("OVERS_FORMAT") },
-                      { label: "Settings", onPress: () => setPanel("SETTINGS") },
                       { label: "Share Match", onPress: handleShare },
                     ] as { label: string; onPress: () => void; disabled?: boolean }[]).map((item) => (
                       <Pressable
@@ -1541,65 +1511,6 @@ export default function LiveScoringScreen() {
                   </Pressable>
                   {cancelRow}
                 </ScrollView>
-              ) : panel === "OVERS_FORMAT" ? (
-                <>
-                  <Text className="text-white font-bold text-lg mb-4">Overs / Format / Wickets</Text>
-                  <Text className="text-white text-xs mb-1.5" style={{ opacity: 0.85 }}>Overs per innings</Text>
-                  <TextInput
-                    value={oversDraft}
-                    onChangeText={(t) => setOversDraft(t.replace(/[^0-9]/g, ""))}
-                    placeholder={String(match.overs_limit)}
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    keyboardType="number-pad"
-                    className="rounded-xl px-4 py-2.5 text-white font-semibold"
-                    style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
-                  />
-                  <Text className="text-white text-xs mt-3 mb-1.5" style={{ opacity: 0.85 }}>Format</Text>
-                  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                    {(["T10", "T20", "ODI", "Club"] as const).map((f) => (
-                      <Pressable
-                        key={f}
-                        onPress={() => setFormatDraft(f)}
-                        className="rounded-full px-3.5 py-2"
-                        style={{ backgroundColor: (formatDraft ?? match.format) === f ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
-                      >
-                        <Text className="text-white font-semibold text-xs">{f}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Text className="text-white text-xs mt-3" style={{ opacity: 0.7 }}>
-                    Wickets: the innings ends after {Math.max(battingPlayers.length - 1, 0)} wickets ({battingPlayers.length} players on the batting side) — set by the team roster, not editable here.
-                  </Text>
-                  <Pressable
-                    onPress={handleSaveOversFormat}
-                    disabled={updateSettings.isPending}
-                    className="bg-white rounded-xl py-3 items-center mt-4"
-                  >
-                    <Text className="font-bold" style={{ color: colors.primaryDark }}>Save</Text>
-                  </Pressable>
-                  {cancelRow}
-                </>
-              ) : panel === "SETTINGS" ? (
-                <>
-                  <Text className="text-white font-bold text-lg mb-4">Settings</Text>
-                  <Text className="text-white text-xs mb-1.5" style={{ opacity: 0.85 }}>Venue</Text>
-                  <TextInput
-                    value={venueDraft}
-                    onChangeText={setVenueDraft}
-                    placeholder={match.venue ?? "e.g. Karachi Cricket Ground"}
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    className="rounded-xl px-4 py-2.5 text-white font-semibold"
-                    style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
-                  />
-                  <Pressable
-                    onPress={handleSaveVenue}
-                    disabled={updateSettings.isPending}
-                    className="bg-white rounded-xl py-3 items-center mt-4"
-                  >
-                    <Text className="font-bold" style={{ color: colors.primaryDark }}>Save</Text>
-                  </Pressable>
-                  {cancelRow}
-                </>
               ) : panel === "WICKET" && !wicketType ? (
                 <>
                   <Text className="text-white font-bold text-lg mb-4">Wicket</Text>

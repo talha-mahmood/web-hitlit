@@ -43,6 +43,7 @@ export default function MentionComposer({
   onSave,
   onCancelEdit,
   saving,
+  onPressPoll,
 }: {
   avatarName: string | null;
   avatarUrl: string | null;
@@ -56,6 +57,9 @@ export default function MentionComposer({
   onSave?: (body: string, mentions: Mention[]) => void;
   onCancelEdit?: () => void;
   saving?: boolean;
+  // Only the main community feed passes this — polls are feed-level posts
+  // only, not replies inside a comment thread.
+  onPressPoll?: () => void;
 }) {
   const [text, setText] = useState("");
   const [selection, setSelection] = useState({ start: 0, end: 0 });
@@ -144,6 +148,15 @@ export default function MentionComposer({
       )}
       <View className="flex-row items-center px-4 py-3" style={{ gap: 8 }}>
         <Avatar name={avatarName} avatar={avatarUrl} />
+        {onPressPoll && !editing && (
+          <Pressable
+            onPress={onPressPoll}
+            className="items-center justify-center rounded-full"
+            style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="bar-chart-outline" size={17} color={colors.primary} />
+          </Pressable>
+        )}
         <View className="flex-1" style={{ position: "relative" }}>
           <TextInput
             value={text}

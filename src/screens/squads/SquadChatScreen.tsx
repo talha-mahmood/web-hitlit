@@ -27,6 +27,9 @@ import { markSquadChatRead, type SquadMessage } from "../../lib/api/squadMessage
 import ChatIcon from "../../components/ChatIcon";
 import SeenByModal from "../../components/SeenByModal";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import PollCreateModal from "../../components/PollCreateModal";
+import PollMessageCard from "../../components/PollMessageCard";
+import { useCreatePoll } from "../../hooks/usePolls";
 
 const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
 
@@ -103,6 +106,7 @@ function MessageBubble({
   isOwn,
   parent,
   isHighlighted,
+  viewerId,
   onLongPress,
   onReply,
   onDelete,
@@ -113,6 +117,7 @@ function MessageBubble({
   isOwn: boolean;
   parent: SquadMessage | null;
   isHighlighted: boolean;
+  viewerId: string | undefined;
   onLongPress: () => void;
   onReply: () => void;
   onDelete: () => void;
@@ -168,7 +173,9 @@ function MessageBubble({
       <View style={{ maxWidth: "75%" }}>
         {!isOwn && <Text className="text-ink text-sm font-bold mb-1 ml-1">{name}</Text>}
         <View style={{ position: "relative" }}>
-          {isOwn ? (
+          {!isDeleted && message.poll_id ? (
+            <PollMessageCard pollId={message.poll_id} fallbackQuestion={message.message} viewerId={viewerId} />
+          ) : isOwn ? (
             <GradientFill
               className="px-3 py-2 rounded-2xl"
               style={isHighlighted ? { borderWidth: 2, borderColor: colors.warning ?? "#F59E0B" } : undefined}
@@ -220,9 +227,11 @@ export default function SquadChatScreen() {
   const [replyTarget, setReplyTarget] = useState<SquadMessage | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [seenByTarget, setSeenByTarget] = useState<SquadMessage | null>(null);
+  const [pollModalOpen, setPollModalOpen] = useState(false);
 
   const { data: allMessages, isLoading, error } = useSquadMessages(params.squadId);
   const sendMessage = useSendSquadMessage(params.squadId);
+  const createPoll = useCreatePoll();
   const { data: blockedIds } = useBlockedUserIds(userId);
   const reportMessage = useReportMessage();
   const blockUser = useBlockUser(userId);
@@ -297,6 +306,23 @@ export default function SquadChatScreen() {
           Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send message."));
           setDraft(text);
         },
+      }
+    );
+  };
+
+  const handleCreatePoll = (question: string, options: string[]) => {
+    if (!userId) return;
+    createPoll.mutate(
+      { question, options, createdBy: userId },
+      {
+        onSuccess: (pollId) => {
+          setPollModalOpen(false);
+          sendMessage.mutate(
+            { senderId: userId, message: `📊 ${question}`, pollId },
+            { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not post the poll.")) }
+          );
+        },
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not create the poll.")),
       }
     );
   };
@@ -389,6 +415,7 @@ export default function SquadChatScreen() {
               isOwn={item.sender_id === userId}
               parent={item.parent_id ? (messages.find((m) => m.id === item.parent_id) ?? null) : null}
               isHighlighted={item.id === highlightedId}
+              viewerId={userId}
               onReply={() => setReplyTarget(item)}
               onDelete={() => handleDelete(item)}
               onJumpToParent={() => item.parent_id && handleJumpToParent(item.parent_id)}
@@ -478,6 +505,13 @@ export default function SquadChatScreen() {
           ...cardShadow,
         }}
       >
+        <Pressable
+          onPress={() => setPollModalOpen(true)}
+          className="items-center justify-center rounded-full"
+          style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
+        >
+          <Ionicons name="bar-chart-outline" size={19} color={colors.primary} />
+        </Pressable>
         <TextInput
           value={draft}
           onChangeText={setDraft}
@@ -509,6 +543,13 @@ export default function SquadChatScreen() {
         seenBy={seenBy ?? []}
         isLoading={seenByLoading}
         onPressUser={(id) => navigation.navigate("PlayerProfile", { userId: id })}
+      />
+
+      <PollCreateModal
+        visible={pollModalOpen}
+        onClose={() => setPollModalOpen(false)}
+        onCreate={handleCreatePoll}
+        creating={createPoll.isPending || sendMessage.isPending}
       />
     </KeyboardAvoidingView>
   );
