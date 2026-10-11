@@ -94,6 +94,23 @@ export async function fetchMyPendingTeamInvite(gameId: string, userId: string): 
   return data as unknown as TeamInviteWithDetails | null;
 }
 
+// How many pending "Invite Players" invites the *viewer* can see for this
+// team — RLS already scopes this per-viewer (the game host sees every
+// pending invite on their own teams, everyone else only sees invites they
+// personally sent), so this is simply "whatever rows come back", not a
+// client-side filter. Shown on the team card so whoever sent invites can
+// track how many are still outstanding.
+export async function fetchPendingTeamInviteCount(teamId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("tournament_team_invites")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId)
+    .eq("status", "pending")
+    .is("deleted_at", null);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export async function fetchMyPendingSquadInvite(squadId: string, userId: string): Promise<SquadInvite | null> {
   const { data, error } = await supabase
     .from("squad_invites")

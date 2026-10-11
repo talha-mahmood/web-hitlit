@@ -143,6 +143,20 @@ export async function requestToJoinTeam(
   if (error) throw new Error(error.message);
 }
 
+// Host-only (enforced by tournament_teams_update_captain_or_host — a team's
+// own captain can also rename it, but the UI only offers this to the host,
+// per spec). Only offered while the team still has open slots (see
+// TeamCard's canEditTeamName) — not blocked server-side, just a UI choice.
+export async function updateTeamName(teamId: string, name: string): Promise<void> {
+  const { error } = await supabase.from("tournament_teams").update({ name }).eq("id", teamId);
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throw new Error("A team with this name already exists in this tournament. Please choose a different name.");
+    }
+    throw new Error(error.message);
+  }
+}
+
 export async function leaveTeam(teamId: string, userId: string): Promise<void> {
   const { error } = await supabase
     .from("tournament_team_members")

@@ -13,9 +13,10 @@ import {
   useApproveTeam,
   useRejectPendingTeam,
   useRemoveTeamMember,
+  useUpdateTeamName,
 } from "../../hooks/useTournamentTeams";
 import { useSquadFillTournamentTeam } from "../../hooks/useSquadTeamFill";
-import { useCreateTeamInvite } from "../../hooks/useInvites";
+import { useCreateTeamInvite, usePendingTeamInviteCount } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
 import { isCricketFamily } from "../../lib/api/sports";
@@ -25,6 +26,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
+import RenameTeamModal from "../../components/RenameTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
@@ -204,6 +206,12 @@ function TeamCard({
   const isEmpty = joinedMembers.length === 0;
   const isJoinedMember = myMembership?.status === "JOINED";
   const { data: teamChatUnread } = useTeamChatUnreadCount(isJoinedMember ? team.id : undefined, userId);
+  const { data: pendingInviteCount } = usePendingTeamInviteCount(team.id);
+  const updateTeamName = useUpdateTeamName(team.game_id);
+  const [renameOpen, setRenameOpen] = useState(false);
+  // Host-only, and only while this specific team still has open slots —
+  // once it's full its roster (and name) is settled.
+  const canEditTeamName = isHost && !isTeamFull;
   // A joined member can leave a team that's still FORMING, or even one
   // that's already PENDING_HOST_APPROVAL/APPROVED — but only before the
   // venue is actually booked (see enforce_team_roster_rules); once booked,
@@ -254,9 +262,17 @@ function TeamCard({
               <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-base" numberOfLines={1}>{team.name}</Text>
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <Text className="text-white font-bold text-base flex-shrink" numberOfLines={1}>{team.name}</Text>
+                {canEditTeamName && (
+                  <Pressable onPress={() => setRenameOpen(true)} hitSlop={8}>
+                    <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.85)" />
+                  </Pressable>
+                )}
+              </View>
               <Text className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
                 {joinedMembers.length}/{requiredSize || "—"} players
+                {!!pendingInviteCount && ` · ${pendingInviteCount} invited`}
               </Text>
             </View>
             {badge && (
@@ -415,6 +431,23 @@ function TeamCard({
         </View>
       )}
       </View>
+      {canEditTeamName && (
+        <RenameTeamModal
+          visible={renameOpen}
+          initialName={team.name}
+          onClose={() => setRenameOpen(false)}
+          onSubmit={(name) =>
+            updateTeamName.mutate(
+              { teamId: team.id, name },
+              {
+                onSuccess: () => setRenameOpen(false),
+                onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not rename team.")),
+              }
+            )
+          }
+          submitting={updateTeamName.isPending}
+        />
+      )}
     </View>
   );
 }
@@ -453,10 +486,12 @@ function HeadToHeadMatchCard({
   const teamBName = displayName(teams[1], "Team B");
 
   // Same rule as the tournament's "Book Venue"/"Go To Scorecard": a real
-  // (dropdown-picked) venue needs an actual booking, a manually typed one
-  // is treated as already settled. The button itself only ever appears once
-  // the match row exists (both teams approved).
-  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
+  // (dropdown-picked) venue counts as booked once there's either an actual
+  // booking or the host has contacted the venue (see GameDetailScreen's
+  // own isVenueBooked), a manually typed one is treated as already
+  // settled. The button itself only ever appears once the match row
+  // exists (both teams approved).
+  const isVenueBooked = game.venue_id ? !!game.booking_id || game.venue_contacted : !!game.custom_venue_name;
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = isCricketFamily(sportName);
   // Once the match has a result (scored live or entered by hand) there's
@@ -629,10 +664,11 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const hiddenByGenderOnly = !myTeam && requiredTeams > 0 && activeTeams.length < requiredTeams && genderMismatch;
   const isPoolFormat = game.tournament_format === "POOL";
   // Same "Book Venue"/"Go To Scorecard" rule used everywhere else — a real
-  // (dropdown-picked) venue needs an actual booking, a manually typed one is
+  // (dropdown-picked) venue counts as booked once there's either an actual
+  // booking or the host has contacted the venue, a manually typed one is
   // treated as already settled the moment it's set. Once booked, a joined
   // member can no longer leave their team (see TeamCard's canLeaveTeam).
-  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
+  const isVenueBooked = game.venue_id ? !!game.booking_id || game.venue_contacted : !!game.custom_venue_name;
 
   const disabled =
     createTeam.isPending ||

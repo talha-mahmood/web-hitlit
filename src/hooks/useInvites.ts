@@ -6,6 +6,7 @@ import {
   fetchMyPendingGameInvite,
   fetchMyPendingSquadInvite,
   fetchMyPendingTeamInvite,
+  fetchPendingTeamInviteCount,
   acceptGameInvite,
   declineGameInvite,
   acceptSquadInvite,
@@ -129,9 +130,21 @@ export function useCreateTeamInvite(gameId: string) {
   return useMutation({
     mutationFn: ({ teamId, invitedUserId, invitedBy }: { teamId: string; invitedUserId: string; invitedBy: string }) =>
       createTeamInvite(teamId, invitedUserId, invitedBy),
-    onSuccess: () => {
+    onSuccess: (_data, { teamId }) => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+      qc.invalidateQueries({ queryKey: ["pendingTeamInviteCount", teamId] });
     },
+  });
+}
+
+// Shown on a team card so whoever's been inviting players can see how many
+// invites are still outstanding (see fetchPendingTeamInviteCount — RLS
+// scopes this per-viewer automatically).
+export function usePendingTeamInviteCount(teamId: string) {
+  return useQuery({
+    queryKey: ["pendingTeamInviteCount", teamId],
+    queryFn: () => fetchPendingTeamInviteCount(teamId),
+    staleTime: 15_000,
   });
 }
 
