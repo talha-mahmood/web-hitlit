@@ -12,7 +12,9 @@ import {
   syncScorecardMatchResult,
   setMatchScorer,
   updateMatchSchedule,
+  computeTournamentTeamNRR,
   type ScorecardSport,
+  type TournamentMatch,
 } from "../lib/api/tournamentMatches";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -94,6 +96,24 @@ export function useTournamentMatches(gameId: string) {
   }, [gameId, qc]);
 
   return query;
+}
+
+// Cricket-only Net Run Rate for every team in a tournament, derived by
+// replaying each completed match's ball-by-ball data (see
+// computeTournamentTeamNRR) — queried separately from the match list
+// itself since it needs an extra round-trip (the linked cricket scorecards)
+// and only matters once there's at least one completed match to replay.
+export function useTournamentNRR(gameId: string, matches: TournamentMatch[] | undefined) {
+  const cricketMatchIds = (matches ?? [])
+    .filter((m) => m.status === "COMPLETED" && m.cricket_match_id)
+    .map((m) => m.cricket_match_id as string)
+    .sort();
+  return useQuery({
+    queryKey: ["tournamentNRR", gameId, cricketMatchIds],
+    queryFn: () => computeTournamentTeamNRR(matches ?? []),
+    enabled: cricketMatchIds.length > 0,
+    staleTime: 30_000,
+  });
 }
 
 export function useSetMatchScorer(gameId: string) {

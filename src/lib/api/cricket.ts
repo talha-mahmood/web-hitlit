@@ -43,6 +43,19 @@ export async function fetchMyCricketMatches(userId: string): Promise<CricketMatc
   return (data ?? []) as unknown as CricketMatchDetail[];
 }
 
+// Batched variant of fetchCricketMatch — used to compute a tournament's Net
+// Run Rate, which needs every completed match's full ball-by-ball data at
+// once (not one at a time). Relies on the same cricket_matches_select_any/
+// cricket_innings_select_any/cricket_balls_select_any RLS (any signed-in
+// user can read any match's scorecard), so this works regardless of which
+// tournament member actually scored each match.
+export async function fetchCricketMatchesForNRR(matchIds: string[]): Promise<CricketMatchDetail[]> {
+  if (matchIds.length === 0) return [];
+  const { data, error } = await supabase.from("cricket_matches").select(MATCH_DETAIL_SELECT).in("id", matchIds);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as CricketMatchDetail[];
+}
+
 // Network-only — no offline fallback here. That lives in
 // fetchMatchWithOfflineFallback (matchSnapshot.ts), used by useCricketMatch,
 // which needs access to the live query cache to do it correctly.

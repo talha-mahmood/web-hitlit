@@ -98,9 +98,7 @@ export const TOURNAMENT_DURATIONS_DAYS = [1, 2, 3, 4, 5] as const;
 export const MAX_PLAYERS_OPTIONS = Array.from({ length: 29 }, (_, i) => i + 2); // 2..30
 export const NUMBER_OF_TEAMS_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 2); // 2..32
 export const PLAYERS_PER_TEAM_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1); // 1..20
-// Pool format groups must be even, so both teams eliminated in a group and
-// a possible knockout stage afterward pair up cleanly.
-export const NUMBER_OF_GROUPS_OPTIONS = Array.from({ length: 10 }, (_, i) => (i + 1) * 2); // 2,4,...,20
-// Pool format's per-group team count — total teams is groups × this, so it
-// stays small; a group needs at least 2 teams to have any match at all.
-export const TEAMS_PER_GROUP_OPTIONS = Array.from({ length: 15 }, (_, i) => i + 2); // 2..16
+// Pool format's group count — odd counts are fine (distributeTeamsIntoGroups
+// balances an uneven split), so this just caps how many groups a host can
+// pick from, not which ones are valid for a given team count.
+export const NUMBER_OF_GROUPS_OPTIONS = Array.from({ length: 7 }, (_, i) => i + 2); // 2..8

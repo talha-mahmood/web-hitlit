@@ -2,6 +2,8 @@ import { supabase } from "../supabase";
 import type { Database, Json } from "../../types/database.types";
 import { pairTeamsForFixtures } from "../tournamentFixtures";
 import type { ManualScore } from "../manualScore";
+import { fetchCricketMatchesForNRR, ballRowToEvent } from "./cricket";
+import { computeInningsForNRR, aggregateNRR, type NRRMatchEntry } from "../netRunRate";
 
 type MatchRow = Database["public"]["Tables"]["tournament_matches"]["Row"];
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
@@ -287,4 +289,53 @@ export async function syncScorecardMatchResult(
     })
     .eq("id", data.id);
   if (updateError) throw new Error(updateError.message);
+}
+
+// Net Run Rate, aggregated across every completed cricket match in a
+// tournament — cricket-only (other sports have no NRR equivalent). A
+// completed match with no linked cricket_match_id (e.g. a manually-entered
+// result with no ball-by-ball data) simply contributes nothing; a team
+// with zero eligible matches has no entry in the returned map at all
+// (computeStandings/StandingsPanel treat a missing entry as "NRR
+// unavailable", never a fabricated 0).
+export async function computeTournamentTeamNRR(
+  matches: Pick<TournamentMatch, "status" | "team_a_id" | "team_b_id" | "cricket_match_id">[]
+): Promise<Map<string, number>> {
+  const eligible = matches.filter(
+    (m): m is typeof m & { cricket_match_id: string; team_a_id: string; team_b_id: string } =>
+      m.status === "COMPLETED" && !!m.cricket_match_id && !!m.team_a_id && !!m.team_b_id
+  );
+  if (eligible.length === 0) return new Map();
+
+  const cricketMatchIds = eligible.map((m) => m.cricket_match_id);
+  const cricketMatches = await fetchCricketMatchesForNRR(cricketMatchIds);
+  const cricketById = new Map(cricketMatches.map((cm) => [cm.id, cm]));
+
+  const entriesByTeam = new Map<string, NRRMatchEntry[]>();
+  const addEntry = (teamId: string, entry: NRRMatchEntry) => {
+    const list = entriesByTeam.get(teamId) ?? [];
+    list.push(entry);
+    entriesByTeam.set(teamId, list);
+  };
+
+  for (const m of eligible) {
+    const cm = cricketById.get(m.cricket_match_id);
+    if (!cm) continue; // host can't see this scorecard, or it was deleted
+    const inningsA = cm.cricket_innings.find((i) => i.batting_team === "A");
+    const inningsB = cm.cricket_innings.find((i) => i.batting_team === "B");
+    if (!inningsA || !inningsB) continue; // one side never actually batted
+
+    const resultA = computeInningsForNRR(inningsA.cricket_balls.map(ballRowToEvent), cm.overs_limit, cm.team_a_players.length);
+    const resultB = computeInningsForNRR(inningsB.cricket_balls.map(ballRowToEvent), cm.overs_limit, cm.team_b_players.length);
+
+    addEntry(m.team_a_id, { runsFor: resultA.runs, ballsFor: resultA.legalBalls, runsAgainst: resultB.runs, ballsAgainst: resultB.legalBalls });
+    addEntry(m.team_b_id, { runsFor: resultB.runs, ballsFor: resultB.legalBalls, runsAgainst: resultA.runs, ballsAgainst: resultA.legalBalls });
+  }
+
+  const nrrByTeam = new Map<string, number>();
+  for (const [teamId, entries] of entriesByTeam) {
+    const nrr = aggregateNRR(entries);
+    if (nrr !== null) nrrByTeam.set(teamId, nrr);
+  }
+  return nrrByTeam;
 }

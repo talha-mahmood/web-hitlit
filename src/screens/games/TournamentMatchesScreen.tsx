@@ -8,6 +8,7 @@ import { useGameDetail } from "../../hooks/useGames";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import {
   useTournamentMatches,
+  useTournamentNRR,
   useGenerateMatches,
   useGenerateNextRound,
   useGeneratePoolMatches,
@@ -36,6 +37,7 @@ import { getSportIcon } from "../../lib/sportIcons";
 import {
   computeFixtures,
   computeStandings,
+  applyHeadToHeadTiebreak,
   knockoutRoundLabel,
   getRoundWinners,
   TOURNAMENT_FORMAT_LABEL,
@@ -407,6 +409,18 @@ function matchPassesStatusFilter(match: TournamentMatch, filter: MatchStatusFilt
   return match.status !== "COMPLETED";
 }
 
+// The full ranking used everywhere standings decide something (the points
+// table display, a round-robin's own playoff seeding, a group's
+// qualifiers) — points → wins → NRR (computeStandings), then a 2-team
+// head-to-head swap on anything still tied (applyHeadToHeadTiebreak).
+function rankStandings(
+  teams: { id: string; name: string }[],
+  matches: TournamentMatch[],
+  nrrByTeam: Map<string, number> | undefined
+) {
+  return applyHeadToHeadTiebreak(computeStandings(teams, matches, nrrByTeam), matches);
+}
+
 function MatchesPanel({
   gameId,
   format,
@@ -417,6 +431,7 @@ function MatchesPanel({
   currentUserId,
   statusFilter,
   stageFilter,
+  nrrByTeam,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
@@ -433,6 +448,7 @@ function MatchesPanel({
   currentUserId?: string;
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
+  nrrByTeam: Map<string, number> | undefined;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
@@ -503,7 +519,7 @@ function MatchesPanel({
   const canAdvanceBracket = bracketWinners !== null && bracketWinners.length > 1;
 
   const isGroupStageComplete = isLatestLeagueGroupStage && latestRoundMatches.every((m) => m.status === "COMPLETED");
-  const standings = isGroupStageComplete ? computeStandings(approvedTeams, allMatches) : [];
+  const standings = isGroupStageComplete ? rankStandings(approvedTeams, allMatches, nrrByTeam) : [];
   const playoffSize = approvedTeams.length >= 4 ? 4 : Math.min(2, approvedTeams.length);
   const playoffTeams = standings.slice(0, playoffSize).map((s) => ({ id: s.teamId, name: s.name }));
 
@@ -598,12 +614,18 @@ function StandingsPanel({
   teams,
   matches,
   label = "Standings",
+  nrrByTeam,
+  showNRR,
 }: {
   teams: { id: string; name: string }[];
   matches: TournamentMatch[];
   label?: string;
+  nrrByTeam?: Map<string, number>;
+  // NRR only exists for cricket (see useTournamentNRR) — other sports just
+  // show Team/P/W/D/L/Pts, same as before.
+  showNRR?: boolean;
 }) {
-  const standings = computeStandings(teams, matches);
+  const standings = rankStandings(teams, matches, nrrByTeam);
   if (standings.length === 0 || standings.every((s) => s.played === 0)) return null;
 
   return (
@@ -616,6 +638,9 @@ function StandingsPanel({
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>D</Text>
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>L</Text>
         <Text className="text-muted text-xs font-bold" style={{ width: 32, textAlign: "center" }}>Pts</Text>
+        {showNRR && (
+          <Text className="text-muted text-xs font-semibold" style={{ width: 50, textAlign: "center" }}>NRR</Text>
+        )}
       </View>
       {standings.map((s) => (
         <View key={s.teamId} className="flex-row items-center py-2 border-b border-border">
@@ -625,6 +650,11 @@ function StandingsPanel({
           <Text className="text-ink text-sm" style={{ width: 28, textAlign: "center" }}>{s.drawn}</Text>
           <Text className="text-ink text-sm" style={{ width: 28, textAlign: "center" }}>{s.lost}</Text>
           <Text className="text-ink text-sm font-bold" style={{ width: 32, textAlign: "center" }}>{s.points}</Text>
+          {showNRR && (
+            <Text className="text-ink text-sm" style={{ width: 50, textAlign: "center" }}>
+              {s.nrr === null ? "—" : `${s.nrr > 0 ? "+" : ""}${s.nrr.toFixed(3)}`}
+            </Text>
+          )}
         </View>
       ))}
     </View>
@@ -898,6 +928,8 @@ function PoolPlayoffPanel({
   currentUserId,
   statusFilter,
   stageFilter,
+  nrrByTeam,
+  qualifiersPerGroup,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
@@ -914,6 +946,12 @@ function PoolPlayoffPanel({
   currentUserId?: string;
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
+  nrrByTeam: Map<string, number> | undefined;
+  // Uniform across every group — host-set at creation time
+  // (games.pool_qualifiers_per_group); falls back to the pre-existing
+  // default (2 when there are exactly 2 groups, else 1) for tournaments
+  // created before that setting existed.
+  qualifiersPerGroup: number;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
@@ -945,29 +983,27 @@ function PoolPlayoffPanel({
 
   if (playoffMatches.length === 0) {
     const poolStandings = (poolId: string) =>
-      computeStandings(
+      rankStandings(
         approvedTeams.filter((t) => t.pool_id === poolId).map((t) => ({ id: t.id, name: t.name })),
-        groupMatches.filter((m) => m.pool_id === poolId)
+        groupMatches.filter((m) => m.pool_id === poolId),
+        nrrByTeam
       );
 
-    let qualifiers: { id: string; name: string }[];
-    if (pools.length === 2) {
-      const standingsA = poolStandings(pools[0].id);
-      const standingsB = poolStandings(pools[1].id);
-      qualifiers =
-        standingsA.length >= 2 && standingsB.length >= 2
-          ? [
-              { id: standingsA[0].teamId, name: standingsA[0].name },
-              { id: standingsB[1].teamId, name: standingsB[1].name },
-              { id: standingsB[0].teamId, name: standingsB[0].name },
-              { id: standingsA[1].teamId, name: standingsA[1].name },
-            ]
-          : [];
-    } else {
-      qualifiers = pools
-        .map((p) => poolStandings(p.id)[0])
-        .filter((s): s is NonNullable<typeof s> => !!s)
-        .map((s) => ({ id: s.teamId, name: s.name }));
+    // The same number of qualifiers from every group, interleaved by rank
+    // (every group's winner, then every group's runner-up, ...) rather than
+    // grouped together — spreads same-group teams apart in the seed order,
+    // reducing (not guaranteeing — a real draw would need bracket-position
+    // awareness) the chance of an immediate same-group rematch. Seeded into
+    // the same bye-aware bracket generator Knockout uses, so a qualifier
+    // count that isn't a power of 2 (5 groups × 1, 3 groups × 2, ...) just
+    // works via byes instead of needing pools.length === 2 as a special case.
+    const allPoolStandings = pools.map((p) => poolStandings(p.id));
+    const qualifiers: { id: string; name: string }[] = [];
+    for (let rank = 0; rank < qualifiersPerGroup; rank++) {
+      for (const standings of allPoolStandings) {
+        const s = standings[rank];
+        if (s) qualifiers.push({ id: s.teamId, name: s.name });
+      }
     }
 
     if (qualifiers.length < 2) return null;
@@ -1084,6 +1120,7 @@ export default function TournamentMatchesScreen() {
   const { data: game, isLoading: gameLoading } = useGameDetail(params.gameId);
   const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
   const { data: matches } = useTournamentMatches(params.gameId);
+  const { data: nrrByTeam } = useTournamentNRR(params.gameId, matches);
   const { data: pools } = useTournamentPools(params.gameId);
   const setMatchScorer = useSetMatchScorer(params.gameId);
   const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
@@ -1438,11 +1475,18 @@ export default function TournamentMatchesScreen() {
                 .map((t) => ({ id: t.id, name: t.name }));
               const poolMatches = allMatchesFlat.filter((m) => m.pool_id === pool.id);
               return (
-                <StandingsPanel key={pool.id} teams={teamsInPool} matches={poolMatches} label={`${pool.name} Standings`} />
+                <StandingsPanel
+                  key={pool.id}
+                  teams={teamsInPool}
+                  matches={poolMatches}
+                  label={`${pool.name} Standings`}
+                  nrrByTeam={nrrByTeam}
+                  showNRR={isCricketSport}
+                />
               );
             })
           ) : game.tournament_format === "LEAGUE" ? (
-            <StandingsPanel teams={approvedTeams} matches={allMatchesFlat} />
+            <StandingsPanel teams={approvedTeams} matches={allMatchesFlat} nrrByTeam={nrrByTeam} showNRR={isCricketSport} />
           ) : (
             <View className="items-center mt-16 px-6">
               <Text className="text-muted text-sm text-center">
@@ -1486,6 +1530,8 @@ export default function TournamentMatchesScreen() {
               currentUserId={userId}
               statusFilter={statusFilter}
               stageFilter={stageFilter}
+              nrrByTeam={nrrByTeam}
+              qualifiersPerGroup={game.pool_qualifiers_per_group ?? ((pools ?? []).length === 2 ? 2 : 1)}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
@@ -1515,6 +1561,7 @@ export default function TournamentMatchesScreen() {
                 currentUserId={userId}
                 statusFilter={statusFilter}
                 stageFilter={stageFilter}
+                nrrByTeam={nrrByTeam}
                 getScorerName={getScorerName}
                 onGoToScorecard={handleGoToScorecard}
                 onEnterScoreManually={handleEnterScoreManually}

@@ -1328,6 +1328,7 @@ export type Database = {
           number_of_teams: number | null
           pay_and_join: boolean
           players_per_team: number | null
+          pool_qualifiers_per_group: number | null
           skill_level:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null
@@ -1371,6 +1372,7 @@ export type Database = {
           number_of_teams?: number | null
           pay_and_join?: boolean
           players_per_team?: number | null
+          pool_qualifiers_per_group?: number | null
           skill_level?:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null
@@ -1414,6 +1416,7 @@ export type Database = {
           number_of_teams?: number | null
           pay_and_join?: boolean
           players_per_team?: number | null
+          pool_qualifiers_per_group?: number | null
           skill_level?:
             | Database["public"]["Enums"]["game_skill_level_type"]
             | null

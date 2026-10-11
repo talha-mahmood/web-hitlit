@@ -49,12 +49,16 @@ import {
   NUMBER_OF_TEAMS_OPTIONS,
   PLAYERS_PER_TEAM_OPTIONS,
   NUMBER_OF_GROUPS_OPTIONS,
-  TEAMS_PER_GROUP_OPTIONS,
   addMinutesWithOverflow,
   addDays,
   isTimeSlotPast,
 } from "../../lib/gameFormHelpers";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
+import {
+  computeKnockoutFixtures,
+  distributeTeamsIntoGroups,
+  leagueRoundsAndMatchesPerTeam,
+} from "../../lib/tournamentFixtures";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -70,22 +74,33 @@ type Gender = Database["public"]["Enums"]["game_gender_type"];
 type GameType = Database["public"]["Enums"]["game_type_type"];
 type TournamentFormat = Database["public"]["Enums"]["tournament_format_type"];
 
-// Knockout needs an even team count so every round pairs up cleanly, with
-// no lingering odd team out. League can't have exactly 3 — round-robin math
-// works for any other count, but this app's format specifically excludes 3.
-// Pool's own team-count constraint depends on the group count too (see
-// isValidGroupCount below), so it isn't checked here.
-function isValidTeamCount(format: TournamentFormat | null, n: number): boolean {
-  if (format === "KNOCKOUT") return n % 2 === 0;
-  if (format === "LEAGUE") return n !== 3;
-  return true;
+// Knockout now generates a real bye-aware bracket (see
+// knockoutBracketPairs in tournamentFixtures.ts) and League's round-robin
+// was always correct for any count — neither format restricts team count
+// beyond the basic "at least 2" every format needs.
+function isValidTeamCount(_format: TournamentFormat | null, n: number): boolean {
+  return n >= 2;
 }
 
-// Pool's total team count is derived as groups × teams-per-group (picked
-// separately below), so it's always evenly divisible by construction — the
-// group count itself just needs to be even.
-function isValidGroupCount(n: number): boolean {
-  return n >= 2 && n % 2 === 0;
+// Groups + Knockout balances teams across groups automatically, uneven
+// splits allowed (see distributeTeamsIntoGroups) — any group count works
+// as long as it doesn't exceed the team count.
+function isValidGroupCount(n: number, totalTeams: number): boolean {
+  return n >= 2 && n <= totalTeams;
+}
+
+// Default group count for a given team total — teams/3 clamped to a
+// sensible 2-4 range; the host can still adjust it afterward.
+function recommendGroupCount(totalTeams: number): number {
+  return Math.min(4, Math.max(2, Math.round(totalTeams / 3)));
+}
+
+// How many teams get a first-round bye in a knockout bracket of this size —
+// mirrors knockoutBracketPairs's own math without re-exporting it, just by
+// counting the {teamB: null} fixtures it already produces.
+function knockoutByeCount(n: number): number {
+  return computeKnockoutFixtures(Array.from({ length: n }, (_, i) => String(i))).filter((f) => f.teamB === null)
+    .length;
 }
 
 // Parses a 'YYYY-MM-DD' string via local Y/M/D components, same as
@@ -422,7 +437,7 @@ export default function CreateGameScreen() {
   const [teamNames, setTeamNames] = useState<string[]>([]);
   const [numberOfGroups, setNumberOfGroups] = useState<number | null>(null);
   const [groupNames, setGroupNames] = useState<string[]>([]);
-  const [teamsPerGroup, setTeamsPerGroup] = useState<number | null>(null);
+  const [qualifiersPerGroup, setQualifiersPerGroup] = useState<number | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   // Visibility isn't a user-facing choice (removed from the form) — every
   // game/tournament created here is public, matching the games list query's
@@ -474,30 +489,25 @@ export default function CreateGameScreen() {
     setTeamNames(total ? Array.from({ length: total }, (_, i) => `Team ${indexToLetters(i)}`) : []);
   };
 
-  // KNOCKOUT/LEAGUE: team count is picked directly.
+  // Team count is always picked directly now, including for Groups +
+  // Knockout — picking it (re-)recommends a group count so the host sees a
+  // sensible default split immediately, adjustable via the groups picker.
   const handleNumberOfTeamsChange = (n: number) => {
     setNumberOfTeams(n);
     resizeTeamNames(n);
+    if (tournamentFormat === "POOL") {
+      const recommended = recommendGroupCount(n);
+      setNumberOfGroups(recommended);
+      setGroupNames(Array.from({ length: recommended }, (_, i) => `Group ${i + 1}`));
+    }
   };
 
-  // POOL: team count is derived (groups × teams-per-group), not picked
-  // directly — recompute the total and resize both the group-name and
-  // team-name slots whenever either factor changes. Group names are always
-  // auto-generated ("Group 1", "Group 2", ...) rather than typed by the
-  // host, so they're just regenerated here to match the new count.
+  // Group names are always auto-generated ("Group 1", "Group 2", ...)
+  // rather than typed by the host, so they're just regenerated here to
+  // match the new count.
   const handleNumberOfGroupsChange = (n: number) => {
     setNumberOfGroups(n);
     setGroupNames(Array.from({ length: n }, (_, i) => `Group ${i + 1}`));
-    const total = teamsPerGroup ? n * teamsPerGroup : null;
-    setNumberOfTeams(total);
-    resizeTeamNames(total);
-  };
-
-  const handleTeamsPerGroupChange = (n: number) => {
-    setTeamsPerGroup(n);
-    const total = numberOfGroups ? numberOfGroups * n : null;
-    setNumberOfTeams(total);
-    resizeTeamNames(total);
   };
 
   // Changing format can make the already-selected team count invalid (e.g.
@@ -507,17 +517,14 @@ export default function CreateGameScreen() {
   // switching to/from it clears whichever side no longer applies.
   const handleTournamentFormatChange = (format: TournamentFormat) => {
     setTournamentFormat(format);
-    if (format === "POOL") {
+    setNumberOfGroups(null);
+    setGroupNames([]);
+    setQualifiersPerGroup(null);
+    // Groups + Knockout needs at least 4 teams (2 groups of 2) to make sense
+    // — a count already picked under Knockout/League might not clear that bar.
+    if (numberOfTeams !== null && (!isValidTeamCount(format, numberOfTeams) || (format === "POOL" && numberOfTeams < 4))) {
       setNumberOfTeams(null);
       setTeamNames([]);
-    } else {
-      setNumberOfGroups(null);
-      setGroupNames([]);
-      setTeamsPerGroup(null);
-      if (numberOfTeams !== null && !isValidTeamCount(format, numberOfTeams)) {
-        setNumberOfTeams(null);
-        setTeamNames([]);
-      }
     }
   };
 
@@ -579,8 +586,8 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select a tournament format (Knockout, League, or Pool).");
       return;
     }
-    if (isTournament && tournamentFormat === "POOL" && (!teamsPerGroup || !numberOfGroups)) {
-      Alert.alert("Missing Info", "Please select a number of teams in each group and a number of groups.");
+    if (isTournament && tournamentFormat === "POOL" && (!numberOfGroups || !qualifiersPerGroup)) {
+      Alert.alert("Missing Info", "Please select a number of groups and how many teams qualify from each.");
       return;
     }
     const teams = numberOfTeams ?? 0;
@@ -593,23 +600,12 @@ export default function CreateGameScreen() {
       Alert.alert("Missing Info", "Please select players per team.");
       return;
     }
-    // Team names are always auto-generated ("Team A", "Team B", ...), so
-    // there's nothing to validate about them — just the team count itself.
-    if (isTournament && tournamentFormat !== "POOL" && !isValidTeamCount(tournamentFormat, teams)) {
-      Alert.alert(
-        "Invalid Team Count",
-        tournamentFormat === "KNOCKOUT"
-          ? "Knockout tournaments need an even number of teams."
-          : "League tournaments can't have exactly 3 teams. Please choose a different number."
-      );
-      return;
-    }
 
     const trimmedGroupNames = groupNames.map((n) => n.trim());
     if (tournamentFormat === "POOL") {
       const groups = numberOfGroups ?? 0;
-      if (!isValidGroupCount(groups)) {
-        Alert.alert("Invalid Group Count", "Pool tournaments need an even number of groups.");
+      if (!isValidGroupCount(groups, teams)) {
+        Alert.alert("Invalid Group Count", "Please choose a number of groups no larger than the team count.");
         return;
       }
       if (trimmedGroupNames.some((n) => !n)) {
@@ -667,6 +663,7 @@ export default function CreateGameScreen() {
         playersPerTeam: perTeam,
         tournamentFormat: isTournament ? tournamentFormat : null,
         dailyHours: isTournament ? hoursPerDay : null,
+        poolQualifiersPerGroup: isTournament && tournamentFormat === "POOL" ? qualifiersPerGroup : null,
       });
       if (isTournament) {
         await createTournamentTeamPlaceholders(game.id, teamNames);
@@ -1045,21 +1042,21 @@ export default function CreateGameScreen() {
 
             {tournamentFormat === "POOL" ? (
               <>
-                <SectionLabel title="Number of Teams in Each Group" required icon="people-outline" compact />
+                <SectionLabel title="Total Number of Teams" required icon="people-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                  {TEAMS_PER_GROUP_OPTIONS.map((n) => (
+                  {NUMBER_OF_TEAMS_OPTIONS.filter((n) => n >= 4).map((n) => (
                     <CountChipItem
                       key={n}
                       n={n}
-                      selected={teamsPerGroup === n}
-                      onPress={() => handleTeamsPerGroupChange(n)}
+                      selected={numberOfTeams === n}
+                      onPress={() => handleNumberOfTeamsChange(n)}
                     />
                   ))}
                 </ScrollView>
 
                 <SectionLabel title="Number of Groups" required icon="layers-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-                  {NUMBER_OF_GROUPS_OPTIONS.filter(isValidGroupCount).map((n) => (
+                  {NUMBER_OF_GROUPS_OPTIONS.filter((n) => isValidGroupCount(n, numberOfTeams ?? 0)).map((n) => (
                     <CountChipItem
                       key={n}
                       n={n}
@@ -1070,11 +1067,24 @@ export default function CreateGameScreen() {
                 </ScrollView>
                 <InfoBox
                   text={
-                    numberOfTeams != null && numberOfTeams > 0
-                      ? `Pool tournaments need an even number of groups. ${numberOfGroups} groups × ${teamsPerGroup} teams each = ${numberOfTeams} teams total.`
-                      : "Pool tournaments need an even number of groups."
+                    numberOfTeams != null && numberOfGroups != null && numberOfGroups > 0
+                      ? `Suggested split: ${distributeTeamsIntoGroups(numberOfTeams, numberOfGroups).join(" + ")} teams across ${numberOfGroups} groups.`
+                      : "Pick a team count to see a suggested group split."
                   }
                 />
+
+                <SectionLabel title="Teams Qualifying per Group" required icon="trophy-outline" compact />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                  {[1, 2].map((n) => (
+                    <CountChipItem
+                      key={n}
+                      n={n}
+                      selected={qualifiersPerGroup === n}
+                      onPress={() => setQualifiersPerGroup(n)}
+                    />
+                  ))}
+                </ScrollView>
+                <InfoBox text="The top team(s) from each group advance to a knockout stage." />
 
                 <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
@@ -1102,9 +1112,19 @@ export default function CreateGameScreen() {
                     />
                   ))}
                 </ScrollView>
-                {tournamentFormat === "KNOCKOUT" && <InfoBox text="Knockout needs an even number of teams." />}
-                {tournamentFormat === "LEAGUE" && (
-                  <InfoBox text="League tournaments can't have exactly 3 teams." />
+                {tournamentFormat === "KNOCKOUT" && numberOfTeams != null && (
+                  <InfoBox
+                    text={
+                      knockoutByeCount(numberOfTeams) > 0
+                        ? `${knockoutByeCount(numberOfTeams)} team(s) get a bye in round 1 — every team still plays ${numberOfTeams - 1 > 0 ? "its way to a single champion" : "on"} across ${numberOfTeams - 1} total matches.`
+                        : `No byes needed — ${numberOfTeams - 1} total matches to crown a champion.`
+                    }
+                  />
+                )}
+                {tournamentFormat === "LEAGUE" && numberOfTeams != null && (
+                  <InfoBox
+                    text={`${leagueRoundsAndMatchesPerTeam(numberOfTeams).matchesPerTeam} matches per team across ${leagueRoundsAndMatchesPerTeam(numberOfTeams).rounds} rounds.`}
+                  />
                 )}
                 <SectionLabel title="Players per Team" required icon="person-outline" compact />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
@@ -1232,8 +1252,29 @@ export default function CreateGameScreen() {
                     ? `${numberOfTeams - 1} matches to crown a champion`
                     : tournamentFormat === "LEAGUE"
                       ? `${(numberOfTeams * (numberOfTeams - 1)) / 2} matches — every team plays every other team once`
-                      : "Group stage + knockout — exact match count depends on final group sizes"}
+                      : numberOfGroups
+                        ? (() => {
+                            const sizes = distributeTeamsIntoGroups(numberOfTeams, numberOfGroups);
+                            const groupMatches = sizes.reduce((sum, size) => sum + (size * (size - 1)) / 2, 0);
+                            const qualifiers = numberOfGroups * (qualifiersPerGroup ?? 1);
+                            const knockoutMatches = qualifiers > 1 ? qualifiers - 1 : 0;
+                            return `${groupMatches} group matches + ${knockoutMatches} knockout matches (${qualifiers} teams qualify)`;
+                          })()
+                        : "Set the number of groups to estimate this"}
               </Text>
+              {tournamentFormat === "KNOCKOUT" && numberOfTeams != null && knockoutByeCount(numberOfTeams) > 0 && (
+                <Text className="text-ink text-sm">
+                  <Text className="font-semibold">Byes: </Text>
+                  {knockoutByeCount(numberOfTeams)} team(s) advance automatically in round 1
+                </Text>
+              )}
+              {tournamentFormat === "LEAGUE" && numberOfTeams != null && (
+                <Text className="text-ink text-sm">
+                  <Text className="font-semibold">Rounds: </Text>
+                  {leagueRoundsAndMatchesPerTeam(numberOfTeams).rounds} rounds,{" "}
+                  {leagueRoundsAndMatchesPerTeam(numberOfTeams).matchesPerTeam} matches per team
+                </Text>
+              )}
               <Text className="text-ink text-sm">
                 <Text className="font-semibold">Venue: </Text>
                 {customVenueName || venues?.find((v) => v.id === venueId)?.name || "Not selected yet"}

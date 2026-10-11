@@ -74,6 +74,10 @@ export type CreateGameParams = {
   endDate: string | null;
   // Tournament-only: hours of play each day, starting from startTime.
   dailyHours: number | null;
+  // Groups + Knockout only: how many teams advance out of each group (1 or
+  // 2, uniform across all groups) — read back by PoolPlayoffPanel once the
+  // group stage finishes.
+  poolQualifiersPerGroup: number | null;
 };
 
 // Sport is intentionally excluded — changing it post-creation would strand
@@ -212,6 +216,7 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       players_per_team: params.playersPerTeam,
       tournament_format: params.tournamentFormat,
       daily_hours: params.dailyHours,
+      pool_qualifiers_per_group: params.poolQualifiersPerGroup,
       bring_equipment: false,
       cost_shared: false,
       pay_and_join: params.entryFee > 0,
