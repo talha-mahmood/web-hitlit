@@ -13,7 +13,7 @@ import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
 import GradientFill from "../../components/GradientFill";
-import { namesClash, entryCollides, hasBlockingDuplicateNames, disambiguateRoster, type NamedEntry } from "../../lib/matchNameValidation";
+import { namesClash, entryCollides, disambiguateRoster, describeRosterIssue, type NamedEntry } from "../../lib/matchNameValidation";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 // A roster entry typed by hand has no real identity behind it (sourceId:
@@ -255,14 +255,15 @@ export default function NewMatchScreen() {
 
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
-  // Players come pre-filled from the tournament roster and are locked. Those
-  // are plain names off the roster, not a verified group pick, so they
-  // start with no sourceId — same as typing them by hand.
+  // Players come pre-filled from the tournament roster and are locked. Each
+  // one carries the real tournament member's user_id as its sourceId — two
+  // different real people can share a display name without being treated
+  // as a duplicate, same as a group pick (see matchNameValidation.ts).
   const [teamAPlayers, setTeamAPlayers] = useState<PlayerEntry[]>(
-    (prefill?.teamAPlayers ?? []).map((name) => ({ name, sourceId: null }))
+    (prefill?.teamAPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId }))
   );
   const [teamBPlayers, setTeamBPlayers] = useState<PlayerEntry[]>(
-    (prefill?.teamBPlayers ?? []).map((name) => ({ name, sourceId: null }))
+    (prefill?.teamBPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId }))
   );
   const [oversLimit, setOversLimit] = useState<string | null>(null);
   const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
@@ -270,18 +271,16 @@ export default function NewMatchScreen() {
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
   const [venue, setVenue] = useState(prefill?.venue ?? "");
 
-  const isValid =
-    teamAName.trim().length > 0 &&
-    teamBName.trim().length > 0 &&
-    !namesClash(teamAName, teamBName) &&
-    teamAPlayers.length >= 2 &&
-    teamBPlayers.length >= 2 &&
-    !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
-    !!oversLimit &&
-    parseInt(oversLimit, 10) > 0 &&
-    !!format &&
-    !!tossWinner &&
-    !!tossDecision;
+  // Surfaced below the Start button when disabled — the first unmet
+  // requirement, in the order a host would naturally fill the form, instead
+  // of leaving the button silently gray with no explanation.
+  const validationReason =
+    describeRosterIssue(teamAName, teamBName, teamAPlayers, teamBPlayers, 2) ??
+    (!oversLimit || parseInt(oversLimit, 10) <= 0 ? "Set the overs per innings." : null) ??
+    (!format ? "Pick a match format." : null) ??
+    (!tossWinner ? "Pick who won the toss." : null) ??
+    (!tossDecision ? "Pick what they chose — bat or bowl." : null);
+  const isValid = !validationReason;
 
   const handleCreate = () => {
     if (!isValid || !userId || !oversLimit || !format || !tossWinner || !tossDecision) return;
@@ -517,6 +516,9 @@ export default function NewMatchScreen() {
             </View>
           )}
         </Pressable>
+        {validationReason && (
+          <Text className="text-muted text-xs text-center mt-2">{validationReason}</Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

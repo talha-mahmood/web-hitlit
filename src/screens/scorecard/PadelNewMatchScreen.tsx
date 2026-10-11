@@ -265,12 +265,12 @@ export default function PadelNewMatchScreen() {
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamAPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamAPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
+    { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
   ]);
   const [teamBPlayers, setTeamBPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamBPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamBPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamBPlayers[0]?.name ?? "", sourceId: prefill?.teamBPlayers[0]?.userId ?? null },
+    { name: prefill?.teamBPlayers[1]?.name ?? "", sourceId: prefill?.teamBPlayers[1]?.userId ?? null },
   ]);
   const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
   const [deuceType, setDeuceType] = useState<DeuceType | null>("ADVANTAGE");
@@ -288,18 +288,25 @@ export default function PadelNewMatchScreen() {
   const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
   const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
 
-  const isValid =
-    teamAName.trim().length > 0 &&
-    teamBName.trim().length > 0 &&
-    !namesClash(teamAName, teamBName) &&
-    doublesPlayersValid &&
-    (!isDoubles || !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])) &&
-    !!playMode &&
-    !!format &&
-    !!deuceType &&
-    !!firstServerTeam &&
-    (!isDoubles || firstServerPlayerIndex !== null) &&
-    isGamesPerSetValid;
+  // Surfaced below the Start button when disabled — the first unmet
+  // requirement, instead of leaving the button silently gray.
+  const validationReason =
+    (!teamAName.trim() ? `Enter a name for ${isDoubles ? "Team A" : "Player A"}.` : null) ??
+    (!teamBName.trim() ? `Enter a name for ${isDoubles ? "Team B" : "Player B"}.` : null) ??
+    (namesClash(teamAName, teamBName)
+      ? `${isDoubles ? "Team A and Team B" : "Player A and Player B"} can't have the same name.`
+      : null) ??
+    (!doublesPlayersValid ? "Enter both players' names for each doubles team." : null) ??
+    (isDoubles && hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])
+      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      : null) ??
+    (!playMode ? "Pick Singles or Doubles." : null) ??
+    (!format ? "Pick a match format." : null) ??
+    (!deuceType ? "Pick a deuce rule." : null) ??
+    (!firstServerTeam ? "Pick who serves first." : null) ??
+    (isDoubles && firstServerPlayerIndex === null ? "Pick which player serves first." : null) ??
+    (!isGamesPerSetValid ? "Set games per set." : null);
+  const isValid = !validationReason;
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !deuceType || !firstServerTeam || !playMode) return;
@@ -467,6 +474,9 @@ export default function PadelNewMatchScreen() {
             </View>
           )}
         </Pressable>
+        {validationReason && (
+          <Text className="text-muted text-xs text-center mt-2">{validationReason}</Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

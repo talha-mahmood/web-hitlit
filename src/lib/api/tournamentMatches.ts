@@ -153,6 +153,17 @@ export async function setMatchScorer(matchId: string, scorerUserId: string | nul
   if (error) throw new Error(error.message);
 }
 
+// Host picks a date/time for a specific match by hand — there's no
+// automatic conflict-checking against venue slot/pitch availability, this
+// is just "when did you plan to play this one" shown on its match card.
+export async function updateMatchSchedule(matchId: string, scheduledAt: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update({ scheduled_at: scheduledAt })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
 // Remembers which cricket_matches row "Go To Scorecard" created for this
 // tournament match, so tapping it again re-opens the same live-scoring
 // session instead of starting a duplicate one.
@@ -207,13 +218,21 @@ export type ScorecardSport = "padel" | "tennis" | "badminton" | "pickleball" | "
 // locks those specific fields instead of asking the host to retype them,
 // while every match-rule field (format, points/games targets, play mode,
 // server, etc.) stays a normal, editable choice.
+//
+// Each player carries the real tournament member's user_id (not just their
+// display name) — two different real people can share a display name, and
+// without the id there'd be no way to tell that apart from the same name
+// typed twice by hand, so the New Match screen's duplicate-name check would
+// block it even though it's a real, valid roster (see matchNameValidation.ts).
+export type ScorecardPrefillPlayer = { name: string; userId: string | null };
+
 export type ScorecardPrefill = {
   tournamentMatchId: string;
   gameId: string;
   teamAName: string;
   teamBName: string;
-  teamAPlayers: string[];
-  teamBPlayers: string[];
+  teamAPlayers: ScorecardPrefillPlayer[];
+  teamBPlayers: ScorecardPrefillPlayer[];
   venue?: string;
 };
 

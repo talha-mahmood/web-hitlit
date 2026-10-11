@@ -32,7 +32,7 @@ import FillTeamWithSquadModal from "../../components/FillTeamWithSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import { soloAwareTeamName, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
+import { soloAwareTeamName, type ScorecardPrefill, type ScorecardPrefillPlayer } from "../../lib/api/tournamentMatches";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
@@ -463,11 +463,13 @@ function HeadToHeadMatchCard({
   // nothing left to score, so neither scoring button is offered.
   const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
 
-  const rosterByTeamId = new Map<string, string[]>();
+  const rosterByTeamId = new Map<string, ScorecardPrefillPlayer[]>();
   for (const t of teams) {
     rosterByTeamId.set(
       t.id,
-      t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.profiles?.full_name ?? "Player")
+      t.tournament_team_members
+        .filter((m) => m.status === "JOINED")
+        .map((m) => ({ name: m.profiles?.full_name ?? "Player", userId: m.user_id }))
     );
   }
 

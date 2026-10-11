@@ -88,6 +88,15 @@ function isValidGroupCount(n: number): boolean {
   return n >= 2 && n % 2 === 0;
 }
 
+// Parses a 'YYYY-MM-DD' string via local Y/M/D components, same as
+// addDays/toLocalDateStr in gameFormHelpers — never via `new Date(iso)`
+// directly, which treats it as UTC and can shift the displayed day
+// depending on the device's timezone.
+function formatDateIso(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-PK", { month: "short", day: "numeric" });
+}
+
 // 0-indexed spreadsheet-column-style letters: A, B, ... Z, AA, AB, ... — used
 // for auto-generated team names so it still reads sensibly past 26 teams.
 function indexToLetters(i: number): string {
@@ -236,11 +245,22 @@ function InfoBox({ text }: { text: string }) {
   );
 }
 
+// The label shown here changed from "Pool" to "Groups + Knockout" for
+// clarity — the stored value stays "POOL" everywhere (DB enum,
+// tournamentFixtures.ts, TOURNAMENT_FORMAT_LABEL) so existing tournaments
+// are never silently reinterpreted.
 const FORMAT_OPTIONS: { value: TournamentFormat; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: "KNOCKOUT", label: "Knockout", icon: "trophy" },
   { value: "LEAGUE", label: "League", icon: "grid-outline" },
-  { value: "POOL", label: "Pool", icon: "people" },
+  { value: "POOL", label: "Groups + Knockout", icon: "people" },
 ];
+
+// One-line taglines shown directly on each format card.
+const FORMAT_TAGLINE: Record<TournamentFormat, string> = {
+  KNOCKOUT: "Lose once and you're out.",
+  LEAGUE: "Everyone plays everyone.",
+  POOL: "Play in groups, then reach the final.",
+};
 
 const FORMAT_INFO: Record<TournamentFormat, string> = {
   KNOCKOUT: "In a knockout format, teams are eliminated after a single loss until only one champion remains.",
@@ -251,27 +271,46 @@ const FORMAT_INFO: Record<TournamentFormat, string> = {
 function FormatCard({
   icon,
   label,
+  tagline,
   selected,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
+  tagline: string;
   selected: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      className="flex-1 items-center rounded-2xl py-4"
-      style={{ borderWidth: 1.5, borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : "white" }}
+      className="flex-row items-center rounded-2xl px-4 py-3.5"
+      style={{
+        gap: 12,
+        borderWidth: 1.5,
+        borderColor: selected ? colors.primary : colors.border,
+        backgroundColor: selected ? colors.primaryLight : "white",
+      }}
     >
-      <Ionicons name={icon} size={22} color={selected ? colors.primaryDark : colors.muted} />
-      <Text
-        className="text-sm font-semibold mt-2"
-        style={{ color: selected ? colors.primaryDark : colors.ink }}
+      <View
+        className="items-center justify-center rounded-full"
+        style={{ width: 40, height: 40, backgroundColor: selected ? "white" : "#F3F4F6" }}
       >
-        {label}
-      </Text>
+        <Ionicons name={icon} size={19} color={selected ? colors.primaryDark : colors.muted} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-sm font-bold" style={{ color: selected ? colors.primaryDark : colors.ink }}>
+          {label}
+        </Text>
+        <Text className="text-xs mt-0.5" style={{ color: selected ? colors.primaryDark : colors.muted }}>
+          {tagline}
+        </Text>
+      </View>
+      {selected && (
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 22, height: 22 }}>
+          <Ionicons name="checkmark" size={14} color="white" />
+        </GradientFill>
+      )}
     </Pressable>
   );
 }
@@ -990,12 +1029,13 @@ export default function CreateGameScreen() {
           <>
             <View onLayout={markSection("format")} />
             <SectionLabel title="Tournament Format" required icon="git-branch-outline" compact />
-            <View className="flex-row" style={{ gap: 10 }}>
+            <View style={{ gap: 10 }}>
               {FORMAT_OPTIONS.map((f) => (
                 <FormatCard
                   key={f.value}
                   icon={f.icon}
                   label={f.label}
+                  tagline={FORMAT_TAGLINE[f.value]}
                   selected={tournamentFormat === f.value}
                   onPress={() => handleTournamentFormatChange(f.value)}
                 />
@@ -1164,6 +1204,49 @@ export default function CreateGameScreen() {
         <Text className="text-muted text-xs mt-1">
           Add any additional details (meeting point, rules, prizes, etc.).
         </Text>
+
+        {isTournament && (
+          <View className="rounded-2xl p-4 mt-6" style={{ backgroundColor: colors.primaryLight }}>
+            <View className="flex-row items-center mb-3" style={{ gap: 8 }}>
+              <Ionicons name="clipboard-outline" size={17} color={colors.primaryDark} />
+              <Text className="font-bold text-sm" style={{ color: colors.primaryDark }}>
+                Review
+              </Text>
+            </View>
+            <View style={{ gap: 6 }}>
+              <Text className="text-ink text-sm">
+                <Text className="font-semibold">Format: </Text>
+                {tournamentFormat
+                  ? `${FORMAT_OPTIONS.find((f) => f.value === tournamentFormat)?.label} — ${FORMAT_TAGLINE[tournamentFormat]}`
+                  : "Not selected yet"}
+              </Text>
+              <Text className="text-ink text-sm">
+                <Text className="font-semibold">Teams: </Text>
+                {numberOfTeams ? `${numberOfTeams} teams` : "Not set yet"}
+              </Text>
+              <Text className="text-ink text-sm">
+                <Text className="font-semibold">Matches: </Text>
+                {!tournamentFormat || !numberOfTeams
+                  ? "Set the format and team count to estimate this"
+                  : tournamentFormat === "KNOCKOUT"
+                    ? `${numberOfTeams - 1} matches to crown a champion`
+                    : tournamentFormat === "LEAGUE"
+                      ? `${(numberOfTeams * (numberOfTeams - 1)) / 2} matches — every team plays every other team once`
+                      : "Group stage + knockout — exact match count depends on final group sizes"}
+              </Text>
+              <Text className="text-ink text-sm">
+                <Text className="font-semibold">Venue: </Text>
+                {customVenueName || venues?.find((v) => v.id === venueId)?.name || "Not selected yet"}
+              </Text>
+              <Text className="text-ink text-sm">
+                <Text className="font-semibold">Schedule: </Text>
+                {formatDateIso(selectedDate)}
+                {durationDays > 1 ? ` – ${formatDateIso(addDays(selectedDate, durationDays - 1))}` : ""}
+                {startTime ? ` · starts ${TIME_SLOTS.find((t) => t.value === startTime)?.label ?? startTime}` : ""}
+              </Text>
+            </View>
+          </View>
+        )}
 
         <Pressable
           onPress={handleCreate}

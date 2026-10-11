@@ -198,12 +198,13 @@ export default function FootballNewMatchScreen() {
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
   // Players come pre-filled from the tournament roster and are locked, same
-  // as cricket's NewMatchScreen.
+  // as cricket's NewMatchScreen — each carries the real tournament member's
+  // user_id as its sourceId.
   const [teamAPlayers, setTeamAPlayers] = useState<PlayerEntry[]>(
-    (prefill?.teamAPlayers ?? []).map((name) => ({ name, sourceId: null }))
+    (prefill?.teamAPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId }))
   );
   const [teamBPlayers, setTeamBPlayers] = useState<PlayerEntry[]>(
-    (prefill?.teamBPlayers ?? []).map((name) => ({ name, sourceId: null }))
+    (prefill?.teamBPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId }))
   );
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
@@ -221,14 +222,19 @@ export default function FootballNewMatchScreen() {
   const extraTimePeriodMinutes = needsExtraTime && isExtraTimeDurationValid ? Math.max(1, Math.round(totalExtraTimeNumber / 2)) : 0;
   const actualTotalExtraTimeMinutes = extraTimePeriodMinutes * 2;
 
-  const isValid =
-    teamAName.trim().length > 0 &&
-    teamBName.trim().length > 0 &&
-    !namesClash(teamAName, teamBName) &&
-    !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers]) &&
-    !!requiresWinner &&
-    isMatchDurationValid &&
-    isExtraTimeDurationValid;
+  // Surfaced below the Kick Off button when disabled — the first unmet
+  // requirement, instead of leaving the button silently gray.
+  const validationReason =
+    (!teamAName.trim() ? "Enter a name for Team A." : null) ??
+    (!teamBName.trim() ? "Enter a name for Team B." : null) ??
+    (namesClash(teamAName, teamBName) ? "Team A and Team B can't have the same name." : null) ??
+    (hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])
+      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      : null) ??
+    (!requiresWinner ? "Pick whether the match requires a winner." : null) ??
+    (!isMatchDurationValid ? "Set the match duration." : null) ??
+    (!isExtraTimeDurationValid ? "Set the extra time duration." : null);
+  const isValid = !validationReason;
 
   const handleCreate = () => {
     if (!isValid || !userId || !requiresWinner) return;
@@ -417,6 +423,9 @@ export default function FootballNewMatchScreen() {
             </View>
           )}
         </Pressable>
+        {validationReason && (
+          <Text className="text-muted text-xs text-center mt-2">{validationReason}</Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

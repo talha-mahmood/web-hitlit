@@ -252,12 +252,12 @@ export default function BadmintonNewMatchScreen() {
   const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
   const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamAPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamAPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
+    { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
   ]);
   const [teamBPlayers, setTeamBPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamBPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamBPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamBPlayers[0]?.name ?? "", sourceId: prefill?.teamBPlayers[0]?.userId ?? null },
+    { name: prefill?.teamBPlayers[1]?.name ?? "", sourceId: prefill?.teamBPlayers[1]?.userId ?? null },
   ]);
   const [teamAServerIndex, setTeamAServerIndex] = useState<0 | 1>(0);
   const [teamBServerIndex, setTeamBServerIndex] = useState<0 | 1>(0);
@@ -282,16 +282,23 @@ export default function BadmintonNewMatchScreen() {
   const gamesToWinNumber = parseInt(gamesToWin ?? "", 10);
   const isGamesToWinValid = !!gamesToWin && gamesToWinNumber > 0;
 
-  const isValid =
-    teamAName.trim().length > 0 &&
-    teamBName.trim().length > 0 &&
-    !namesClash(teamAName, teamBName) &&
-    doublesPlayersValid &&
-    (!isDoubles || !hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])) &&
-    !!playMode &&
-    !!firstServingTeam &&
-    isPointsToWinValid &&
-    isGamesToWinValid;
+  // Surfaced below the Start button when disabled — the first unmet
+  // requirement, instead of leaving the button silently gray.
+  const validationReason =
+    (!teamAName.trim() ? `Enter a name for ${isDoubles ? "Team A" : "Player A"}.` : null) ??
+    (!teamBName.trim() ? `Enter a name for ${isDoubles ? "Team B" : "Player B"}.` : null) ??
+    (namesClash(teamAName, teamBName)
+      ? `${isDoubles ? "Team A and Team B" : "Player A and Player B"} can't have the same name.`
+      : null) ??
+    (!doublesPlayersValid ? "Enter both players' names for each doubles team." : null) ??
+    (isDoubles && hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])
+      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      : null) ??
+    (!playMode ? "Pick Singles or Doubles." : null) ??
+    (!firstServingTeam ? "Pick who serves first." : null) ??
+    (!isPointsToWinValid ? "Set the points needed to win a game." : null) ??
+    (!isGamesToWinValid ? "Set the games needed to win the match." : null);
+  const isValid = !validationReason;
 
   const handleCreate = () => {
     if (!isValid || !userId || !playMode || !firstServingTeam) return;
@@ -482,6 +489,9 @@ export default function BadmintonNewMatchScreen() {
             </View>
           )}
         </Pressable>
+        {validationReason && (
+          <Text className="text-muted text-xs text-center mt-2">{validationReason}</Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

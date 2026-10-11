@@ -11,6 +11,7 @@ import {
   linkScorecardMatch,
   syncScorecardMatchResult,
   setMatchScorer,
+  updateMatchSchedule,
   type ScorecardSport,
 } from "../lib/api/tournamentMatches";
 import { supabase } from "../lib/supabase";
@@ -100,6 +101,15 @@ export function useSetMatchScorer(gameId: string) {
   return useMutation({
     mutationFn: (params: { matchId: string; scorerUserId: string | null }) =>
       setMatchScorer(params.matchId, params.scorerUserId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useUpdateMatchSchedule(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { matchId: string; scheduledAt: string | null }) =>
+      updateMatchSchedule(params.matchId, params.scheduledAt),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
   });
 }

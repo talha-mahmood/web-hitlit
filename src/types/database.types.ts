@@ -2824,6 +2824,7 @@ export type Database = {
           played_at: string | null
           pool_id: string | null
           round: number
+          scheduled_at: string | null
           scorer_user_id: string | null
           sort_order: number
           status: string
@@ -2848,6 +2849,7 @@ export type Database = {
           played_at?: string | null
           pool_id?: string | null
           round?: number
+          scheduled_at?: string | null
           scorer_user_id?: string | null
           sort_order?: number
           status?: string
@@ -2872,6 +2874,7 @@ export type Database = {
           played_at?: string | null
           pool_id?: string | null
           round?: number
+          scheduled_at?: string | null
           scorer_user_id?: string | null
           sort_order?: number
           status?: string

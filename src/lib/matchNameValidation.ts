@@ -91,6 +91,30 @@ export function entryCollides(entry: NamedEntry, others: NamedEntry[]): boolean 
 // only suffixes the 2nd+ occurrence of a name that's only still present
 // because it's backed by a distinct account ("Ali" / "Ali (2)"), so the
 // engine — and every picker built on top of it — can tell them apart.
+// The team-name/roster portion of every sport's New Match "Start Match"
+// validation is identical — only the sport-specific fields after it differ
+// (overs/format/toss, points target, sets, etc.). Returns the first unmet
+// reason, or null once this part is satisfied, so a screen can show *why*
+// its Start button is still disabled instead of leaving it silently gray
+// (the sport-specific checks the caller adds afterward should do the same).
+export function describeRosterIssue(
+  teamAName: string,
+  teamBName: string,
+  teamAPlayers: NamedEntry[],
+  teamBPlayers: NamedEntry[],
+  minPlayersPerTeam = 1
+): string | null {
+  if (!teamAName.trim()) return "Enter a name for Team A.";
+  if (!teamBName.trim()) return "Enter a name for Team B.";
+  if (namesClash(teamAName, teamBName)) return "Team A and Team B can't have the same name.";
+  if (teamAPlayers.length < minPlayersPerTeam) return `Add at least ${minPlayersPerTeam} player${minPlayersPerTeam === 1 ? "" : "s"} to Team A.`;
+  if (teamBPlayers.length < minPlayersPerTeam) return `Add at least ${minPlayersPerTeam} player${minPlayersPerTeam === 1 ? "" : "s"} to Team B.`;
+  if (hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])) {
+    return "Two players share the same name — rename one, or add them from a group so they're tracked as separate people.";
+  }
+  return null;
+}
+
 export function disambiguateRoster(teamA: NamedEntry[], teamB: NamedEntry[]): { teamANames: string[]; teamBNames: string[] } {
   const seen = new Map<string, number>();
   const assign = (entries: NamedEntry[]) =>

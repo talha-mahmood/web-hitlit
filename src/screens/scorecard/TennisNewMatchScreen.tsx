@@ -264,12 +264,12 @@ export default function TennisNewMatchScreen() {
   const [playerAName, setPlayerAName] = useState(prefill?.teamAName ?? "");
   const [playerBName, setPlayerBName] = useState(prefill?.teamBName ?? "");
   const [playerAPlayers, setPlayerAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamAPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamAPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
+    { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
   ]);
   const [playerBPlayers, setPlayerBPlayers] = useState<[PlayerEntry, PlayerEntry]>([
-    { name: prefill?.teamBPlayers[0] ?? "", sourceId: null },
-    { name: prefill?.teamBPlayers[1] ?? "", sourceId: null },
+    { name: prefill?.teamBPlayers[0]?.name ?? "", sourceId: prefill?.teamBPlayers[0]?.userId ?? null },
+    { name: prefill?.teamBPlayers[1]?.name ?? "", sourceId: prefill?.teamBPlayers[1]?.userId ?? null },
   ]);
   const [playerAServerIndex, setPlayerAServerIndex] = useState<0 | 1>(0);
   const [playerBServerIndex, setPlayerBServerIndex] = useState<0 | 1>(0);
@@ -289,16 +289,23 @@ export default function TennisNewMatchScreen() {
   const gamesPerSetNumber = parseInt(gamesPerSet ?? "", 10);
   const isGamesPerSetValid = !!gamesPerSet && gamesPerSetNumber > 0;
 
-  const isValid =
-    playerAName.trim().length > 0 &&
-    playerBName.trim().length > 0 &&
-    !namesClash(playerAName, playerBName) &&
-    doublesPlayersValid &&
-    (!isDoubles || !hasBlockingDuplicateNames([...playerAPlayers, ...playerBPlayers])) &&
-    !!playMode &&
-    !!format &&
-    !!firstServer &&
-    isGamesPerSetValid;
+  // Surfaced below the Start button when disabled — the first unmet
+  // requirement, instead of leaving the button silently gray.
+  const validationReason =
+    (!playerAName.trim() ? `Enter a name for ${isDoubles ? "Team A" : "Player A"}.` : null) ??
+    (!playerBName.trim() ? `Enter a name for ${isDoubles ? "Team B" : "Player B"}.` : null) ??
+    (namesClash(playerAName, playerBName)
+      ? `${isDoubles ? "Team A and Team B" : "Player A and Player B"} can't have the same name.`
+      : null) ??
+    (!doublesPlayersValid ? "Enter both players' names for each doubles team." : null) ??
+    (isDoubles && hasBlockingDuplicateNames([...playerAPlayers, ...playerBPlayers])
+      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      : null) ??
+    (!playMode ? "Pick Singles or Doubles." : null) ??
+    (!format ? "Pick a match format." : null) ??
+    (!firstServer ? "Pick who serves first." : null) ??
+    (!isGamesPerSetValid ? "Set games per set." : null);
+  const isValid = !validationReason;
 
   const handleCreate = () => {
     if (!isValid || !userId || !format || !firstServer || !playMode) return;
@@ -462,6 +469,9 @@ export default function TennisNewMatchScreen() {
             </View>
           )}
         </Pressable>
+        {validationReason && (
+          <Text className="text-muted text-xs text-center mt-2">{validationReason}</Text>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -12,6 +12,7 @@ import {
   useGenerateNextRound,
   useGeneratePoolMatches,
   useSetMatchScorer,
+  useUpdateMatchSchedule,
 } from "../../hooks/useTournamentMatches";
 import { useTournamentPools, useAssignTeamToPool } from "../../hooks/useTournamentPools";
 import { useCricketMatch } from "../../hooks/useCricket";
@@ -23,10 +24,11 @@ import { manualSportForName } from "../../lib/manualScore";
 import { isCricketFamily } from "../../lib/api/sports";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
 import SelectScorerModal, { type ScorerCandidate } from "../../components/SelectScorerModal";
+import SetMatchTimeModal from "../../components/SetMatchTimeModal";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
-import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
+import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill, type ScorecardPrefillPlayer } from "../../lib/api/tournamentMatches";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -175,6 +177,34 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
   );
 }
 
+// "Oct 15 · 9:00 AM" — same short style used for chat timestamps elsewhere
+// in the app, just date+time together since a match card needs both.
+function formatMatchSchedule(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-PK", { month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${date} · ${time}`;
+}
+
+// Small top-right status pill every card carries — Completed (settled,
+// green-tinted) or Upcoming (muted) — independent of the ready-to-score
+// pill, which is about who can act on the match right now, not its status.
+function StatusPill({ completed }: { completed: boolean }) {
+  return (
+    <View
+      className="px-2.5 py-1 rounded-full"
+      style={{ backgroundColor: completed ? colors.primaryLight : "#EFF6FF" }}
+    >
+      <Text
+        className="text-xs font-bold"
+        style={{ color: completed ? colors.primaryDark : "#2563EB" }}
+      >
+        {completed ? "Completed" : "Upcoming"}
+      </Text>
+    </View>
+  );
+}
+
 function MatchRow({
   match,
   matchNumber,
@@ -185,6 +215,8 @@ function MatchRow({
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
+  onSetTime,
+  onViewDetails,
 }: {
   match: TournamentMatch;
   matchNumber: number;
@@ -202,6 +234,13 @@ function MatchRow({
   onGoToScorecard?: () => void;
   onEnterScoreManually?: () => void;
   onSelectScorer?: () => void;
+  // Host-only manual scheduling — opens SetMatchTimeModal for this match.
+  onSetTime?: () => void;
+  // Shown instead of the scoring buttons while the match isn't ready yet
+  // (venue not booked, or no scorer assigned) — explains why in an alert
+  // rather than leaving dead space where the mockup shows "View match
+  // details".
+  onViewDetails?: () => void;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
@@ -219,7 +258,13 @@ function MatchRow({
           : `${teamAName} advances`; // a bye, auto-completed at generation
     return (
       <View className="bg-gray-50 rounded-2xl px-3 py-2.5">
-        <Text className="text-muted text-xs font-bold mb-1.5">Match {matchNumber}</Text>
+        <View className="flex-row items-center justify-between mb-1.5">
+          <Text className="text-muted text-xs font-bold">
+            Match {matchNumber}
+            {match.scheduled_at ? ` · ${formatMatchSchedule(match.scheduled_at)}` : ""}
+          </Text>
+          <StatusPill completed />
+        </View>
         <View className="flex-row items-center" style={{ gap: 10 }}>
           <TeamStatusIcon status={match.team_a?.id ? "APPROVED" : undefined} />
           <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
@@ -252,14 +297,18 @@ function MatchRow({
         >
           Match {matchNumber}
         </Text>
-        {isReady && (
-          <View className="bg-white px-2.5 py-1 rounded-full">
-            <Text className="text-primary text-xs font-bold">
-              {showScoringButtons ? "Ready to Enter Score" : "Select a Scorer"}
-            </Text>
-          </View>
-        )}
+        <StatusPill completed={false} />
       </View>
+      {match.scheduled_at ? (
+        <Text className="text-muted text-xs mb-1.5">{formatMatchSchedule(match.scheduled_at)}</Text>
+      ) : onSetTime ? (
+        <Pressable onPress={onSetTime} hitSlop={6} className="flex-row items-center mb-1.5" style={{ gap: 4 }}>
+          <Ionicons name="calendar-outline" size={12} color={colors.primary} />
+          <Text className="text-primary text-xs font-semibold">Set time</Text>
+        </Pressable>
+      ) : (
+        <Text className="text-muted text-xs mb-1.5">Not scheduled yet</Text>
+      )}
       <View className="flex-row items-center" style={{ gap: 10 }}>
         <TeamStatusIcon status={match.team_a ? "APPROVED" : undefined} />
         <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
@@ -274,7 +323,7 @@ function MatchRow({
       </View>
       {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       <LinkedMatchScoreDetails match={match} />
-      {isReady && (
+      {isReady ? (
         <View style={{ gap: 8, marginTop: 12 }}>
           {showScoringButtons && (
             <>
@@ -316,7 +365,15 @@ function MatchRow({
             </Pressable>
           )}
         </View>
-      )}
+      ) : onViewDetails ? (
+        <Pressable
+          onPress={onViewDetails}
+          className="items-center rounded-2xl mt-3"
+          style={{ paddingVertical: 12, borderWidth: 1.5, borderColor: colors.border }}
+        >
+          <Text className="text-ink text-sm font-semibold">View match details</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -336,6 +393,20 @@ function roundLabel(format: Database["public"]["Enums"]["tournament_format_type"
   return knockoutRoundLabel(teamIds.size);
 }
 
+// The All/Upcoming/Completed filter and the tournament-stage pills are
+// purely a display filter over whichever matches a round/pool/playoff
+// section would already render — they never touch the round-completion,
+// qualification or standings computations above (those always see every
+// match, unfiltered), so there's no risk of the filter UI silently
+// breaking bracket advancement.
+export type MatchStatusFilter = "ALL" | "UPCOMING" | "COMPLETED";
+
+function matchPassesStatusFilter(match: TournamentMatch, filter: MatchStatusFilter): boolean {
+  if (filter === "ALL") return true;
+  if (filter === "COMPLETED") return match.status === "COMPLETED";
+  return match.status !== "COMPLETED";
+}
+
 function MatchesPanel({
   gameId,
   format,
@@ -344,10 +415,14 @@ function MatchesPanel({
   isHost,
   isVenueBooked,
   currentUserId,
+  statusFilter,
+  stageFilter,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
+  onSetTime,
+  onViewDetails,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
@@ -356,10 +431,14 @@ function MatchesPanel({
   isHost: boolean;
   isVenueBooked: boolean;
   currentUserId?: string;
+  statusFilter: MatchStatusFilter;
+  stageFilter: string | null;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
   onSelectScorer: (match: TournamentMatch) => void;
+  onSetTime: (match: TournamentMatch) => void;
+  onViewDetails: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
@@ -435,13 +514,15 @@ function MatchesPanel({
 
       {rounds.map((round, idx) => {
         const roundMatches = allMatches.filter((m) => m.round === round);
+        const stageKey = roundLabel(format, round, roundMatches);
+        if (stageFilter !== null && stageFilter !== stageKey) return null;
+        const visibleMatches = roundMatches.filter((m) => matchPassesStatusFilter(m, statusFilter));
+        if (visibleMatches.length === 0) return null;
         return (
           <View key={round} className={idx > 0 ? "mt-4" : undefined}>
-            <Text className="text-ink text-xs font-semibold mb-2">
-              {roundLabel(format, round, roundMatches)}
-            </Text>
+            <Text className="text-ink text-xs font-semibold mb-2">{stageKey}</Text>
             <View style={{ gap: 8 }}>
-              {roundMatches.map((m, mi) => (
+              {visibleMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
@@ -453,6 +534,8 @@ function MatchesPanel({
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
+                  onSetTime={isHost ? () => onSetTime(m) : undefined}
+                  onViewDetails={() => onViewDetails(m)}
                 />
               ))}
             </View>
@@ -532,6 +615,7 @@ function StandingsPanel({
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>W</Text>
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>D</Text>
         <Text className="text-muted text-xs font-semibold" style={{ width: 28, textAlign: "center" }}>L</Text>
+        <Text className="text-muted text-xs font-bold" style={{ width: 32, textAlign: "center" }}>Pts</Text>
       </View>
       {standings.map((s) => (
         <View key={s.teamId} className="flex-row items-center py-2 border-b border-border">
@@ -540,6 +624,7 @@ function StandingsPanel({
           <Text className="text-ink text-sm" style={{ width: 28, textAlign: "center" }}>{s.won}</Text>
           <Text className="text-ink text-sm" style={{ width: 28, textAlign: "center" }}>{s.drawn}</Text>
           <Text className="text-ink text-sm" style={{ width: 28, textAlign: "center" }}>{s.lost}</Text>
+          <Text className="text-ink text-sm font-bold" style={{ width: 32, textAlign: "center" }}>{s.points}</Text>
         </View>
       ))}
     </View>
@@ -669,10 +754,14 @@ function PoolMatchesPanel({
   isHost,
   isVenueBooked,
   currentUserId,
+  statusFilter,
+  stageFilter,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
+  onSetTime,
+  onViewDetails,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -681,10 +770,14 @@ function PoolMatchesPanel({
   isHost: boolean;
   isVenueBooked: boolean;
   currentUserId?: string;
+  statusFilter: MatchStatusFilter;
+  stageFilter: string | null;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
   onSelectScorer: (match: TournamentMatch) => void;
+  onSetTime: (match: TournamentMatch) => void;
+  onViewDetails: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
@@ -752,13 +845,15 @@ function PoolMatchesPanel({
     <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
       <CardHeader icon="git-network-outline" title="Matches" badge="Pool" />
       {pools.map((pool, idx) => {
+        if (stageFilter !== null && stageFilter !== pool.name) return null;
         const poolMatches = allMatches.filter((m) => m.pool_id === pool.id);
-        if (poolMatches.length === 0) return null;
+        const visibleMatches = poolMatches.filter((m) => matchPassesStatusFilter(m, statusFilter));
+        if (visibleMatches.length === 0) return null;
         return (
           <View key={pool.id} className={idx > 0 ? "mt-4" : undefined}>
             <Text className="text-ink text-xs font-semibold mb-2">{pool.name}</Text>
             <View style={{ gap: 8 }}>
-              {poolMatches.map((m, mi) => (
+              {visibleMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
@@ -770,6 +865,8 @@ function PoolMatchesPanel({
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
+                  onSetTime={isHost ? () => onSetTime(m) : undefined}
+                  onViewDetails={() => onViewDetails(m)}
                 />
               ))}
             </View>
@@ -799,10 +896,14 @@ function PoolPlayoffPanel({
   isHost,
   isVenueBooked,
   currentUserId,
+  statusFilter,
+  stageFilter,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
+  onSetTime,
+  onViewDetails,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -811,10 +912,14 @@ function PoolPlayoffPanel({
   isHost: boolean;
   isVenueBooked: boolean;
   currentUserId?: string;
+  statusFilter: MatchStatusFilter;
+  stageFilter: string | null;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
   onSelectScorer: (match: TournamentMatch) => void;
+  onSetTime: (match: TournamentMatch) => void;
+  onViewDetails: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
@@ -909,13 +1014,15 @@ function PoolPlayoffPanel({
       <CardHeader icon="trophy-outline" title="Playoffs" />
       {rounds.map((round, idx) => {
         const roundMatches = playoffMatches.filter((m) => m.round === round);
+        const stageKey = roundLabel("KNOCKOUT", round, roundMatches);
+        if (stageFilter !== null && stageFilter !== stageKey) return null;
+        const visibleMatches = roundMatches.filter((m) => matchPassesStatusFilter(m, statusFilter));
+        if (visibleMatches.length === 0) return null;
         return (
           <View key={round} className={idx > 0 ? "mt-4" : undefined}>
-            <Text className="text-ink text-xs font-semibold mb-2">
-              {roundLabel("KNOCKOUT", round, roundMatches)}
-            </Text>
+            <Text className="text-ink text-xs font-semibold mb-2">{stageKey}</Text>
             <View style={{ gap: 8 }}>
-              {roundMatches.map((m, mi) => (
+              {visibleMatches.map((m, mi) => (
                 <MatchRow
                   key={m.id}
                   match={m}
@@ -927,6 +1034,8 @@ function PoolPlayoffPanel({
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
+                  onSetTime={isHost ? () => onSetTime(m) : undefined}
+                  onViewDetails={() => onViewDetails(m)}
                 />
               ))}
             </View>
@@ -977,7 +1086,12 @@ export default function TournamentMatchesScreen() {
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: pools } = useTournamentPools(params.gameId);
   const setMatchScorer = useSetMatchScorer(params.gameId);
+  const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
   const [scorerModalMatchId, setScorerModalMatchId] = useState<string | null>(null);
+  const [scheduleModalMatchId, setScheduleModalMatchId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"MATCHES" | "POINTS">("MATCHES");
+  const [statusFilter, setStatusFilter] = useState<MatchStatusFilter>("ALL");
+  const [stageFilter, setStageFilter] = useState<string | null>(null);
 
   if (gameLoading || teamsLoading || !game) {
     return (
@@ -1014,13 +1128,57 @@ export default function TournamentMatchesScreen() {
   const isCricketSport = isCricketFamily(sportName);
   const isVenueBooked = game.venue_id ? !!game.booking_id || game.venue_contacted : !!game.custom_venue_name;
 
-  const rosterByTeamId = new Map<string, string[]>();
+  // Header stat row + stage pills — derived straight from `matches`/`pools`,
+  // the same source every panel below already reads, so they can never
+  // drift from what's actually rendered.
+  const allMatchesFlat = matches ?? [];
+  const playedCount = allMatchesFlat.filter((m) => m.status === "COMPLETED").length;
+  const totalMatchesCount = allMatchesFlat.length;
+  const remainingCount = totalMatchesCount - playedCount;
+  const nonPoolRoundMatches = allMatchesFlat.filter((m) => !isPoolFormat || m.pool_id === null);
+  const nonPoolRounds = Array.from(new Set(nonPoolRoundMatches.map((m) => m.round))).sort((a, b) => a - b);
+  const stageOptions: string[] = isPoolFormat
+    ? [
+        ...(pools ?? []).map((p) => p.name),
+        ...nonPoolRounds.map((r) => roundLabel("KNOCKOUT", r, nonPoolRoundMatches.filter((m) => m.round === r))),
+      ]
+    : nonPoolRounds.map((r) =>
+        roundLabel(game.tournament_format ?? "KNOCKOUT", r, nonPoolRoundMatches.filter((m) => m.round === r))
+      );
+
+  const scheduleModalMatch = allMatchesFlat.find((m) => m.id === scheduleModalMatchId) ?? null;
+  const handleConfirmSchedule = (iso: string) => {
+    if (!scheduleModalMatchId) return;
+    updateMatchSchedule.mutate(
+      { matchId: scheduleModalMatchId, scheduledAt: iso },
+      {
+        onSuccess: () => setScheduleModalMatchId(null),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not set match time.")),
+      }
+    );
+  };
+
+  // Stands in for the mockup's "View match details" — rather than a
+  // separate screen, a quick summary of why it isn't ready to score yet.
+  const handleViewMatchDetails = (match: TournamentMatch) => {
+    const reason = !match.team_a || !match.team_b
+      ? "Waiting for both teams to be decided."
+      : !isVenueBooked
+        ? "Waiting for the venue to be booked."
+        : "Waiting for a scorer to be assigned.";
+    Alert.alert(
+      `${match.team_a?.name ?? "TBD"} vs ${match.team_b?.name ?? "Bye"}`,
+      [match.scheduled_at ? formatMatchSchedule(match.scheduled_at) : "Not scheduled yet", reason].join("\n")
+    );
+  };
+
+  const rosterByTeamId = new Map<string, ScorecardPrefillPlayer[]>();
   for (const t of teams) {
     rosterByTeamId.set(
       t.id,
       t.tournament_team_members
         .filter((m) => m.status === "JOINED")
-        .map((m) => m.profiles?.full_name ?? "Player")
+        .map((m) => ({ name: m.profiles?.full_name ?? "Player", userId: m.user_id }))
     );
   }
 
@@ -1131,22 +1289,168 @@ export default function TournamentMatchesScreen() {
         </>
       )}
 
-      <View className="flex-row items-center px-4" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 12 }}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          hitSlop={8}
-          className="items-center justify-center bg-white rounded-full"
-          style={{ width: 44, height: 44, ...cardShadow }}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.ink} />
-        </Pressable>
-        <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 21 }} numberOfLines={1}>
-          Matches · {game.title}
-        </Text>
+      {/* Fixed dark-green banner — same treatment as GamesListScreen/the
+          Community tab's header (CLAUDE.md's "tab-root screens" recipe). */}
+      <GradientFill
+        style={{
+          paddingTop: insets.top + 12,
+          paddingBottom: 20,
+          paddingHorizontal: 16,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          overflow: "hidden",
+        }}
+      >
+        <View className="flex-row items-center" style={{ gap: 10 }}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Ionicons name="arrow-back" size={22} color="white" />
+          </Pressable>
+          <View className="flex-1">
+            <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: "700", letterSpacing: 0.5 }}>
+              TOURNAMENT DASHBOARD
+            </Text>
+            <Text className="text-white font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
+              {game.title}
+            </Text>
+            <View className="flex-row items-center mt-1.5 flex-wrap" style={{ gap: 8 }}>
+              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                <Text className="text-white text-xs font-semibold">
+                  {game.tournament_format ? TOURNAMENT_FORMAT_LABEL[game.tournament_format] : "—"}
+                </Text>
+              </View>
+              <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+                {approvedTeamsFull.length} teams · {totalMatchesCount} matches
+              </Text>
+            </View>
+          </View>
+        </View>
+      </GradientFill>
+
+      {/* Stat row */}
+      <View className="flex-row items-center px-4 py-4" style={{ gap: 12 }}>
+        <View className="flex-1 items-center">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 22 }}>{approvedTeamsFull.length}</Text>
+          <Text className="text-muted text-xs mt-0.5">Teams</Text>
+        </View>
+        <View className="flex-1 items-center">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 22 }}>{playedCount}/{totalMatchesCount}</Text>
+          <Text className="text-muted text-xs mt-0.5">Played</Text>
+        </View>
+        <View className="flex-1 items-center">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 22 }}>{remainingCount}</Text>
+          <Text className="text-muted text-xs mt-0.5">Remaining</Text>
+        </View>
       </View>
 
+      {/* Matches / Points Table */}
+      <View className="flex-row px-4" style={{ gap: 24 }}>
+        {(
+          [
+            { key: "MATCHES", label: "Matches" },
+            { key: "POINTS", label: "Points Table" },
+          ] as const
+        ).map((t) => (
+          <Pressable key={t.key} onPress={() => setActiveTab(t.key)} className="pb-3">
+            <Text
+              className="font-semibold text-sm"
+              style={{ color: activeTab === t.key ? colors.primaryDark : colors.muted }}
+            >
+              {t.label}
+            </Text>
+            {activeTab === t.key && (
+              <View style={{ height: 2.5, width: "100%", backgroundColor: colors.primary, borderRadius: 2, marginTop: 6 }} />
+            )}
+          </Pressable>
+        ))}
+      </View>
+      <View className="h-px bg-border" />
+
+      {activeTab === "MATCHES" && (
+        <>
+          <View className="flex-row px-4 py-3" style={{ gap: 8 }}>
+            {(
+              [
+                { key: "ALL", label: "All" },
+                { key: "UPCOMING", label: "Upcoming" },
+                { key: "COMPLETED", label: "Completed" },
+              ] as const
+            ).map((f) => {
+              const selected = statusFilter === f.key;
+              return (
+                <Pressable key={f.key} onPress={() => setStatusFilter(f.key)}>
+                  {selected ? (
+                    <GradientFill className="rounded-full px-4 py-2">
+                      <Text className="text-white text-xs font-bold">{f.label}</Text>
+                    </GradientFill>
+                  ) : (
+                    <View className="rounded-full px-4 py-2" style={{ backgroundColor: "#F3F4F6" }}>
+                      <Text className="text-muted text-xs font-bold">{f.label}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {stageOptions.length > 0 && (
+            <>
+              <Text className="text-ink font-bold text-sm px-4 mb-2">Tournament stages</Text>
+              {/* A plain wrapping row instead of a horizontal ScrollView —
+                  there are only ever a handful of stages, so there's
+                  nothing to scroll, and a ScrollView here was prone to
+                  native measurement glitches (seen as missing/blank pills
+                  depending on the status filter selected above it). */}
+              <View className="flex-row flex-wrap px-4" style={{ gap: 8, paddingBottom: 8 }}>
+                {stageOptions.map((stage) => {
+                  const selected = stageFilter === stage;
+                  return (
+                    <Pressable key={stage} onPress={() => setStageFilter(selected ? null : stage)}>
+                      <View
+                        className="rounded-full px-4 py-2"
+                        style={{
+                          backgroundColor: selected ? colors.primaryLight : "#F3F4F6",
+                          borderWidth: selected ? 1.5 : 0,
+                          borderColor: colors.primary,
+                        }}
+                      >
+                        <Text
+                          className="text-xs font-bold"
+                          style={{ color: selected ? colors.primaryDark : colors.muted }}
+                        >
+                          {stage}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          )}
+        </>
+      )}
+
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {isPoolFormat ? (
+        {activeTab === "POINTS" ? (
+          isPoolFormat ? (
+            (pools ?? []).map((pool) => {
+              const teamsInPool = approvedTeamsFull
+                .filter((t) => t.pool_id === pool.id)
+                .map((t) => ({ id: t.id, name: t.name }));
+              const poolMatches = allMatchesFlat.filter((m) => m.pool_id === pool.id);
+              return (
+                <StandingsPanel key={pool.id} teams={teamsInPool} matches={poolMatches} label={`${pool.name} Standings`} />
+              );
+            })
+          ) : game.tournament_format === "LEAGUE" ? (
+            <StandingsPanel teams={approvedTeams} matches={allMatchesFlat} />
+          ) : (
+            <View className="items-center mt-16 px-6">
+              <Text className="text-muted text-sm text-center">
+                A points table only applies to a league or group stage — Knockout advances by result alone.
+              </Text>
+            </View>
+          )
+        ) : isPoolFormat ? (
           <>
             <GroupsPanel
               gameId={game.id}
@@ -1163,26 +1467,15 @@ export default function TournamentMatchesScreen() {
               isHost={isHost}
               isVenueBooked={isVenueBooked}
               currentUserId={userId}
+              statusFilter={statusFilter}
+              stageFilter={stageFilter}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
               onSelectScorer={(match) => setScorerModalMatchId(match.id)}
+              onSetTime={(match) => setScheduleModalMatchId(match.id)}
+              onViewDetails={handleViewMatchDetails}
             />
-            {matches &&
-              (pools ?? []).map((pool) => {
-                const teamsInPool = approvedTeamsFull
-                  .filter((t) => t.pool_id === pool.id)
-                  .map((t) => ({ id: t.id, name: t.name }));
-                const poolMatches = matches.filter((m) => m.pool_id === pool.id);
-                return (
-                  <StandingsPanel
-                    key={pool.id}
-                    teams={teamsInPool}
-                    matches={poolMatches}
-                    label={`${pool.name} Standings`}
-                  />
-                );
-              })}
             <PoolPlayoffPanel
               gameId={game.id}
               pools={pools ?? []}
@@ -1191,10 +1484,14 @@ export default function TournamentMatchesScreen() {
               isHost={isHost}
               isVenueBooked={isVenueBooked}
               currentUserId={userId}
+              statusFilter={statusFilter}
+              stageFilter={stageFilter}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
               onSelectScorer={(match) => setScorerModalMatchId(match.id)}
+              onSetTime={(match) => setScheduleModalMatchId(match.id)}
+              onViewDetails={handleViewMatchDetails}
             />
           </>
         ) : (
@@ -1216,14 +1513,15 @@ export default function TournamentMatchesScreen() {
                 isHost={isHost}
                 isVenueBooked={isVenueBooked}
                 currentUserId={userId}
+                statusFilter={statusFilter}
+                stageFilter={stageFilter}
                 getScorerName={getScorerName}
                 onGoToScorecard={handleGoToScorecard}
                 onEnterScoreManually={handleEnterScoreManually}
                 onSelectScorer={(match) => setScorerModalMatchId(match.id)}
+                onSetTime={(match) => setScheduleModalMatchId(match.id)}
+                onViewDetails={handleViewMatchDetails}
               />
-            )}
-            {game.tournament_format === "LEAGUE" && matches && (
-              <StandingsPanel teams={approvedTeams} matches={matches} />
             )}
           </>
         )}
@@ -1236,6 +1534,14 @@ export default function TournamentMatchesScreen() {
         currentScorerId={scorerModalMatch?.scorer_user_id ?? null}
         onSelect={handleSelectScorer}
         submitting={setMatchScorer.isPending}
+      />
+
+      <SetMatchTimeModal
+        visible={!!scheduleModalMatchId}
+        onClose={() => setScheduleModalMatchId(null)}
+        initialIso={scheduleModalMatch?.scheduled_at ?? null}
+        onConfirm={handleConfirmSchedule}
+        submitting={updateMatchSchedule.isPending}
       />
     </View>
   );

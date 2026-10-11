@@ -393,6 +393,7 @@ export default function LiveScoringScreen() {
   const [matchCentreTab, setMatchCentreTab] = useState<"scoring" | "scorecard" | "stats" | "superstars">("scoring");
   const [selectBatsmanOpen, setSelectBatsmanOpen] = useState(false);
   const [selectBowlerOpen, setSelectBowlerOpen] = useState(false);
+  const [selectFielderOpen, setSelectFielderOpen] = useState(false);
   // Which roster names are benched for this session — a scoring-convenience
   // filter only (there's no "bench" concept in the database), so it resets
   // whenever the screen remounts and never affects anyone else's view of the
@@ -1555,14 +1556,23 @@ export default function LiveScoringScreen() {
                   {(wicketType === "CAUGHT" || wicketType === "STUMPED" || wicketType === "RUN_OUT" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
                     <View className="mb-3">
                       <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Fielder (optional)</Text>
-                      <TextInput
-                        value={fielderName}
-                        onChangeText={setFielderName}
-                        placeholder="Fielder name"
-                        placeholderTextColor="rgba(255,255,255,0.5)"
-                        className="rounded-xl px-4 py-2.5 text-white"
+                      <Pressable
+                        onPress={() => setSelectFielderOpen(true)}
+                        className="flex-row items-center justify-between rounded-xl px-4 py-2.5"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
-                      />
+                      >
+                        <Text className="text-white" style={{ opacity: fielderName ? 1 : 0.5 }} numberOfLines={1}>
+                          {fielderName || "Select fielder"}
+                        </Text>
+                        <View className="flex-row items-center" style={{ gap: 10 }}>
+                          {fielderName ? (
+                            <Pressable onPress={() => setFielderName("")} hitSlop={8}>
+                              <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.7)" />
+                            </Pressable>
+                          ) : null}
+                          <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.7)" />
+                        </View>
+                      </Pressable>
                     </View>
                   )}
                   {wicketType === "RUN_OUT" ? (
@@ -1648,7 +1658,7 @@ export default function LiveScoringScreen() {
 
       {selectBatsmanOpen && (
         <SelectPlayerPanel
-          title="Select Batsman"
+          title={needsStriker ? "Select Striker" : "Select Non-Striker"}
           names={battingPlayers}
           excluded={excludeForNextBatsman}
           selectedName={needsStriker ? null : effectiveStriker}
@@ -1656,8 +1666,17 @@ export default function LiveScoringScreen() {
           onToggleBench={toggleBench}
           onClose={() => setSelectBatsmanOpen(false)}
           onSelect={(name) => {
-            if (needsStriker) setPendingStriker(name);
-            else setPendingNonStriker(name);
+            if (needsStriker) {
+              setPendingStriker(name);
+              // Fresh start (innings not yet underway) — both ends are
+              // still empty, so stay open for the very next tap to pick
+              // the non-striker instead of requiring the panel to be
+              // reopened. A mid-innings replacement (only one end empty)
+              // still closes immediately below.
+              if (!effectiveNonStriker) return;
+            } else {
+              setPendingNonStriker(name);
+            }
             setSelectBatsmanOpen(false);
           }}
           onAddPlayer={(name) => handleAddPlayer("batting", name)}
@@ -1676,6 +1695,23 @@ export default function LiveScoringScreen() {
           onSelect={(name) => {
             setPendingBowler(name);
             setSelectBowlerOpen(false);
+          }}
+          onAddPlayer={(name) => handleAddPlayer("bowling", name)}
+          addPlayerPending={addRosterPlayer.isPending}
+        />
+      )}
+      {selectFielderOpen && (
+        <SelectPlayerPanel
+          title="Select Fielder"
+          names={bowlingPlayers}
+          excluded={[]}
+          selectedName={fielderName || null}
+          benchedNames={benchedNames}
+          onToggleBench={toggleBench}
+          onClose={() => setSelectFielderOpen(false)}
+          onSelect={(name) => {
+            setFielderName(name);
+            setSelectFielderOpen(false);
           }}
           onAddPlayer={(name) => handleAddPlayer("bowling", name)}
           addPlayerPending={addRosterPlayer.isPending}

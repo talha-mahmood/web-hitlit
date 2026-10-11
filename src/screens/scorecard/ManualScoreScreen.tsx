@@ -254,8 +254,8 @@ export default function ManualScoreScreen() {
                     <Text className="text-ink font-semibold text-sm mb-2 mt-4">Team {letter} Players</Text>
                     <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                       {players.map((p, i) => (
-                        <View key={`${p}-${i}`} className="bg-primary-light rounded-full px-3 py-1.5">
-                          <Text className="text-primary text-sm font-medium">{p}</Text>
+                        <View key={`${p.name}-${i}`} className="bg-primary-light rounded-full px-3 py-1.5">
+                          <Text className="text-primary text-sm font-medium">{p.name}</Text>
                         </View>
                       ))}
                     </View>

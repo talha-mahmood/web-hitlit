@@ -76,15 +76,22 @@ export type TeamStanding = {
   won: number;
   drawn: number;
   lost: number;
+  points: number;
 };
 
+const POINTS_WIN = 3;
+const POINTS_DRAW = 1;
+const POINTS_LOSS = 0;
+
 // Derived purely from completed matches — nothing about standings is
-// persisted, so it can never drift from the recorded results.
+// persisted, so it can never drift from the recorded results. Ranked by
+// points (win=3/draw=1/loss=0, the standard league convention), falling
+// back to wins as a tie-break when points are level.
 export function computeStandings<
   M extends { status: string; team_a_id: string | null; team_b_id: string | null; winner_team_id: string | null; is_draw: boolean }
 >(teams: { id: string; name: string }[], matches: M[]): TeamStanding[] {
   const table = new Map<string, TeamStanding>();
-  for (const t of teams) table.set(t.id, { teamId: t.id, name: t.name, played: 0, won: 0, drawn: 0, lost: 0 });
+  for (const t of teams) table.set(t.id, { teamId: t.id, name: t.name, played: 0, won: 0, drawn: 0, lost: 0, points: 0 });
 
   for (const m of matches) {
     if (m.status !== "COMPLETED" || !m.team_a_id || !m.team_b_id) continue; // skip byes/pending
@@ -96,16 +103,22 @@ export function computeStandings<
     if (m.is_draw) {
       a.drawn++;
       b.drawn++;
+      a.points += POINTS_DRAW;
+      b.points += POINTS_DRAW;
     } else if (m.winner_team_id === m.team_a_id) {
       a.won++;
       b.lost++;
+      a.points += POINTS_WIN;
+      b.points += POINTS_LOSS;
     } else if (m.winner_team_id === m.team_b_id) {
       b.won++;
       a.lost++;
+      b.points += POINTS_WIN;
+      a.points += POINTS_LOSS;
     }
   }
 
-  return Array.from(table.values()).sort((x, y) => y.won - x.won || y.played - x.played);
+  return Array.from(table.values()).sort((x, y) => y.points - x.points || y.won - x.won || y.played - x.played);
 }
 
 // Round labels for a knockout bracket, derived from how many teams entered
