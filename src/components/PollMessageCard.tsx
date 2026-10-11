@@ -3,6 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, useWindowDimensions } from "r
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import { usePollResult, useCastPollVote } from "../hooks/usePolls";
+import PollResultsModal from "./PollResultsModal";
 
 // The poll's own white rounded-2xl card, same card style as the rest of the
 // app — rendered in place of the plain-text bubble content for any message
@@ -28,6 +29,7 @@ export default function PollMessageCard({
   const { data: poll, isLoading } = usePollResult(pollId, viewerId);
   const castVote = useCastPollVote(pollId);
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
+  const [resultsOpen, setResultsOpen] = useState(false);
 
   const handleVote = (optionId: string) => {
     if (!viewerId || castVote.isPending || optionId === poll?.myOptionId) return;
@@ -40,11 +42,13 @@ export default function PollMessageCard({
 
   return (
     <View className="bg-white rounded-2xl p-3" style={{ width: cardWidth, ...cardShadow }}>
-      <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
-        <Ionicons name="bar-chart" size={15} color={colors.primary} />
-        <Text className="text-primary text-xs font-bold">POLL</Text>
-      </View>
-      <Text className="text-ink font-bold text-sm mb-3">{question}</Text>
+      <Pressable onPress={() => poll && setResultsOpen(true)} disabled={!poll}>
+        <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
+          <Ionicons name="bar-chart" size={15} color={colors.primary} />
+          <Text className="text-primary text-xs font-bold">POLL</Text>
+        </View>
+        <Text className="text-ink font-bold text-sm mb-3">{question}</Text>
+      </Pressable>
 
       {isLoading && !poll ? (
         <ActivityIndicator color={colors.primary} />
@@ -87,9 +91,13 @@ export default function PollMessageCard({
         </View>
       )}
 
-      <Text className="text-muted text-xs mt-3">
-        {totalVotes} vote{totalVotes === 1 ? "" : "s"}
-      </Text>
+      <Pressable onPress={() => poll && setResultsOpen(true)} disabled={!poll} hitSlop={6}>
+        <Text className="text-muted text-xs mt-3">
+          {totalVotes} vote{totalVotes === 1 ? "" : "s"}
+        </Text>
+      </Pressable>
+
+      <PollResultsModal visible={resultsOpen} onClose={() => setResultsOpen(false)} poll={poll} />
     </View>
   );
 }

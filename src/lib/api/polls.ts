@@ -2,10 +2,17 @@ import { supabase } from "../supabase";
 import { uniqueChannelName } from "../realtimeChannel";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
+export type PollVoter = {
+  id: string;
+  fullName: string | null;
+  avatar: string | null;
+};
+
 export type PollOptionResult = {
   id: string;
   text: string;
   voteCount: number;
+  voters: PollVoter[];
 };
 
 export type PollResult = {
@@ -52,16 +59,21 @@ export async function fetchPollResult(pollId: string, viewerId: string): Promise
     .order("display_order", { ascending: true });
   if (optionsError) throw new Error(optionsError.message);
 
+  // Who voted for what, shown on the poll results screen (tap a poll's vote
+  // count to open it) — same as WhatsApp's poll detail view, which lists
+  // voters per option rather than just a tally.
   const { data: votes, error: votesError } = await supabase
     .from("poll_votes")
-    .select("option_id, voter_id")
+    .select("option_id, voter_id, profiles(id, full_name, avatar)")
     .eq("poll_id", pollId);
   if (votesError) throw new Error(votesError.message);
 
-  const counts = new Map<string, number>();
+  const votersByOption = new Map<string, PollVoter[]>();
   let myOptionId: string | null = null;
-  for (const vote of votes ?? []) {
-    counts.set(vote.option_id, (counts.get(vote.option_id) ?? 0) + 1);
+  for (const vote of (votes ?? []) as unknown as { option_id: string; voter_id: string; profiles: { id: string; full_name: string | null; avatar: string | null } | null }[]) {
+    const list = votersByOption.get(vote.option_id) ?? [];
+    list.push({ id: vote.voter_id, fullName: vote.profiles?.full_name ?? null, avatar: vote.profiles?.avatar ?? null });
+    votersByOption.set(vote.option_id, list);
     if (vote.voter_id === viewerId) myOptionId = vote.option_id;
   }
 
@@ -69,7 +81,12 @@ export async function fetchPollResult(pollId: string, viewerId: string): Promise
     id: poll.id,
     question: poll.question,
     createdBy: poll.created_by,
-    options: (options ?? []).map((o) => ({ id: o.id, text: o.option_text, voteCount: counts.get(o.id) ?? 0 })),
+    options: (options ?? []).map((o) => ({
+      id: o.id,
+      text: o.option_text,
+      voteCount: votersByOption.get(o.id)?.length ?? 0,
+      voters: votersByOption.get(o.id) ?? [],
+    })),
     totalVotes: votes?.length ?? 0,
     myOptionId,
   };
