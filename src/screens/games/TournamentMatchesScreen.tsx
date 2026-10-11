@@ -1012,7 +1012,7 @@ export default function TournamentMatchesScreen() {
   // rest of the match rules there (see handleGoToScorecard below).
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = isCricketFamily(sportName);
-  const isVenueBooked = game.venue_id ? !!game.booking_id : !!game.custom_venue_name;
+  const isVenueBooked = game.venue_id ? !!game.booking_id || game.venue_contacted : !!game.custom_venue_name;
 
   const rosterByTeamId = new Map<string, string[]>();
   for (const t of teams) {
