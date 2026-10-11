@@ -65,6 +65,11 @@ export type BallEvent = {
   wicketType: WicketType | null;
   dismissedName: string | null;
   fielderName: string | null;
+  // A run out can credit a second fielder (e.g. a relay throw) — every other
+  // dismissal type only ever uses fielderName. Optional so every existing
+  // submitBall(...) call site (which only ever set one fielder) keeps
+  // compiling unchanged.
+  fielderName2?: string | null;
 };
 
 export type BatsmanStat = {
@@ -201,8 +206,10 @@ function describeDismissal(ball: BallEvent): string {
       return `st ${ball.fielderName ?? "†"} b ${ball.bowlerName}`;
     case "HIT_WICKET":
       return `hit wicket b ${ball.bowlerName}`;
-    case "RUN_OUT":
-      return ball.fielderName ? `run out (${ball.fielderName})` : "run out";
+    case "RUN_OUT": {
+      const fielders = [ball.fielderName, ball.fielderName2].filter((f): f is string => !!f);
+      return fielders.length > 0 ? `run out (${fielders.join("/")})` : "run out";
+    }
     case "RETIRED_OUT":
       return "retired out";
     case "MANKAD":

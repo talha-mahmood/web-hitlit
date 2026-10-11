@@ -358,6 +358,229 @@ function SelectPlayerPanel({
   );
 }
 
+// A toggle pill shared by the byes/leg-bye and no-ball/wide rows below —
+// selected state fills with the brand green, matching the app's existing
+// "selected chip" convention (e.g. PillRow) rather than the translucent
+// white-on-green style the inline keypad panels use, since this is a
+// light-surface full-screen modal, not the green bottom sheet.
+function ToggleOption({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 items-center rounded-xl py-3"
+      style={{
+        borderWidth: 1.5,
+        borderColor: selected ? colors.primary : colors.border,
+        backgroundColor: selected ? colors.primary : "white",
+      }}
+    >
+      <Text className="font-bold text-sm" style={{ color: selected ? "white" : colors.ink }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+// Dedicated full-screen Run Out flow — distinct from every other dismissal
+// type's inline bottom-sheet step (see the WICKET panel further down) since
+// a run out alone needs two fielder slots, a wider runs-completed range, and
+// the option to flag the same delivery as a bye/leg-bye or no-ball/wide (a
+// run out can happen on any of those) — more fields than comfortably fit in
+// the keypad's green sheet. Self-contained local state; the parent only
+// hears about the final choice via onSubmit.
+function RunOutPanel({
+  strikerName,
+  nonStrikerName,
+  bowlingPlayers,
+  benchedNames,
+  onToggleBench,
+  onAddPlayer,
+  addPlayerPending,
+  onCancel,
+  onSubmit,
+  submitting,
+}: {
+  strikerName: string;
+  nonStrikerName: string;
+  bowlingPlayers: string[];
+  benchedNames: Set<string>;
+  onToggleBench: (name: string) => void;
+  onAddPlayer: (name: string) => void;
+  addPlayerPending: boolean;
+  onCancel: () => void;
+  onSubmit: (result: {
+    dismissedName: string;
+    fielderName: string;
+    fielderName2: string | null;
+    runsCompleted: number;
+    extraType: ExtraType;
+  }) => void;
+  submitting: boolean;
+}) {
+  const [dismissedEnd, setDismissedEnd] = useState<"striker" | "nonStriker" | null>(null);
+  const [fielder1, setFielder1] = useState("");
+  const [fielder2, setFielder2] = useState("");
+  const [fielderSlotOpen, setFielderSlotOpen] = useState<1 | 2 | null>(null);
+  const [runs, setRuns] = useState(0);
+  // Both toggle rows below share this single value — a delivery can only
+  // really be recorded one way at a time (BallEvent.extraType is a single
+  // field), so picking "Wide" clears a prior "Byes" pick and vice versa,
+  // even though they're shown as two separate optional questions.
+  const [extra, setExtra] = useState<ExtraType>(null);
+
+  const dismissedName = dismissedEnd === "striker" ? strikerName : dismissedEnd === "nonStriker" ? nonStrikerName : null;
+  const canSubmit = !!dismissedName && !!fielder1.trim();
+
+  return (
+    <Modal visible animationType="slide" onRequestClose={onCancel}>
+      <View className="flex-1 bg-white">
+        <GradientFill className="flex-row items-center px-4 pb-3" style={{ paddingTop: 54, gap: 12 }}>
+          <Pressable onPress={onCancel} hitSlop={8}>
+            <Ionicons name="close" size={24} color="white" />
+          </Pressable>
+          <Text className="text-white font-bold text-lg flex-1">Run Out</Text>
+        </GradientFill>
+
+        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+          <Text className="text-ink font-bold text-sm mb-3">Select the batsman *</Text>
+          <View className="flex-row mb-6" style={{ gap: 12 }}>
+            {(
+              [
+                { end: "striker" as const, name: strikerName },
+                { end: "nonStriker" as const, name: nonStrikerName },
+              ]
+            ).map(({ end, name }) => (
+              <Pressable
+                key={end}
+                onPress={() => setDismissedEnd(end)}
+                className="flex-1 items-center rounded-2xl py-4"
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: dismissedEnd === end ? colors.primary : colors.border,
+                  backgroundColor: dismissedEnd === end ? colors.primaryLight : "white",
+                }}
+              >
+                <PlayerAvatar name={name} />
+                <Text className="text-ink text-sm font-semibold mt-2" numberOfLines={1}>
+                  {name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text className="text-ink font-bold text-sm mb-3">Select fielder (Fielder 01 is mandatory)</Text>
+          <View className="flex-row mb-6" style={{ gap: 28 }}>
+            {(
+              [
+                { slot: 1 as const, name: fielder1, label: "Fielder 01*" },
+                { slot: 2 as const, name: fielder2, label: "Fielder 02" },
+              ]
+            ).map(({ slot, name, label }) => (
+              <Pressable key={slot} onPress={() => setFielderSlotOpen(slot)} className="items-center" style={{ gap: 6, width: 76 }}>
+                {name ? (
+                  <PlayerAvatar name={name} />
+                ) : (
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 38, height: 38, backgroundColor: "#F3F4F6" }}
+                  >
+                    <Ionicons name="add" size={20} color={colors.muted} />
+                  </View>
+                )}
+                <Text className="text-ink text-xs font-medium" numberOfLines={1}>
+                  {name || label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text className="text-ink font-bold text-sm mb-3">Did batsman complete any runs? (optional)</Text>
+          <View className="flex-row flex-wrap mb-6" style={{ gap: 10 }}>
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <Pressable
+                key={n}
+                onPress={() => setRuns(runs === n ? 0 : n)}
+                className="rounded-xl items-center justify-center"
+                style={{
+                  width: 52,
+                  height: 48,
+                  borderWidth: 1.5,
+                  borderColor: runs === n ? colors.primary : colors.border,
+                  backgroundColor: runs === n ? colors.primary : "white",
+                }}
+              >
+                <Text className="font-bold" style={{ color: runs === n ? "white" : colors.ink }}>
+                  {n}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text className="text-ink font-bold text-sm mb-3">Is that a byes or leg bye? (optional)</Text>
+          <View className="flex-row mb-6" style={{ gap: 12 }}>
+            <ToggleOption label="Byes" selected={extra === "BYE"} onPress={() => setExtra(extra === "BYE" ? null : "BYE")} />
+            <ToggleOption
+              label="Leg Byes"
+              selected={extra === "LEGBYE"}
+              onPress={() => setExtra(extra === "LEGBYE" ? null : "LEGBYE")}
+            />
+          </View>
+
+          <Text className="text-ink font-bold text-sm mb-3">Is that a noball or wide? (optional)</Text>
+          <View className="flex-row mb-6" style={{ gap: 12 }}>
+            <ToggleOption
+              label="No Ball"
+              selected={extra === "NOBALL"}
+              onPress={() => setExtra(extra === "NOBALL" ? null : "NOBALL")}
+            />
+            <ToggleOption label="Wide" selected={extra === "WIDE"} onPress={() => setExtra(extra === "WIDE" ? null : "WIDE")} />
+          </View>
+        </ScrollView>
+
+        <View className="px-4" style={{ paddingBottom: 28 }}>
+          <Pressable
+            onPress={() => {
+              if (!dismissedName || !fielder1.trim()) return;
+              onSubmit({
+                dismissedName,
+                fielderName: fielder1.trim(),
+                fielderName2: fielder2.trim() || null,
+                runsCompleted: runs,
+                extraType: extra,
+              });
+            }}
+            disabled={!canSubmit || submitting}
+            style={{ opacity: canSubmit && !submitting ? 1 : 0.5 }}
+          >
+            <GradientFill className="rounded-xl py-3.5 items-center">
+              {submitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold tracking-wide">DONE</Text>}
+            </GradientFill>
+          </Pressable>
+        </View>
+      </View>
+
+      {fielderSlotOpen && (
+        <SelectPlayerPanel
+          title={fielderSlotOpen === 1 ? "Select Fielder 01" : "Select Fielder 02"}
+          names={bowlingPlayers}
+          excluded={[]}
+          selectedName={(fielderSlotOpen === 1 ? fielder1 : fielder2) || null}
+          benchedNames={benchedNames}
+          onToggleBench={onToggleBench}
+          onClose={() => setFielderSlotOpen(null)}
+          onSelect={(name) => {
+            if (fielderSlotOpen === 1) setFielder1(name);
+            else setFielder2(name);
+            setFielderSlotOpen(null);
+          }}
+          onAddPlayer={onAddPlayer}
+          addPlayerPending={addPlayerPending}
+        />
+      )}
+    </Modal>
+  );
+}
+
 export default function LiveScoringScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
@@ -637,25 +860,57 @@ export default function LiveScoringScreen() {
     });
   };
 
-  const handleWicket = (runsCompleted: number) => {
+  // Run Out itself is handled separately by handleRunOutSubmit/RunOutPanel —
+  // this now only ever fires for Mankad (dismisses whichever end the scorer
+  // picked, conventionally the non-striker, but the picker stays open in
+  // case the scorer needs the other end) and every other non-run-out type
+  // (always the striker).
+  const handleWicket = () => {
     if (!wicketType) return;
-    // Run outs and Mankads both dismiss whichever end the scorer picked
-    // (Mankad is conventionally the non-striker, but the picker stays open
-    // in case the scorer needs the other end for an unusual case).
     const dismissed =
-      wicketType === "RUN_OUT" || wicketType === "MANKAD"
-        ? wicketEnd === "nonStriker"
-          ? effectiveNonStriker
-          : effectiveStriker
-        : effectiveStriker;
+      wicketType === "MANKAD" ? (wicketEnd === "nonStriker" ? effectiveNonStriker : effectiveStriker) : effectiveStriker;
     submitBall({
-      runsBatted: wicketType === "RUN_OUT" ? runsCompleted : 0,
+      runsBatted: 0,
       extraType: null,
       extraRuns: 0,
       isWicket: true,
       wicketType,
       dismissedName: dismissed,
       fielderName: fielderName.trim() || null,
+    });
+  };
+
+  // A run out can land on a normal delivery, or on the same ball as a bye/
+  // leg-bye/no-ball/wide — extraType only ever holds one of those at a time
+  // (see RunOutPanel's `extra` state comment), so the completed-runs count
+  // flows into whichever field that delivery type actually uses, exactly
+  // matching handleWide/handleNoBall/handleByeLegBye's own conventions.
+  const handleRunOutSubmit = (result: {
+    dismissedName: string;
+    fielderName: string;
+    fielderName2: string | null;
+    runsCompleted: number;
+    extraType: ExtraType;
+  }) => {
+    const { dismissedName, fielderName: f1, fielderName2: f2, runsCompleted, extraType } = result;
+    const runsBatted = extraType === "BYE" || extraType === "LEGBYE" || extraType === "WIDE" ? 0 : runsCompleted;
+    const extraRuns =
+      extraType === "BYE" || extraType === "LEGBYE"
+        ? runsCompleted
+        : extraType === "NOBALL"
+          ? 1
+          : extraType === "WIDE"
+            ? runsCompleted + 1
+            : 0;
+    submitBall({
+      runsBatted,
+      extraType,
+      extraRuns,
+      isWicket: true,
+      wicketType: "RUN_OUT",
+      dismissedName,
+      fielderName: f1,
+      fielderName2: f2,
     });
   };
 
@@ -1529,10 +1784,10 @@ export default function LiveScoringScreen() {
                   </View>
                   {cancelRow}
                 </>
-              ) : panel === "WICKET" && wicketType ? (
+              ) : panel === "WICKET" && wicketType && wicketType !== "RUN_OUT" ? (
                 <>
                   <Text className="text-white font-bold text-lg mb-4">{WICKET_TYPES.find((w) => w.value === wicketType)?.label}</Text>
-                  {(wicketType === "RUN_OUT" || wicketType === "MANKAD") && (
+                  {wicketType === "MANKAD" && (
                     <>
                       <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Who was run out?</Text>
                       <View className="flex-row mb-3" style={{ gap: 8 }}>
@@ -1553,7 +1808,7 @@ export default function LiveScoringScreen() {
                       </View>
                     </>
                   )}
-                  {(wicketType === "CAUGHT" || wicketType === "STUMPED" || wicketType === "RUN_OUT" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
+                  {(wicketType === "CAUGHT" || wicketType === "STUMPED" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
                     <View className="mb-3">
                       <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Fielder (optional)</Text>
                       <Pressable
@@ -1575,24 +1830,14 @@ export default function LiveScoringScreen() {
                       </Pressable>
                     </View>
                   )}
-                  {wicketType === "RUN_OUT" ? (
+                  {wicketType === "MANKAD" ? (
                     wicketEnd && (
-                      <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-                        {[0, 1, 2, 3].map((n) => (
-                          <Pressable key={n} onPress={() => handleWicket(n)} className="rounded-xl items-center justify-center" style={{ width: 52, height: 48, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                            <Text className="text-white font-bold">{n}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    )
-                  ) : wicketType === "MANKAD" ? (
-                    wicketEnd && (
-                      <Pressable onPress={() => handleWicket(0)} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
+                      <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
                         <Text className="font-bold" style={{ color: colors.primaryDark }}>Confirm Wicket</Text>
                       </Pressable>
                     )
                   ) : (
-                    <Pressable onPress={() => handleWicket(0)} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
+                    <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
                       <Text className="font-bold" style={{ color: colors.primaryDark }}>Confirm Wicket</Text>
                     </Pressable>
                   )}
@@ -1715,6 +1960,21 @@ export default function LiveScoringScreen() {
           }}
           onAddPlayer={(name) => handleAddPlayer("bowling", name)}
           addPlayerPending={addRosterPlayer.isPending}
+        />
+      )}
+
+      {panel === "WICKET" && wicketType === "RUN_OUT" && effectiveStriker && effectiveNonStriker && (
+        <RunOutPanel
+          strikerName={effectiveStriker}
+          nonStrikerName={effectiveNonStriker}
+          bowlingPlayers={bowlingPlayers}
+          benchedNames={benchedNames}
+          onToggleBench={toggleBench}
+          onAddPlayer={(name) => handleAddPlayer("bowling", name)}
+          addPlayerPending={addRosterPlayer.isPending}
+          onCancel={closePanel}
+          onSubmit={handleRunOutSubmit}
+          submitting={addBall.isPending}
         />
       )}
 

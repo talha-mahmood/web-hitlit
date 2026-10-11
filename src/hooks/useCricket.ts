@@ -80,6 +80,7 @@ function ballEventToRow(inningsId: string, ball: BallEvent, id: string): Cricket
     wicket_type: ball.wicketType,
     dismissed_name: ball.dismissedName,
     fielder_name: ball.fielderName,
+    fielder2_name: ball.fielderName2 ?? null,
     created_at: new Date().toISOString(),
   };
 }

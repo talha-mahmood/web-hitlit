@@ -234,6 +234,7 @@ export async function addCricketBall(inningsId: string, seq: number, ball: BallE
       wicket_type: ball.wicketType,
       dismissed_name: ball.dismissedName,
       fielder_name: ball.fielderName,
+      fielder2_name: ball.fielderName2 ?? null,
     })
     .select("id")
     .single();
@@ -263,5 +264,6 @@ export function ballRowToEvent(row: CricketBallRow): BallEvent {
     wicketType: row.wicket_type as WicketType | null,
     dismissedName: row.dismissed_name,
     fielderName: row.fielder_name,
+    fielderName2: row.fielder2_name,
   };
 }

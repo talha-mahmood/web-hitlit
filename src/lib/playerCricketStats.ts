@@ -148,7 +148,7 @@ export function computeMatchFigures(match: CricketMatchDetail, fullName: string)
       if (row.bowler_name === fullName && row.extra_type !== "WIDE" && row.extra_type !== "NOBALL" && row.runs_batted + row.extra_runs === 0) {
         dots += 1;
       }
-      if (!row.is_wicket || row.fielder_name !== fullName) continue;
+      if (!row.is_wicket || (row.fielder_name !== fullName && row.fielder2_name !== fullName)) continue;
       if (row.wicket_type === "CAUGHT") catches += 1;
       else if (row.wicket_type === "STUMPED") stumpings += 1;
       else if (row.wicket_type === "RUN_OUT") runouts += 1;

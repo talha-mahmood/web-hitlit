@@ -564,6 +564,7 @@ export type Database = {
           extra_runs: number
           extra_type: string | null
           fielder_name: string | null
+          fielder2_name: string | null
           id: string
           innings_id: string
           is_wicket: boolean
@@ -580,6 +581,7 @@ export type Database = {
           extra_runs?: number
           extra_type?: string | null
           fielder_name?: string | null
+          fielder2_name?: string | null
           id?: string
           innings_id: string
           is_wicket?: boolean
@@ -596,6 +598,7 @@ export type Database = {
           extra_runs?: number
           extra_type?: string | null
           fielder_name?: string | null
+          fielder2_name?: string | null
           id?: string
           innings_id?: string
           is_wicket?: boolean
