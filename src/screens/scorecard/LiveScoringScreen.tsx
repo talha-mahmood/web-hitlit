@@ -80,17 +80,27 @@ const MATCH_CENTRE_TABS: { key: "scoring" | "scorecard" | "stats" | "superstars"
   { key: "superstars", label: "Super Stars" },
 ];
 
-// Short label for one delivery — "W" for a wicket, the usual Wd/Nb/B/Lb/P
-// shorthand for extras, or the plain runs scored. Shared by the current-over
-// strip above the keypad and the Balls tab's full over-by-over log.
+// Short label for one delivery — the usual Wd/Nb/B/Lb/P shorthand for
+// extras, the plain runs scored, or "W" for a wicket. A run out can land on
+// an extra too (see RunOutPanel) — that still shows the extra's own
+// shorthand, with " W" appended, rather than collapsing to a bare "W" and
+// losing which kind of delivery it was. Shared by the current-over strip
+// above the keypad and the Balls tab's full over-by-over log.
 function ballLabel(b: BallEvent): string {
-  if (b.isWicket) return "W";
-  if (b.extraType === "WIDE") return `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`;
-  if (b.extraType === "NOBALL") return `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`;
-  if (b.extraType === "BYE") return `B${b.extraRuns}`;
-  if (b.extraType === "LEGBYE") return `Lb${b.extraRuns}`;
-  if (b.extraType === "PENALTY") return `P${b.extraRuns >= 0 ? "+" : ""}${b.extraRuns}`;
-  return String(b.runsBatted);
+  const extraLabel =
+    b.extraType === "WIDE"
+      ? `Wd${b.extraRuns > 1 ? "+" + (b.extraRuns - 1) : ""}`
+      : b.extraType === "NOBALL"
+        ? `Nb${b.runsBatted > 0 ? "+" + b.runsBatted : ""}`
+        : b.extraType === "BYE"
+          ? `B${b.extraRuns}`
+          : b.extraType === "LEGBYE"
+            ? `Lb${b.extraRuns}`
+            : b.extraType === "PENALTY"
+              ? `P${b.extraRuns >= 0 ? "+" : ""}${b.extraRuns}`
+              : null;
+  if (b.isWicket) return extraLabel ? `${extraLabel} W` : "W";
+  return extraLabel ?? String(b.runsBatted);
 }
 
 function PlayerAvatar({ name }: { name: string }) {
@@ -1447,14 +1457,34 @@ export default function LiveScoringScreen() {
                         <View className="flex-row" style={{ gap: 8 }}>
                           {over.map((b, i) => {
                             const isLast = i === over.length - 1;
+                            const label = ballLabel(b);
+                            // A wicket always stands out in red, whether or
+                            // not it's also the most recent ball — a run out
+                            // combined with an extra (e.g. "3+Wd W") runs
+                            // longer than this circle's usual single
+                            // character, so it gets a bit more room and
+                            // shrinks to fit on two lines instead of
+                            // truncating.
+                            const size = b.isWicket ? 44 : 32;
                             return (
                               <View
                                 key={i}
                                 className="items-center justify-center rounded-full"
-                                style={{ width: 32, height: 32, backgroundColor: isLast ? "#2563EB" : "#E5E7EB" }}
+                                style={{
+                                  width: size,
+                                  height: size,
+                                  backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : "#E5E7EB",
+                                }}
                               >
-                                <Text className="font-bold text-xs" style={{ color: isLast ? "white" : colors.ink }}>
-                                  {ballLabel(b)}
+                                <Text
+                                  className="font-bold text-center"
+                                  numberOfLines={2}
+                                  style={{
+                                    color: b.isWicket || isLast ? "white" : colors.ink,
+                                    fontSize: label.length > 2 ? 10 : 12,
+                                  }}
+                                >
+                                  {label}
                                 </Text>
                               </View>
                             );
