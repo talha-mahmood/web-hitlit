@@ -19,7 +19,7 @@ import {
 } from "../../hooks/useCricket";
 import { useNetworkStore } from "../../store/networkStore";
 import { useSyncCricketMatchResult } from "../../hooks/useTournamentMatches";
-import { ballRowToEvent, friendlyCricketError } from "../../lib/api/cricket";
+import { ballRowToEvent, friendlyCricketError, type CricketMatchDetail, type CricketInnings, type CricketBallRow } from "../../lib/api/cricket";
 import {
   replayInnings,
   formatOvers,
@@ -32,6 +32,7 @@ import {
   type WicketType,
   type InningsState,
 } from "../../lib/cricketScoring";
+import { describeBallCommentary, computePartnerships, computePlayerOfTheMatch } from "../../lib/cricketCommentary";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import GradientFill from "../../components/GradientFill";
@@ -83,11 +84,26 @@ const WICKET_TYPES: { label: string; value: WicketType }[] = [
   { label: "Timed Out", value: "TIMED_OUT" },
 ];
 
-const MATCH_CENTRE_TABS: { key: "scoring" | "scorecard" | "stats" | "superstars"; label: string }[] = [
+type MatchCentreTabKey = "scoring" | "scorecard" | "stats" | "superstars" | "summary" | "balls" | "info";
+
+// While a match is live, the tab bar is exactly what it's always been
+// (Scoring is where the keypad lives). Once a match is COMPLETED there's
+// nothing left to score, so "Scoring" is dropped in favor of the completed-
+// match tab set (Summary becomes the default landing tab instead) — see
+// isMatchCompleted/activeTabs below.
+const LIVE_TABS: { key: MatchCentreTabKey; label: string }[] = [
   { key: "scoring", label: "Scoring" },
   { key: "scorecard", label: "Scorecard" },
   { key: "stats", label: "Stats" },
   { key: "superstars", label: "Super Stars" },
+];
+const COMPLETED_TABS: { key: MatchCentreTabKey; label: string }[] = [
+  { key: "summary", label: "Summary" },
+  { key: "scorecard", label: "Scorecard" },
+  { key: "stats", label: "Stats" },
+  { key: "superstars", label: "Super Stars" },
+  { key: "balls", label: "Balls" },
+  { key: "info", label: "Info" },
 ];
 
 // Short label for one delivery — the usual Wd/Nb/B/Lb/P shorthand for
@@ -126,40 +142,72 @@ function PlayerAvatar({ name }: { name: string }) {
   );
 }
 
-// Short 2-letter initials avatar for a scorecard batter/bowler row, colored
-// per team — ported from the old standalone FullScorecardScreen (now folded
-// into this screen's own "Scorecard" tab). Named distinctly from
-// PlayerAvatar above (the live-keypad's single-initial avatar) since both
-// are used on this same screen now.
-function ScorecardPlayerAvatar({ name, color, bg }: { name: string; color: string; bg: string }) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : name.trim().slice(0, 2);
+// Shared rounded segmented toggle — used for the Scorecard tab's team
+// switcher and the Balls tab's 1st/2nd-innings switcher (identical visuals,
+// different option lists), matching the reference design's pill control.
+function SegmentedPill({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: { key: string; label: string }[];
+  selected: string;
+  onSelect: (key: string) => void;
+}) {
   return (
-    <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: bg }}>
-      <Text className="font-bold" style={{ fontSize: 11, color }}>
-        {(initials || "?").toUpperCase()}
-      </Text>
+    <View className="flex-row bg-gray-100 rounded-full p-1 mb-4">
+      {options.map((o) => (
+        <Pressable
+          key={o.key}
+          onPress={() => onSelect(o.key)}
+          className="flex-1 items-center rounded-full py-2.5"
+          style={{ backgroundColor: selected === o.key ? colors.primary : "transparent" }}
+        >
+          <Text
+            className="text-xs font-bold"
+            numberOfLines={1}
+            style={{ color: selected === o.key ? "white" : colors.muted }}
+          >
+            {o.label}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
 }
 
 // One innings' full batting/bowling card — same content the old
 // FullScorecardScreen showed, now rendered inline in this screen's
-// "Scorecard" tab instead of a separate read-only screen.
+// "Scorecard" tab instead of a separate read-only screen. `balls` (the raw
+// chronological ball log) and `allPlayers` (the batting team's full roster)
+// feed the Partnership list and Did Not Bat line respectively — neither is
+// derivable from `state` alone.
 function InningsCard({
   teamName,
   inningsNumber,
   color,
-  bg,
   state,
+  balls,
+  allPlayers,
 }: {
   teamName: string;
   inningsNumber: number;
   color: string;
-  bg: string;
   state: InningsState;
+  balls: BallEvent[];
+  allPlayers: string[];
 }) {
   const runRate = computeRunRate(state.runs, state.legalBalls);
+  const didNotBat = allPlayers.filter((n) => !state.battingOrder.includes(n));
+  const extrasTotal = state.extras.bye + state.extras.wide + state.extras.noball + state.extras.legbye;
+  const extrasParts = [
+    state.extras.bye > 0 ? `B ${state.extras.bye}` : null,
+    state.extras.wide > 0 ? `WD ${state.extras.wide}` : null,
+    state.extras.noball > 0 ? `NB ${state.extras.noball}` : null,
+    state.extras.legbye > 0 ? `LB ${state.extras.legbye}` : null,
+  ].filter((p): p is string => !!p);
+  const partnerships = computePartnerships(balls);
+
   return (
     <View className="rounded-2xl border border-border overflow-hidden mb-4 bg-white" style={cardShadow}>
       <View className="flex-row items-center justify-between p-4">
@@ -184,7 +232,7 @@ function InningsCard({
 
       <View className="px-4 pb-4">
         <View className="flex-row pb-2 border-b border-border">
-          <Text className="text-muted text-xs font-semibold flex-1">Batter</Text>
+          <Text className="text-muted text-xs font-semibold flex-1">Batsman</Text>
           <Text className="text-muted text-xs font-semibold" style={{ width: 40, textAlign: "center" }}>R</Text>
           <Text className="text-muted text-xs font-semibold" style={{ width: 36, textAlign: "center" }}>B</Text>
           <Text className="text-muted text-xs font-semibold" style={{ width: 30, textAlign: "center" }}>4s</Text>
@@ -197,16 +245,13 @@ function InningsCard({
           return (
             <View key={name} className="py-2.5 border-b border-border">
               <View className="flex-row items-center">
-                <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
-                  <ScorecardPlayerAvatar name={name} color={color} bg={bg} />
-                  <View className="flex-1">
-                    <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
-                      {name}
-                    </Text>
-                    <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
-                      {s.isOut ? s.outDescription : "Not out"}
-                    </Text>
-                  </View>
+                <View className="flex-1">
+                  <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+                    {name}
+                  </Text>
+                  <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                    {s.isOut ? s.outDescription : "not out"}
+                  </Text>
                 </View>
                 <Text className="text-ink text-sm font-semibold" style={{ width: 40, textAlign: "center" }}>{s.runs}</Text>
                 <Text className="text-ink text-sm" style={{ width: 36, textAlign: "center" }}>{s.balls}</Text>
@@ -218,12 +263,26 @@ function InningsCard({
           );
         })}
 
-        <View className="rounded-xl bg-gray-50 px-3 py-2 mt-3">
-          <Text className="text-muted text-xs">
-            Extras: {state.extras.wide + state.extras.noball + state.extras.bye + state.extras.legbye} (wd{" "}
-            {state.extras.wide}, nb {state.extras.noball}, b {state.extras.bye}, lb {state.extras.legbye})
-          </Text>
+        <View className="rounded-xl bg-gray-50 px-3 py-3 mt-3">
+          <View className="flex-row items-start justify-between">
+            <View>
+              <Text className="text-muted text-xs">Extras</Text>
+              <Text className="text-ink text-sm font-semibold mt-0.5">{extrasTotal}</Text>
+              <Text className="text-xs font-bold mt-2.5" style={{ color }}>Total</Text>
+              <Text className="font-extrabold text-base" style={{ color }}>{state.runs}/{state.wickets}</Text>
+            </View>
+            <View className="items-end">
+              <Text className="text-muted text-xs">Overs</Text>
+              <Text className="text-ink text-sm font-semibold mt-0.5">{formatOvers(state.legalBalls)}</Text>
+              <Text className="text-muted text-xs mt-2.5">Run Rate</Text>
+              <Text className="text-ink text-sm font-semibold">{runRate.toFixed(1)}</Text>
+            </View>
+          </View>
+          {extrasParts.length > 0 && <Text className="text-muted text-xs mt-3">{extrasParts.join(" | ")}</Text>}
         </View>
+        {didNotBat.length > 0 && (
+          <Text className="text-muted text-xs mt-2.5" numberOfLines={2}>Did Not Bat - {didNotBat.join(", ")}</Text>
+        )}
 
         {state.bowlingOrder.length > 0 && (
           <>
@@ -233,17 +292,14 @@ function InningsCard({
               <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>M</Text>
               <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>R</Text>
               <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>W</Text>
-              <Text className="text-muted text-xs font-semibold" style={{ width: 44, textAlign: "center" }}>Econ</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 44, textAlign: "center" }}>Eco</Text>
             </View>
             {state.bowlingOrder.map((name) => {
               const b = state.bowlingStats[name];
               const econ = b.legalBalls > 0 ? (b.runsConceded / b.legalBalls) * 6 : 0;
               return (
                 <View key={name} className="flex-row items-center py-2.5 border-b border-border">
-                  <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
-                    <ScorecardPlayerAvatar name={name} color={color} bg={bg} />
-                    <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{name}</Text>
-                  </View>
+                  <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{name}</Text>
                   <Text className="text-ink text-sm" style={{ width: 40, textAlign: "center" }}>{formatOvers(b.legalBalls)}</Text>
                   <Text className="text-ink text-sm" style={{ width: 32, textAlign: "center" }}>{b.maidens}</Text>
                   <Text className="text-ink text-sm" style={{ width: 32, textAlign: "center" }}>{b.runsConceded}</Text>
@@ -256,17 +312,386 @@ function InningsCard({
         )}
 
         {state.fallOfWickets.length > 0 && (
-          <View className="mt-3 mb-4">
-            <Text className="text-muted text-xs font-semibold mb-1">Fall of Wickets</Text>
-            <Text className="text-muted text-xs">
-              {state.fallOfWickets
-                .map((f) => `${f.teamScore}-${f.wicketNumber} (${f.playerOut}, ${f.overs} ov)`)
-                .join(", ")}
-            </Text>
+          <View className="mt-4">
+            <Text className="text-ink font-bold text-sm mb-2">Fall of wickets</Text>
+            {state.fallOfWickets.map((f, i) => (
+              <View
+                key={i}
+                className="flex-row items-center justify-between py-2"
+                style={i < state.fallOfWickets.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+              >
+                <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+                  <Text className="text-muted text-xs font-semibold" style={{ width: 18 }}>{f.wicketNumber}</Text>
+                  <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{f.playerOut.toUpperCase()}</Text>
+                </View>
+                <Text className="text-ink text-sm">{f.teamScore} ({f.overs})</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {partnerships.length > 0 && (
+          <View className="mt-4 mb-1">
+            <Text className="text-ink font-bold text-sm mb-2">Partnership</Text>
+            {partnerships.map((p, i) => {
+              const statA = state.battingStats[p.batsmanA];
+              const statB = p.batsmanB ? state.battingStats[p.batsmanB] : undefined;
+              return (
+                <View key={i} className="flex-row items-center justify-between py-2.5">
+                  <View className="flex-1">
+                    <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{p.batsmanA.toUpperCase()}</Text>
+                    {statA && <Text className="text-muted text-xs mt-0.5">{statA.runs}({statA.balls})</Text>}
+                  </View>
+                  <View className="items-center" style={{ width: 70 }}>
+                    <View
+                      className="items-center justify-center rounded-full"
+                      style={{ width: 40, height: 40, borderWidth: 1.5, borderColor: color }}
+                    >
+                      <Text className="font-extrabold text-sm" style={{ color }}>{p.runs}</Text>
+                    </View>
+                    <Text className="text-muted text-[10px] mt-1">{p.balls} Balls</Text>
+                  </View>
+                  <View className="flex-1 items-end">
+                    {p.batsmanB ? (
+                      <>
+                        <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{p.batsmanB.toUpperCase()}</Text>
+                        {statB && <Text className="text-muted text-xs mt-0.5">{statB.runs}({statB.balls})</Text>}
+                      </>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
       </View>
     </View>
+  );
+}
+
+// Shared shape of the per-innings data every completed-match tab below
+// works from (the main screen's own scorecardInnings useMemo produces an
+// array of exactly this).
+type ScorecardInningsEntry = {
+  inn: CricketInnings & { cricket_balls: CricketBallRow[] };
+  teamName: string;
+  state: InningsState;
+};
+
+// Completed-match "Summary" tab — both teams' final score + their own top 3
+// batters paired with the opposing team's top 3 bowlers (the side that
+// actually bowled at them), a Winner card and a Player of the Match card
+// (both read-only, computed from already-fetched data — no new schema),
+// and the two share actions.
+function SummaryTab({
+  match,
+  scorecardInnings,
+  onShareReport,
+  generatingReport,
+  onShareSummary,
+}: {
+  match: CricketMatchDetail;
+  scorecardInnings: ScorecardInningsEntry[];
+  onShareReport: () => void;
+  generatingReport: boolean;
+  onShareSummary: () => void;
+}) {
+  if (scorecardInnings.length === 0) {
+    return (
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <Text className="text-muted text-sm text-center mt-10">No balls bowled yet.</Text>
+      </ScrollView>
+    );
+  }
+
+  const potm = computePlayerOfTheMatch(scorecardInnings);
+
+  const [first, second] = scorecardInnings;
+  let winnerName: string | null = null;
+  let winnerColor = colors.primary;
+  if (first && second) {
+    if (second.state.runs > first.state.runs) {
+      winnerName = second.teamName;
+      winnerColor = second.inn.batting_team === "A" ? colors.primary : "#1D4ED8";
+    } else if (first.state.runs > second.state.runs) {
+      winnerName = first.teamName;
+      winnerColor = first.inn.batting_team === "A" ? colors.primary : "#1D4ED8";
+    }
+  }
+
+  return (
+    <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      {scorecardInnings.map((si) => {
+        const isTeamA = si.inn.batting_team === "A";
+        const color = isTeamA ? colors.primary : "#1D4ED8";
+        const opposing = scorecardInnings.find((o) => o.inn.id !== si.inn.id);
+        const topBatters = si.state.battingOrder
+          .map((n) => si.state.battingStats[n])
+          .sort((a, b) => b.runs - a.runs)
+          .slice(0, 3);
+        const topBowlers = opposing
+          ? opposing.state.bowlingOrder
+              .map((n) => opposing.state.bowlingStats[n])
+              .sort((a, b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded)
+              .slice(0, 3)
+          : [];
+        return (
+          <View key={si.inn.id} className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+                <TeamCrest color={color} size={32} icon="cricket" />
+                <Text className="font-bold text-base flex-1" numberOfLines={1} style={{ color }}>
+                  {si.teamName.toUpperCase()}
+                </Text>
+              </View>
+              <Text className="font-extrabold text-base" style={{ color }}>
+                {si.state.runs}-{si.state.wickets}{" "}
+                <Text className="text-muted text-xs font-semibold">({formatOvers(si.state.legalBalls)})</Text>
+              </Text>
+            </View>
+            <View className="h-px bg-border mb-2" />
+            {Array.from({ length: Math.max(topBatters.length, topBowlers.length) }, (_, row) => (
+              <View key={row} className="flex-row items-center justify-between py-1.5">
+                <Text className="text-ink text-sm flex-1" numberOfLines={1}>
+                  {topBatters[row] ? `${topBatters[row].name} ${topBatters[row].runs}(${topBatters[row].balls})` : ""}
+                </Text>
+                <Text className="text-ink text-sm flex-1 text-right" numberOfLines={1}>
+                  {topBowlers[row] ? `${topBowlers[row].name} ${topBowlers[row].wickets}-${topBowlers[row].runsConceded}` : ""}
+                </Text>
+              </View>
+            ))}
+          </View>
+        );
+      })}
+
+      {winnerName && (
+        <View className="bg-white rounded-2xl p-4 mb-3 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+          <TeamCrest color={winnerColor} size={44} icon="cricket" />
+          <View className="flex-1">
+            <Text className="text-muted text-xs">Winner</Text>
+            <Text className="text-ink font-bold text-base mt-0.5" numberOfLines={2}>
+              {match.result_summary ?? `${winnerName} won`}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {potm && (
+        <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="person" size={22} color={colors.primaryDark} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-muted text-xs">Player Of The Match</Text>
+            <Text className="text-ink font-bold text-base mt-0.5" numberOfLines={1}>{potm}</Text>
+          </View>
+        </View>
+      )}
+
+      <Pressable
+        onPress={onShareReport}
+        disabled={generatingReport}
+        className="flex-row items-center justify-center rounded-2xl py-3.5 mb-3"
+        style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}
+      >
+        {generatingReport ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <>
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+            <Text className="font-semibold text-sm" style={{ color: colors.ink }}>Share Match Report</Text>
+          </>
+        )}
+      </Pressable>
+      <Pressable
+        onPress={onShareSummary}
+        className="flex-row items-center justify-center rounded-2xl py-3.5"
+        style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}
+      >
+        <Ionicons name="share-social-outline" size={18} color={colors.ink} />
+        <Text className="font-semibold text-sm" style={{ color: colors.ink }}>Share Match Summary</Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+// Completed-match "Balls" tab — a reverse-chronological, over-grouped
+// commentary feed for whichever innings is selected. Each over's snapshot
+// card is computed by replaying that innings' chronological ball-prefix up
+// through the over's last ball (innings are short, so re-replaying per over
+// has no real performance cost for a one-time completed-match render).
+function BallsTab({
+  match,
+  scorecardInnings,
+  selectedInningsNumber,
+  onSelectInnings,
+}: {
+  match: CricketMatchDetail;
+  scorecardInnings: ScorecardInningsEntry[];
+  selectedInningsNumber: number;
+  onSelectInnings: (n: number) => void;
+}) {
+  if (scorecardInnings.length === 0) {
+    return (
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <Text className="text-muted text-sm text-center mt-10">No balls bowled yet.</Text>
+      </ScrollView>
+    );
+  }
+
+  const selected =
+    scorecardInnings.find((si) => si.inn.innings_number === selectedInningsNumber) ??
+    scorecardInnings[scorecardInnings.length - 1];
+  const battingTeamLetter = selected.inn.batting_team as "A" | "B";
+  const battingPlayers = battingTeamLetter === "A" ? match.team_a_players : match.team_b_players;
+  const startingRuns = battingTeamLetter === "A" ? match.team_a_penalty_runs : match.team_b_penalty_runs;
+  const chronBalls = [...selected.inn.cricket_balls].sort((a, b) => a.seq - b.seq).map(ballRowToEvent);
+  const overs = groupBallsByOver(chronBalls);
+
+  let consumed = 0;
+  const overGroups = overs.map((over, overIdx) => {
+    consumed += over.length;
+    const prefix = chronBalls.slice(0, consumed);
+    const snapshot = replayInnings(
+      prefix,
+      battingTeamLetter,
+      match.overs_limit,
+      battingPlayers.length,
+      chronBalls[0].strikerName,
+      chronBalls[0].nonStrikerName ?? "",
+      startingRuns,
+      match.last_man_stand
+    );
+    // A wide/no-ball doesn't advance the ball count, so it shares the same
+    // "over.ball" label as whichever legal delivery it's attached to —
+    // standard scorecard notation.
+    let legalSoFar = 0;
+    const labeled = over.map((b) => {
+      const label = `${overIdx + 1}.${legalSoFar + 1}`;
+      if (b.extraType !== "WIDE" && b.extraType !== "NOBALL" && b.extraType !== "PENALTY") legalSoFar += 1;
+      return { ball: b, label };
+    });
+    return { over: labeled, state: snapshot, runsInOver: over.reduce((s, b) => s + b.runsBatted + b.extraRuns, 0) };
+  });
+
+  return (
+    <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      {scorecardInnings.length > 1 && (
+        <SegmentedPill
+          options={scorecardInnings.map((si) => ({
+            key: String(si.inn.innings_number),
+            label: si.inn.innings_number === 1 ? "1st Innings" : "2nd Innings",
+          }))}
+          selected={String(selectedInningsNumber)}
+          onSelect={(k) => onSelectInnings(Number(k))}
+        />
+      )}
+      {[...overGroups].reverse().map((group, gi) => {
+        const lastBall = group.over[group.over.length - 1].ball;
+        const strikerStat = group.state.striker ? group.state.battingStats[group.state.striker] : undefined;
+        const nonStrikerStat = group.state.nonStriker ? group.state.battingStats[group.state.nonStriker] : undefined;
+        const bowlerStat = group.state.bowlingStats[lastBall.bowlerName];
+        return (
+          <View key={gi} style={{ marginBottom: 18 }}>
+            <View className="bg-gray-50 rounded-2xl px-3.5 py-3 mb-2">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1">
+                  {group.state.striker && (
+                    <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+                      {group.state.striker} {strikerStat ? `${strikerStat.runs}(${strikerStat.balls})` : ""}
+                    </Text>
+                  )}
+                  {group.state.nonStriker && (
+                    <Text className="text-ink text-sm font-semibold mt-0.5" numberOfLines={1}>
+                      {group.state.nonStriker} {nonStrikerStat ? `${nonStrikerStat.runs}(${nonStrikerStat.balls})` : ""}
+                    </Text>
+                  )}
+                </View>
+                <View className="items-end">
+                  <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{lastBall.bowlerName}</Text>
+                  {bowlerStat && (
+                    <Text className="text-muted text-xs mt-0.5">
+                      {formatOvers(bowlerStat.legalBalls)} - {bowlerStat.maidens} - {bowlerStat.runsConceded} - {bowlerStat.wickets}
+                    </Text>
+                  )}
+                </View>
+              </View>
+              <View
+                className="flex-row items-center justify-between mt-2.5 pt-2"
+                style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+              >
+                <Text className="text-muted text-xs font-semibold">Overs {formatOvers(group.state.legalBalls)}</Text>
+                <Text className="text-muted text-xs font-semibold">Runs {group.runsInOver}</Text>
+                <Text className="text-muted text-xs font-semibold">Score {group.state.runs}-{group.state.wickets}</Text>
+              </View>
+            </View>
+            {[...group.over].reverse().map(({ ball, label }, bi) => (
+              <View
+                key={bi}
+                className="flex-row items-start py-2.5"
+                style={{ gap: 10, borderBottomWidth: bi < group.over.length - 1 ? 1 : 0, borderBottomColor: colors.border }}
+              >
+                <Text className="text-muted text-xs font-semibold" style={{ width: 32, marginTop: 2 }}>{label}</Text>
+                <View
+                  className="items-center justify-center rounded-full"
+                  style={{
+                    width: ball.isWicket ? 30 : 26,
+                    height: ball.isWicket ? 30 : 26,
+                    backgroundColor: ball.isWicket ? colors.danger : "#E5E7EB",
+                  }}
+                >
+                  <Text className="font-bold text-center" style={{ color: ball.isWicket ? "white" : colors.ink, fontSize: 11 }}>
+                    {ballLabel(ball)}
+                  </Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{ball.bowlerName} to {ball.strikerName}</Text>
+                  <Text className="text-muted text-xs mt-0.5">{describeBallCommentary(ball)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+// Completed-match "Info" tab — no reference screenshot was given for this
+// one, so it's populated with the match metadata this screen already has
+// (nothing new fetched), in the app's standard card style.
+function InfoTab({ match }: { match: CricketMatchDetail }) {
+  const rows: { label: string; value: string }[] = [
+    { label: "Venue", value: match.venue || "Not set" },
+    { label: "Overs", value: `${match.overs_limit} overs` },
+    { label: "Toss", value: match.toss_winner ? `${match.toss_winner} chose to ${match.toss_decision ?? "—"}` : "—" },
+    { label: "Last Man Stand", value: match.last_man_stand ? "On" : "Off" },
+    { label: "Scoring Code", value: match.scoring_code ?? "—" },
+    {
+      label: "Completed",
+      value: match.completed_at
+        ? new Date(match.completed_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })
+        : "—",
+    },
+  ];
+  return (
+    <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <View className="bg-white rounded-2xl p-4" style={cardShadow}>
+        {rows.map((r, i) => (
+          <View
+            key={r.label}
+            className="flex-row items-center justify-between py-2.5"
+            style={i > 0 ? { borderTopWidth: 1, borderTopColor: colors.border } : undefined}
+          >
+            <Text className="text-muted text-sm">{r.label}</Text>
+            <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{r.value}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -836,7 +1261,12 @@ export default function LiveScoringScreen() {
   // this is its own flag rather than reusing RunOutPanel's extraType toggle.
   const [stumpedWide, setStumpedWide] = useState(false);
   const [bonusSign, setBonusSign] = useState<1 | -1>(1);
-  const [matchCentreTab, setMatchCentreTab] = useState<"scoring" | "scorecard" | "stats" | "superstars">("scoring");
+  const [matchCentreTab, setMatchCentreTab] = useState<MatchCentreTabKey>("scoring");
+  // Scorecard tab's team switcher / Balls tab's innings switcher — both
+  // default to the first available option once there's data (see the
+  // render below), so these start null rather than guessing.
+  const [scorecardInningsId, setScorecardInningsId] = useState<string | null>(null);
+  const [ballsInningsNumber, setBallsInningsNumber] = useState<number | null>(null);
   const [selectBatsmanOpen, setSelectBatsmanOpen] = useState(false);
   const [selectBowlerOpen, setSelectBowlerOpen] = useState(false);
   const [selectFielderOpen, setSelectFielderOpen] = useState(false);
@@ -1032,6 +1462,19 @@ export default function LiveScoringScreen() {
   const innings2Row = match?.cricket_innings.find((i) => i.innings_number === 2);
   const isBetweenInnings = !!innings1Row?.is_completed && !innings2Row;
   const isMatchCompleted = match?.status === "COMPLETED";
+
+  // Lands on the new Summary tab the moment a match finishes — whether that
+  // happens while this screen is already open, or it's opened directly on
+  // an already-completed match. Only fires once per true→false transition
+  // (the ref guard) so it doesn't fight a viewer who's since browsed to
+  // another tab.
+  const hasAutoSwitchedToSummary = useRef(false);
+  useEffect(() => {
+    if (isMatchCompleted && !hasAutoSwitchedToSummary.current) {
+      hasAutoSwitchedToSummary.current = true;
+      setMatchCentreTab("summary");
+    }
+  }, [isMatchCompleted]);
 
   const effectiveStriker = inningsState?.striker ?? pendingStriker;
   const effectiveNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
@@ -1479,6 +1922,20 @@ export default function LiveScoringScreen() {
     }).catch(() => {});
   };
 
+  // Plain-text version of the Summary tab (final scores, result, Player of
+  // the Match) — same Share.share mechanism as handleShare above, just a
+  // richer composed message instead of the scoring-code invite.
+  const handleShareMatchSummary = () => {
+    const potm = computePlayerOfTheMatch(scorecardInnings);
+    const lines = [
+      `${match.team_a_name} vs ${match.team_b_name}`,
+      ...scorecardInnings.map((si) => `${si.teamName}: ${si.state.runs}/${si.state.wickets} (${formatOvers(si.state.legalBalls)} ov)`),
+      match.result_summary ?? "",
+      potm ? `Player of the Match: ${potm}` : "",
+    ].filter(Boolean);
+    Share.share({ message: lines.join("\n") }).catch(() => {});
+  };
+
   // Real partnership (runs/balls added since the last wicket fell by this
   // pair) — derived the same replay-based way as everything else, not a
   // separately-tracked counter.
@@ -1563,7 +2020,7 @@ export default function LiveScoringScreen() {
 
         {/* Match Centre tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, gap: 22 }}>
-          {MATCH_CENTRE_TABS.map((t) => (
+          {(isMatchCompleted ? COMPLETED_TABS : LIVE_TABS).map((t) => (
             <Pressable key={t.key} onPress={() => setMatchCentreTab(t.key)} className="items-center pb-3">
               <Text
                 className="font-semibold text-sm"
@@ -2307,21 +2764,46 @@ export default function LiveScoringScreen() {
           {scorecardInnings.length === 0 ? (
             <Text className="text-muted text-sm text-center mt-10">No balls bowled yet.</Text>
           ) : (
-            scorecardInnings.map(({ inn, teamName, state }) => {
-              const isTeamA = inn.batting_team === "A";
+            (() => {
+              const selectedId = scorecardInningsId ?? scorecardInnings[0].inn.id;
+              const selected = scorecardInnings.find((si) => si.inn.id === selectedId) ?? scorecardInnings[0];
+              const isTeamA = selected.inn.batting_team === "A";
+              const balls = [...selected.inn.cricket_balls].sort((a, b) => a.seq - b.seq).map(ballRowToEvent);
+              const allPlayers = isTeamA ? match.team_a_players : match.team_b_players;
               return (
-                <InningsCard
-                  key={inn.id}
-                  teamName={teamName}
-                  inningsNumber={inn.innings_number}
-                  color={isTeamA ? colors.primary : "#1D4ED8"}
-                  bg={isTeamA ? colors.primaryLight : "#DBEAFE"}
-                  state={state}
-                />
+                <>
+                  {scorecardInnings.length > 1 && (
+                    <SegmentedPill
+                      options={scorecardInnings.map((si) => ({ key: si.inn.id, label: si.teamName.toUpperCase() }))}
+                      selected={selectedId}
+                      onSelect={setScorecardInningsId}
+                    />
+                  )}
+                  <InningsCard
+                    key={selected.inn.id}
+                    teamName={selected.teamName}
+                    inningsNumber={selected.inn.innings_number}
+                    color={isTeamA ? colors.primary : "#1D4ED8"}
+                    state={selected.state}
+                    balls={balls}
+                    allPlayers={allPlayers}
+                  />
+                </>
               );
-            })
+            })()
           )}
         </ScrollView>
+      ) : matchCentreTab === "summary" ? (
+        <SummaryTab match={match} scorecardInnings={scorecardInnings} onShareReport={handleGenerateMatchReport} generatingReport={generatingReport} onShareSummary={handleShareMatchSummary} />
+      ) : matchCentreTab === "balls" ? (
+        <BallsTab
+          match={match}
+          scorecardInnings={scorecardInnings}
+          selectedInningsNumber={ballsInningsNumber ?? scorecardInnings[scorecardInnings.length - 1]?.inn.innings_number ?? 1}
+          onSelectInnings={setBallsInningsNumber}
+        />
+      ) : matchCentreTab === "info" ? (
+        <InfoTab match={match} />
       ) : matchCentreTab === "stats" ? (
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
           <View className="bg-white rounded-2xl border border-border p-4" style={cardShadow}>
