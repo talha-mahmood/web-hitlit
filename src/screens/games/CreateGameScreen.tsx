@@ -36,7 +36,7 @@ import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import LocationMapPicker from "../../components/LocationMapPicker";
-import { detectCurrentCoordinates, reverseGeocodeCoordinates } from "../../lib/locationPicker";
+import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import { HomeSportTile } from "../../components/HomeWideCards";
@@ -526,7 +526,7 @@ export default function CreateGameScreen() {
   const handleConfirmMapLocation = async (lat: number, lng: number) => {
     setConfirmingLocation(true);
     try {
-      const label = await reverseGeocodeCoordinates(lat, lng);
+      const label = await reverseGeocodeViaNominatim(lat, lng);
       setCustomVenueName(label);
       setCustomVenueLat(lat);
       setCustomVenueLng(lng);

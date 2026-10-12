@@ -3,6 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, TextInput } from "react-nativ
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../constants/theme";
+import { reverseGeocodeViaNominatim } from "../lib/locationPicker";
 import GradientFill from "./GradientFill";
 
 // A small, self-contained Leaflet + OpenStreetMap page, loaded straight
@@ -72,6 +73,17 @@ export default function LocationMapPicker({
   // Guards against a slower, older request's results landing after a
   // newer one's and clobbering what's on screen.
   const searchRequestId = useRef(0);
+  // The map posts the marker's starting position once on load (same as
+  // every later drag/tap) — skip reverse-geocoding that first report so the
+  // search box starts empty instead of auto-filling with the initial
+  // center's address before the host has picked anything.
+  const hasMapLoadedOnce = useRef(false);
+  // Picking a search result already sets the box to that result's own
+  // label (see handlePickResult) — skip the next reverse-geocode sync so it
+  // isn't immediately overwritten by a (usually near-identical, but
+  // possibly differently worded) address for the same coordinates.
+  const skipNextGeocodeSync = useRef(false);
+  const geocodeSyncRequestId = useRef(0);
 
   const handleMessage = (e: WebViewMessageEvent) => {
     try {
@@ -81,6 +93,30 @@ export default function LocationMapPicker({
       // Ignore anything that isn't the {lat,lng} shape we post.
     }
   };
+
+  // Keeps the search box showing wherever the pin currently is — like
+  // Google Maps' search bar echoing the selected place — whenever it moves
+  // because the host dragged or tapped the map (not because a search
+  // result was picked, which already set a label directly).
+  useEffect(() => {
+    if (!hasMapLoadedOnce.current) {
+      hasMapLoadedOnce.current = true;
+      return;
+    }
+    if (skipNextGeocodeSync.current) {
+      skipNextGeocodeSync.current = false;
+      return;
+    }
+    const requestId = ++geocodeSyncRequestId.current;
+    reverseGeocodeViaNominatim(picked.lat, picked.lng)
+      .then((label) => {
+        if (requestId === geocodeSyncRequestId.current) setQuery(label);
+      })
+      .catch(() => {
+        // Best-effort — leave whatever text is already in the box.
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked]);
 
   // OSM's own free geocoder — no API key, same OSM ecosystem the tiles
   // already come from. A User-Agent is required by Nominatim's usage
@@ -125,6 +161,7 @@ export default function LocationMapPicker({
   const handlePickResult = (r: SearchResult) => {
     setResults([]);
     setQuery(r.label);
+    skipNextGeocodeSync.current = true;
     setPicked({ lat: r.lat, lng: r.lng });
     // Moves the already-loaded map/marker in place — map/marker/post are
     // plain globals in the page's own script (see buildMapHtml), so no

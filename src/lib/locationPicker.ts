@@ -71,3 +71,24 @@ export async function reverseGeocodeCoordinates(latitude: number, longitude: num
   if (!address) return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
   return formatAddress(address);
 }
+
+// Nominatim's own reverse geocoder — used specifically by the OSM manual
+// map picker (not the OS-native GPS flows above), since it returns the same
+// street-level detail (e.g. "Street 23, G-6/2, Islamabad") its forward
+// search already shows, which the OS geocoder's city/district-only summary
+// above doesn't surface. Falls back to the OS geocoder if the request fails
+// (offline, rate-limited, etc.) so a dropped pin always resolves to
+// something rather than leaving the host with a blank result.
+export async function reverseGeocodeViaNominatim(latitude: number, longitude: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18`,
+      { headers: { "User-Agent": "HitLit-App/1.0", "Accept-Language": "en" } }
+    );
+    const data = (await res.json()) as { display_name?: string };
+    if (data.display_name) return data.display_name;
+  } catch {
+    // fall through to the OS geocoder below
+  }
+  return reverseGeocodeCoordinates(latitude, longitude);
+}
