@@ -2745,8 +2745,10 @@ export default function LiveScoringScreen() {
 
           {/* Available to every tournament player, not just the scorer —
               RLS already lets any signed-in user read this match, and
-              generating the PDF only reads, it never writes. */}
-          {scorecardInnings.length > 0 && (
+              generating the PDF only reads, it never writes. Hidden once
+              the match is completed — the Summary tab has its own copy of
+              this same button, so it'd otherwise be offered twice. */}
+          {scorecardInnings.length > 0 && !isMatchCompleted && (
             <Pressable onPress={handleGenerateMatchReport} disabled={generatingReport} className="mb-4">
               <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
                 {generatingReport ? (
