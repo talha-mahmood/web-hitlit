@@ -1,4 +1,4 @@
-import { Children, useEffect, useMemo, useRef, useState } from "react";
+import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, Modal, TextInput, Share, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -234,6 +234,9 @@ function SelectPlayerPanel({
   onClose,
   onAddPlayer,
   addPlayerPending,
+  headerExtra,
+  listLabel,
+  submitting,
 }: {
   title: string;
   names: string[];
@@ -245,6 +248,17 @@ function SelectPlayerPanel({
   onClose: () => void;
   onAddPlayer: (name: string) => void;
   addPlayerPending: boolean;
+  // Extra content rendered between the header and the player list — used by
+  // the Stumped flow's "Is that a wide ball?" toggle, so that flow can reuse
+  // this exact same squad-list UI instead of duplicating it.
+  headerExtra?: ReactNode;
+  listLabel?: string;
+  // True while a tap on a row is already being submitted (e.g. the Stumped
+  // flow's onSelect records the dismissal immediately) — disables every row
+  // so a second quick tap on a different name can't fire a second ball.
+  // submitBall itself also guards against this, so this is belt-and-
+  // suspenders visual feedback, not the only thing preventing it.
+  submitting?: boolean;
 }) {
   const [addDraft, setAddDraft] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -263,11 +277,13 @@ function SelectPlayerPanel({
         </GradientFill>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+          {headerExtra}
+          {listLabel && <Text className="text-ink font-bold text-sm mb-3">{listLabel}</Text>}
           {names.map((name, i) => {
             const isExcluded = excluded.includes(name);
             const isBenched = benchedNames.has(name);
             const isSelected = name === selectedName;
-            const disabled = isExcluded || isBenched;
+            const disabled = isExcluded || isBenched || !!submitting;
             return (
               <Pressable
                 key={`${name}-${i}`}
@@ -585,6 +601,7 @@ function RunOutPanel({
           }}
           onAddPlayer={onAddPlayer}
           addPlayerPending={addPlayerPending}
+          submitting={submitting}
         />
       )}
     </Modal>
@@ -622,6 +639,9 @@ export default function LiveScoringScreen() {
   const [wicketType, setWicketType] = useState<WicketType | null>(null);
   const [wicketEnd, setWicketEnd] = useState<"striker" | "nonStriker" | null>(null);
   const [fielderName, setFielderName] = useState("");
+  // Stumped-specific: a stumping can happen on a wide (never a no-ball), so
+  // this is its own flag rather than reusing RunOutPanel's extraType toggle.
+  const [stumpedWide, setStumpedWide] = useState(false);
   const [bonusSign, setBonusSign] = useState<1 | -1>(1);
   const [matchCentreTab, setMatchCentreTab] = useState<"scoring" | "scorecard" | "stats" | "superstars">("scoring");
   const [selectBatsmanOpen, setSelectBatsmanOpen] = useState(false);
@@ -786,7 +806,19 @@ export default function LiveScoringScreen() {
     );
   }
 
+  // The single choke point every scoring action goes through — the
+  // addBall.isPending guard here is what stops a double-tap (or several
+  // quick taps across different buttons/rows) from recording more than one
+  // ball. Most callers already have their own belt-and-suspenders guard too
+  // (the main keypad's whole panel goes pointerEvents="none" while pending,
+  // RunOutPanel's DONE button and the "Confirm Wicket" buttons disable
+  // themselves), but those only cover the specific control they're attached
+  // to — this is the one place that protects every path at once, including
+  // ones with no such guard of their own (e.g. tapping two different names
+  // in a row in the Stumped "select wicket keeper" list, which submits
+  // straight from onSelect with nothing else in between).
   const submitBall = (partial: Omit<BallEvent, "seq" | "strikerName" | "nonStrikerName" | "bowlerName">) => {
+    if (addBall.isPending) return;
     if (!currentInnings || !effectiveStriker || !effectiveNonStriker || !effectiveBowler) return;
     const seq = ballEvents.length + 1;
     const ball: BallEvent = {
@@ -807,6 +839,7 @@ export default function LiveScoringScreen() {
           setWicketType(null);
           setWicketEnd(null);
           setFielderName("");
+          setStumpedWide(false);
         },
         onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not record ball.")),
       }
@@ -921,6 +954,22 @@ export default function LiveScoringScreen() {
       dismissedName,
       fielderName: f1,
       fielderName2: f2,
+    });
+  };
+
+  // A stumping can happen on a wide (the mandatory 1 extra run, same as any
+  // bare wide — a batsman doesn't run on a stumping) but never a no-ball, so
+  // there's only the one combo to handle, unlike Run Out's four.
+  const handleStumpedSubmit = (result: { fielderName: string; wide: boolean }) => {
+    if (!effectiveStriker) return;
+    submitBall({
+      runsBatted: 0,
+      extraType: result.wide ? "WIDE" : null,
+      extraRuns: result.wide ? 1 : 0,
+      isWicket: true,
+      wicketType: "STUMPED",
+      dismissedName: effectiveStriker,
+      fielderName: result.fielderName,
     });
   };
 
@@ -1195,6 +1244,7 @@ export default function LiveScoringScreen() {
     setWicketType(null);
     setWicketEnd(null);
     setFielderName("");
+    setStumpedWide(false);
     setChangeTargetDraft("");
     setRevisedOversDraft("");
   };
@@ -1814,7 +1864,7 @@ export default function LiveScoringScreen() {
                   </View>
                   {cancelRow}
                 </>
-              ) : panel === "WICKET" && wicketType && wicketType !== "RUN_OUT" ? (
+              ) : panel === "WICKET" && wicketType && wicketType !== "RUN_OUT" && wicketType !== "STUMPED" ? (
                 <>
                   <Text className="text-white font-bold text-lg mb-4">{WICKET_TYPES.find((w) => w.value === wicketType)?.label}</Text>
                   {wicketType === "MANKAD" && (
@@ -1838,7 +1888,7 @@ export default function LiveScoringScreen() {
                       </View>
                     </>
                   )}
-                  {(wicketType === "CAUGHT" || wicketType === "STUMPED" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
+                  {(wicketType === "CAUGHT" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
                     <View className="mb-3">
                       <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Fielder (optional)</Text>
                       <Pressable
@@ -1956,6 +2006,7 @@ export default function LiveScoringScreen() {
           }}
           onAddPlayer={(name) => handleAddPlayer("batting", name)}
           addPlayerPending={addRosterPlayer.isPending}
+          submitting={addBall.isPending}
         />
       )}
       {selectBowlerOpen && (
@@ -1973,6 +2024,7 @@ export default function LiveScoringScreen() {
           }}
           onAddPlayer={(name) => handleAddPlayer("bowling", name)}
           addPlayerPending={addRosterPlayer.isPending}
+          submitting={addBall.isPending}
         />
       )}
       {selectFielderOpen && (
@@ -1990,6 +2042,7 @@ export default function LiveScoringScreen() {
           }}
           onAddPlayer={(name) => handleAddPlayer("bowling", name)}
           addPlayerPending={addRosterPlayer.isPending}
+          submitting={addBall.isPending}
         />
       )}
 
@@ -2005,6 +2058,41 @@ export default function LiveScoringScreen() {
           onCancel={closePanel}
           onSubmit={handleRunOutSubmit}
           submitting={addBall.isPending}
+        />
+      )}
+
+      {panel === "WICKET" && wicketType === "STUMPED" && (
+        <SelectPlayerPanel
+          title="Stumped By"
+          names={bowlingPlayers}
+          excluded={[]}
+          selectedName={null}
+          benchedNames={benchedNames}
+          onToggleBench={toggleBench}
+          onClose={closePanel}
+          onSelect={(name) => handleStumpedSubmit({ fielderName: name, wide: stumpedWide })}
+          onAddPlayer={(name) => handleAddPlayer("bowling", name)}
+          addPlayerPending={addRosterPlayer.isPending}
+          submitting={addBall.isPending}
+          listLabel="Select the wicket keeper :"
+          headerExtra={
+            <View className="mb-6">
+              <Text className="text-ink font-bold text-sm mb-3">Is that a wide ball? (Optional)</Text>
+              <Pressable
+                onPress={() => setStumpedWide((w) => !w)}
+                className="self-start rounded-xl px-5 py-3"
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: stumpedWide ? colors.primary : colors.border,
+                  backgroundColor: stumpedWide ? colors.primary : "white",
+                }}
+              >
+                <Text className="font-bold text-sm" style={{ color: stumpedWide ? "white" : colors.ink }}>
+                  Wide
+                </Text>
+              </Pressable>
+            </View>
+          }
         />
       )}
 
