@@ -1233,9 +1233,14 @@ export default function LiveScoringScreen() {
         { event: "*", schema: "public", table: "cricket_matches", filter: `id=eq.${params.matchId}` },
         () => qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_innings" }, () =>
-        qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cricket_innings", filter: `match_id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
       )
+      // cricket_balls has no direct match_id column (only innings_id), so
+      // this one stays unfiltered — any ball anywhere invalidates this
+      // match's query, a harmless no-op refetch for every other match.
       .on("postgres_changes", { event: "*", schema: "public", table: "cricket_balls" }, () =>
         qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
       )

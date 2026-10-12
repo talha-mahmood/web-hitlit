@@ -227,20 +227,17 @@ function formatMatchSchedule(iso: string): string {
 }
 
 // Small top-right status pill every card carries — Completed (settled,
-// green-tinted) or Upcoming (muted) — independent of the ready-to-score
-// pill, which is about who can act on the match right now, not its status.
-function StatusPill({ completed }: { completed: boolean }) {
+// green-tinted), Live (red, once its linked cricket scorecard is actually
+// IN_PROGRESS — see liveCricketMatchIds), or Upcoming (muted) — independent
+// of the ready-to-score pill, which is about who can act on the match right
+// now, not its status.
+function StatusPill({ completed, live }: { completed: boolean; live?: boolean }) {
+  const label = completed ? "Completed" : live ? "Live" : "Upcoming";
+  const color = completed ? colors.primaryDark : live ? "#DC2626" : "#2563EB";
+  const bg = completed ? colors.primaryLight : live ? "#FEE2E2" : "#EFF6FF";
   return (
-    <View
-      className="px-2.5 py-1 rounded-full"
-      style={{ backgroundColor: completed ? colors.primaryLight : "#EFF6FF" }}
-    >
-      <Text
-        className="text-xs font-bold"
-        style={{ color: completed ? colors.primaryDark : "#2563EB" }}
-      >
-        {completed ? "Completed" : "Upcoming"}
-      </Text>
+    <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: bg }}>
+      <Text className="text-xs font-bold" style={{ color }}>{label}</Text>
     </View>
   );
 }
@@ -317,6 +314,7 @@ function MatchRow({
   isAssignedScorer,
   scorerName,
   nrrByTeam,
+  liveCricketMatchIds,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
@@ -327,6 +325,10 @@ function MatchRow({
   match: TournamentMatch;
   matchNumber: number;
   nrrByTeam?: Map<string, number>;
+  // Cricket scorecards currently IN_PROGRESS — same set the "Live Now"
+  // section is built from — so this card's own status pill can show "Live"
+  // instead of "Upcoming" while it's actually being scored.
+  liveCricketMatchIds?: Set<string>;
   // True once the venue is booked and both teams are set — the same bar
   // "Go To Scorecard"/"Enter Score Manually" always required, now checked
   // per match instead of only the single earliest one.
@@ -362,6 +364,7 @@ function MatchRow({
   const showSelectScorer = isEligible && isHost;
   const isReady = isEligible && (isAssignedScorer || isHost);
   const canWatch = !!match.cricket_match_id && !!onWatchScorecard;
+  const isLive = !!match.cricket_match_id && !!liveCricketMatchIds?.has(match.cricket_match_id);
 
   if (match.status === "COMPLETED") {
     const resultLabel = match.is_draw
@@ -429,7 +432,7 @@ function MatchRow({
         >
           Match {matchNumber}
         </Text>
-        <StatusPill completed={false} />
+        <StatusPill completed={false} live={isLive} />
       </View>
       {match.scheduled_at ? (
         <Text className="text-muted text-xs mb-1.5">{formatMatchSchedule(match.scheduled_at)}</Text>
@@ -583,6 +586,7 @@ function MatchesPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  liveCricketMatchIds,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
@@ -601,6 +605,7 @@ function MatchesPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  liveCricketMatchIds: Set<string>;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
@@ -714,6 +719,7 @@ function MatchesPanel({
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
                   nrrByTeam={nrrByTeam}
+                  liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
@@ -967,6 +973,7 @@ function PoolMatchesPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  liveCricketMatchIds,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
@@ -985,6 +992,7 @@ function PoolMatchesPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  liveCricketMatchIds: Set<string>;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
@@ -1078,6 +1086,7 @@ function PoolMatchesPanel({
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
                   nrrByTeam={nrrByTeam}
+                  liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
@@ -1116,6 +1125,7 @@ function PoolPlayoffPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  liveCricketMatchIds,
   qualifiersPerGroup,
   getScorerName,
   onGoToScorecard,
@@ -1135,6 +1145,7 @@ function PoolPlayoffPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  liveCricketMatchIds: Set<string>;
   // Uniform across every group — host-set at creation time
   // (games.pool_qualifiers_per_group); falls back to the pre-existing
   // default (2 when there are exactly 2 groups, else 1) for tournaments
@@ -1266,6 +1277,7 @@ function PoolPlayoffPanel({
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
                   nrrByTeam={nrrByTeam}
+                  liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
@@ -1344,6 +1356,10 @@ export default function TournamentMatchesScreen() {
       .map((m) => m.cricket_match_id as string)
   );
   const liveCricketMatches = (liveCricketMatchesRaw ?? []).filter((lm) => !completedCricketMatchIds.has(lm.id));
+  // Same set, as cricket_match_ids only — lets each match card's own
+  // StatusPill show "Live" without every MatchRow needing the full
+  // LiveCricketMatchSummary objects.
+  const liveCricketMatchIds = new Set(liveCricketMatches.map((lm) => lm.id));
   const { data: pools } = useTournamentPools(params.gameId);
   const setMatchScorer = useSetMatchScorer(params.gameId);
   const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
@@ -1808,6 +1824,7 @@ export default function TournamentMatchesScreen() {
               statusFilter={statusFilter}
               stageFilter={stageFilter}
               nrrByTeam={nrrByTeam}
+              liveCricketMatchIds={liveCricketMatchIds}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
@@ -1827,6 +1844,7 @@ export default function TournamentMatchesScreen() {
               statusFilter={statusFilter}
               stageFilter={stageFilter}
               nrrByTeam={nrrByTeam}
+              liveCricketMatchIds={liveCricketMatchIds}
               qualifiersPerGroup={game.pool_qualifiers_per_group ?? ((pools ?? []).length === 2 ? 2 : 1)}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
@@ -1859,6 +1877,7 @@ export default function TournamentMatchesScreen() {
                 statusFilter={statusFilter}
                 stageFilter={stageFilter}
                 nrrByTeam={nrrByTeam}
+                liveCricketMatchIds={liveCricketMatchIds}
                 getScorerName={getScorerName}
                 onGoToScorecard={handleGoToScorecard}
                 onEnterScoreManually={handleEnterScoreManually}
