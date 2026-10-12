@@ -61,10 +61,19 @@ function buildOverRows(
   balls: BallEvent[],
   battingTeam: "A" | "B",
   oversLimit: number,
-  totalPlayers: number
+  totalPlayers: number,
+  lastManStand: boolean
 ): OverRow[] {
   if (balls.length === 0) return [];
-  let state = createInitialInningsState(battingTeam, oversLimit, totalPlayers, balls[0].strikerName, balls[0].nonStrikerName);
+  let state = createInitialInningsState(
+    battingTeam,
+    oversLimit,
+    totalPlayers,
+    balls[0].strikerName,
+    balls[0].nonStrikerName ?? "",
+    0,
+    lastManStand
+  );
   const rows: OverRow[] = [];
   let symbols: string[] = [];
   let overStartRuns = 0;
@@ -218,9 +227,18 @@ export function buildCricketMatchReportHtml(
       const teamName = inn.batting_team === "A" ? match.team_a_name : match.team_b_name;
       const totalPlayers = inn.batting_team === "A" ? match.team_a_players.length : match.team_b_players.length;
       const state = balls.length
-        ? replayInnings(balls, inn.batting_team as "A" | "B", match.overs_limit, totalPlayers, balls[0].strikerName, balls[0].nonStrikerName)
+        ? replayInnings(
+            balls,
+            inn.batting_team as "A" | "B",
+            match.overs_limit,
+            totalPlayers,
+            balls[0].strikerName,
+            balls[0].nonStrikerName ?? "",
+            0,
+            match.last_man_stand
+          )
         : null;
-      const overRows = buildOverRows(balls, inn.batting_team as "A" | "B", match.overs_limit, totalPlayers);
+      const overRows = buildOverRows(balls, inn.batting_team as "A" | "B", match.overs_limit, totalPlayers, match.last_man_stand);
       return { inn, teamName, state, overRows };
     })
     .filter((x): x is typeof x & { state: InningsState } => x.state !== null);

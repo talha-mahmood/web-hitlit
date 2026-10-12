@@ -8,6 +8,7 @@ import {
   joinGame,
   leaveGame,
   cancelGame,
+  addManualGamePlayer,
   approvePlayer,
   rejectPlayer,
   removePlayer,
@@ -165,6 +166,17 @@ export function useCancelGame() {
   return useMutation({
     mutationFn: (gameId: string) => cancelGame(gameId),
     onSuccess: (_, gameId) => {
+      qc.invalidateQueries({ queryKey: ["game", gameId] });
+      qc.invalidateQueries({ queryKey: ["games"] });
+    },
+  });
+}
+
+export function useAddManualGamePlayer(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => addManualGamePlayer(gameId, name),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["game", gameId] });
       qc.invalidateQueries({ queryKey: ["games"] });
     },

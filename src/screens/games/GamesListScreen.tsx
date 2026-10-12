@@ -273,7 +273,7 @@ function GameCard({
               <AvatarStack
                 people={joined.map((p) => ({
                   avatar: p.profiles?.avatar ?? null,
-                  name: p.profiles?.full_name ?? null,
+                  name: p.profiles?.full_name ?? p.manual_name ?? null,
                 }))}
                 size={30}
               />

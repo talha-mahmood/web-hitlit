@@ -568,7 +568,7 @@ export type Database = {
           id: string
           innings_id: string
           is_wicket: boolean
-          non_striker_name: string
+          non_striker_name: string | null
           runs_batted: number
           seq: number
           striker_name: string
@@ -585,7 +585,7 @@ export type Database = {
           id?: string
           innings_id: string
           is_wicket?: boolean
-          non_striker_name: string
+          non_striker_name?: string | null
           runs_batted?: number
           seq: number
           striker_name: string
@@ -602,7 +602,7 @@ export type Database = {
           id?: string
           innings_id?: string
           is_wicket?: boolean
-          non_striker_name?: string
+          non_striker_name?: string | null
           runs_batted?: number
           seq?: number
           striker_name?: string
@@ -656,6 +656,7 @@ export type Database = {
           created_at: string
           format: string
           id: string
+          last_man_stand: boolean
           overs_limit: number
           result_summary: string | null
           scoring_code: string | null
@@ -677,6 +678,7 @@ export type Database = {
           created_at?: string
           format?: string
           id?: string
+          last_man_stand?: boolean
           overs_limit: number
           result_summary?: string | null
           scoring_code?: string | null
@@ -698,6 +700,7 @@ export type Database = {
           created_at?: string
           format?: string
           id?: string
+          last_man_stand?: boolean
           overs_limit?: number
           result_summary?: string | null
           scoring_code?: string | null
@@ -1202,11 +1205,12 @@ export type Database = {
           id: string
           joined_at: string | null
           location: string | null
+          manual_name: string | null
           payment_status: Database["public"]["Enums"]["payment_status_type"]
           skill_level: Database["public"]["Enums"]["skill_level_type"] | null
           status: Database["public"]["Enums"]["game_player_status_type"]
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1215,11 +1219,12 @@ export type Database = {
           id?: string
           joined_at?: string | null
           location?: string | null
+          manual_name?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status_type"]
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1228,11 +1233,12 @@ export type Database = {
           id?: string
           joined_at?: string | null
           location?: string | null
+          manual_name?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status_type"]
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1311,6 +1317,8 @@ export type Database = {
           court_id: string | null
           created_at: string
           creator_id: string
+          custom_venue_lat: number | null
+          custom_venue_lng: number | null
           custom_venue_name: string | null
           daily_hours: number | null
           deleted_at: string | null
@@ -1355,6 +1363,8 @@ export type Database = {
           court_id?: string | null
           created_at?: string
           creator_id: string
+          custom_venue_lat?: number | null
+          custom_venue_lng?: number | null
           custom_venue_name?: string | null
           daily_hours?: number | null
           deleted_at?: string | null
@@ -1399,6 +1409,8 @@ export type Database = {
           court_id?: string | null
           created_at?: string
           creator_id?: string
+          custom_venue_lat?: number | null
+          custom_venue_lng?: number | null
           custom_venue_name?: string | null
           daily_hours?: number | null
           deleted_at?: string | null
@@ -3079,11 +3091,12 @@ export type Database = {
           id: string
           joined_at: string | null
           location: string | null
+          manual_name: string | null
           skill_level: Database["public"]["Enums"]["skill_level_type"] | null
           status: Database["public"]["Enums"]["game_player_status_type"]
           team_id: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -3091,11 +3104,12 @@ export type Database = {
           id?: string
           joined_at?: string | null
           location?: string | null
+          manual_name?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           team_id: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -3103,11 +3117,12 @@ export type Database = {
           id?: string
           joined_at?: string | null
           location?: string | null
+          manual_name?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
           status?: Database["public"]["Enums"]["game_player_status_type"]
           team_id?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -3477,6 +3492,14 @@ export type Database = {
       accept_game_invite: { Args: { p_invite_id: string }; Returns: undefined }
       accept_squad_invite: { Args: { p_invite_id: string }; Returns: undefined }
       accept_team_invite: { Args: { p_invite_id: string }; Returns: undefined }
+      add_manual_game_player: {
+        Args: { p_game_id: string; p_name: string }
+        Returns: string
+      }
+      add_manual_team_member: {
+        Args: { p_name: string; p_team_id: string }
+        Returns: string
+      }
       can_view_poll: { Args: { p_poll_id: string }; Returns: boolean }
       create_notification: {
         Args: {
@@ -3579,6 +3602,14 @@ export type Database = {
       }
       revoke_venue_admin: {
         Args: { target_user_id: string; target_venue_id: string }
+        Returns: undefined
+      }
+      squad_add_members_to_team: {
+        Args: {
+          p_member_user_ids: string[]
+          p_squad_id: string
+          p_team_id: string
+        }
         Returns: undefined
       }
       squad_fill_game_slots: {

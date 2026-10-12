@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import {
@@ -13,16 +13,47 @@ import {
   yearlyOverview,
   bestAgainstTeam,
 } from "../lib/playerCricketStats";
+import { supabase } from "../lib/supabase";
+import { uniqueChannelName } from "../lib/realtimeChannel";
 
 // Every match (any status) this player appears in — shared cache key so the
 // Overview/Statistics/Matches tabs all reuse the same single fetch.
 export function usePlayerCricketMatches(fullName: string | null | undefined) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["playerCricketMatches", fullName],
     queryFn: () => fetchPlayerCricketMatches(fullName as string),
     enabled: !!fullName,
     staleTime: 60_000,
   });
+
+  // A player's matches are found by name appearing in team_a_players/
+  // team_b_players (plain text[] columns) — Postgres realtime's filter
+  // grammar doesn't reliably support "array contains" filters, so this
+  // subscribes broadly (any cricket_matches/cricket_innings/cricket_balls
+  // change) and invalidates, the same broad-then-invalidate shape
+  // useProfileStats's own channel already uses. Only active while a
+  // player's profile screen has this tab mounted.
+  useEffect(() => {
+    if (!fullName) return;
+    const channel = supabase
+      .channel(uniqueChannelName(`playerCricketMatches:${fullName}`))
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_matches" }, () =>
+        qc.invalidateQueries({ queryKey: ["playerCricketMatches", fullName] })
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_innings" }, () =>
+        qc.invalidateQueries({ queryKey: ["playerCricketMatches", fullName] })
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_balls" }, () =>
+        qc.invalidateQueries({ queryKey: ["playerCricketMatches", fullName] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fullName, qc]);
+
+  return query;
 }
 
 export function usePlayerCricketFigures(fullName: string | null | undefined) {

@@ -9,14 +9,14 @@ type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 export type TournamentTeam = TeamRow & {
   tournament_team_members: (Pick<
     TeamMemberRow,
-    "id" | "status" | "user_id" | "joined_at" | "skill_level" | "location"
+    "id" | "status" | "user_id" | "manual_name" | "joined_at" | "skill_level" | "location"
   > & {
     profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   })[];
 };
 
 const TEAM_SELECT =
-  "*, tournament_team_members(id, status, user_id, joined_at, skill_level, location, profiles(id, full_name, avatar))";
+  "*, tournament_team_members(id, status, user_id, manual_name, joined_at, skill_level, location, profiles(id, full_name, avatar))";
 
 export async function fetchTeamsForTournament(gameId: string): Promise<TournamentTeam[]> {
   const { data, error } = await supabase
@@ -140,6 +140,15 @@ export async function requestToJoinTeam(
     location: location || null,
     joined_at: new Date().toISOString(),
   });
+  if (error) throw new Error(error.message);
+}
+
+// Host-only (enforced server-side by the add_manual_team_member RPC —
+// every normal INSERT policy on this table requires user_id = auth.uid(),
+// which can never be true for a manual, account-less member). Lands as
+// JOINED immediately, same as any other host-initiated add.
+export async function addManualTeamMember(teamId: string, name: string): Promise<void> {
+  const { error } = await supabase.rpc("add_manual_team_member", { p_team_id: teamId, p_name: name });
   if (error) throw new Error(error.message);
 }
 

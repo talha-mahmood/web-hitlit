@@ -1,0 +1,211 @@
+import { useEffect, useRef, useState } from "react";
+import { View, Text, Pressable, ActivityIndicator, TextInput } from "react-native";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, cardShadow, primaryButtonShadow } from "../constants/theme";
+import GradientFill from "./GradientFill";
+
+// A small, self-contained Leaflet + OpenStreetMap page, loaded straight
+// into the WebView as an HTML string (no separate asset file, no API key —
+// OSM's tile server is free to use at this scale). The marker starts at
+// (initialLat, initialLng) and can be dragged or placed by tapping
+// anywhere on the map; every move posts the new {lat, lng} back to RN.
+// `map`/`marker`/`post` are left as plain globals (no IIFE wrapper) so a
+// search result picked on the RN side can move them via injectJavaScript
+// without reloading the page.
+function buildMapHtml(initialLat: number, initialLng: number): string {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([${initialLat}, ${initialLng}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    var marker = L.marker([${initialLat}, ${initialLng}], { draggable: true }).addTo(map);
+    function post(latlng) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ lat: latlng.lat, lng: latlng.lng }));
+    }
+    marker.on('dragend', function (e) { post(e.target.getLatLng()); });
+    map.on('click', function (e) {
+      marker.setLatLng(e.latlng);
+      post(e.latlng);
+    });
+    post(marker.getLatLng());
+  </script>
+</body>
+</html>`;
+}
+
+type SearchResult = { label: string; lat: number; lng: number };
+
+export default function LocationMapPicker({
+  initialLat,
+  initialLng,
+  onConfirm,
+  confirming,
+}: {
+  initialLat: number;
+  initialLng: number;
+  onConfirm: (lat: number, lng: number) => void;
+  confirming: boolean;
+}) {
+  const [picked, setPicked] = useState<{ lat: number; lng: number }>({ lat: initialLat, lng: initialLng });
+  const [mapReady, setMapReady] = useState(false);
+  const html = useRef(buildMapHtml(initialLat, initialLng)).current;
+  const webviewRef = useRef<WebView>(null);
+
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  // Guards against a slower, older request's results landing after a
+  // newer one's and clobbering what's on screen.
+  const searchRequestId = useRef(0);
+
+  const handleMessage = (e: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(e.nativeEvent.data) as { lat: number; lng: number };
+      setPicked(data);
+    } catch {
+      // Ignore anything that isn't the {lat,lng} shape we post.
+    }
+  };
+
+  // OSM's own free geocoder — no API key, same OSM ecosystem the tiles
+  // already come from. A User-Agent is required by Nominatim's usage
+  // policy; fetch lets us set one from React Native. Restricted to
+  // Pakistan (countrycodes=pk) — this app is Pakistan-only, so a result in
+  // another country is never useful here.
+  const handleSearch = async (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) {
+      setResults([]);
+      return;
+    }
+    const requestId = ++searchRequestId.current;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=5&countrycodes=pk`,
+        { headers: { "User-Agent": "HitLit-App/1.0", "Accept-Language": "en" } }
+      );
+      const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+      if (requestId !== searchRequestId.current) return;
+      setResults(data.map((d) => ({ label: d.display_name, lat: parseFloat(d.lat), lng: parseFloat(d.lon) })));
+    } catch {
+      if (requestId === searchRequestId.current) setResults([]);
+    } finally {
+      if (requestId === searchRequestId.current) setSearching(false);
+    }
+  };
+
+  // Live-as-you-type, like Google Maps — debounced so it fires once typing
+  // pauses instead of on every keystroke.
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    const timeout = setTimeout(() => handleSearch(query), 400);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  const handlePickResult = (r: SearchResult) => {
+    setResults([]);
+    setQuery(r.label);
+    setPicked({ lat: r.lat, lng: r.lng });
+    // Moves the already-loaded map/marker in place — map/marker/post are
+    // plain globals in the page's own script (see buildMapHtml), so no
+    // reload is needed.
+    webviewRef.current?.injectJavaScript(
+      `(function(){ var ll = { lat: ${r.lat}, lng: ${r.lng} }; map.setView(ll, 15); marker.setLatLng(ll); post(ll); })(); true;`
+    );
+  };
+
+  return (
+    <View>
+      <View className="flex-row items-center bg-white rounded-xl px-3.5 mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}>
+        <Ionicons name="search-outline" size={18} color={colors.muted} />
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={() => handleSearch(query)}
+          returnKeyType="search"
+          placeholder="Search for a place..."
+          placeholderTextColor={colors.muted}
+          className="flex-1 text-ink text-sm"
+          style={{ paddingVertical: 12 }}
+        />
+        {searching ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : query.length > 0 ? (
+          <Pressable
+            onPress={() => {
+              setQuery("");
+              setResults([]);
+            }}
+            hitSlop={8}
+          >
+            <Ionicons name="close-circle" size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      {results.length > 0 && (
+        <View className="bg-white rounded-xl mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}>
+          {results.map((r, i) => (
+            <Pressable
+              key={`${r.lat}-${r.lng}-${i}`}
+              onPress={() => handlePickResult(r)}
+              className="flex-row items-center px-3.5 py-3"
+              style={i < results.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border, gap: 8 } : { gap: 8 }}
+            >
+              <Ionicons name="location-outline" size={16} color={colors.muted} />
+              <Text className="flex-1 text-ink text-xs" numberOfLines={2}>
+                {r.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      <View className="rounded-2xl overflow-hidden" style={{ height: 260, ...cardShadow }}>
+        <WebView ref={webviewRef} source={{ html }} onMessage={handleMessage} onLoadEnd={() => setMapReady(true)} style={{ flex: 1 }} />
+        {!mapReady && (
+          <View className="absolute inset-0 items-center justify-center bg-white">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        )}
+        <Pressable
+          onPress={() => onConfirm(picked.lat, picked.lng)}
+          disabled={confirming}
+          className="absolute bottom-3 left-3 right-3"
+          style={primaryButtonShadow}
+        >
+          <GradientFill className="flex-row items-center justify-center rounded-xl py-3" style={{ gap: 8 }}>
+            {confirming ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={18} color="white" />
+                <Text className="text-white font-bold text-sm">Use This Location</Text>
+              </>
+            )}
+          </GradientFill>
+        </Pressable>
+      </View>
+    </View>
+  );
+}

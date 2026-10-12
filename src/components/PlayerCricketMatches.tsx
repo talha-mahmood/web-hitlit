@@ -20,7 +20,10 @@ function MatchRow({ match }: { match: CricketMatchDetail }) {
 
   return (
     <Bouncy
-      onPress={() => navigation.navigate("FullScorecard", { matchId: match.id })}
+      // LiveScoring is the permanent destination for a cricket match now —
+      // live or completed, with read-only viewing + the Scorecard tab for
+      // anyone who isn't the assigned scorer.
+      onPress={() => navigation.navigate("LiveScoring", { matchId: match.id })}
       scaleTo={0.98}
       style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, marginBottom: 12 }}
     >

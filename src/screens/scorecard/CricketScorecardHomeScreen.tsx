@@ -47,7 +47,9 @@ function computeInningsScore(match: CricketMatchDetail) {
     match.overs_limit,
     totalPlayers,
     balls[0]?.strikerName ?? "",
-    balls[0]?.nonStrikerName ?? ""
+    balls[0]?.nonStrikerName ?? "",
+    0,
+    match.last_man_stand
   );
   return { runs: state.runs, wickets: state.wickets, oversLabel: formatOvers(state.legalBalls) };
 }
@@ -188,7 +190,10 @@ export default function CricketScorecardHomeScreen() {
 
   const handleLookupScoringCode = async (code: string) => {
     const result = await findCricketMatchByCode(code);
-    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    // LiveScoring now covers both live and finished matches (read-only for
+    // anyone who isn't the match's scorer) — no more separate screen to
+    // send a code-lookup viewer to.
+    if (result) navigation.navigate("LiveScoring", { matchId: result.id });
     return result?.id ?? null;
   };
 
@@ -313,11 +318,10 @@ export default function CricketScorecardHomeScreen() {
           renderItem={({ item }) => (
             <MatchCard
               match={item}
-              onPress={() =>
-                item.status === "IN_PROGRESS"
-                  ? navigation.navigate("LiveScoring", { matchId: item.id })
-                  : navigation.navigate("FullScorecard", { matchId: item.id })
-              }
+              // LiveScoring is the one permanent destination now, live or
+              // completed — it shows read-only once the match is over
+              // instead of needing a separate screen.
+              onPress={() => navigation.navigate("LiveScoring", { matchId: item.id })}
               onDelete={() => handleDelete(item)}
             />
           )}

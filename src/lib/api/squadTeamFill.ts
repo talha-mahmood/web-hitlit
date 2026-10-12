@@ -41,6 +41,20 @@ export async function squadFillTournamentTeam(
   if (error) throw new Error(error.message);
 }
 
+// Adds a partial set of a squad's own active members directly onto an
+// already-forming team (JOINED, no approval) — unlike
+// squadFillTournamentTeam above, which only works for claiming a still-
+// empty team and filling its exact required headcount in one shot. Used by
+// "Fill With My Group" when the acting user is that group's own owner/host.
+export async function squadAddMembersToTeam(teamId: string, squadId: string, memberUserIds: string[]): Promise<void> {
+  const { error } = await supabase.rpc("squad_add_members_to_team", {
+    p_team_id: teamId,
+    p_squad_id: squadId,
+    p_member_user_ids: memberUserIds,
+  });
+  if (error) throw new Error(error.message);
+}
+
 // Same idea for a regular game's remaining open slots (max_players minus
 // currently JOINED players) — see squad_fill_game_slots RPC.
 export async function squadFillGameSlots(gameId: string, squadId: string, memberUserIds: string[]): Promise<void> {

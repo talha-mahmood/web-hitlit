@@ -38,7 +38,10 @@ export default function FillTeamWithSquadModal({
   // from the picker, same reasoning as SelectTeamModal.
   excludeUserIds: string[];
   gameGender: Gender;
-  onSubmit: (memberUserIds: string[]) => void;
+  // isHostSquad: true when the acting user is this group's own owner/host —
+  // those members get added straight away (no approval needed); everyone
+  // else's groups still go through the existing per-member invite flow.
+  onSubmit: (squadId: string, memberUserIds: string[], isHostSquad: boolean) => void;
 }) {
   const insets = useSafeAreaInsets();
   const { data: squads, isLoading } = useMySquads(userId);
@@ -50,6 +53,11 @@ export default function FillTeamWithSquadModal({
     s.squad_members.filter((m) => m.status === "ACTIVE" && !excludeSet.has(m.user_id));
   const genderEligible = (s: SquadListItem) => gameGender === "mixed" || s.gender === gameGender;
   const eligibleSquads = (squads ?? []).filter((s) => availableMembers(s).length > 0 && genderEligible(s));
+  // Same check squad_add_members_to_team itself enforces server-side —
+  // mirrored here just to drive the "Add Members" vs "Send Request(s)" UI.
+  const isHostSquad = (s: SquadListItem) =>
+    s.squad_owner_id === userId ||
+    s.squad_members.some((m) => m.user_id === userId && m.role === "host" && m.status === "ACTIVE");
 
   useEffect(() => {
     if (!visible) {
@@ -70,13 +78,14 @@ export default function FillTeamWithSquadModal({
     });
   };
 
-  const canSubmit = selectedMemberIds.size > 0;
+  const canSubmit = selectedMemberIds.size > 0 && !!selectedSquad;
   const handleSubmit = () => {
-    if (!canSubmit) return;
-    onSubmit(Array.from(selectedMemberIds));
+    if (!canSubmit || !selectedSquad) return;
+    onSubmit(selectedSquad.id, Array.from(selectedMemberIds), isHostSquad(selectedSquad));
   };
 
   const activeMembers = selectedSquad ? availableMembers(selectedSquad) : [];
+  const addingDirectly = !!selectedSquad && isHostSquad(selectedSquad);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -182,7 +191,9 @@ export default function FillTeamWithSquadModal({
           )}
 
           <Text className="text-muted text-xs text-center mt-6">
-            Each selected player gets their own request — they join once they approve it from Notifications.
+            {addingDirectly
+              ? "You're the host of this group — selected members are added to the team right away and notified."
+              : "Each selected player gets their own request — they join once they approve it from Notifications."}
           </Text>
 
           <Pressable
@@ -196,13 +207,19 @@ export default function FillTeamWithSquadModal({
                   <ActivityIndicator color="white" />
                 ) : (
                   <Text className="font-semibold text-base text-white">
-                    SEND ({selectedMemberIds.size}) REQUEST{selectedMemberIds.size === 1 ? "" : "S"}
+                    {addingDirectly
+                      ? `ADD (${selectedMemberIds.size}) MEMBER${selectedMemberIds.size === 1 ? "" : "S"}`
+                      : `SEND (${selectedMemberIds.size}) REQUEST${selectedMemberIds.size === 1 ? "" : "S"}`}
                   </Text>
                 )}
               </GradientFill>
             ) : (
               <View className="rounded-xl py-4 items-center mt-4 bg-gray-200">
-                {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-muted">SEND REQUESTS</Text>}
+                {submitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-semibold text-base text-muted">{addingDirectly ? "ADD MEMBERS" : "SEND REQUESTS"}</Text>
+                )}
               </View>
             )}
           </Pressable>

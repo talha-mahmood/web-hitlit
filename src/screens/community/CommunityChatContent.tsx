@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
+import FieldInput from "../../components/FieldInput";
 import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
@@ -146,6 +147,7 @@ export default function CommunityChatContent({
   const profile = useProfileStore((s) => s.profile);
   // null = no age filter (show everything the 6-month retention still has).
   const [dayFilter, setDayFilter] = useState<1 | 2 | 3 | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
   const [pollModalOpen, setPollModalOpen] = useState(false);
 
@@ -156,11 +158,24 @@ export default function CommunityChatContent({
   const toggleLike = useToggleCommentLike();
   const createPoll = useCreatePoll();
 
+  // Everything's already loaded in one shot (no pagination on this feed), so
+  // search is a plain client-side filter over the same array the day-age
+  // filter already narrows — matches by the author's name or any keyword in
+  // the comment body (e.g. "tournament", "games").
   const visibleComments = useMemo(() => {
-    if (!dayFilter) return comments ?? [];
-    const cutoff = Date.now() - dayFilter * 24 * 60 * 60 * 1000;
-    return (comments ?? []).filter((c) => new Date(c.created_at).getTime() >= cutoff);
-  }, [comments, dayFilter]);
+    let list = comments ?? [];
+    if (dayFilter) {
+      const cutoff = Date.now() - dayFilter * 24 * 60 * 60 * 1000;
+      list = list.filter((c) => new Date(c.created_at).getTime() >= cutoff);
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (c) => (c.profiles?.full_name ?? "").toLowerCase().includes(q) || c.body.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [comments, dayFilter, searchQuery]);
 
   const handleSend = (body: string, mentions: Mention[]) => {
     if (!userId) return;
@@ -242,6 +257,25 @@ export default function CommunityChatContent({
         saving={updateComment.isPending}
       />
 
+      <View className="px-4 pt-2.5 bg-white">
+        <FieldInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search by name or keyword..."
+          autoCapitalize="none"
+          autoCorrect={false}
+          containerStyle={{ borderRadius: 24, height: 44 }}
+          left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
+          right={
+            searchQuery.length > 0 ? (
+              <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
+                <Ionicons name="close-circle" size={18} color={colors.muted} />
+              </Pressable>
+            ) : undefined
+          }
+        />
+      </View>
+
       <View className="flex-row items-center px-4 py-2.5 bg-white border-b border-border" style={{ gap: 8 }}>
         {DAY_FILTERS.map((d) => {
           const active = dayFilter === d;
@@ -283,10 +317,18 @@ export default function CommunityChatContent({
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
               <Text className="text-ink font-semibold text-base">
-                {dayFilter ? `No comments in the last ${dayFilter} day${dayFilter === 1 ? "" : "s"}` : "No comments yet"}
+                {searchQuery.trim()
+                  ? `No comments match "${searchQuery.trim()}"`
+                  : dayFilter
+                    ? `No comments in the last ${dayFilter} day${dayFilter === 1 ? "" : "s"}`
+                    : "No comments yet"}
               </Text>
               <Text className="text-muted text-sm text-center px-8">
-                {dayFilter ? "Try a wider filter." : "Be the first to say something to the community!"}
+                {searchQuery.trim()
+                  ? "Try a different name or keyword."
+                  : dayFilter
+                    ? "Try a wider filter."
+                    : "Be the first to say something to the community!"}
               </Text>
             </View>
           }

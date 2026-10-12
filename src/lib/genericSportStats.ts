@@ -113,6 +113,19 @@ export function classifyGenericSport(sportName: string | null | undefined): Gene
   return null;
 }
 
+const CRICKET_SPORT_NAMES = ["hard ball", "tape ball", "outdoor cricket"];
+
+// Which player-stats module a sport's name resolves to — cricket's own
+// richer system, one of the generic-sport configs above, or null for sports
+// with no scorecard module at all. Shared by every screen that renders a
+// player's stat tabs (PlayerProfileScreen, ProfileScreen) so they resolve a
+// sport name to the same tab set.
+export function classifySportKind(sportName: string | null | undefined): "cricket" | GenericSport | null {
+  if (!sportName) return null;
+  if (CRICKET_SPORT_NAMES.includes(sportName.trim().toLowerCase())) return "cricket";
+  return classifyGenericSport(sportName);
+}
+
 export type GenericMatchRow = {
   id: string;
   status: string;

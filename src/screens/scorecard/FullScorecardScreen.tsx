@@ -169,7 +169,8 @@ function InningsCard({
 function deriveInnings(
   innings: CricketInnings & { cricket_balls: CricketBallRow[] },
   oversLimit: number,
-  totalPlayers: number
+  totalPlayers: number,
+  lastManStand: boolean
 ): InningsState | null {
   const balls = [...innings.cricket_balls].sort((a, b) => a.seq - b.seq).map(ballRowToEvent);
   if (balls.length === 0) return null;
@@ -179,7 +180,9 @@ function deriveInnings(
     oversLimit,
     totalPlayers,
     balls[0].strikerName,
-    balls[0].nonStrikerName
+    balls[0].nonStrikerName ?? "",
+    0,
+    lastManStand
   );
 }
 
@@ -214,7 +217,7 @@ export default function FullScorecardScreen() {
       .map((inn) => {
         const teamName = inn.batting_team === "A" ? match.team_a_name : match.team_b_name;
         const totalPlayers = inn.batting_team === "A" ? match.team_a_players.length : match.team_b_players.length;
-        const state = deriveInnings(inn, match.overs_limit, totalPlayers);
+        const state = deriveInnings(inn, match.overs_limit, totalPlayers, match.last_man_stand);
         return { inn, teamName, state };
       })
       .filter((x) => x.state !== null) as { inn: (typeof match.cricket_innings)[number]; teamName: string; state: InningsState }[];

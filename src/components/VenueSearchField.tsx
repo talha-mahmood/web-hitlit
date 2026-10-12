@@ -144,7 +144,7 @@ export default function VenueSearchField({
           className="bg-white rounded-2xl mt-1.5 overflow-hidden"
           style={{ maxHeight: 260, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
         >
-          <ScrollView bounces={false} keyboardShouldPersistTaps="handled">
+          <ScrollView bounces={false} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
             {matches.length === 0 && !canUseCustom && (
               <Text className="text-muted text-sm px-4 py-3">
                 {venues && venues.length > 0 ? `No venues match "${query}".` : "No venues found for this sport yet."}

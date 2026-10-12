@@ -32,18 +32,10 @@ import PlayerSportTournaments from "../../components/PlayerSportTournaments";
 import PlayerSportClubs from "../../components/PlayerSportClubs";
 import PlayerSportInsights from "../../components/PlayerSportInsights";
 import PlayerSportCompare from "../../components/PlayerSportCompare";
-import { classifyGenericSport, type GenericSport } from "../../lib/genericSportStats";
+import { classifySportKind, type GenericSport } from "../../lib/genericSportStats";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
-const CRICKET_SPORT_NAMES = ["hard ball", "tape ball", "outdoor cricket"];
-
-function classifySportKind(sportName: string | null | undefined): "cricket" | GenericSport | null {
-  if (!sportName) return null;
-  if (CRICKET_SPORT_NAMES.includes(sportName.trim().toLowerCase())) return "cricket";
-  return classifyGenericSport(sportName);
-}
-
-type ProfileTab = "profile" | "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
+export type ProfileTab = "profile" | "overview" | "statistics" | "matches" | "teams" | "tournaments" | "clubs" | "insights" | "compare";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 type Route = RouteProp<HomeStackParamList, "PlayerProfile">;

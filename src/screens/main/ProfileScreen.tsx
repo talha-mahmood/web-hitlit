@@ -21,6 +21,24 @@ import JerseyNumberCard from "../../components/JerseyNumberCard";
 import SelectSportModal from "../../components/SelectSportModal";
 import { useSports } from "../../hooks/useSports";
 import { getSportIcon } from "../../lib/sportIcons";
+import PlayerCricketOverview, { usePlayerCricketFigures } from "../../components/PlayerCricketOverview";
+import PlayerCricketStatistics from "../../components/PlayerCricketStatistics";
+import PlayerCricketMatches from "../../components/PlayerCricketMatches";
+import PlayerCricketTeams from "../../components/PlayerCricketTeams";
+import PlayerCricketTournaments from "../../components/PlayerCricketTournaments";
+import PlayerCricketClubs from "../../components/PlayerCricketClubs";
+import PlayerCricketInsights from "../../components/PlayerCricketInsights";
+import PlayerCricketCompare from "../../components/PlayerCricketCompare";
+import PlayerSportOverview, { usePlayerGenericFigures } from "../../components/PlayerSportOverview";
+import PlayerSportStatistics from "../../components/PlayerSportStatistics";
+import PlayerSportMatches from "../../components/PlayerSportMatches";
+import PlayerSportTeams from "../../components/PlayerSportTeams";
+import PlayerSportTournaments from "../../components/PlayerSportTournaments";
+import PlayerSportClubs from "../../components/PlayerSportClubs";
+import PlayerSportInsights from "../../components/PlayerSportInsights";
+import PlayerSportCompare from "../../components/PlayerSportCompare";
+import { classifySportKind, type GenericSport } from "../../lib/genericSportStats";
+import type { ProfileTab } from "../../screens/players/PlayerProfileScreen";
 import GradientFill from "../../components/GradientFill";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { colors, cardShadow } from "../../constants/theme";
@@ -152,6 +170,22 @@ export default function ProfileScreen() {
   const { data: allSportsProfile } = usePlayerPublicProfile(userId);
   const sportsPlayed = allSportsProfile?.sportBreakdown ?? [];
   const { data: followState } = useFollowState(userId, userId);
+  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
+  const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
+  // Same tab-set resolution PlayerProfileScreen uses when viewing someone
+  // else's profile — whatever sport is explicitly filtered, else cricket if
+  // this player has any, else their most-played sport if it has its own
+  // scorecard module.
+  const resolvedSportKind: "cricket" | GenericSport | null = filterSportName
+    ? classifySportKind(filterSportName)
+    : hasCricketData
+      ? "cricket"
+      : classifySportKind(player?.sportBreakdown?.[0]?.sportName);
+  const genericSport: GenericSport | null = resolvedSportKind && resolvedSportKind !== "cricket" ? resolvedSportKind : null;
+  const { data: genericFigures } = usePlayerGenericFigures(genericSport, player?.fullName);
+  const hasGenericData = !!genericFigures && genericFigures.length > 0;
+  const hasActiveSportData = resolvedSportKind === "cricket" ? hasCricketData : resolvedSportKind ? hasGenericData : false;
+  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
   const handleSelectSportCard = (sportId: string, sportName: string) => {
     if (filterSportId === sportId) {
       setFilterSportId(undefined);
@@ -312,31 +346,91 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
       >
-      <View className="px-6" style={{ paddingTop: 20 }}>
-        <PlayerStatCards
-          data={{
-            rating,
-            gamesPlayed: stats?.gamesPlayedTotal ?? 0,
-            tournamentsPlayed: stats?.tournamentsPlayedTotal ?? 0,
-            gamesHosted: stats?.gamesHostedTotal ?? 0,
-            activeSquads: stats?.activeSquads.length ?? 0,
-            hoursPlayed: stats?.hoursPlayedTotal ?? 0,
-            participationScore: computeRating(stats),
-            followerCount: followState?.followerCount ?? 0,
-            regularGamesPlayed,
-            matchesWon,
-            matchesPlayed,
-            sportSegments,
-            totals: player ? { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals } : null,
-          }}
-          isLoading={isLoading}
-          filterSportId={filterSportId}
-          filterSportName={filterSportName}
-          sportsPlayed={sportsPlayed}
-          onSelectSport={handleSelectSportCard}
-          hideSportsFilter
-          onOpenSportFilter={() => setSportSheetOpen(true)}
-        />
+      {hasActiveSportData && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="flex-grow-0"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, gap: 8 }}
+        >
+          {(
+            [
+              ["profile", "Player Profile"],
+              ["overview", "Player Overview"],
+              ["statistics", "Statistics"],
+              ["matches", "Matches"],
+              ["teams", "Teams"],
+              ["tournaments", "Tournaments"],
+              ["clubs", "Clubs"],
+              ["insights", "Insights"],
+              ["compare", "Compare"],
+            ] as [ProfileTab, string][]
+          ).map(([key, label]) => (
+            <Pressable
+              key={key}
+              onPress={() => setActiveTab(key)}
+              className="rounded-full px-4 py-2"
+              style={{ backgroundColor: activeTab === key ? "#1F2937" : "#E5E7EB" }}
+            >
+              <Text className="text-xs font-bold" style={{ color: activeTab === key ? "white" : "#374151" }}>
+                {label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      <View className="px-6" style={{ paddingTop: hasActiveSportData ? 16 : 20 }}>
+        {activeTab !== "profile" && resolvedSportKind === "cricket" && player?.fullName ? (
+          <>
+            {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}
+            {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} />}
+            {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} />}
+            {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} />}
+            {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} />}
+            {activeTab === "clubs" && userId && <PlayerCricketClubs userId={userId} />}
+            {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} />}
+            {activeTab === "compare" && <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />}
+          </>
+        ) : activeTab !== "profile" && genericSport && player?.fullName ? (
+          <>
+            {activeTab === "overview" && <PlayerSportOverview sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "statistics" && <PlayerSportStatistics sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "matches" && <PlayerSportMatches sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "teams" && <PlayerSportTeams sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "tournaments" && <PlayerSportTournaments sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "clubs" && userId && <PlayerSportClubs sport={genericSport} userId={userId} />}
+            {activeTab === "insights" && <PlayerSportInsights sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "compare" && (
+              <PlayerSportCompare sport={genericSport} fullName={player.fullName} displayName={player.fullName} />
+            )}
+          </>
+        ) : (
+          <PlayerStatCards
+            data={{
+              rating,
+              gamesPlayed: stats?.gamesPlayedTotal ?? 0,
+              tournamentsPlayed: stats?.tournamentsPlayedTotal ?? 0,
+              gamesHosted: stats?.gamesHostedTotal ?? 0,
+              activeSquads: stats?.activeSquads.length ?? 0,
+              hoursPlayed: stats?.hoursPlayedTotal ?? 0,
+              participationScore: computeRating(stats),
+              followerCount: followState?.followerCount ?? 0,
+              regularGamesPlayed,
+              matchesWon,
+              matchesPlayed,
+              sportSegments,
+              totals: player ? { runs: player.totalRuns, wickets: player.totalWickets, goals: player.totalGoals } : null,
+            }}
+            isLoading={isLoading}
+            filterSportId={filterSportId}
+            filterSportName={filterSportName}
+            sportsPlayed={sportsPlayed}
+            onSelectSport={handleSelectSportCard}
+            hideSportsFilter
+            onOpenSportFilter={() => setSportSheetOpen(true)}
+          />
+        )}
 
         <SelectSportModal
           visible={sportSheetOpen}

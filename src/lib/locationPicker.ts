@@ -61,3 +61,13 @@ export async function detectCurrentCoordinates(): Promise<{
     city: address?.city ?? null,
   };
 }
+
+// Reverse-geocodes an arbitrary point (not necessarily the device's own
+// location) — used by the OpenStreetMap manual-location picker once the
+// host taps/drags a pin, to turn their pick into a readable label without
+// typing anything.
+export async function reverseGeocodeCoordinates(latitude: number, longitude: number): Promise<string> {
+  const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+  if (!address) return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+  return formatAddress(address);
+}

@@ -269,6 +269,10 @@ export default function NewMatchScreen() {
   const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
+  // Standard ICC rule by default — off. On means the last batsman keeps
+  // playing alone once their team is down to one, instead of the innings
+  // ending at totalPlayers-1 wickets.
+  const [lastManStand, setLastManStand] = useState<"on" | "off">("off");
   const [venue, setVenue] = useState(prefill?.venue ?? "");
 
   // Surfaced below the Start button when disabled — the first unmet
@@ -303,6 +307,7 @@ export default function NewMatchScreen() {
         tossWinner,
         tossDecision,
         venue: venue.trim() || undefined,
+        lastManStand: lastManStand === "on",
       },
       {
         onSuccess: ({ matchId }) => {
@@ -486,6 +491,17 @@ export default function NewMatchScreen() {
             </CardSection>
           </View>
         </View>
+
+        <CardSection icon="person-outline" title="Last Man Stand">
+          <PillRow
+            options={[
+              { label: "Last Man Not Play (Standard)", value: "off" as const },
+              { label: "Last Man Play", value: "on" as const },
+            ]}
+            value={lastManStand}
+            onChange={setLastManStand}
+          />
+        </CardSection>
 
         <Pressable
           onPress={handleCreate}

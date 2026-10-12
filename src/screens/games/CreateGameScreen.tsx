@@ -35,6 +35,8 @@ import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
+import LocationMapPicker from "../../components/LocationMapPicker";
+import { detectCurrentCoordinates, reverseGeocodeCoordinates } from "../../lib/locationPicker";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import { HomeSportTile } from "../../components/HomeWideCards";
@@ -424,6 +426,16 @@ export default function CreateGameScreen() {
   const [venueId, setVenueId] = useState<string | null>(null);
   const [customVenueName, setCustomVenueName] = useState<string | null>(null);
   const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: sportId ?? undefined });
+  // "Enter Location Manually" — hides the app's venue list entirely and
+  // shows an OpenStreetMap picker instead; confirming a pin reverse-geocodes
+  // it straight into customVenueName (see games_venue_or_custom_check —
+  // this is still the same custom-venue path, just with coordinates too).
+  const [manualLocationMode, setManualLocationMode] = useState(false);
+  const [customVenueLat, setCustomVenueLat] = useState<number | null>(null);
+  const [customVenueLng, setCustomVenueLng] = useState<number | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingDevice, setLocatingDevice] = useState(false);
+  const [confirmingLocation, setConfirmingLocation] = useState(false);
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
@@ -480,6 +492,49 @@ export default function CreateGameScreen() {
     setSportId(id);
     setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
     setCustomVenueName(null);
+    setManualLocationMode(false);
+    setCustomVenueLat(null);
+    setCustomVenueLng(null);
+  };
+
+  const handleToggleManualLocation = async () => {
+    if (manualLocationMode) {
+      // Switching back to the app's own venue list — drop whatever manual
+      // pick was made.
+      setManualLocationMode(false);
+      setCustomVenueName(null);
+      setCustomVenueLat(null);
+      setCustomVenueLng(null);
+      return;
+    }
+    setVenueId(null);
+    setCustomVenueName(null);
+    setManualLocationMode(true);
+    setLocatingDevice(true);
+    try {
+      const { latitude, longitude } = await detectCurrentCoordinates();
+      setMapCenter({ lat: latitude, lng: longitude });
+    } catch {
+      // Permission denied or GPS unavailable — a sensible default center
+      // (Lahore; this app is Pakistan-only) beats blocking the picker.
+      setMapCenter({ lat: 31.5204, lng: 74.3587 });
+    } finally {
+      setLocatingDevice(false);
+    }
+  };
+
+  const handleConfirmMapLocation = async (lat: number, lng: number) => {
+    setConfirmingLocation(true);
+    try {
+      const label = await reverseGeocodeCoordinates(lat, lng);
+      setCustomVenueName(label);
+      setCustomVenueLat(lat);
+      setCustomVenueLng(lng);
+    } catch (err) {
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not look up an address for this location."));
+    } finally {
+      setConfirmingLocation(false);
+    }
   };
 
   // Team names are always auto-generated ("Team A", "Team B", ...) rather
@@ -643,6 +698,8 @@ export default function CreateGameScreen() {
         sportId,
         venueId,
         customVenueName,
+        customVenueLat,
+        customVenueLng,
         gameDate: selectedDate,
         endDate: endDateValue,
         startTime: `${startTime}:00`,
@@ -876,26 +933,66 @@ export default function CreateGameScreen() {
 
         {/* Venue */}
         <SectionLabel title="Venue" required icon="location-outline" compact />
-        <VenueSearchField
-          venues={venues}
-          loading={sportId != null && venuesLoading}
-          selectedVenueId={venueId}
-          customVenueName={customVenueName}
-          onSelect={(id) => setVenueId(id || null)}
-          onSelectCustom={(name) => setCustomVenueName(name || null)}
-          disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
-          thumbnailSource={selectedSportName ? getSportImage(selectedSportName) : null}
-        />
-        {venueId && (
-          <Pressable
-            onPress={() => navigation.navigate("VenueDetail", { venueId })}
-            className="flex-row items-center justify-between mt-2 px-1 py-1"
-          >
-            <Text className="text-primary text-sm font-medium">View venue details</Text>
-            <Ionicons name="chevron-forward" size={15} color={colors.primary} />
-          </Pressable>
+        {/* Prominent, right above the field — switching modes only ever
+            hides/shows the app's venue list; it never changes anything
+            else about the form. */}
+        <Pressable
+          onPress={handleToggleManualLocation}
+          className="flex-row items-center self-start rounded-full px-3.5 py-2 mb-2"
+          style={{ gap: 6, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary }}
+        >
+          <Ionicons name={manualLocationMode ? "list-outline" : "map-outline"} size={15} color={colors.primaryDark} />
+          <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
+            {manualLocationMode ? "Choose from app venues instead" : "Enter Location Manually"}
+          </Text>
+        </Pressable>
+        {manualLocationMode ? (
+          <>
+            {locatingDevice || !mapCenter ? (
+              <View className="rounded-2xl items-center justify-center" style={{ height: 260, backgroundColor: colors.primaryLight }}>
+                <ActivityIndicator color={colors.primary} />
+                <Text className="text-primary text-xs font-semibold mt-2">Finding your location…</Text>
+              </View>
+            ) : (
+              <LocationMapPicker
+                initialLat={mapCenter.lat}
+                initialLng={mapCenter.lng}
+                onConfirm={handleConfirmMapLocation}
+                confirming={confirmingLocation}
+              />
+            )}
+            {customVenueName && (
+              <View className="flex-row items-center rounded-xl px-3.5 py-2.5 mt-2" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
+                <Ionicons name="location" size={15} color={colors.primaryDark} />
+                <Text className="flex-1 text-xs font-semibold" style={{ color: colors.primaryDark }} numberOfLines={2}>
+                  {customVenueName}
+                </Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <>
+            <VenueSearchField
+              venues={venues}
+              loading={sportId != null && venuesLoading}
+              selectedVenueId={venueId}
+              customVenueName={customVenueName}
+              onSelect={(id) => setVenueId(id || null)}
+              onSelectCustom={(name) => setCustomVenueName(name || null)}
+              disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
+              thumbnailSource={selectedSportName ? getSportImage(selectedSportName) : null}
+            />
+            {venueId && (
+              <Pressable
+                onPress={() => navigation.navigate("VenueDetail", { venueId })}
+                className="flex-row items-center justify-between mt-2 px-1 py-1"
+              >
+                <Text className="text-primary text-sm font-medium">View venue details</Text>
+                <Ionicons name="chevron-forward" size={15} color={colors.primary} />
+              </Pressable>
+            )}
+          </>
         )}
-
         {/* Date */}
         <SectionLabel title="Date" required icon="calendar-outline" compact />
         <ScrollView

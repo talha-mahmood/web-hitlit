@@ -30,11 +30,21 @@ import {
   type BallEvent,
   type ExtraType,
   type WicketType,
+  type InningsState,
 } from "../../lib/cricketScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import GradientFill from "../../components/GradientFill";
 import { resourcePercent, computeDuckworthLewis } from "../../lib/duckworthLewis";
+import { useAuthStore } from "../../store/authStore";
+import { useProfileStore } from "../../store/profileStore";
+import TeamCrest from "../../components/TeamCrest";
+import { buildCricketMatchReportHtml } from "../../lib/matchReport/cricketReport";
+import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { supabase } from "../../lib/supabase";
+import { uniqueChannelName } from "../../lib/realtimeChannel";
+import { useQueryClient } from "@tanstack/react-query";
 type Route = RouteProp<ScorecardStackParamList, "LiveScoring">;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "LiveScoring">;
 
@@ -112,6 +122,150 @@ function PlayerAvatar({ name }: { name: string }) {
       <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 15 }}>
         {name.trim().charAt(0).toUpperCase() || "?"}
       </Text>
+    </View>
+  );
+}
+
+// Short 2-letter initials avatar for a scorecard batter/bowler row, colored
+// per team — ported from the old standalone FullScorecardScreen (now folded
+// into this screen's own "Scorecard" tab). Named distinctly from
+// PlayerAvatar above (the live-keypad's single-initial avatar) since both
+// are used on this same screen now.
+function ScorecardPlayerAvatar({ name, color, bg }: { name: string; color: string; bg: string }) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : name.trim().slice(0, 2);
+  return (
+    <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: bg }}>
+      <Text className="font-bold" style={{ fontSize: 11, color }}>
+        {(initials || "?").toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+// One innings' full batting/bowling card — same content the old
+// FullScorecardScreen showed, now rendered inline in this screen's
+// "Scorecard" tab instead of a separate read-only screen.
+function InningsCard({
+  teamName,
+  inningsNumber,
+  color,
+  bg,
+  state,
+}: {
+  teamName: string;
+  inningsNumber: number;
+  color: string;
+  bg: string;
+  state: InningsState;
+}) {
+  const runRate = computeRunRate(state.runs, state.legalBalls);
+  return (
+    <View className="rounded-2xl border border-border overflow-hidden mb-4 bg-white" style={cardShadow}>
+      <View className="flex-row items-center justify-between p-4">
+        <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
+          <TeamCrest color={color} size={36} icon="cricket" />
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-base" numberOfLines={1}>{teamName}</Text>
+            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+              {inningsNumber === 1 ? "1st" : "2nd"} Innings · {state.isComplete ? "Completed" : "Batting"}
+            </Text>
+          </View>
+        </View>
+        <View className="items-end">
+          <Text className="text-ink font-extrabold" style={{ fontSize: 22 }}>
+            {state.runs}/{state.wickets}
+          </Text>
+          <Text className="text-muted text-xs" numberOfLines={1}>
+            ({formatOvers(state.legalBalls)} ov, RR {runRate.toFixed(2)})
+          </Text>
+        </View>
+      </View>
+
+      <View className="px-4 pb-4">
+        <View className="flex-row pb-2 border-b border-border">
+          <Text className="text-muted text-xs font-semibold flex-1">Batter</Text>
+          <Text className="text-muted text-xs font-semibold" style={{ width: 40, textAlign: "center" }}>R</Text>
+          <Text className="text-muted text-xs font-semibold" style={{ width: 36, textAlign: "center" }}>B</Text>
+          <Text className="text-muted text-xs font-semibold" style={{ width: 30, textAlign: "center" }}>4s</Text>
+          <Text className="text-muted text-xs font-semibold" style={{ width: 30, textAlign: "center" }}>6s</Text>
+          <Text className="text-muted text-xs font-semibold" style={{ width: 44, textAlign: "center" }}>SR</Text>
+        </View>
+        {state.battingOrder.map((name) => {
+          const s = state.battingStats[name];
+          const sr = s.balls > 0 ? (s.runs / s.balls) * 100 : 0;
+          return (
+            <View key={name} className="py-2.5 border-b border-border">
+              <View className="flex-row items-center">
+                <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
+                  <ScorecardPlayerAvatar name={name} color={color} bg={bg} />
+                  <View className="flex-1">
+                    <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+                      {name}
+                    </Text>
+                    <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+                      {s.isOut ? s.outDescription : "Not out"}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-ink text-sm font-semibold" style={{ width: 40, textAlign: "center" }}>{s.runs}</Text>
+                <Text className="text-ink text-sm" style={{ width: 36, textAlign: "center" }}>{s.balls}</Text>
+                <Text className="text-ink text-sm" style={{ width: 30, textAlign: "center" }}>{s.fours}</Text>
+                <Text className="text-ink text-sm" style={{ width: 30, textAlign: "center" }}>{s.sixes}</Text>
+                <Text className="text-ink text-sm" style={{ width: 44, textAlign: "center" }}>{sr.toFixed(1)}</Text>
+              </View>
+            </View>
+          );
+        })}
+
+        <View className="rounded-xl bg-gray-50 px-3 py-2 mt-3">
+          <Text className="text-muted text-xs">
+            Extras: {state.extras.wide + state.extras.noball + state.extras.bye + state.extras.legbye} (wd{" "}
+            {state.extras.wide}, nb {state.extras.noball}, b {state.extras.bye}, lb {state.extras.legbye})
+          </Text>
+        </View>
+
+        {state.bowlingOrder.length > 0 && (
+          <>
+            <View className="flex-row pt-4 pb-2 border-b border-border mt-2">
+              <Text className="text-muted text-xs font-semibold flex-1">Bowler</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 40, textAlign: "center" }}>O</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>M</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>R</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 32, textAlign: "center" }}>W</Text>
+              <Text className="text-muted text-xs font-semibold" style={{ width: 44, textAlign: "center" }}>Econ</Text>
+            </View>
+            {state.bowlingOrder.map((name) => {
+              const b = state.bowlingStats[name];
+              const econ = b.legalBalls > 0 ? (b.runsConceded / b.legalBalls) * 6 : 0;
+              return (
+                <View key={name} className="flex-row items-center py-2.5 border-b border-border">
+                  <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
+                    <ScorecardPlayerAvatar name={name} color={color} bg={bg} />
+                    <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{name}</Text>
+                  </View>
+                  <Text className="text-ink text-sm" style={{ width: 40, textAlign: "center" }}>{formatOvers(b.legalBalls)}</Text>
+                  <Text className="text-ink text-sm" style={{ width: 32, textAlign: "center" }}>{b.maidens}</Text>
+                  <Text className="text-ink text-sm" style={{ width: 32, textAlign: "center" }}>{b.runsConceded}</Text>
+                  <Text className="text-ink text-sm" style={{ width: 32, textAlign: "center" }}>{b.wickets}</Text>
+                  <Text className="text-ink text-sm" style={{ width: 44, textAlign: "center" }}>{econ.toFixed(1)}</Text>
+                </View>
+              );
+            })}
+          </>
+        )}
+
+        {state.fallOfWickets.length > 0 && (
+          <View className="mt-3 mb-4">
+            <Text className="text-muted text-xs font-semibold mb-1">Fall of Wickets</Text>
+            <Text className="text-muted text-xs">
+              {state.fallOfWickets
+                .map((f) => `${f.teamScore}-${f.wicketNumber} (${f.playerOut}, ${f.overs} ov)`)
+                .join(", ")}
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -626,6 +780,45 @@ export default function LiveScoringScreen() {
   const abandonMatch = useAbandonCricketMatch(params.matchId);
   const addRosterPlayer = useAddRosterPlayer(params.matchId);
   const updateSettings = useUpdateCricketMatchSettings(params.matchId);
+  const qc = useQueryClient();
+
+  // RLS only ever lets cricket_matches.user_id write to this match's own
+  // tables (cricket_matches_owner/cricket_innings_owner/cricket_balls_owner
+  // — every scoring insert/update would be silently rejected for anyone
+  // else), so this is the one check that actually matches what the backend
+  // enforces — not a separate permission model invented client-side. Every
+  // other signed-in tournament player can still open this screen and watch
+  // (reads are open to any signed-in user), just without the scoring
+  // controls below.
+  const currentUserId = useAuthStore((s) => s.session?.user.id);
+  const profile = useProfileStore((s) => s.profile);
+  const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  // Live push for every viewer (not just the scorer) — a ball the scorer
+  // just added, an innings starting/completing, or a match-level settings
+  // change (overs/target/penalty/Last Man Stand) all land here instantly
+  // instead of needing a manual refresh. Same uniqueChannelName +
+  // postgres_changes pattern already used throughout the app.
+  useEffect(() => {
+    const channel = supabase
+      .channel(uniqueChannelName(`liveScoring:${params.matchId}`))
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cricket_matches", filter: `id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_innings" }, () =>
+        qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_balls" }, () =>
+        qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [params.matchId, qc]);
 
   const [pendingStriker, setPendingStriker] = useState<string | null>(null);
   const [pendingNonStriker, setPendingNonStriker] = useState<string | null>(null);
@@ -673,7 +866,19 @@ export default function LiveScoringScreen() {
 
   const currentInnings = useMemo(() => {
     if (!match) return undefined;
-    return match.cricket_innings.find((i) => !i.is_completed);
+    const active = match.cricket_innings.find((i) => !i.is_completed);
+    if (active) return active;
+    // Once the match is genuinely finished (not just between innings — see
+    // isBetweenInnings below, which checks the DB completion flags
+    // directly), fall back to the last innings played so this screen keeps
+    // showing its real final score/batting/bowling figures instead of
+    // blanking to 0-0. The tick-overlay JSX further down is what actually
+    // stops offering scoring controls once match.status is COMPLETED, not
+    // this fallback.
+    if (match.status === "COMPLETED") {
+      return [...match.cricket_innings].sort((a, b) => b.innings_number - a.innings_number)[0];
+    }
+    return undefined;
   }, [match]);
 
   const ballEvents: BallEvent[] = useMemo(() => {
@@ -694,7 +899,16 @@ export default function LiveScoringScreen() {
     const opener2 = ballEvents[0]?.nonStrikerName ?? pendingNonStriker ?? "";
     if (!opener1 || !opener2) return null;
     const startingRuns = battingTeam === "A" ? match.team_a_penalty_runs : match.team_b_penalty_runs;
-    return replayInnings(ballEvents, battingTeam, match.overs_limit, battingPlayers.length, opener1, opener2, startingRuns);
+    return replayInnings(
+      ballEvents,
+      battingTeam,
+      match.overs_limit,
+      battingPlayers.length,
+      opener1,
+      opener2,
+      startingRuns,
+      match.last_man_stand
+    );
   }, [ballEvents, battingTeam, match, battingPlayers.length, pendingStriker, pendingNonStriker]);
 
   // Only relevant chasing in the 2nd innings.
@@ -713,10 +927,56 @@ export default function LiveScoringScreen() {
       match.overs_limit,
       firstBattingPlayers.length,
       balls[0].strikerName,
-      balls[0].nonStrikerName,
-      startingRuns
+      balls[0].nonStrikerName ?? "",
+      startingRuns,
+      match.last_man_stand
     );
   }, [match, currentInnings]);
+
+  // Every completed/in-progress innings, replayed for the "Scorecard" tab —
+  // same derivation the old standalone FullScorecardScreen used, just
+  // computed here now that this screen is the permanent scorecard too.
+  const scorecardInnings = useMemo(() => {
+    if (!match) return [];
+    return [...match.cricket_innings]
+      .sort((a, b) => a.innings_number - b.innings_number)
+      .map((inn) => {
+        const teamName = inn.batting_team === "A" ? match.team_a_name : match.team_b_name;
+        const totalPlayers = inn.batting_team === "A" ? match.team_a_players.length : match.team_b_players.length;
+        const balls = [...inn.cricket_balls].sort((a, b) => a.seq - b.seq).map(ballRowToEvent);
+        const state =
+          balls.length === 0
+            ? null
+            : replayInnings(
+                balls,
+                inn.batting_team as "A" | "B",
+                match.overs_limit,
+                totalPlayers,
+                balls[0].strikerName,
+                balls[0].nonStrikerName ?? "",
+                0,
+                match.last_man_stand
+              );
+        return { inn, teamName, state };
+      })
+      .filter((x): x is typeof x & { state: InningsState } => x.state !== null);
+  }, [match]);
+
+  const handleGenerateMatchReport = async () => {
+    if (!match) return;
+    setGeneratingReport(true);
+    try {
+      const html = buildCricketMatchReportHtml(match, {
+        organiserName: profile?.full_name ?? "—",
+        appName: "HitLit",
+      });
+      await generateAndShareMatchReport(html);
+    } catch (err) {
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the match report."));
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   // A manually-set target (More > Change Target, after a rain delay or
   // similar) always wins over the plain first-innings-runs+1 computation.
@@ -771,6 +1031,7 @@ export default function LiveScoringScreen() {
   const innings1Row = match?.cricket_innings.find((i) => i.innings_number === 1);
   const innings2Row = match?.cricket_innings.find((i) => i.innings_number === 2);
   const isBetweenInnings = !!innings1Row?.is_completed && !innings2Row;
+  const isMatchCompleted = match?.status === "COMPLETED";
 
   const effectiveStriker = inningsState?.striker ?? pendingStriker;
   const effectiveNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
@@ -780,9 +1041,15 @@ export default function LiveScoringScreen() {
   // Striker" picker would flash up for the split second between finishing
   // the match and landing on the final scorecard.
   const hasActiveInnings = !!currentInnings;
-  const needsStriker = hasActiveInnings && !inningsOver && !effectiveStriker;
-  const needsNonStriker = hasActiveInnings && !inningsOver && !!effectiveStriker && !effectiveNonStriker;
-  const readyToScore = hasActiveInnings && !inningsOver && !!effectiveStriker && !!effectiveNonStriker && !!effectiveBowler;
+  // Last Man Stand: once the second-to-last wicket falls, the other crease
+  // slot has no one left to fill (every other teammate is already out) — it
+  // stays permanently empty instead of prompting for a replacement that
+  // doesn't exist, and scoring continues with just the lone survivor.
+  const isLastManBatting = !!match?.last_man_stand && !!inningsState && inningsState.wickets === inningsState.totalPlayers - 1;
+  const needsStriker = hasActiveInnings && !inningsOver && !effectiveStriker && !isLastManBatting;
+  const needsNonStriker = hasActiveInnings && !inningsOver && !!effectiveStriker && !effectiveNonStriker && !isLastManBatting;
+  const readyToScore =
+    hasActiveInnings && !inningsOver && !!effectiveStriker && (!!effectiveNonStriker || isLastManBatting) && !!effectiveBowler;
   // The Match Centre's "Select Players" panel offers Batsman and Bowler as
   // two independent buttons — either can be picked first, matching the
   // reference (unlike needsStriker/needsNonStriker above, which still decide
@@ -819,7 +1086,11 @@ export default function LiveScoringScreen() {
   // straight from onSelect with nothing else in between).
   const submitBall = (partial: Omit<BallEvent, "seq" | "strikerName" | "nonStrikerName" | "bowlerName">) => {
     if (addBall.isPending) return;
-    if (!currentInnings || !effectiveStriker || !effectiveNonStriker || !effectiveBowler) return;
+    // A Last Man Stand innings legitimately has no non-striker once it's
+    // down to the lone survivor — everywhere else, a missing non-striker
+    // means a replacement genuinely hasn't been picked yet and the ball
+    // can't be scored.
+    if (!currentInnings || !effectiveStriker || (!effectiveNonStriker && !isLastManBatting) || !effectiveBowler) return;
     const seq = ballEvents.length + 1;
     const ball: BallEvent = {
       seq,
@@ -1027,7 +1298,8 @@ export default function LiveScoringScreen() {
               // tournament match) shouldn't block the host from seeing
               // their finished scorecard.
               syncTournamentResult.mutate({ cricketMatchId: match.id, teamAWon });
-              navigation.replace("FullScorecard", { matchId: match.id });
+              // This screen is the permanent destination for this match now
+              // (live or finished) — no more navigating away on completion.
             },
             onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not complete match.")),
           }
@@ -1039,7 +1311,6 @@ export default function LiveScoringScreen() {
 
   const handleConfirmAbandon = () => {
     abandonMatch.mutate(undefined, {
-      onSuccess: () => navigation.replace("FullScorecard", { matchId: match.id }),
       onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not abandon the match.")),
     });
     setDialog(null);
@@ -1078,6 +1349,14 @@ export default function LiveScoringScreen() {
 
   const rainDLOvers = Math.floor((inningsState?.legalBalls ?? 0) / 6);
 
+  const handleToggleLastManStand = () => {
+    setPanel(null);
+    updateSettings.mutate(
+      { lastManStand: !match.last_man_stand },
+      { onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not change the Last Man Stand setting.")) }
+    );
+  };
+
   const handleConfirmRainDL = () => {
     setDialog(null);
     if (rainDLOvers < 1) {
@@ -1100,7 +1379,6 @@ export default function LiveScoringScreen() {
           {
             onSuccess: () => {
               syncTournamentResult.mutate({ cricketMatchId: match.id, teamAWon: rainDLChaseVerdict.teamAWon });
-              navigation.replace("FullScorecard", { matchId: match.id });
             },
             onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not complete match.")),
           }
@@ -1275,6 +1553,10 @@ export default function LiveScoringScreen() {
                 <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
                 <Text className="text-white text-[10px] font-bold">LIVE</Text>
               </View>
+            ) : isMatchCompleted ? (
+              <View className="flex-row items-center bg-white/20 rounded-full px-2 py-0.5">
+                <Text className="text-white text-[10px] font-bold">MATCH COMPLETED</Text>
+              </View>
             ) : null}
           </View>
         </View>
@@ -1282,15 +1564,7 @@ export default function LiveScoringScreen() {
         {/* Match Centre tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, gap: 22 }}>
           {MATCH_CENTRE_TABS.map((t) => (
-            <Pressable
-              key={t.key}
-              onPress={() =>
-                t.key === "scorecard"
-                  ? navigation.navigate("FullScorecard", { matchId: match.id })
-                  : setMatchCentreTab(t.key)
-              }
-              className="items-center pb-3"
-            >
+            <Pressable key={t.key} onPress={() => setMatchCentreTab(t.key)} className="items-center pb-3">
               <Text
                 className="font-semibold text-sm"
                 style={{ color: matchCentreTab === t.key ? "white" : "rgba(255,255,255,0.5)" }}
@@ -1367,31 +1641,50 @@ export default function LiveScoringScreen() {
 
             <View className="h-px bg-border mt-4 mb-1" />
 
-            {inningsOver || !hasActiveInnings ? (
+            {(inningsOver || !hasActiveInnings) && !isMatchCompleted ? (
               <View className="items-center py-6">
                 <Ionicons name="checkmark-circle" size={40} color={colors.primary} />
                 <Text className="text-ink font-bold text-lg mt-2">
                   {currentInnings?.innings_number === 1 || isBetweenInnings ? "Innings Complete" : "Match Complete"}
                 </Text>
+                {/* Finishing the innings/match is a scoring action, so it's
+                    scorer-only — everyone else just sees the status text
+                    (and, once the match is actually done, a link to this
+                    same screen's own Scorecard tab instead of navigating
+                    anywhere else). Once match.status is actually COMPLETED,
+                    this whole block is skipped below in favor of the normal
+                    batting/bowling view with its final, frozen figures — see
+                    the hero banner's "Match Completed" tag for that state
+                    instead. */}
                 {currentInnings?.innings_number === 1 || isBetweenInnings ? (
-                  <Pressable
-                    onPress={handleStartSecondInnings}
-                    disabled={markInningsComplete.isPending || startSecondInnings.isPending}
-                    style={primaryButtonShadow}
-                  >
-                    <GradientFill className="rounded-xl px-5 py-3 mt-4">
-                      <Text className="text-white font-semibold">Start 2nd Innings</Text>
-                    </GradientFill>
-                  </Pressable>
+                  isScorer && (
+                    <Pressable
+                      onPress={handleStartSecondInnings}
+                      disabled={markInningsComplete.isPending || startSecondInnings.isPending}
+                      style={primaryButtonShadow}
+                    >
+                      <GradientFill className="rounded-xl px-5 py-3 mt-4">
+                        <Text className="text-white font-semibold">Start 2nd Innings</Text>
+                      </GradientFill>
+                    </Pressable>
+                  )
+                ) : hasActiveInnings ? (
+                  isScorer && (
+                    <Pressable
+                      onPress={handleFinishMatch}
+                      disabled={markInningsComplete.isPending || completeMatch.isPending}
+                      style={primaryButtonShadow}
+                    >
+                      <GradientFill className="rounded-xl px-5 py-3 mt-4">
+                        <Text className="text-white font-semibold">Finish Match</Text>
+                      </GradientFill>
+                    </Pressable>
+                  )
                 ) : (
-                  <Pressable
-                    onPress={hasActiveInnings ? handleFinishMatch : () => navigation.replace("FullScorecard", { matchId: match.id })}
-                    disabled={markInningsComplete.isPending || completeMatch.isPending}
-                    style={primaryButtonShadow}
-                  >
-                    <GradientFill className="rounded-xl px-5 py-3 mt-4">
-                      <Text className="text-white font-semibold">View Final Scorecard</Text>
-                    </GradientFill>
+                  <Pressable onPress={() => setMatchCentreTab("scorecard")} className="mt-4">
+                    <Text className="font-semibold text-sm" style={{ color: colors.primary }}>
+                      View Scorecard
+                    </Text>
                   </Pressable>
                 )}
               </View>
@@ -1549,10 +1842,19 @@ export default function LiveScoringScreen() {
           </ScrollView>
 
           {/* Fixed bottom panel — Select Players, the main keypad, or
-              whichever sub-panel is active. Locked while a ball is being
-              saved so a slow network or a fast double-tap can never fire two
-              deliveries for the same ball. */}
-          {hasActiveInnings && !inningsOver && (
+              whichever sub-panel is active. Scorer-only (every scoring
+              mutation would be rejected by RLS for anyone else anyway — see
+              isScorer above); everyone else just watches the score update
+              above via realtime, with no controls shown at all. Locked
+              while a ball is being saved so a slow network or a fast
+              double-tap can never fire two deliveries for the same ball.
+              Also hidden once the match is actually COMPLETED — "End
+              Innings"/the D-L chase dialog can both mark the match complete
+              while the ball-by-ball replay itself hasn't naturally finished
+              (inningsOver stays false), so isMatchCompleted is checked
+              explicitly rather than relying on inningsOver/hasActiveInnings
+              alone. */}
+          {isScorer && hasActiveInnings && !inningsOver && !isMatchCompleted && (
             <GradientFill
               pointerEvents={addBall.isPending ? "none" : "auto"}
               style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18 }}
@@ -1734,6 +2036,10 @@ export default function LiveScoringScreen() {
                       { label: "Retired Hurt", onPress: () => setPanel("RETIRED_HURT") },
                       { label: "D / L", onPress: handleOpenDL },
                       { label: "Change Target", onPress: handleOpenChangeTarget },
+                      {
+                        label: `Last Man Stand: ${match.last_man_stand ? "On" : "Off"}`,
+                        onPress: handleToggleLastManStand,
+                      },
                       { label: "Share Match", onPress: handleShare },
                     ] as { label: string; onPress: () => void; disabled?: boolean }[]).map((item) => (
                       <Pressable
@@ -1927,6 +2233,95 @@ export default function LiveScoringScreen() {
             </GradientFill>
           )}
         </>
+      ) : matchCentreTab === "scorecard" ? (
+        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          {/* Team crests + result, with a winner ribbon — same layout the
+              old standalone FullScorecardScreen used. */}
+          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+            <View
+              style={{
+                position: "absolute", top: 0, left: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderRightWidth: 56,
+                borderTopColor: colors.primary, borderRightColor: "transparent",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute", top: 0, right: 0, width: 0, height: 0,
+                borderTopWidth: 56, borderLeftWidth: 56,
+                borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
+              }}
+            />
+            <View className="p-5 items-center">
+              {match.result_summary && (
+                <View
+                  className="flex-row items-center rounded-full mb-4"
+                  style={{ gap: 6, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.primaryLight }}
+                >
+                  <Ionicons name="trophy" size={15} color={colors.primaryDark} />
+                  <Text className="font-extrabold text-xs text-center" style={{ color: colors.primaryDark, letterSpacing: 0.5 }}>
+                    {match.result_summary.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={{ position: "relative" }}>
+                <View className="flex-row items-center justify-between w-full">
+                  <View className="items-center" style={{ width: 92 }}>
+                    <TeamCrest color={colors.primary} icon="cricket" />
+                    <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_a_name}</Text>
+                  </View>
+                  <View style={{ width: 92 }} />
+                  <View className="items-center" style={{ width: 92 }}>
+                    <TeamCrest color="#1D4ED8" icon="cricket" />
+                    <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>{match.team_b_name}</Text>
+                  </View>
+                </View>
+                <View
+                  className="items-center justify-center rounded-full bg-white"
+                  style={{ position: "absolute", width: 40, height: 40, left: "50%", top: 8, marginLeft: -20, ...cardShadow }}
+                >
+                  <Text className="text-ink font-extrabold" style={{ fontSize: 12 }}>VS</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Available to every tournament player, not just the scorer —
+              RLS already lets any signed-in user read this match, and
+              generating the PDF only reads, it never writes. */}
+          {scorecardInnings.length > 0 && (
+            <Pressable onPress={handleGenerateMatchReport} disabled={generatingReport} className="mb-4">
+              <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
+                {generatingReport ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="document-text-outline" size={18} color="white" />
+                    <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                  </>
+                )}
+              </GradientFill>
+            </Pressable>
+          )}
+
+          {scorecardInnings.length === 0 ? (
+            <Text className="text-muted text-sm text-center mt-10">No balls bowled yet.</Text>
+          ) : (
+            scorecardInnings.map(({ inn, teamName, state }) => {
+              const isTeamA = inn.batting_team === "A";
+              return (
+                <InningsCard
+                  key={inn.id}
+                  teamName={teamName}
+                  inningsNumber={inn.innings_number}
+                  color={isTeamA ? colors.primary : "#1D4ED8"}
+                  bg={isTeamA ? colors.primaryLight : "#DBEAFE"}
+                  state={state}
+                />
+              );
+            })
+          )}
+        </ScrollView>
       ) : matchCentreTab === "stats" ? (
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
           <View className="bg-white rounded-2xl border border-border p-4" style={cardShadow}>

@@ -116,6 +116,56 @@ export function useTournamentNRR(gameId: string, matches: TournamentMatch[] | un
   });
 }
 
+// Cricket-only: which of this tournament's linked matches are IN_PROGRESS
+// right now, for the "Live Now" section — tournament_matches.status itself
+// doesn't distinguish "not started" from "live" (it only ever flips to
+// COMPLETED), so this is a small extra fetch against the linked cricket
+// scorecards themselves, with realtime so a match flipping to IN_PROGRESS
+// (the instant a scorer starts it) appears here without a refresh.
+export type LiveCricketMatchSummary = {
+  id: string;
+  team_a_name: string;
+  team_b_name: string;
+  overs_limit: number;
+};
+
+export function useLiveCricketMatches(cricketMatchIds: string[]) {
+  const qc = useQueryClient();
+  const sortedIds = [...cricketMatchIds].sort();
+  const idsKey = sortedIds.join(",");
+
+  const query = useQuery({
+    queryKey: ["liveCricketMatches", idsKey],
+    queryFn: async (): Promise<LiveCricketMatchSummary[]> => {
+      const { data, error } = await supabase
+        .from("cricket_matches")
+        .select("id, team_a_name, team_b_name, overs_limit")
+        .in("id", sortedIds)
+        .eq("status", "IN_PROGRESS");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    enabled: sortedIds.length > 0,
+    staleTime: 15_000,
+  });
+
+  useEffect(() => {
+    if (sortedIds.length === 0) return;
+    const channel = supabase
+      .channel(uniqueChannelName(`liveCricketMatches:${idsKey}`))
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_matches" }, () =>
+        qc.invalidateQueries({ queryKey: ["liveCricketMatches", idsKey] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, qc]);
+
+  return query;
+}
+
 export function useSetMatchScorer(gameId: string) {
   const qc = useQueryClient();
   return useMutation({

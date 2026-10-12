@@ -20,7 +20,8 @@ export type GameListItem = GameRow & {
   game_players: {
     id: string;
     status: GamePlayerRow["status"];
-    user_id: string;
+    user_id: string | null;
+    manual_name: string | null;
     profiles: { avatar: string | null; full_name: string | null } | null;
   }[];
   tournament_teams: {
@@ -32,7 +33,7 @@ export type GameListItem = GameRow & {
     // readout, and which teams are still open) + user_id (so the card can
     // tell whether the current viewer is already on one of these teams) —
     // full member profiles aren't needed until the detail screen.
-    tournament_team_members: { status: string; user_id: string }[];
+    tournament_team_members: { status: string; user_id: string | null; manual_name: string | null }[];
   }[];
 };
 
@@ -42,7 +43,7 @@ export type GameDetail = GameRow & {
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   game_players: (Pick<
     GamePlayerRow,
-    "id" | "status" | "user_id" | "joined_at" | "payment_status" | "skill_level" | "location"
+    "id" | "status" | "user_id" | "manual_name" | "joined_at" | "payment_status" | "skill_level" | "location"
   > & {
     profiles: { id: string; full_name: string | null; avatar: string | null } | null;
   })[];
@@ -57,6 +58,10 @@ export type CreateGameParams = {
   // See games_venue_or_custom_check.
   venueId: string | null;
   customVenueName: string | null;
+  // Only ever set alongside customVenueName — the manual-location map
+  // picker's pin (null when the host just typed a name with no map pick).
+  customVenueLat: number | null;
+  customVenueLng: number | null;
   gameDate: string;
   startTime: string;
   endTime: string;
@@ -106,10 +111,10 @@ export type UpdateGameParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), venues(id, name, city, address, latitude, longitude), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order, tournament_team_members(status, user_id))";
+  "*, sports(id, name), venues(id, name, city, address, latitude, longitude), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, manual_name, profiles(avatar, full_name)), tournament_teams(id, name, status, sort_order, tournament_team_members(status, user_id, manual_name))";
 
 const DETAIL_SELECT =
-  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";
+  "*, sports(id, name), venues(id, name, city), profiles!games_creator_id_fkey(id, full_name, avatar), game_players(id, status, user_id, manual_name, joined_at, payment_status, skill_level, location, profiles(id, full_name, avatar))";
 
 // Games are stored as separate DATE + TIME columns with no timezone; the app is
 // Pakistan-only (see GameDetailScreen's time formatting), so treat them as +05:00.
@@ -199,6 +204,8 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
       sport_id: params.sportId,
       venue_id: params.venueId,
       custom_venue_name: params.customVenueName,
+      custom_venue_lat: params.customVenueLat,
+      custom_venue_lng: params.customVenueLng,
       game_date: params.gameDate,
       end_date: params.endDate,
       start_time: params.startTime,
@@ -293,6 +300,15 @@ export async function joinGame(
     skill_level: skillLevel,
     location: location || null,
   });
+  if (error) throw new Error(error.message);
+}
+
+// Host-only (enforced server-side by the add_manual_game_player RPC —
+// every normal INSERT policy on this table requires user_id = auth.uid(),
+// which can never be true for a manual, account-less player). Lands as
+// JOINED immediately, same as any other host-initiated add.
+export async function addManualGamePlayer(gameId: string, name: string): Promise<void> {
+  const { error } = await supabase.rpc("add_manual_game_player", { p_game_id: gameId, p_name: name });
   if (error) throw new Error(error.message);
 }
 

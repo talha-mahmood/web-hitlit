@@ -5,6 +5,7 @@ import {
   createTeam,
   createTournamentTeamPlaceholders,
   requestToJoinTeam,
+  addManualTeamMember,
   leaveTeam,
   removeTeamMember,
   rejectTeam,
@@ -88,6 +89,16 @@ export function useRequestToJoinTeam(gameId: string) {
       skillLevel?: SkillLevel | null;
       location?: string;
     }) => requestToJoinTeam(teamId, userId, skillLevel, location),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+    },
+  });
+}
+
+export function useAddManualTeamMember(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, name }: { teamId: string; name: string }) => addManualTeamMember(teamId, name),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

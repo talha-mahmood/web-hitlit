@@ -57,6 +57,17 @@ export async function fetchMatchesForTournament(gameId: string): Promise<Tournam
 // Shared by every round's generation — a bye (no second team) is inserted
 // already COMPLETED with team_a as the winner, so it never blocks the round
 // from being considered "decided" and doesn't need a manual result.
+//
+// Every row below explicitly sets status/winner_team_id/played_at (never
+// conditionally spread in) — PostgREST's bulk insert for an array of
+// objects derives the column list from the union of keys across the WHOLE
+// batch, and a row missing a key that another row in the same batch has
+// gets sent as an explicit NULL for that column, not the column's DEFAULT.
+// A round with any bye mixed in with real matches (any odd team count,
+// e.g. 3 teams = 1 real match + 1 bye) used to hit exactly this: the real
+// match's row omitted `status` relying on its DB default, the bye's row
+// included it, and PostgREST sent `status: null` for the real match —
+// violating its NOT NULL constraint and silently failing the whole insert.
 async function insertRound(
   gameId: string,
   round: number,
@@ -72,9 +83,9 @@ async function insertRound(
       team_a_id: p.teamA.id,
       team_b_id: p.teamB?.id ?? null,
       sort_order: i,
-      ...(p.teamB
-        ? {}
-        : { status: "COMPLETED" as const, winner_team_id: p.teamA.id, played_at: new Date().toISOString() }),
+      status: p.teamB ? ("PENDING" as const) : ("COMPLETED" as const),
+      winner_team_id: p.teamB ? null : p.teamA.id,
+      played_at: p.teamB ? null : new Date().toISOString(),
     }))
   );
   if (error) throw new Error(error.message);
@@ -325,8 +336,18 @@ export async function computeTournamentTeamNRR(
     const inningsB = cm.cricket_innings.find((i) => i.batting_team === "B");
     if (!inningsA || !inningsB) continue; // one side never actually batted
 
-    const resultA = computeInningsForNRR(inningsA.cricket_balls.map(ballRowToEvent), cm.overs_limit, cm.team_a_players.length);
-    const resultB = computeInningsForNRR(inningsB.cricket_balls.map(ballRowToEvent), cm.overs_limit, cm.team_b_players.length);
+    const resultA = computeInningsForNRR(
+      inningsA.cricket_balls.map(ballRowToEvent),
+      cm.overs_limit,
+      cm.team_a_players.length,
+      cm.last_man_stand
+    );
+    const resultB = computeInningsForNRR(
+      inningsB.cricket_balls.map(ballRowToEvent),
+      cm.overs_limit,
+      cm.team_b_players.length,
+      cm.last_man_stand
+    );
 
     addEntry(m.team_a_id, { runsFor: resultA.runs, ballsFor: resultA.legalBalls, runsAgainst: resultB.runs, ballsAgainst: resultB.legalBalls });
     addEntry(m.team_b_id, { runsFor: resultB.runs, ballsFor: resultB.legalBalls, runsAgainst: resultA.runs, ballsAgainst: resultA.legalBalls });

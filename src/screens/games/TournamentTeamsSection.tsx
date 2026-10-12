@@ -9,13 +9,14 @@ import {
   useTournamentTeams,
   useCreateTeam,
   useRequestToJoinTeam,
+  useAddManualTeamMember,
   useLeaveTeam,
   useApproveTeam,
   useRejectPendingTeam,
   useRemoveTeamMember,
   useUpdateTeamName,
 } from "../../hooks/useTournamentTeams";
-import { useSquadFillTournamentTeam } from "../../hooks/useSquadTeamFill";
+import { useSquadFillTournamentTeam, useSquadAddMembersToTeam } from "../../hooks/useSquadTeamFill";
 import { useCreateTeamInvite, usePendingTeamInviteCount } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
@@ -30,11 +31,13 @@ import RenameTeamModal from "../../components/RenameTeamModal";
 import SelectTeamModal from "../../components/SelectTeamModal";
 import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
+import AddManualMemberModal from "../../components/AddManualMemberModal";
 import FillTeamWithSquadModal from "../../components/FillTeamWithSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type ScorecardPrefill, type ScorecardPrefillPlayer } from "../../lib/api/tournamentMatches";
+import { disambiguateRoster } from "../../lib/matchNameValidation";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
@@ -65,12 +68,17 @@ function MemberAvatar({
   name,
   avatar,
   colorIndex,
+  isManual,
   onRemove,
   onPressAvatar,
 }: {
   name: string | null;
   avatar: string | null;
   colorIndex: number;
+  // A host-entered player with no app account — shown with the app's
+  // default avatar image instead of a colored-initial circle, so it's
+  // visually distinct from a real member.
+  isManual?: boolean;
   onRemove?: () => void;
   onPressAvatar?: () => void;
 }) {
@@ -80,7 +88,9 @@ function MemberAvatar({
     <View className="items-center" style={{ width: 56 }}>
       <View style={{ position: "relative" }}>
         <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
-          {avatar ? (
+          {isManual ? (
+            <Image source={require("../../../assets/avatar.png")} className="w-10 h-10 rounded-full bg-gray-200" />
+          ) : avatar ? (
             <Image source={{ uri: avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
           ) : (
             <View
@@ -136,6 +146,7 @@ function TeamCard({
   onOpenChat,
   onInvitePlayer,
   onFillWithSquadMembers,
+  onAddManually,
   onJoinTeam,
   onRemoveMember,
   genderMismatch,
@@ -164,6 +175,9 @@ function TeamCard({
   // already on this team, while it still has an open slot.
   onInvitePlayer?: () => void;
   onFillWithSquadMembers?: () => void;
+  // Host-only: add a player with no app account — lands as JOINED
+  // immediately, shown with the app's default avatar everywhere.
+  onAddManually?: () => void;
   // A non-host, teamless user's plain individual join — see canJoinTeam.
   onJoinTeam?: () => void;
   // Host-only: pull one specific joined member off this team.
@@ -293,15 +307,18 @@ function TeamCard({
           {joinedMembers.map((m, i) => (
             <MemberAvatar
               key={m.id}
-              name={m.profiles?.full_name ?? null}
+              name={m.profiles?.full_name ?? m.manual_name ?? null}
               avatar={m.profiles?.avatar ?? null}
+              isManual={!m.user_id}
               colorIndex={i}
               onRemove={
                 canHostRemoveMembers && m.user_id !== userId && onRemoveMember
-                  ? () => onRemoveMember(m.id, m.profiles?.full_name ?? null)
+                  ? () => onRemoveMember(m.id, m.profiles?.full_name ?? m.manual_name ?? null)
                   : undefined
               }
-              onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: m.user_id })}
+              onPressAvatar={
+                m.user_id ? () => navigation.navigate("PlayerProfile", { userId: m.user_id as string }) : undefined
+              }
             />
           ))}
         </View>
@@ -430,6 +447,19 @@ function TeamCard({
           )}
         </View>
       )}
+      {/* Host-only — a player without an app account, added straight to
+          the roster (no approval, no invite to accept). */}
+      {isHost && canManageRecruiting && onAddManually && (
+        <Pressable
+          onPress={onAddManually}
+          disabled={disabled}
+          className="flex-row items-center justify-center rounded-full border border-border py-3 mt-2"
+          style={{ gap: 6 }}
+        >
+          <Ionicons name="person-add-outline" size={15} color={colors.muted} />
+          <Text className="text-muted font-bold text-xs">Add Player Manually</Text>
+        </Pressable>
+      )}
       </View>
       {canEditTeamName && (
         <RenameTeamModal
@@ -504,9 +534,24 @@ function HeadToHeadMatchCard({
       t.id,
       t.tournament_team_members
         .filter((m) => m.status === "JOINED")
-        .map((m) => ({ name: m.profiles?.full_name ?? "Player", userId: m.user_id }))
+        .map((m) => ({ name: m.profiles?.full_name ?? m.manual_name ?? "Player", userId: m.user_id }))
     );
   }
+
+  // Manually-typed names (no account to tell them apart) can collide —
+  // two different players both entered as "Ali" — and since the New Match
+  // screen locks a prefilled roster's names, that collision would otherwise
+  // leave the Start button permanently disabled with no way to fix it.
+  // Suffix duplicates ("Ali (2)") here, before the roster ever reaches that
+  // screen.
+  const rawTeamAPlayers = match?.team_a ? rosterByTeamId.get(match.team_a.id) ?? [] : [];
+  const rawTeamBPlayers = match?.team_b ? rosterByTeamId.get(match.team_b.id) ?? [] : [];
+  const { teamANames, teamBNames } = disambiguateRoster(
+    rawTeamAPlayers.map((p) => ({ name: p.name, sourceId: p.userId })),
+    rawTeamBPlayers.map((p) => ({ name: p.name, sourceId: p.userId }))
+  );
+  const teamAPlayers = rawTeamAPlayers.map((p, i) => ({ ...p, name: teamANames[i] }));
+  const teamBPlayers = rawTeamBPlayers.map((p, i) => ({ ...p, name: teamBNames[i] }));
 
   const handleEnterScoreManually = () => {
     const manualSport = manualSportForName(sportName);
@@ -519,8 +564,8 @@ function HeadToHeadMatchCard({
         gameId: game.id,
         teamAName: match.team_a.name,
         teamBName: match.team_b.name,
-        teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
-        teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+        teamAPlayers,
+        teamBPlayers,
         venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
       },
     });
@@ -535,8 +580,8 @@ function HeadToHeadMatchCard({
       gameId: game.id,
       teamAName: match.team_a.name,
       teamBName: match.team_b.name,
-      teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
-      teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+      teamAPlayers,
+      teamBPlayers,
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
     };
 
@@ -628,16 +673,19 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const [showJoinTeamModal, setShowJoinTeamModal] = useState(false);
   const [invitePlayerTeamId, setInvitePlayerTeamId] = useState<string | null>(null);
   const [fillSquadTeamId, setFillSquadTeamId] = useState<string | null>(null);
+  const [addManuallyTeamId, setAddManuallyTeamId] = useState<string | null>(null);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
   const requestToJoinTeam = useRequestToJoinTeam(game.id);
   const leaveTeam = useLeaveTeam(game.id);
   const squadFillTeam = useSquadFillTournamentTeam(game.id);
+  const squadAddMembers = useSquadAddMembersToTeam(game.id);
   const approveTeam = useApproveTeam(game.id);
   const rejectPendingTeam = useRejectPendingTeam(game.id);
   const removeTeamMember = useRemoveTeamMember(game.id);
   const createTeamInvite = useCreateTeamInvite(game.id);
+  const addManualMember = useAddManualTeamMember(game.id);
 
   if (isLoading) {
     return <ActivityIndicator color={colors.primary} className="mt-4" />;
@@ -686,7 +734,9 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   // never with the same player on two teams — this is every player already
   // JOINED anywhere else, so SelectTeamModal can hide them from the picker.
   const joinedElsewhereUserIds = activeTeams.flatMap((t) =>
-    t.tournament_team_members.filter((m) => m.status === "JOINED").map((m) => m.user_id)
+    t.tournament_team_members
+      .filter((m) => m.status === "JOINED" && m.user_id)
+      .map((m) => m.user_id as string)
   );
   // "Add Myself" — every active team with an open slot, offered to the host
   // only while they don't already have a team of their own in this
@@ -881,6 +931,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name, sportName: game.sports?.name })}
               onInvitePlayer={userId ? () => setInvitePlayerTeamId(team.id) : undefined}
               onFillWithSquadMembers={userId ? () => setFillSquadTeamId(team.id) : undefined}
+              onAddManually={userId ? () => setAddManuallyTeamId(team.id) : undefined}
               onJoinTeam={userId ? () => handleJoinTeam(team.id) : undefined}
               onRemoveMember={handleRemoveMember}
               genderMismatch={genderMismatch}
@@ -958,20 +1009,45 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           requiredSize - (fillSquadTeam?.tournament_team_members.filter((m) => m.status === "JOINED").length ?? 0),
           0
         )}
-        submitting={createTeamInvite.isPending}
+        submitting={createTeamInvite.isPending || squadAddMembers.isPending}
         excludeUserIds={joinedElsewhereUserIds}
         gameGender={game.gender}
-        onSubmit={async (memberUserIds) => {
+        onSubmit={async (squadId, memberUserIds, isHostSquad) => {
           if (!userId || !fillSquadTeamId) return;
           try {
-            for (const memberUserId of memberUserIds) {
-              await createTeamInvite.mutateAsync({ teamId: fillSquadTeamId, invitedUserId: memberUserId, invitedBy: userId });
+            if (isHostSquad) {
+              // The acting user owns/hosts this group — add them straight
+              // to the team, no approval needed (squad_add_members_to_team
+              // already enforces the same host check server-side).
+              await squadAddMembers.mutateAsync({ teamId: fillSquadTeamId, squadId, memberUserIds });
+              setFillSquadTeamId(null);
+              Alert.alert("Members Added", `Added ${memberUserIds.length} member${memberUserIds.length === 1 ? "" : "s"} to the team.`);
+            } else {
+              for (const memberUserId of memberUserIds) {
+                await createTeamInvite.mutateAsync({ teamId: fillSquadTeamId, invitedUserId: memberUserId, invitedBy: userId });
+              }
+              setFillSquadTeamId(null);
+              Alert.alert("Requests Sent", `Sent ${memberUserIds.length} request${memberUserIds.length === 1 ? "" : "s"}.`);
             }
-            setFillSquadTeamId(null);
-            Alert.alert("Requests Sent", `Sent ${memberUserIds.length} request${memberUserIds.length === 1 ? "" : "s"}.`);
           } catch (err) {
-            Alert.alert("Error", getFriendlyErrorMessage(err, "Could not send all requests."));
+            Alert.alert("Error", getFriendlyErrorMessage(err, isHostSquad ? "Could not add all members." : "Could not send all requests."));
           }
+        }}
+      />
+
+      <AddManualMemberModal
+        visible={!!addManuallyTeamId}
+        onClose={() => setAddManuallyTeamId(null)}
+        submitting={addManualMember.isPending}
+        onSubmit={(name) => {
+          if (!addManuallyTeamId) return;
+          addManualMember.mutate(
+            { teamId: addManuallyTeamId, name },
+            {
+              onSuccess: () => setAddManuallyTeamId(null),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player.")),
+            }
+          );
         }}
       />
     </View>

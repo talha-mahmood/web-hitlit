@@ -9,6 +9,7 @@ import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import {
   useTournamentMatches,
   useTournamentNRR,
+  useLiveCricketMatches,
   useGenerateMatches,
   useGenerateNextRound,
   useGeneratePoolMatches,
@@ -30,6 +31,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { Database } from "../../types/database.types";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type TournamentMatch, type ScorecardPrefill, type ScorecardPrefillPlayer } from "../../lib/api/tournamentMatches";
+import { disambiguateRoster } from "../../lib/matchNameValidation";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -179,6 +181,42 @@ function MatchRunRates({ cricketMatchId }: { cricketMatchId: string }) {
   );
 }
 
+// Once a match is completed, the single-match "current run rate" it was
+// showing while live isn't the useful number anymore — what actually
+// matters at that point is each team's NET run rate across the whole
+// tournament stage (the same figure already shown in Standings), reusing
+// the already-computed nrrByTeam map rather than deriving anything new.
+function MatchNetRunRates({
+  teamAId,
+  teamBId,
+  teamAName,
+  teamBName,
+  nrrByTeam,
+}: {
+  teamAId?: string | null;
+  teamBId?: string | null;
+  teamAName: string;
+  teamBName: string;
+  nrrByTeam: Map<string, number> | undefined;
+}) {
+  const a = teamAId ? nrrByTeam?.get(teamAId) : undefined;
+  const b = teamBId ? nrrByTeam?.get(teamBId) : undefined;
+  if (a === undefined && b === undefined) return null;
+
+  const formatNrr = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(3)}`;
+
+  return (
+    <View className="flex-row items-center justify-between mt-1">
+      <Text className="text-muted text-xs" numberOfLines={1}>
+        {a !== undefined ? `${teamAName} NRR: ${formatNrr(a)}` : ""}
+      </Text>
+      <Text className="text-muted text-xs" numberOfLines={1}>
+        {b !== undefined ? `${teamBName} NRR: ${formatNrr(b)}` : ""}
+      </Text>
+    </View>
+  );
+}
+
 // "Oct 15 · 9:00 AM" — same short style used for chat timestamps elsewhere
 // in the app, just date+time together since a match card needs both.
 function formatMatchSchedule(iso: string): string {
@@ -207,6 +245,70 @@ function StatusPill({ completed }: { completed: boolean }) {
   );
 }
 
+// A not-yet-generated future bracket round's match, shown as a "TBD vs TBD"
+// placeholder — same card shape as a real MatchRow's upcoming state, just
+// with no team names/actions yet, since who plays it depends on winners
+// that aren't decided until earlier rounds finish. Nothing in the database
+// backs this; it's pure display math (see the preview computation in
+// MatchesPanel) and disappears the instant the host actually generates that
+// round for real.
+function TbdMatchRow({ matchNumber }: { matchNumber: number }) {
+  return (
+    <View className="bg-gray-50 rounded-2xl px-3 py-2.5" style={{ opacity: 0.65 }}>
+      <View className="flex-row items-center justify-between mb-1.5">
+        <Text className="text-muted text-xs font-bold">Match {matchNumber}</Text>
+        <StatusPill completed={false} />
+      </View>
+      <View className="flex-row items-center" style={{ gap: 10 }}>
+        <View style={{ width: 28 }} />
+        <Text className="text-muted text-sm font-medium flex-1" numberOfLines={1}>
+          TBD
+        </Text>
+        <View className="items-center justify-center rounded-full bg-gray-200" style={{ width: 32, height: 32 }}>
+          <Text className="text-muted text-xs font-bold">VS</Text>
+        </View>
+        <Text className="text-muted text-sm font-medium flex-1 text-right" numberOfLines={1}>
+          TBD
+        </Text>
+        <View style={{ width: 28 }} />
+      </View>
+    </View>
+  );
+}
+
+// Every future bracket round from here to the Final, as TBD placeholder
+// rows — teamsEnteringNextRound is how many winners the current round will
+// produce (= its match count, since byes only ever happen in round 1, long
+// past by the time there's a "next round" to preview). Pure display math,
+// nothing persisted.
+function computeBracketPreviewRounds(teamsEnteringNextRound: number): { label: string; matchCount: number }[] {
+  const rounds: { label: string; matchCount: number }[] = [];
+  let teams = teamsEnteringNextRound;
+  while (teams >= 2) {
+    const matchCount = Math.floor(teams / 2);
+    rounds.push({ label: knockoutRoundLabel(teams), matchCount });
+    teams = matchCount;
+  }
+  return rounds;
+}
+
+function BracketPreviewRounds({ rounds }: { rounds: { label: string; matchCount: number }[] }) {
+  return (
+    <>
+      {rounds.map((r) => (
+        <View key={r.label} className="mt-4">
+          <Text className="text-muted text-xs font-semibold mb-2">{r.label} · Upcoming</Text>
+          <View style={{ gap: 8 }}>
+            {Array.from({ length: r.matchCount }, (_, i) => (
+              <TbdMatchRow key={i} matchNumber={i + 1} />
+            ))}
+          </View>
+        </View>
+      ))}
+    </>
+  );
+}
+
 function MatchRow({
   match,
   matchNumber,
@@ -214,14 +316,17 @@ function MatchRow({
   isHost,
   isAssignedScorer,
   scorerName,
+  nrrByTeam,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
   onSetTime,
   onViewDetails,
+  onWatchScorecard,
 }: {
   match: TournamentMatch;
   matchNumber: number;
+  nrrByTeam?: Map<string, number>;
   // True once the venue is booked and both teams are set — the same bar
   // "Go To Scorecard"/"Enter Score Manually" always required, now checked
   // per match instead of only the single earliest one.
@@ -243,12 +348,20 @@ function MatchRow({
   // rather than leaving dead space where the mockup shows "View match
   // details".
   onViewDetails?: () => void;
+  // Any tournament player (not just the scorer/host) can open the cricket
+  // scorecard once one exists (match.cricket_match_id) — read-only for
+  // everyone but the assigned scorer, enforced inside LiveScoringScreen
+  // itself. Separate from onGoToScorecard, which also handles the "no
+  // scorecard yet" case by routing into match CREATION — a viewer must
+  // never land there.
+  onWatchScorecard?: () => void;
 }) {
   const teamAName = match.team_a?.name ?? "TBD";
   const teamBName = match.team_b?.name ?? "Bye";
   const showScoringButtons = isEligible && isAssignedScorer;
   const showSelectScorer = isEligible && isHost;
   const isReady = isEligible && (isAssignedScorer || isHost);
+  const canWatch = !!match.cricket_match_id && !!onWatchScorecard;
 
   if (match.status === "COMPLETED") {
     const resultLabel = match.is_draw
@@ -281,8 +394,25 @@ function MatchRow({
           )}
         </View>
         <Text className="text-primary text-xs font-semibold mt-1.5">{resultLabel}</Text>
-        {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
+        {match.cricket_match_id && !match.manual_score && (
+          <MatchNetRunRates
+            teamAId={match.team_a?.id}
+            teamBId={match.team_b?.id}
+            teamAName={teamAName}
+            teamBName={teamBName}
+            nrrByTeam={nrrByTeam}
+          />
+        )}
         <LinkedMatchScoreDetails match={match} />
+        {canWatch && (
+          <Pressable
+            onPress={onWatchScorecard}
+            className="items-center rounded-2xl mt-2"
+            style={{ paddingVertical: 10, borderWidth: 1.5, borderColor: colors.border }}
+          >
+            <Text className="text-ink text-xs font-semibold">View Scorecard</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -366,7 +496,28 @@ function MatchRow({
               <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </Pressable>
           )}
+          {/* The host/scorer's own buttons above already open LiveScoring
+              for them — this is for anyone else who's ready (e.g. the host
+              when they're not the one scoring) to watch once scoring has
+              actually started. */}
+          {!showScoringButtons && canWatch && (
+            <Pressable
+              onPress={onWatchScorecard}
+              className="items-center rounded-2xl"
+              style={{ paddingVertical: 12, borderWidth: 1.5, borderColor: colors.primary }}
+            >
+              <Text className="text-primary text-sm font-semibold">Watch Live</Text>
+            </Pressable>
+          )}
         </View>
+      ) : canWatch ? (
+        <Pressable
+          onPress={onWatchScorecard}
+          className="items-center rounded-2xl mt-3"
+          style={{ paddingVertical: 12, borderWidth: 1.5, borderColor: colors.primary }}
+        >
+          <Text className="text-primary text-sm font-semibold">Watch Live</Text>
+        </Pressable>
       ) : onViewDetails ? (
         <Pressable
           onPress={onViewDetails}
@@ -438,6 +589,7 @@ function MatchesPanel({
   onSelectScorer,
   onSetTime,
   onViewDetails,
+  onWatchScorecard,
 }: {
   gameId: string;
   format: Database["public"]["Enums"]["tournament_format_type"];
@@ -455,6 +607,7 @@ function MatchesPanel({
   onSelectScorer: (match: TournamentMatch) => void;
   onSetTime: (match: TournamentMatch) => void;
   onViewDetails: (match: TournamentMatch) => void;
+  onWatchScorecard: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateMatches = useGenerateMatches(gameId);
@@ -480,7 +633,12 @@ function MatchesPanel({
         />
         {canGenerate ? (
           <Pressable
-            onPress={() => generateMatches.mutate({ format, teams: approvedTeams })}
+            onPress={() =>
+              generateMatches.mutate(
+                { format, teams: approvedTeams },
+                { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate matches.")) }
+              )
+            }
             disabled={generateMatches.isPending}
           >
             <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
@@ -523,6 +681,14 @@ function MatchesPanel({
   const playoffSize = approvedTeams.length >= 4 ? 4 : Math.min(2, approvedTeams.length);
   const playoffTeams = standings.slice(0, playoffSize).map((s) => ({ id: s.teamId, name: s.name }));
 
+  // Knockout only (a league round-robin already lists its whole fixture set
+  // in one round, nothing left to preview) — every future round all the way
+  // to the Final, shown as TBD placeholders until the host actually
+  // generates each one for real.
+  const previewRounds =
+    !isLatestLeagueGroupStage && statusFilter !== "COMPLETED"
+      ? computeBracketPreviewRounds(latestRoundMatches.length)
+      : [];
 
   return (
     <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
@@ -547,11 +713,13 @@ function MatchesPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  nrrByTeam={nrrByTeam}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
                   onSetTime={isHost ? () => onSetTime(m) : undefined}
                   onViewDetails={() => onViewDetails(m)}
+                  onWatchScorecard={() => onWatchScorecard(m)}
                 />
               ))}
             </View>
@@ -559,9 +727,16 @@ function MatchesPanel({
         );
       })}
 
+      <BracketPreviewRounds rounds={previewRounds} />
+
       {isHost && canAdvanceBracket && bracketWinners && (
         <Pressable
-          onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
+          onPress={() =>
+            generateNextRound.mutate(
+              { round: latestRound + 1, teams: bracketWinners },
+              { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the next round.")) }
+            )
+          }
           disabled={generateNextRound.isPending}
           className="mt-4"
         >
@@ -582,7 +757,12 @@ function MatchesPanel({
 
       {isHost && isGroupStageComplete && playoffTeams.length >= 2 && (
         <Pressable
-          onPress={() => generateNextRound.mutate({ round: 2, teams: playoffTeams })}
+          onPress={() =>
+            generateNextRound.mutate(
+              { round: 2, teams: playoffTeams },
+              { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the playoffs.")) }
+            )
+          }
           disabled={generateNextRound.isPending}
           className="mt-4"
         >
@@ -786,12 +966,14 @@ function PoolMatchesPanel({
   currentUserId,
   statusFilter,
   stageFilter,
+  nrrByTeam,
   getScorerName,
   onGoToScorecard,
   onEnterScoreManually,
   onSelectScorer,
   onSetTime,
   onViewDetails,
+  onWatchScorecard,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -802,12 +984,14 @@ function PoolMatchesPanel({
   currentUserId?: string;
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
+  nrrByTeam: Map<string, number> | undefined;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
   onEnterScoreManually: (match: TournamentMatch) => void;
   onSelectScorer: (match: TournamentMatch) => void;
   onSetTime: (match: TournamentMatch) => void;
   onViewDetails: (match: TournamentMatch) => void;
+  onWatchScorecard: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generatePoolMatches = useGeneratePoolMatches(gameId);
@@ -841,7 +1025,8 @@ function PoolMatchesPanel({
                   teams: approvedTeams
                     .filter((t) => t.pool_id === pool.id)
                     .map((t) => ({ id: t.id, name: t.name })),
-                }))
+                })),
+                { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the group matches.")) }
               )
             }
             disabled={generatePoolMatches.isPending}
@@ -892,11 +1077,13 @@ function PoolMatchesPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  nrrByTeam={nrrByTeam}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
                   onSetTime={isHost ? () => onSetTime(m) : undefined}
                   onViewDetails={() => onViewDetails(m)}
+                  onWatchScorecard={() => onWatchScorecard(m)}
                 />
               ))}
             </View>
@@ -936,6 +1123,7 @@ function PoolPlayoffPanel({
   onSelectScorer,
   onSetTime,
   onViewDetails,
+  onWatchScorecard,
 }: {
   gameId: string;
   pools: TournamentPool[];
@@ -958,6 +1146,7 @@ function PoolPlayoffPanel({
   onSelectScorer: (match: TournamentMatch) => void;
   onSetTime: (match: TournamentMatch) => void;
   onViewDetails: (match: TournamentMatch) => void;
+  onWatchScorecard: (match: TournamentMatch) => void;
 }) {
   const { data: matches, isLoading } = useTournamentMatches(gameId);
   const generateNextRound = useGenerateNextRound(gameId);
@@ -1017,7 +1206,12 @@ function PoolPlayoffPanel({
         />
         {isHost && (
           <Pressable
-            onPress={() => generateNextRound.mutate({ round: 2, teams: qualifiers })}
+            onPress={() =>
+              generateNextRound.mutate(
+                { round: 2, teams: qualifiers },
+                { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the playoffs.")) }
+              )
+            }
             disabled={generateNextRound.isPending}
           >
             <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 8 }}>
@@ -1034,6 +1228,9 @@ function PoolPlayoffPanel({
             </GradientFill>
           </Pressable>
         )}
+        {statusFilter !== "COMPLETED" && (
+          <BracketPreviewRounds rounds={computeBracketPreviewRounds(qualifiers.length)} />
+        )}
       </View>
     );
   }
@@ -1044,6 +1241,7 @@ function PoolPlayoffPanel({
   const bracketWinners = getRoundWinners(latestRoundMatches);
   const isChampionDecided = bracketWinners !== null && bracketWinners.length === 1;
   const canAdvanceBracket = bracketWinners !== null && bracketWinners.length > 1;
+  const previewRounds = statusFilter !== "COMPLETED" ? computeBracketPreviewRounds(latestRoundMatches.length) : [];
 
   return (
     <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
@@ -1067,11 +1265,13 @@ function PoolPlayoffPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  nrrByTeam={nrrByTeam}
                   onGoToScorecard={() => onGoToScorecard(m)}
                   onEnterScoreManually={() => onEnterScoreManually(m)}
                   onSelectScorer={() => onSelectScorer(m)}
                   onSetTime={isHost ? () => onSetTime(m) : undefined}
                   onViewDetails={() => onViewDetails(m)}
+                  onWatchScorecard={() => onWatchScorecard(m)}
                 />
               ))}
             </View>
@@ -1079,9 +1279,16 @@ function PoolPlayoffPanel({
         );
       })}
 
+      <BracketPreviewRounds rounds={previewRounds} />
+
       {isHost && canAdvanceBracket && bracketWinners && (
         <Pressable
-          onPress={() => generateNextRound.mutate({ round: latestRound + 1, teams: bracketWinners })}
+          onPress={() =>
+            generateNextRound.mutate(
+              { round: latestRound + 1, teams: bracketWinners },
+              { onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not generate the next round.")) }
+            )
+          }
           disabled={generateNextRound.isPending}
           className="mt-4"
         >
@@ -1121,6 +1328,8 @@ export default function TournamentMatchesScreen() {
   const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: nrrByTeam } = useTournamentNRR(params.gameId, matches);
+  const linkedCricketMatchIds = (matches ?? []).filter((m) => m.cricket_match_id).map((m) => m.cricket_match_id as string);
+  const { data: liveCricketMatches } = useLiveCricketMatches(linkedCricketMatchIds);
   const { data: pools } = useTournamentPools(params.gameId);
   const setMatchScorer = useSetMatchScorer(params.gameId);
   const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
@@ -1197,6 +1406,17 @@ export default function TournamentMatchesScreen() {
 
   // Stands in for the mockup's "View match details" — rather than a
   // separate screen, a quick summary of why it isn't ready to score yet.
+  // Any tournament player can watch a cricket match's live/finished
+  // scorecard once one exists — unlike handleGoToScorecard, this never
+  // falls back to match creation, since a viewer must never land there.
+  // Cricket-only for now (see LiveScoringScreen's own isScorer gate, which
+  // is what actually makes this read-only for everyone but the scorer).
+  const handleWatchScorecard = (match: TournamentMatch) => {
+    if (isCricketSport && match.cricket_match_id) {
+      navigation.navigate("LiveScoring", { matchId: match.cricket_match_id });
+    }
+  };
+
   const handleViewMatchDetails = (match: TournamentMatch) => {
     const reason = !match.team_a || !match.team_b
       ? "Waiting for both teams to be decided."
@@ -1215,18 +1435,36 @@ export default function TournamentMatchesScreen() {
       t.id,
       t.tournament_team_members
         .filter((m) => m.status === "JOINED")
-        .map((m) => ({ name: m.profiles?.full_name ?? "Player", userId: m.user_id }))
+        .map((m) => ({ name: m.profiles?.full_name ?? m.manual_name ?? "Player", userId: m.user_id }))
     );
   }
 
   // Every joined member across every active team — the pool the host picks
   // a match's scorer from (not just the two teams playing that match, per
   // spec: "all the members of tournament will show in drop down list").
-  const scorerCandidates: ScorerCandidate[] = activeTeams.flatMap((t) =>
+  // Manually-added players (no real account) can never be picked — there's
+  // no one to assign — so when a team is filled entirely with them, this
+  // list would otherwise be completely empty with no way to assign anyone.
+  // The host is always added as a fallback candidate (deduped below in case
+  // they're also a joined team member) so there's always at least one
+  // person who can score. Every candidate who IS the host (whichever way
+  // they ended up in the list) is labeled "(Host)" on their name, so it's
+  // always clear in the picker which entry that is.
+  const rawScorerCandidates: ScorerCandidate[] = activeTeams.flatMap((t) =>
     t.tournament_team_members
       .filter((m) => m.status === "JOINED" && m.user_id)
-      .map((m) => ({ id: m.user_id, name: m.profiles?.full_name ?? "Player", teamName: t.name }))
+      .map((m) => ({ id: m.user_id as string, name: m.profiles?.full_name ?? "Player", teamName: t.name }))
   );
+  if (game.creator_id) {
+    rawScorerCandidates.push({
+      id: game.creator_id,
+      name: game.profiles?.full_name ?? "Host",
+      teamName: "Tournament Host",
+    });
+  }
+  const scorerCandidates: ScorerCandidate[] = Array.from(
+    new Map(rawScorerCandidates.map((c) => [c.id, c])).values()
+  ).map((c) => (c.id === game.creator_id ? { ...c, name: `${c.name} (Host)` } : c));
   const scorerNameById = new Map(scorerCandidates.map((c) => [c.id, c.name]));
   const getScorerName = (match: TournamentMatch): string | null =>
     match.scorer_user_id ? scorerNameById.get(match.scorer_user_id) ?? null : null;
@@ -1245,13 +1483,25 @@ export default function TournamentMatchesScreen() {
 
   const buildPrefill = (match: TournamentMatch): ScorecardPrefill | null => {
     if (!match.team_a || !match.team_b) return null;
+    const rawTeamAPlayers = rosterByTeamId.get(match.team_a.id) ?? [];
+    const rawTeamBPlayers = rosterByTeamId.get(match.team_b.id) ?? [];
+    // Manually-typed names (no account to tell them apart) can collide —
+    // two different players both entered as "Ali" — and since the New Match
+    // screen locks a prefilled roster's names, that collision would
+    // otherwise leave the Start button permanently disabled with no way to
+    // fix it. Suffix duplicates ("Ali (2)") here, before the roster ever
+    // reaches that screen.
+    const { teamANames, teamBNames } = disambiguateRoster(
+      rawTeamAPlayers.map((p) => ({ name: p.name, sourceId: p.userId })),
+      rawTeamBPlayers.map((p) => ({ name: p.name, sourceId: p.userId }))
+    );
     return {
       tournamentMatchId: match.id,
       gameId: params.gameId,
       teamAName: match.team_a.name,
       teamBName: match.team_b.name,
-      teamAPlayers: rosterByTeamId.get(match.team_a.id) ?? [],
-      teamBPlayers: rosterByTeamId.get(match.team_b.id) ?? [],
+      teamAPlayers: rawTeamAPlayers.map((p, i) => ({ ...p, name: teamANames[i] })),
+      teamBPlayers: rawTeamBPlayers.map((p, i) => ({ ...p, name: teamBNames[i] })),
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
     };
   };
@@ -1404,6 +1654,36 @@ export default function TournamentMatchesScreen() {
 
       {activeTab === "MATCHES" && (
         <>
+          {/* Live Now — any match a scorer has actually started, surfaced
+              immediately to every tournament player via useLiveCricketMatches'
+              realtime subscription (no refresh needed the instant one
+              starts or finishes). */}
+          {!!liveCricketMatches && liveCricketMatches.length > 0 && (
+            <View className="mx-4 mt-3 rounded-2xl p-4" style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FCA5A5" }}>
+              <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
+                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
+                  <Text className="text-white text-[10px] font-bold">LIVE</Text>
+                </View>
+                <Text className="font-bold text-sm" style={{ color: "#991B1B" }}>Live Now</Text>
+              </View>
+              <View style={{ gap: 8 }}>
+                {liveCricketMatches.map((lm) => (
+                  <Pressable
+                    key={lm.id}
+                    onPress={() => navigation.navigate("LiveScoring", { matchId: lm.id })}
+                    className="flex-row items-center justify-between bg-white rounded-xl px-3.5 py-3"
+                    style={cardShadow}
+                  >
+                    <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>
+                      {lm.team_a_name} vs {lm.team_b_name}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
           <View className="flex-row px-4 py-3" style={{ gap: 8 }}>
             {(
               [
@@ -1513,12 +1793,14 @@ export default function TournamentMatchesScreen() {
               currentUserId={userId}
               statusFilter={statusFilter}
               stageFilter={stageFilter}
+              nrrByTeam={nrrByTeam}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
               onEnterScoreManually={handleEnterScoreManually}
               onSelectScorer={(match) => setScorerModalMatchId(match.id)}
               onSetTime={(match) => setScheduleModalMatchId(match.id)}
               onViewDetails={handleViewMatchDetails}
+              onWatchScorecard={handleWatchScorecard}
             />
             <PoolPlayoffPanel
               gameId={game.id}
@@ -1538,6 +1820,7 @@ export default function TournamentMatchesScreen() {
               onSelectScorer={(match) => setScorerModalMatchId(match.id)}
               onSetTime={(match) => setScheduleModalMatchId(match.id)}
               onViewDetails={handleViewMatchDetails}
+              onWatchScorecard={handleWatchScorecard}
             />
           </>
         ) : (
@@ -1568,6 +1851,7 @@ export default function TournamentMatchesScreen() {
                 onSelectScorer={(match) => setScorerModalMatchId(match.id)}
                 onSetTime={(match) => setScheduleModalMatchId(match.id)}
                 onViewDetails={handleViewMatchDetails}
+              onWatchScorecard={handleWatchScorecard}
               />
             )}
           </>

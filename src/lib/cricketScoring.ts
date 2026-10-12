@@ -56,7 +56,11 @@ const BOWLER_CREDIT_WICKETS = new Set<WicketType>([
 export type BallEvent = {
   seq: number;
   strikerName: string;
-  nonStrikerName: string;
+  // null once the team is down to a Last Man Stand innings (see
+  // InningsState.lastManStand) — the other end stays permanently empty for
+  // the rest of the innings instead of waiting for a replacement that
+  // doesn't exist.
+  nonStrikerName: string | null;
   bowlerName: string;
   runsBatted: number;
   extraType: ExtraType;
@@ -102,6 +106,11 @@ export type InningsState = {
   battingTeam: "A" | "B";
   oversLimit: number;
   totalPlayers: number;
+  // When true, the innings doesn't end at totalPlayers-1 wickets — the
+  // lone remaining batsman keeps playing (no partner) until overs run out
+  // or they're out too, matching real Last Man Stand club-cricket rules
+  // (off by default — standard ICC "all out at totalPlayers-1" applies).
+  lastManStand: boolean;
   runs: number;
   wickets: number;
   legalBalls: number;
@@ -242,12 +251,14 @@ export function createInitialInningsState(
   // batting yet) — folded straight into their starting total. Not counted
   // in extras.penalty since it didn't happen on a tracked delivery of this
   // innings.
-  startingRuns = 0
+  startingRuns = 0,
+  lastManStand = false
 ): InningsState {
   const state: InningsState = {
     battingTeam,
     oversLimit,
     totalPlayers,
+    lastManStand,
     runs: startingRuns,
     wickets: 0,
     legalBalls: 0,
@@ -287,7 +298,7 @@ export function applyBall(prev: InningsState, ball: BallEvent): InningsState {
 
   const bowler = ensureBowler(state, ball.bowlerName);
   const striker = ensureBatsman(state, ball.strikerName);
-  ensureBatsman(state, ball.nonStrikerName);
+  if (ball.nonStrikerName) ensureBatsman(state, ball.nonStrikerName);
   state.currentBowler = ball.bowlerName;
   // Trust the names recorded on the ball itself rather than whatever the
   // reducer's own swap bookkeeping predicted — this is what makes replay
@@ -394,7 +405,7 @@ export function applyBall(prev: InningsState, ball: BallEvent): InningsState {
     state.runsInCurrentOver = 0;
   }
 
-  const allOut = state.wickets >= state.totalPlayers - 1;
+  const allOut = state.lastManStand ? state.wickets >= state.totalPlayers : state.wickets >= state.totalPlayers - 1;
   const oversUp = state.legalBalls >= state.oversLimit * 6;
   if (allOut || oversUp) state.isComplete = true;
 
@@ -420,9 +431,18 @@ export function replayInnings(
   totalPlayers: number,
   openingStriker: string,
   openingNonStriker: string,
-  startingRuns = 0
+  startingRuns = 0,
+  lastManStand = false
 ): InningsState {
-  let state = createInitialInningsState(battingTeam, oversLimit, totalPlayers, openingStriker, openingNonStriker, startingRuns);
+  let state = createInitialInningsState(
+    battingTeam,
+    oversLimit,
+    totalPlayers,
+    openingStriker,
+    openingNonStriker,
+    startingRuns,
+    lastManStand
+  );
   for (const ball of balls) {
     state = applyBall(state, ball);
   }
@@ -438,7 +458,9 @@ export function matchResultSummary(
   const battingSecond = secondInnings.battingTeam === "A" ? teamAName : teamBName;
   const battingFirst = firstInnings.battingTeam === "A" ? teamAName : teamBName;
   if (secondInnings.runs > firstInnings.runs) {
-    const wicketsInHand = secondInnings.totalPlayers - 1 - secondInnings.wickets;
+    const wicketsInHand = secondInnings.lastManStand
+      ? secondInnings.totalPlayers - secondInnings.wickets
+      : secondInnings.totalPlayers - 1 - secondInnings.wickets;
     return `${battingSecond} won by ${wicketsInHand} wicket${wicketsInHand === 1 ? "" : "s"}`;
   }
   if (secondInnings.runs < firstInnings.runs) {

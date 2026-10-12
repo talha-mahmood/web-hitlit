@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
-import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer } from "../../hooks/useGames";
+import { useGameDetail, useJoinGame, useLeaveGame, useCancelGame, useApprovePlayer, useRejectPlayer, useRemovePlayer, useAddManualGamePlayer } from "../../hooks/useGames";
 import { useGameChatUnreadCount } from "../../hooks/useGameMessages";
 import { useTournamentTeams } from "../../hooks/useTournamentTeams";
 import {
@@ -27,6 +27,7 @@ import type { GameDetail } from "../../lib/api/games";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
 import SquadFillModal from "../../components/SquadFillModal";
+import AddManualMemberModal from "../../components/AddManualMemberModal";
 import InviteSquadModal from "../../components/InviteSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
@@ -165,12 +166,30 @@ function InfoRow({
   );
 }
 
-function PlayerAvatar({ name, avatar, isCreator, onRemove, onPressAvatar }: { name: string | null; avatar: string | null; isCreator: boolean; onRemove?: () => void; onPressAvatar?: () => void }) {
+function PlayerAvatar({
+  name,
+  avatar,
+  isCreator,
+  isManual,
+  onRemove,
+  onPressAvatar,
+}: {
+  name: string | null;
+  avatar: string | null;
+  isCreator: boolean;
+  // A host-entered player with no app account — shown with the app's
+  // default avatar image instead of initials.
+  isManual?: boolean;
+  onRemove?: () => void;
+  onPressAvatar?: () => void;
+}) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="items-center" style={{ width: 64 }}>
       <Pressable onPress={onPressAvatar} disabled={!onPressAvatar}>
-        {avatar ? (
+        {isManual ? (
+          <Image source={require("../../../assets/avatar.png")} className="w-12 h-12 rounded-full bg-gray-200" />
+        ) : avatar ? (
           <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-primary-light" />
         ) : (
           <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center">
@@ -257,6 +276,7 @@ export default function GameDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSquadFillModal, setShowSquadFillModal] = useState(false);
+  const [showAddManualPlayer, setShowAddManualPlayer] = useState(false);
   const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
@@ -277,6 +297,7 @@ export default function GameDetailScreen() {
   const leaveGame = useLeaveGame();
   const cancelGame = useCancelGame();
   const approvePlayer = useApprovePlayer(params.gameId);
+  const addManualPlayer = useAddManualGamePlayer(params.gameId);
   const rejectPlayer = useRejectPlayer(params.gameId);
   const removePlayer = useRemovePlayer(params.gameId);
   const { data: myGameInvite } = useMyPendingGameInvite(params.gameId, userId);
@@ -835,9 +856,22 @@ export default function GameDetailScreen() {
                   <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Group</Text>
                 </Pressable>
               )}
+              {isCreator && emptySlots > 0 && !isCancelled && !hasEnded && (
+                <Pressable onPress={() => setShowAddManualPlayer(true)} className="border border-border rounded-lg py-2 items-center mb-3">
+                  <Text className="text-muted text-xs font-semibold">Add Player Manually</Text>
+                </Pressable>
+              )}
               <View className="flex-row flex-wrap" style={{ gap: 12 }}>
                 {joinedPlayers.map((p) => (
-                  <PlayerAvatar key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} isCreator={p.user_id === game.creator_id} onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? null) : undefined} onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: p.user_id })} />
+                  <PlayerAvatar
+                    key={p.id}
+                    name={p.profiles?.full_name ?? p.manual_name ?? null}
+                    avatar={p.profiles?.avatar ?? null}
+                    isManual={!p.user_id}
+                    isCreator={p.user_id === game.creator_id}
+                    onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? p.manual_name ?? null) : undefined}
+                    onPressAvatar={p.user_id ? () => navigation.navigate("PlayerProfile", { userId: p.user_id as string }) : undefined}
+                  />
                 ))}
                 {Array.from({ length: Math.min(emptySlots, 8) }).map((_, i) => (
                   <EmptySlot key={`empty-${i}`} />
@@ -851,7 +885,7 @@ export default function GameDetailScreen() {
                 <Text className="text-ink font-semibold text-sm mb-1">Join Requests ({pendingRequests.length})</Text>
                 <Text className="text-muted text-xs mb-2">Approve players before they're added to the game.</Text>
                 {pendingRequests.map((p) => (
-                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} onPressAvatar={() => navigation.navigate("PlayerProfile", { userId: p.user_id })} />
+                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} onPressAvatar={p.user_id ? () => navigation.navigate("PlayerProfile", { userId: p.user_id as string }) : undefined} />
                 ))}
                 {isFull && <Text className="text-orange-600 text-xs mt-2">Game is full — reject remaining requests or remove a player to approve more.</Text>}
               </View>
@@ -962,7 +996,7 @@ export default function GameDetailScreen() {
           visible={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           title={`Invite Players · ${game.title}`}
-          excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id)]}
+          excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id).filter((id): id is string => !!id)]}
           onInvite={async (user) => {
             if (!userId) return;
             await createInvite.mutateAsync({
@@ -989,6 +1023,20 @@ export default function GameDetailScreen() {
                 onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not join the game.")),
               },
             );
+          }}
+        />
+      )}
+
+      {isCreator && !isTeamBased && (
+        <AddManualMemberModal
+          visible={showAddManualPlayer}
+          onClose={() => setShowAddManualPlayer(false)}
+          submitting={addManualPlayer.isPending}
+          onSubmit={(name) => {
+            addManualPlayer.mutate(name, {
+              onSuccess: () => setShowAddManualPlayer(false),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player.")),
+            });
           }}
         />
       )}

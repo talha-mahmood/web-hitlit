@@ -95,6 +95,10 @@ export async function createCricketMatch(params: {
   tossWinner: "A" | "B";
   tossDecision: "BAT" | "BOWL";
   venue?: string;
+  // Standard ICC rule (off) by default — a team's innings ends at
+  // totalPlayers-1 wickets. When on, the lone last batsman keeps playing
+  // without a partner until overs run out or they're out too.
+  lastManStand?: boolean;
 }): Promise<{ matchId: string; inningsId: string; battingTeam: "A" | "B" }> {
   const { data: match, error } = await supabase
     .from("cricket_matches")
@@ -109,6 +113,7 @@ export async function createCricketMatch(params: {
       toss_winner: params.tossWinner,
       toss_decision: params.tossDecision,
       venue: params.venue?.trim() || null,
+      last_man_stand: params.lastManStand ?? false,
     })
     .select()
     .single();
@@ -195,6 +200,7 @@ export type CricketMatchSettingsUpdate = {
   targetOverride?: number | null;
   teamAPenaltyRuns?: number;
   teamBPenaltyRuns?: number;
+  lastManStand?: boolean;
 };
 
 export async function updateCricketMatchSettings(matchId: string, updates: CricketMatchSettingsUpdate): Promise<void> {
@@ -207,6 +213,7 @@ export async function updateCricketMatchSettings(matchId: string, updates: Crick
       ...(updates.targetOverride !== undefined ? { target_override: updates.targetOverride } : {}),
       ...(updates.teamAPenaltyRuns !== undefined ? { team_a_penalty_runs: updates.teamAPenaltyRuns } : {}),
       ...(updates.teamBPenaltyRuns !== undefined ? { team_b_penalty_runs: updates.teamBPenaltyRuns } : {}),
+      ...(updates.lastManStand !== undefined ? { last_man_stand: updates.lastManStand } : {}),
     })
     .eq("id", matchId);
   if (error) throw new Error(error.message);

@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from "reac
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import GradientFill from "./GradientFill";
+import EmojiPickerSheet from "./EmojiPickerSheet";
 import { useMentionSearch } from "../hooks/useMentions";
 import MentionSuggestionsList from "./MentionSuggestionsList";
 import {
@@ -65,6 +66,14 @@ export default function MentionComposer({
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [confirmedTokens, setConfirmedTokens] = useState<MentionCandidate[]>([]);
   const [activeType, setActiveType] = useState<MentionEntityType | undefined>(undefined);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+
+  const insertEmoji = (emoji: string) => {
+    const next = text.slice(0, selection.start) + emoji + text.slice(selection.end);
+    const cursor = selection.start + emoji.length;
+    setText(next);
+    setSelection({ start: cursor, end: cursor });
+  };
 
   // Enter/refresh edit mode whenever a *different* message is targeted.
   useEffect(() => {
@@ -157,6 +166,13 @@ export default function MentionComposer({
             <Ionicons name="bar-chart-outline" size={17} color={colors.primary} />
           </Pressable>
         )}
+        <Pressable
+          onPress={() => setEmojiOpen(true)}
+          className="items-center justify-center rounded-full"
+          style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+        >
+          <Ionicons name="happy-outline" size={18} color={colors.primary} />
+        </Pressable>
         <View className="flex-1" style={{ position: "relative" }}>
           <TextInput
             value={text}
@@ -204,6 +220,14 @@ export default function MentionComposer({
           )}
         </Pressable>
       </View>
+      <EmojiPickerSheet
+        visible={emojiOpen}
+        onClose={() => setEmojiOpen(false)}
+        onPick={(emoji) => {
+          insertEmoji(emoji);
+          setEmojiOpen(false);
+        }}
+      />
     </View>
   );
 }

@@ -74,6 +74,7 @@ function replayAllInnings(match: CricketMatchDetail): InningsState[] {
           battingTeam,
           oversLimit: match.overs_limit,
           totalPlayers,
+          lastManStand: match.last_man_stand,
           runs: 0,
           wickets: 0,
           legalBalls: 0,
@@ -92,7 +93,16 @@ function replayAllInnings(match: CricketMatchDetail): InningsState[] {
           isComplete: false,
         } satisfies InningsState;
       }
-      return replayInnings(balls, battingTeam, match.overs_limit, totalPlayers, balls[0].strikerName, balls[0].nonStrikerName);
+      return replayInnings(
+        balls,
+        battingTeam,
+        match.overs_limit,
+        totalPlayers,
+        balls[0].strikerName,
+        balls[0].nonStrikerName ?? "",
+        0,
+        match.last_man_stand
+      );
     });
 }
 

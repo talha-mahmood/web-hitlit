@@ -14,13 +14,14 @@ import FieldInput from "../../components/FieldInput";
 import SelectSportModal from "../../components/SelectSportModal";
 import SelectDistanceModal from "../../components/SelectDistanceModal";
 import SelectLocationModal from "../../components/SelectLocationModal";
+import SelectGroupTypeModal from "../../components/SelectGroupTypeModal";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
-import type { SquadListItem } from "../../lib/api/squads";
+import type { SquadListItem, SquadGroupType } from "../../lib/api/squads";
 import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
@@ -31,6 +32,12 @@ import { matchesLocationQuery } from "../../lib/locationFilter";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "SquadsList">;
+
+const GROUP_TYPE_LABELS: Record<SquadGroupType, string> = {
+  group: "Group",
+  club: "Club",
+  training_camp: "Training Camp",
+};
 
 function SquadCard({
   squad,
@@ -241,7 +248,8 @@ export default function SquadsListScreen() {
   // row as the Games list, minus its Date pill (squads aren't scheduled).
   const [listFilter, setListFilter] = useState<"all" | "mine">("all");
   const myOnly = listFilter === "mine";
-  const [groupTypeFilter, setGroupTypeFilter] = useState<"club" | "training_camp" | null>(null);
+  const [groupTypeOpen, setGroupTypeOpen] = useState(false);
+  const [groupTypeFilters, setGroupTypeFilters] = useState<SquadGroupType[]>([]);
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
   const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
   const [distanceOpen, setDistanceOpen] = useState(false);
@@ -267,7 +275,10 @@ export default function SquadsListScreen() {
           s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE" && m.role === "host")
       )
     : locationFiltered;
-  const scoped = groupTypeFilter ? (myScoped ?? []).filter((s) => s.group_type === groupTypeFilter) : myScoped;
+  const scoped =
+    groupTypeFilters.length > 0
+      ? (myScoped ?? []).filter((s) => groupTypeFilters.includes(s.group_type as SquadGroupType))
+      : myScoped;
   // Squads don't carry their own coordinates (just a typed-in location
   // label), so "near me" is measured from the squad owner's own registered
   // location instead — the closest real coordinates available today.
@@ -401,41 +412,35 @@ export default function SquadsListScreen() {
                 </Pressable>
               );
             })}
-            {/* "Club" / "Training Camp" — filter by the group's type (set at
-                creation), toggling off when tapped again. */}
-            {(
-              [
-                { key: "club", label: "Club" },
-                { key: "training_camp", label: "Training Camp" },
-              ] as const
-            ).map((p) => {
-              const active = groupTypeFilter === p.key;
-              return (
-                <Pressable
-                  key={p.key}
-                  onPress={() => {
-                    setDistanceOpen(false);
-                    setGroupTypeFilter(active ? null : p.key);
-                  }}
-                  className="rounded-full"
-                  style={{ borderWidth: 1, borderColor: active ? colors.primary : colors.border }}
-                >
-                  {active ? (
-                    <GradientFill className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                      <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }}>
-                        {p.label}
-                      </Text>
-                    </GradientFill>
-                  ) : (
-                    <View className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "white" }}>
-                      <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }}>
-                        {p.label}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
+            {/* "Group Type" — opens a multi-select popup (Group/Club/Training
+                Camp, the same set CreateSquadScreen offers) rather than two
+                separate single-select toggle pills. */}
+            <Pressable
+              onPress={() => {
+                setDistanceOpen(false);
+                setGroupTypeOpen(true);
+              }}
+              className="rounded-full"
+              style={{ borderWidth: 1, borderColor: groupTypeFilters.length > 0 ? colors.primary : colors.border }}
+            >
+              {groupTypeFilters.length > 0 ? (
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                    {groupTypeFilters.length === 1
+                      ? GROUP_TYPE_LABELS[groupTypeFilters[0]]
+                      : `${groupTypeFilters.length} types`}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color="white" />
+                </GradientFill>
+              ) : (
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }}>
+                    Group Type
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color={colors.muted} />
+                </View>
+              )}
+            </Pressable>
             {/* "Location" — opens a bottom sheet with a free-text field plus
                 city suggestions (multi-select), in place of the old
                 always-visible inline field. Right after All/My Squads. */}
@@ -539,6 +544,16 @@ export default function SquadsListScreen() {
         }}
       />
 
+      <SelectGroupTypeModal
+        visible={groupTypeOpen}
+        onClose={() => setGroupTypeOpen(false)}
+        value={groupTypeFilters}
+        onApply={(types) => {
+          setGroupTypeFilters(types);
+          setGroupTypeOpen(false);
+        }}
+      />
+
       <SelectSportModal
         visible={sportSheetOpen}
         onClose={() => setSportSheetOpen(false)}
@@ -560,7 +575,7 @@ export default function SquadsListScreen() {
           contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null || groupTypeFilter ? (
+            debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null || groupTypeFilters.length > 0 ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No groups found</Text>
