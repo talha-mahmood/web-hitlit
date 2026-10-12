@@ -1329,7 +1329,21 @@ export default function TournamentMatchesScreen() {
   const { data: matches } = useTournamentMatches(params.gameId);
   const { data: nrrByTeam } = useTournamentNRR(params.gameId, matches);
   const linkedCricketMatchIds = (matches ?? []).filter((m) => m.cricket_match_id).map((m) => m.cricket_match_id as string);
-  const { data: liveCricketMatches } = useLiveCricketMatches(linkedCricketMatchIds);
+  const { data: liveCricketMatchesRaw } = useLiveCricketMatches(linkedCricketMatchIds);
+  // Safety net on top of useLiveCricketMatches' own cricket_matches realtime
+  // channel: tournament_matches has its own separate, game_id-filtered
+  // realtime subscription (useTournamentMatches above) that's already proven
+  // reliable elsewhere on this screen, and gets flipped to COMPLETED the
+  // moment a linked scorecard finishes (syncCricketMatchResult). Cross-
+  // checking against it means a just-finished match can never keep showing
+  // under Live Now even in the rare case the other channel's event is
+  // delayed or dropped.
+  const completedCricketMatchIds = new Set(
+    (matches ?? [])
+      .filter((m) => m.status === "COMPLETED" && m.cricket_match_id)
+      .map((m) => m.cricket_match_id as string)
+  );
+  const liveCricketMatches = (liveCricketMatchesRaw ?? []).filter((lm) => !completedCricketMatchIds.has(lm.id));
   const { data: pools } = useTournamentPools(params.gameId);
   const setMatchScorer = useSetMatchScorer(params.gameId);
   const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
