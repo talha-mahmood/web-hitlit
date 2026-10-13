@@ -137,6 +137,7 @@ function GameCard({
   const spotsLeft = game.max_players - joined.length;
   const teamsLeft = requiredTeams - approvedTeams.length;
   const isFull = game.status === "FULL" || (isTeamBased ? teamsLeft <= 0 : spotsLeft <= 0);
+  const isCompleted = game.status === "COMPLETED";
   const isMyGame = game.creator_id === currentUserId;
   const skill = game.skill_level;
   const skillColor = skill ? GAME_SKILL_COLORS[skill] : null;
@@ -185,6 +186,10 @@ function GameCard({
             {isMyGame ? (
               <View className="bg-blue-50 rounded-2xl px-3 py-2">
                 <Text className="text-blue-600 font-bold text-sm">{isTournament ? "My Tournament" : "My Game"}</Text>
+              </View>
+            ) : isCompleted ? (
+              <View className="bg-gray-100 rounded-2xl px-3 py-2">
+                <Text className="text-muted font-bold text-sm">Completed</Text>
               </View>
             ) : isFull && !hasJoined ? (
               <View className="bg-red-50 rounded-2xl px-3 py-2">

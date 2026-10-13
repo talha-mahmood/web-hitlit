@@ -136,14 +136,12 @@ export async function fetchGames(
     gameType?: Database["public"]["Enums"]["game_type_type"];
   } = {}
 ): Promise<GameListItem[]> {
-  const today = new Date().toISOString().split("T")[0];
   let query = supabase
     .from("games")
     .select(LIST_SELECT)
     .eq("visibility", "public")
-    .in("status", ["OPEN", "FULL"])
+    .in("status", ["OPEN", "FULL", "COMPLETED"])
     .is("deleted_at", null)
-    .gte("game_date", today)
     .order("game_date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -162,10 +160,20 @@ export async function fetchGames(
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  // Belt-and-suspenders: the DB-side cron job (expire_past_games) archives and
-  // hard-deletes ended games every 10 minutes, but this filters out any that
-  // ended within that window so the list never shows something unjoinable.
-  return ((data ?? []) as GameListItem[]).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time));
+  // Games/tournaments are kept forever (never auto-deleted) and always shown,
+  // upcoming/ongoing first (soonest first) then ended ones after (most
+  // recently ended first) so the list doesn't bury what's still joinable
+  // under old history.
+  return ((data ?? []) as GameListItem[]).sort((a, b) => {
+    const aEnded = hasGameEnded(a.game_date, a.end_date, a.end_time);
+    const bEnded = hasGameEnded(b.game_date, b.end_date, b.end_time);
+    if (aEnded !== bEnded) return aEnded ? 1 : -1;
+    const aKey = `${a.game_date}T${a.start_time}`;
+    const bKey = `${b.game_date}T${b.start_time}`;
+    if (aKey === bKey) return 0;
+    const ascending = aKey < bKey;
+    return aEnded ? (ascending ? 1 : -1) : ascending ? -1 : 1;
+  });
 }
 
 export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
