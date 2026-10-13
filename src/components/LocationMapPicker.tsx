@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, TextInput } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View, Text, Pressable, ActivityIndicator, TextInput, Modal } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../constants/theme";
@@ -62,9 +63,17 @@ export default function LocationMapPicker({
   onConfirm: (lat: number, lng: number) => void;
   confirming: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   const [picked, setPicked] = useState<{ lat: number; lng: number }>({ lat: initialLat, lng: initialLng });
   const [mapReady, setMapReady] = useState(false);
-  const html = useRef(buildMapHtml(initialLat, initialLng)).current;
+  const [fullscreen, setFullscreen] = useState(false);
+  // Reseeded from the current pin position (not the original initial props)
+  // whenever fullscreen is toggled on or off, so switching views never loses
+  // whatever the host already picked. Only recomputed on that transition —
+  // the map then tracks drags/taps/search picks live via injectJavaScript,
+  // same as it always has, without needing a fresh HTML load for those.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const html = useMemo(() => buildMapHtml(picked.lat, picked.lng), [fullscreen]);
   const webviewRef = useRef<WebView>(null);
 
   const [query, setQuery] = useState("");
@@ -171,8 +180,19 @@ export default function LocationMapPicker({
     );
   };
 
-  return (
-    <View>
+  // Reloads the map at its current size (the WebView's `source` prop
+  // changing re-triggers its loading state) — reset the "skip the very
+  // first report" guard too, so the reloaded map's own initial position
+  // report doesn't overwrite the search box the same way a real first load
+  // wouldn't.
+  const toggleFullscreen = () => {
+    hasMapLoadedOnce.current = false;
+    setMapReady(false);
+    setFullscreen((f) => !f);
+  };
+
+  const pickerBody = (
+    <View style={fullscreen ? { flex: 1 } : undefined}>
       <View className="flex-row items-center bg-white rounded-xl px-3.5 mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}>
         <Ionicons name="search-outline" size={18} color={colors.muted} />
         <TextInput
@@ -218,12 +238,27 @@ export default function LocationMapPicker({
         </View>
       )}
 
-      <View className="rounded-2xl overflow-hidden" style={{ height: 260, ...cardShadow }}>
+      <View
+        className="rounded-2xl overflow-hidden"
+        style={fullscreen ? { flex: 1 } : { height: 260, ...cardShadow }}
+      >
         <WebView ref={webviewRef} source={{ html }} onMessage={handleMessage} onLoadEnd={() => setMapReady(true)} style={{ flex: 1 }} />
         {!mapReady && (
           <View className="absolute inset-0 items-center justify-center bg-white">
             <ActivityIndicator color={colors.primary} />
           </View>
+        )}
+        {/* Only in the embedded view — the full-screen view exits via its
+            own header's close button instead. */}
+        {!fullscreen && (
+          <Pressable
+            onPress={toggleFullscreen}
+            hitSlop={6}
+            className="absolute top-3 right-3 items-center justify-center"
+            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "white", ...cardShadow }}
+          >
+            <Ionicons name="expand-outline" size={16} color={colors.ink} />
+          </Pressable>
         )}
         <Pressable
           onPress={() => onConfirm(picked.lat, picked.lng)}
@@ -245,4 +280,25 @@ export default function LocationMapPicker({
       </View>
     </View>
   );
+
+  if (fullscreen) {
+    return (
+      <Modal visible animationType="slide" onRequestClose={toggleFullscreen}>
+        <View style={{ flex: 1, backgroundColor: "white", paddingTop: insets.top }}>
+          <View
+            className="flex-row items-center justify-between px-4 py-3"
+            style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+          >
+            <Text className="text-ink font-bold text-base">Pick a location</Text>
+            <Pressable onPress={toggleFullscreen} hitSlop={8}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          <View style={{ flex: 1, padding: 12, paddingBottom: insets.bottom + 12 }}>{pickerBody}</View>
+        </View>
+      </Modal>
+    );
+  }
+
+  return pickerBody;
 }
