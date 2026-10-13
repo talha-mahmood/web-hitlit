@@ -131,8 +131,6 @@ function CommentCard({
   );
 }
 
-const DAY_FILTERS = [1, 2, 3] as const;
-
 // Shared by the Community tab's in-place "Community Chat" segment — the
 // composer + feed list, with no header of its own since the caller already
 // provides one (the segmented pill row, for the in-place case).
@@ -145,8 +143,6 @@ export default function CommunityChatContent({
 }) {
   const userId = useAuthStore((s) => s.session?.user.id);
   const profile = useProfileStore((s) => s.profile);
-  // null = no age filter (show everything the 6-month retention still has).
-  const [dayFilter, setDayFilter] = useState<1 | 2 | 3 | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
   const [pollModalOpen, setPollModalOpen] = useState(false);
@@ -159,15 +155,10 @@ export default function CommunityChatContent({
   const createPoll = useCreatePoll();
 
   // Everything's already loaded in one shot (no pagination on this feed), so
-  // search is a plain client-side filter over the same array the day-age
-  // filter already narrows — matches by the author's name or any keyword in
-  // the comment body (e.g. "tournament", "games").
+  // search is a plain client-side filter — matches by the author's name or
+  // any keyword in the comment body (e.g. "tournament", "games").
   const visibleComments = useMemo(() => {
     let list = comments ?? [];
-    if (dayFilter) {
-      const cutoff = Date.now() - dayFilter * 24 * 60 * 60 * 1000;
-      list = list.filter((c) => new Date(c.created_at).getTime() >= cutoff);
-    }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -175,7 +166,7 @@ export default function CommunityChatContent({
       );
     }
     return list;
-  }, [comments, dayFilter, searchQuery]);
+  }, [comments, searchQuery]);
 
   const handleSend = (body: string, mentions: Mention[]) => {
     if (!userId) return;
@@ -276,29 +267,6 @@ export default function CommunityChatContent({
         />
       </View>
 
-      <View className="flex-row items-center px-4 py-2.5 bg-white border-b border-border" style={{ gap: 8 }}>
-        {DAY_FILTERS.map((d) => {
-          const active = dayFilter === d;
-          return (
-            <Pressable key={d} onPress={() => setDayFilter(active ? null : d)}>
-              {active ? (
-                <GradientFill className="rounded-full px-3 py-1.5">
-                  <Text className="text-xs font-bold text-white">
-                    {d} Day{d === 1 ? "" : "s"}
-                  </Text>
-                </GradientFill>
-              ) : (
-                <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: "#F3F4F6" }}>
-                  <Text className="text-xs font-bold text-muted">
-                    {d} Day{d === 1 ? "" : "s"}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
-
       {isLoading ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : error ? (
@@ -317,18 +285,12 @@ export default function CommunityChatContent({
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
               <Text className="text-ink font-semibold text-base">
-                {searchQuery.trim()
-                  ? `No comments match "${searchQuery.trim()}"`
-                  : dayFilter
-                    ? `No comments in the last ${dayFilter} day${dayFilter === 1 ? "" : "s"}`
-                    : "No comments yet"}
+                {searchQuery.trim() ? `No comments match "${searchQuery.trim()}"` : "No comments yet"}
               </Text>
               <Text className="text-muted text-sm text-center px-8">
                 {searchQuery.trim()
                   ? "Try a different name or keyword."
-                  : dayFilter
-                    ? "Try a wider filter."
-                    : "Be the first to say something to the community!"}
+                  : "Be the first to say something to the community!"}
               </Text>
             </View>
           }
