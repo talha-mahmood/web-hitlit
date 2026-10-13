@@ -230,7 +230,7 @@ function skillLevelLabel(skill: string | null): string {
   return skill.charAt(0).toUpperCase() + skill.slice(1);
 }
 
-function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject, onPressAvatar, disabled }: { name: string | null; avatar: string | null; skill: string | null; location: string | null; onApprove: () => void; onReject: () => void; onPressAvatar?: () => void; disabled: boolean }) {
+function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject, onPressAvatar, disabled, approveDisabled }: { name: string | null; avatar: string | null; skill: string | null; location: string | null; onApprove: () => void; onReject: () => void; onPressAvatar?: () => void; disabled: boolean; approveDisabled?: boolean }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
   return (
     <View className="py-3 border-b border-border">
@@ -255,7 +255,7 @@ function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject,
         <Pressable onPress={onReject} disabled={disabled} className="border border-border rounded-lg px-3 py-1.5">
           <Text className="text-muted text-xs font-semibold">Reject</Text>
         </Pressable>
-        <Pressable onPress={onApprove} disabled={disabled}>
+        <Pressable onPress={onApprove} disabled={disabled || approveDisabled}>
           <GradientFill className="rounded-lg px-3 py-1.5">
             <Text className="text-white text-xs font-semibold">Approve</Text>
           </GradientFill>
@@ -885,9 +885,10 @@ export default function GameDetailScreen() {
                 <Text className="text-ink font-semibold text-sm mb-1">Join Requests ({pendingRequests.length})</Text>
                 <Text className="text-muted text-xs mb-2">Approve players before they're added to the game.</Text>
                 {pendingRequests.map((p) => (
-                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting || isFull} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} onPressAvatar={p.user_id ? () => navigation.navigate("PlayerProfile", { userId: p.user_id as string }) : undefined} />
+                  <PendingRequestRow key={p.id} name={p.profiles?.full_name ?? null} avatar={p.profiles?.avatar ?? null} skill={p.skill_level} location={p.location} disabled={isApprovingOrRejecting} approveDisabled={isFull || isCancelled || hasEnded} onApprove={() => handleApprove(p.id, p.profiles?.full_name ?? null)} onReject={() => handleReject(p.id, p.profiles?.full_name ?? null)} onPressAvatar={p.user_id ? () => navigation.navigate("PlayerProfile", { userId: p.user_id as string }) : undefined} />
                 ))}
                 {isFull && <Text className="text-orange-600 text-xs mt-2">Game is full — reject remaining requests or remove a player to approve more.</Text>}
+                {!isFull && (isCancelled || hasEnded) && <Text className="text-orange-600 text-xs mt-2">This game has ended — you can no longer approve new players, but you can still reject requests.</Text>}
               </View>
             )}
           </>
