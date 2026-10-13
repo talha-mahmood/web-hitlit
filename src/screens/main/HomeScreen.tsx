@@ -250,7 +250,7 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 14, color: "white", marginTop: 2 }}>What are you playing today?</Text>
             </View>
           </Pressable>
-          <View className="flex-row items-center" style={{ gap: 10 }}>
+          <View className="flex-row items-center" style={{ gap: 10, paddingRight: 6 }}>
             <NotificationBell
               size={28}
               color="white"
