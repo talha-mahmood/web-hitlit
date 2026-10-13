@@ -989,7 +989,11 @@ export default function CreateGameScreen() {
               selectedVenueId={venueId}
               customVenueName={customVenueName}
               onSelect={(id) => setVenueId(id || null)}
-              onSelectCustom={(name) => setCustomVenueName(name || null)}
+              // No onSelectCustom here on purpose — unlike EditGameScreen,
+              // Create already has a proper "Enter Location Manually" flow
+              // (the map picker below) for a venue that isn't in the app's
+              // list, so this field must only ever accept a real venue picked
+              // from its own dropdown, never arbitrary typed text.
               disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
               thumbnailSource={selectedSportName ? getSportImage(selectedSportName) : null}
             />
