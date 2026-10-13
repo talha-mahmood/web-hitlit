@@ -256,6 +256,10 @@ export default function CommunityChatContent({
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 24, height: 44 }}
+          // Same fixed line-height + vertical-centering fix as the composer's
+          // placeholder below — without it, Android's extra font padding
+          // makes the placeholder drift vertically instead of sitting still.
+          style={{ paddingVertical: 11, fontSize: 14, lineHeight: 20, textAlignVertical: "center", includeFontPadding: false }}
           left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
           right={
             searchQuery.length > 0 ? (
