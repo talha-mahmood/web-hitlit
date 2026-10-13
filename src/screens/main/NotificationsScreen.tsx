@@ -20,6 +20,8 @@ import {
   useDeclineTeamInvite,
   useAcceptSquadInviteFromNotification,
   useDeclineSquadInviteFromNotification,
+  useTeamInviteStatuses,
+  useSquadInviteStatuses,
 } from "../../hooks/useInvites";
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
@@ -93,6 +95,7 @@ function NotificationCard({
   onPress,
   onDelete,
   inviteActions,
+  resolvedInviteLabel,
 }: {
   notification: NotificationRow;
   onPress: () => void;
@@ -101,6 +104,10 @@ function NotificationCard({
   // types that are acted on right here instead of just navigating away, so
   // the recipient can approve/decline without leaving this list.
   inviteActions?: { onApprove: () => void; onDecline: () => void; isResponding: boolean };
+  // Set once that invite is no longer pending (accepted/declined, whether
+  // just now or in an earlier visit) — shown in place of the Approve/
+  // Decline buttons instead of leaving them clickable forever.
+  resolvedInviteLabel?: "Approved" | "Declined";
 }) {
   const meta = TYPE_META[notification.type ?? ""] ?? DEFAULT_META;
   const unread = !notification.is_read;
@@ -156,6 +163,15 @@ function NotificationCard({
             </Pressable>
           </View>
         )}
+        {resolvedInviteLabel && (
+          <View className="mt-3">
+            <Text
+              className={`text-xs font-semibold ${resolvedInviteLabel === "Approved" ? "text-primary" : "text-danger"}`}
+            >
+              {resolvedInviteLabel}
+            </Text>
+          </View>
+        )}
       </View>
       <Pressable onPress={onDelete} hitSlop={10} className="p-1 -mt-1 -mr-1">
         <Ionicons name="close" size={18} color={colors.muted} />
@@ -178,10 +194,25 @@ export default function NotificationsScreen() {
   const declineTeamInvite = useDeclineTeamInvite();
   const acceptSquadInvite = useAcceptSquadInviteFromNotification();
   const declineSquadInvite = useDeclineSquadInviteFromNotification();
-  // Session-only — once an invite is acted on, its Approve/Decline pair
-  // hides in favor of the notification's own text, without needing to alter
-  // the notification row itself (it's just a plain info feed otherwise).
-  const [respondedInviteIds, setRespondedInviteIds] = useState<Set<string>>(new Set());
+  // Instant local overlay for "I just acted on this" — shows the resolved
+  // label right away, before the status queries below have refetched. The
+  // real, persisted source of truth is each invite's own status row (see
+  // teamInviteStatuses/squadInviteStatuses) — without that, this map alone
+  // would reset to empty the moment the screen remounts (e.g. navigating
+  // away and back), leaving an already-resolved invite's Approve/Decline
+  // buttons clickable again.
+  const [respondedInvites, setRespondedInvites] = useState<Map<string, "accepted" | "declined">>(new Map());
+
+  const teamInviteIds = (notifications ?? [])
+    .filter((n) => n.type === "team_invite")
+    .map((n) => resolveTarget(n).inviteId)
+    .filter((id): id is string => !!id);
+  const squadInviteIds = (notifications ?? [])
+    .filter((n) => n.type === "squad_invite")
+    .map((n) => resolveTarget(n).inviteId)
+    .filter((id): id is string => !!id);
+  const { data: teamInviteStatuses } = useTeamInviteStatuses(teamInviteIds);
+  const { data: squadInviteStatuses } = useSquadInviteStatuses(squadInviteIds);
 
   const hasUnread = (notifications ?? []).some((n) => !n.is_read);
 
@@ -234,7 +265,7 @@ export default function NotificationsScreen() {
     const accept = n.type === "squad_invite" ? acceptSquadInvite : acceptTeamInvite;
     accept.mutate(inviteId, {
       onSuccess: () => {
-        setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
+        setRespondedInvites((prev) => new Map(prev).set(inviteId, "accepted"));
         if (!n.is_read) markRead.mutate(n.id);
         navigateToTarget(n);
       },
@@ -246,7 +277,7 @@ export default function NotificationsScreen() {
     const decline = n.type === "squad_invite" ? declineSquadInvite : declineTeamInvite;
     decline.mutate(inviteId, {
       onSuccess: () => {
-        setRespondedInviteIds((prev) => new Set(prev).add(inviteId));
+        setRespondedInvites((prev) => new Map(prev).set(inviteId, "declined"));
         if (!n.is_read) markRead.mutate(n.id);
       },
       onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not decline this request.")),
@@ -296,10 +327,24 @@ export default function NotificationsScreen() {
           }
           renderItem={({ item }) => {
             const { inviteId } = resolveTarget(item);
-            const isPendingInvite =
-              (item.type === "team_invite" || item.type === "squad_invite") &&
-              !!inviteId &&
-              !respondedInviteIds.has(inviteId);
+            const isInviteType = item.type === "team_invite" || item.type === "squad_invite";
+            // Local "just acted on it" overlay wins instantly; otherwise fall
+            // back to the invite's actual persisted status; default to
+            // "pending" while that query hasn't loaded yet so the buttons
+            // don't flash into a false "resolved" state on first render.
+            const dbStatus = !inviteId
+              ? undefined
+              : item.type === "squad_invite"
+                ? squadInviteStatuses?.[inviteId]
+                : teamInviteStatuses?.[inviteId];
+            const effectiveStatus = (inviteId ? respondedInvites.get(inviteId) : undefined) ?? dbStatus ?? "pending";
+            const isPendingInvite = isInviteType && !!inviteId && effectiveStatus === "pending";
+            const resolvedInviteLabel =
+              isInviteType && !!inviteId && effectiveStatus !== "pending"
+                ? effectiveStatus === "accepted"
+                  ? ("Approved" as const)
+                  : ("Declined" as const)
+                : undefined;
             const isResponding =
               !!inviteId &&
               ((acceptTeamInvite.isPending && acceptTeamInvite.variables === inviteId) ||
@@ -320,6 +365,7 @@ export default function NotificationsScreen() {
                       }
                     : undefined
                 }
+                resolvedInviteLabel={resolvedInviteLabel}
               />
             );
           }}

@@ -13,6 +13,8 @@ import {
   declineSquadInvite,
   acceptTeamInvite,
   declineTeamInvite,
+  fetchTeamInviteStatuses,
+  fetchSquadInviteStatuses,
 } from "../lib/api/invites";
 import { searchUsers } from "../lib/api/users";
 
@@ -148,6 +150,28 @@ export function usePendingTeamInviteCount(teamId: string) {
   });
 }
 
+// The actual current status (pending/accepted/declined) of a batch of team
+// or squad invites, by id — lets the Notifications screen show "Approved"/
+// "Declined" in place of the buttons for an invite that's already been
+// resolved, even after the screen remounts (see fetchTeamInviteStatuses).
+export function useTeamInviteStatuses(inviteIds: string[]) {
+  const key = [...inviteIds].sort();
+  return useQuery({
+    queryKey: ["teamInviteStatuses", key],
+    queryFn: () => fetchTeamInviteStatuses(key),
+    enabled: key.length > 0,
+  });
+}
+
+export function useSquadInviteStatuses(inviteIds: string[]) {
+  const key = [...inviteIds].sort();
+  return useQuery({
+    queryKey: ["squadInviteStatuses", key],
+    queryFn: () => fetchSquadInviteStatuses(key),
+    enabled: key.length > 0,
+  });
+}
+
 // Acted on either from the Notifications screen's inline Approve/Decline
 // (no gameId — the notification's own `data` already carries gameId/teamId)
 // or from the "you're invited" banner on that specific game/tournament's
@@ -160,6 +184,7 @@ export function useAcceptTeamInvite(gameId?: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["teamInviteStatuses"] });
       if (gameId) qc.invalidateQueries({ queryKey: ["teamInvite", gameId] });
     },
   });
@@ -171,6 +196,7 @@ export function useDeclineTeamInvite(gameId?: string) {
     mutationFn: (inviteId: string) => declineTeamInvite(inviteId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["teamInviteStatuses"] });
       if (gameId) qc.invalidateQueries({ queryKey: ["teamInvite", gameId] });
     },
   });
@@ -187,6 +213,7 @@ export function useAcceptSquadInviteFromNotification() {
       qc.invalidateQueries({ queryKey: ["squads"] });
       qc.invalidateQueries({ queryKey: ["squadInvite"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["squadInviteStatuses"] });
     },
   });
 }
@@ -197,6 +224,7 @@ export function useDeclineSquadInviteFromNotification() {
     mutationFn: (inviteId: string) => declineSquadInvite(inviteId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["squadInviteStatuses"] });
     },
   });
 }

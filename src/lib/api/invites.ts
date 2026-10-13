@@ -156,3 +156,23 @@ export async function declineTeamInvite(inviteId: string): Promise<void> {
   const { error } = await supabase.rpc("decline_team_invite", { p_invite_id: inviteId });
   if (error) throw new Error(error.message);
 }
+
+// Lets the Notifications screen know an invite's *current* resolved state
+// (pending/accepted/declined) by its own id, rather than only remembering
+// "I just responded to this" in local component state — that local memory
+// resets the moment the screen remounts (e.g. navigating away and back),
+// which otherwise left an already-resolved invite's Approve/Decline buttons
+// showing again.
+export async function fetchTeamInviteStatuses(inviteIds: string[]): Promise<Record<string, TeamInvite["status"]>> {
+  if (inviteIds.length === 0) return {};
+  const { data, error } = await supabase.from("tournament_team_invites").select("id, status").in("id", inviteIds);
+  if (error) throw new Error(error.message);
+  return Object.fromEntries((data ?? []).map((row) => [row.id, row.status]));
+}
+
+export async function fetchSquadInviteStatuses(inviteIds: string[]): Promise<Record<string, SquadInvite["status"]>> {
+  if (inviteIds.length === 0) return {};
+  const { data, error } = await supabase.from("squad_invites").select("id, status").in("id", inviteIds);
+  if (error) throw new Error(error.message);
+  return Object.fromEntries((data ?? []).map((row) => [row.id, row.status]));
+}
