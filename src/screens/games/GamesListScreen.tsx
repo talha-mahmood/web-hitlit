@@ -293,7 +293,8 @@ function GameCard({
               </Text>
             </View>
 
-            {/* Row 3: avatar stack + going/teams count and how many are left */}
+            {/* Row 3: avatar stack + going/teams count and how many are left
+                + the sport pill, pinned to the right of that text. */}
             <View className="flex-row items-center mb-3" style={{ gap: 8, ...rightGutter }}>
               <AvatarStack
                 people={joined.map((p) => ({
@@ -302,15 +303,20 @@ function GameCard({
                 }))}
                 size={30}
               />
-              <Text className="text-muted font-medium flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+              <Text className="text-muted font-medium" style={{ fontSize: 14, flexShrink: 1 }} numberOfLines={1}>
                 {isTeamBased
                   ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""} · ${Math.max(teamsLeft, 0)} left`
                   : `${joined.length} Going · ${Math.max(spotsLeft, 0)} left`}
               </Text>
+              <View className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 0 }}>
+                <Text className="text-primary text-xs font-bold" numberOfLines={1}>
+                  {game.sports?.name ?? "Sport"}
+                </Text>
+              </View>
             </View>
 
-            {/* Row 4: when + sport — never wraps; the time text truncates
-                rather than pushing a second line in on narrow screens. */}
+            {/* Row 4: when — alone on its own row now that the sport pill
+                moved up to Row 3. */}
             <View className="flex-row items-center" style={{ gap: 8 }}>
               <View
                 className="flex-row items-center px-3 py-1 rounded-full"
@@ -323,11 +329,6 @@ function GameCard({
                 />
                 <Text className="text-white text-xs font-bold" numberOfLines={1} style={{ flexShrink: 1 }}>
                   {badgeLabel}
-                </Text>
-              </View>
-              <View className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 0 }}>
-                <Text className="text-primary text-xs font-bold" numberOfLines={1}>
-                  {game.sports?.name ?? "Sport"}
                 </Text>
               </View>
             </View>
