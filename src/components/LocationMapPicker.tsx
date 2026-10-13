@@ -57,11 +57,17 @@ export default function LocationMapPicker({
   initialLng,
   onConfirm,
   confirming,
+  selectedLabel,
 }: {
   initialLat: number;
   initialLng: number;
   onConfirm: (lat: number, lng: number) => void;
   confirming: boolean;
+  // The host's last confirmed pick (set by the caller once onConfirm's own
+  // address lookup resolves) — shown below the map in both the embedded and
+  // full-screen views, since the full-screen one is a modal the caller's
+  // own layout can't reach to show it there itself.
+  selectedLabel?: string | null;
 }) {
   const insets = useSafeAreaInsets();
   const [picked, setPicked] = useState<{ lat: number; lng: number }>({ lat: initialLat, lng: initialLng });
@@ -278,6 +284,15 @@ export default function LocationMapPicker({
           </GradientFill>
         </Pressable>
       </View>
+
+      {selectedLabel && (
+        <View className="flex-row items-center rounded-xl px-3.5 py-2.5 mt-2" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
+          <Ionicons name="location" size={15} color={colors.primaryDark} />
+          <Text className="flex-1 text-xs font-semibold" style={{ color: colors.primaryDark }} numberOfLines={2}>
+            {selectedLabel}
+          </Text>
+        </View>
+      )}
     </View>
   );
 

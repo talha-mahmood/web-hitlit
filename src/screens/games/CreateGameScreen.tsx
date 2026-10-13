@@ -970,15 +970,8 @@ export default function CreateGameScreen() {
                 initialLng={mapCenter.lng}
                 onConfirm={handleConfirmMapLocation}
                 confirming={confirmingLocation}
+                selectedLabel={customVenueName}
               />
-            )}
-            {customVenueName && (
-              <View className="flex-row items-center rounded-xl px-3.5 py-2.5 mt-2" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
-                <Ionicons name="location" size={15} color={colors.primaryDark} />
-                <Text className="flex-1 text-xs font-semibold" style={{ color: colors.primaryDark }} numberOfLines={2}>
-                  {customVenueName}
-                </Text>
-              </View>
             )}
           </>
         ) : (
