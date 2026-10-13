@@ -119,7 +119,7 @@ const DETAIL_SELECT =
 // Pakistan-only (see GameDetailScreen's time formatting), so treat them as +05:00.
 // A multi-day TOURNAMENT's real finish line is end_date (its last day), not
 // game_date (its first day) — regular games leave end_date null.
-function hasGameEnded(gameDate: string, endDate: string | null, endTime: string): boolean {
+export function hasGameEnded(gameDate: string, endDate: string | null, endTime: string): boolean {
   return new Date(`${endDate ?? gameDate}T${endTime}+05:00`).getTime() < Date.now();
 }
 

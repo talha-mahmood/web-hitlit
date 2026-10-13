@@ -8,6 +8,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
+import { hasGameEnded } from "../../lib/api/games";
 import { useRequestToJoinTeam } from "../../hooks/useTournamentTeams";
 import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
@@ -355,9 +356,9 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationTags, setLocationTags] = useState<string[]>([]);
-  // "All" / "My Games" pills, the "Time" range pill, and the distance
-  // dropdown beside them.
-  const [listFilter, setListFilter] = useState<"all" | "mine">("all");
+  // "All" / "Upcoming" / "My Games" pills, the "Time" range pill, and the
+  // distance dropdown beside them.
+  const [listFilter, setListFilter] = useState<"all" | "upcoming" | "mine">("all");
   const [timeRange, setTimeRange] = useState<DateSelection | null>(null);
   const [timeModalOpen, setTimeModalOpen] = useState(false);
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
@@ -365,6 +366,7 @@ export default function GamesListScreen() {
   const [distanceOpen, setDistanceOpen] = useState(false);
   const { coords: myCoords, status: locationStatus, requestLocation } = useDeviceLocation();
   const myOnly = listFilter === "mine";
+  const upcomingOnlyFilter = listFilter === "upcoming";
   const gameType = route.params?.gameType;
   // Off = only regular games, on = only tournaments — an entry point that
   // opens this screen already scoped to tournaments (e.g. "Explore
@@ -409,7 +411,11 @@ export default function GamesListScreen() {
         )
       )
     : searched;
-  const scoped = myOnly ? (locationFiltered ?? []).filter((g) => g.creator_id === userId) : locationFiltered;
+  const scoped = myOnly
+    ? (locationFiltered ?? []).filter((g) => g.creator_id === userId)
+    : upcomingOnlyFilter
+    ? (locationFiltered ?? []).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time))
+    : locationFiltered;
   // "Time": only games whose date falls inside the picked range (a
   // multi-day tournament counts if any of its days overlap the range).
   const upcomingOnly = timeRange
@@ -564,6 +570,7 @@ export default function GamesListScreen() {
           {(
             [
               { key: "all", label: "All" },
+              { key: "upcoming", label: "Upcoming" },
               { key: "mine", label: isTournamentList ? "My Tournaments" : "My Games" },
             ] as const
           ).map((p) => {
