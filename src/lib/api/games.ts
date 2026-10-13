@@ -1,5 +1,4 @@
 import { supabase } from "../supabase";
-import { isUniqueViolation } from "../nameValidation";
 import type { Database } from "../../types/database.types";
 
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
@@ -231,11 +230,6 @@ export async function createGame(params: CreateGameParams): Promise<GameRow> {
     .select()
     .single();
   if (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error(
-        `A ${params.gameType === "TOURNAMENT" ? "tournament" : "game"} with this title already exists. Please choose a different title.`
-      );
-    }
     throw new Error(error.message);
   }
 
@@ -278,9 +272,6 @@ export async function updateGame(params: UpdateGameParams): Promise<GameRow> {
     .select()
     .single();
   if (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error("Another game already uses this title. Please choose a different title.");
-    }
     throw new Error(error.message);
   }
   return data;

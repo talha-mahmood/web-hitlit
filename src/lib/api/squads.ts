@@ -1,5 +1,4 @@
 import { supabase } from "../supabase";
-import { isUniqueViolation } from "../nameValidation";
 import type { Database } from "../../types/database.types";
 
 type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
@@ -181,9 +180,6 @@ export async function createSquad(params: CreateSquadParams): Promise<SquadRow> 
     .select()
     .single();
   if (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error("A group with this name already exists. Please choose a different name.");
-    }
     throw new Error(error.message);
   }
 
@@ -214,9 +210,6 @@ export async function updateSquad(params: UpdateSquadParams): Promise<SquadRow> 
     .select()
     .single();
   if (error) {
-    if (isUniqueViolation(error)) {
-      throw new Error("Another group already uses this name. Please choose a different name.");
-    }
     throw new Error(error.message);
   }
   return data;
