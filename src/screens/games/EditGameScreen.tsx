@@ -186,14 +186,29 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
     }
     // A late start (e.g. 11 PM + 1 hr) can legitimately run past midnight —
     // in that case end_date is bumped to the next day so the stored
-    // end_time is still read relative to the right calendar day.
+    // end_time is still read relative to the right calendar day. A
+    // single-day tournament works the same way: start time + its (fixed,
+    // not editable here) hours-per-day fully determines its one day's end
+    // time. A multi-day tournament's last day instead formally closes at
+    // 23:59:59, since matches on the final day don't have a predetermined
+    // end time the way a single day's session does.
     const regularEnd = isTournament ? null : addMinutesWithOverflow(startTime, Math.round(duration * 60));
+    const tournamentSingleDayEnd =
+      isTournament && durationDays === 1 ? addMinutesWithOverflow(startTime, (game.daily_hours ?? 24) * 60) : null;
     const endDateValue = isTournament
-      ? addDays(selectedDate, durationDays - 1)
+      ? durationDays === 1
+        ? tournamentSingleDayEnd!.daysOverflow > 0
+          ? addDays(selectedDate, tournamentSingleDayEnd!.daysOverflow)
+          : null
+        : addDays(selectedDate, durationDays - 1)
       : regularEnd!.daysOverflow > 0
         ? addDays(selectedDate, regularEnd!.daysOverflow)
         : null;
-    const endTimeValue = isTournament ? "23:59:59" : `${regularEnd!.time}:00`;
+    const endTimeValue = isTournament
+      ? durationDays === 1
+        ? `${tournamentSingleDayEnd!.time}:00`
+        : "23:59:59"
+      : `${regularEnd!.time}:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {

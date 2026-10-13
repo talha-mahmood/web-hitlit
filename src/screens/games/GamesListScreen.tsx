@@ -25,7 +25,7 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 import type { GameListItem } from "../../lib/api/games";
 import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
-import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "../../lib/badgeColors";
+import { GAME_SKILL_COLORS, timeBadgeColor } from "../../lib/badgeColors";
 import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { matchesLocationQuery } from "../../lib/locationFilter";
@@ -80,6 +80,25 @@ function formatTimeRange(startTime: string, endTime: string): string {
       hour12: true,
     });
   return `${fmt(startTime)} - ${fmt(endTime)}`;
+}
+
+// Same "Today"/"Tomorrow"/date idea as badgeColors' dayLabel, but without
+// the weekday — the card is tight on space, so just the date is enough
+// here (the detail screen still shows the full day name).
+function cardDayLabel(dateStr: string): string {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+  if (isSameDay(date, today)) return "Today";
+  if (isSameDay(date, tomorrow)) return "Tomorrow";
+  return date.toLocaleDateString("en-PK", { month: "short", day: "numeric" });
 }
 
 // A multi-day tournament shows a date range instead of a single day + time.
@@ -151,7 +170,7 @@ function GameCard({
   const badgeLabel =
     isTournament && game.end_date && game.end_date !== game.game_date
       ? formatDateRange(game.game_date, game.end_date)
-      : `${dayLabel(game.game_date)} · ${formatTimeRange(game.start_time, game.end_time)}`;
+      : `${cardDayLabel(game.game_date)} · ${formatTimeRange(game.start_time, game.end_time)}`;
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
 
   const sportName = game.sports?.name ?? "";

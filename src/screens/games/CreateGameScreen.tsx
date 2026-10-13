@@ -678,17 +678,28 @@ export default function CreateGameScreen() {
     // game_date, but a late start (e.g. 11 PM + 1 hr) can legitimately run
     // past midnight, in which case end_date is bumped to the next day so
     // the stored end_time is still read relative to the right calendar day.
-    // A tournament instead spans durationDays calendar days starting at
-    // game_date; its last day (end_date) formally closes at 23:59:59 rather
-    // than some fixed hour, since matches on the final day don't have a
-    // predetermined end time the way a single game session does.
+    // A single-day tournament works the same way: start time + hours per
+    // day fully determines its one and only day's end time. A multi-day
+    // tournament's last day (end_date) instead formally closes at 23:59:59
+    // rather than some fixed hour, since matches on the final day don't
+    // have a predetermined end time the way a single day's session does.
     const regularEnd = isTournament ? null : addMinutesWithOverflow(startTime, Math.round(duration * 60));
+    const tournamentSingleDayEnd =
+      isTournament && durationDays === 1 ? addMinutesWithOverflow(startTime, hoursPerDay * 60) : null;
     const endDateValue = isTournament
-      ? addDays(selectedDate, durationDays - 1)
+      ? durationDays === 1
+        ? tournamentSingleDayEnd!.daysOverflow > 0
+          ? addDays(selectedDate, tournamentSingleDayEnd!.daysOverflow)
+          : null
+        : addDays(selectedDate, durationDays - 1)
       : regularEnd!.daysOverflow > 0
         ? addDays(selectedDate, regularEnd!.daysOverflow)
         : null;
-    const endTimeValue = isTournament ? "23:59:59" : `${regularEnd!.time}:00`;
+    const endTimeValue = isTournament
+      ? durationDays === 1
+        ? `${tournamentSingleDayEnd!.time}:00`
+        : "23:59:59"
+      : `${regularEnd!.time}:00`;
     const fee = parseInt(entryFee, 10) || 0;
 
     try {
