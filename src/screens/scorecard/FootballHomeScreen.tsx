@@ -172,7 +172,7 @@ export default function FootballHomeScreen() {
 
   const handleLookupScoringCode = async (code: string) => {
     const result = await findFootballMatchByCode(code);
-    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    if (result) navigation.navigate("FootballLiveScoring", { matchId: result.id });
     return result?.id ?? null;
   };
 

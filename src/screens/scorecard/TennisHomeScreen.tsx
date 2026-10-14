@@ -171,7 +171,7 @@ export default function TennisHomeScreen() {
 
   const handleLookupScoringCode = async (code: string) => {
     const result = await findTennisMatchByCode(code);
-    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    if (result) navigation.navigate("TennisLiveScoring", { matchId: result.id });
     return result?.id ?? null;
   };
 

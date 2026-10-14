@@ -171,7 +171,7 @@ export default function BadmintonHomeScreen() {
 
   const handleLookupScoringCode = async (code: string) => {
     const result = await findBadmintonMatchByCode(code);
-    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    if (result) navigation.navigate("BadmintonLiveScoring", { matchId: result.id });
     return result?.id ?? null;
   };
 

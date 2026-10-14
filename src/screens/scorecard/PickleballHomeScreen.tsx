@@ -170,7 +170,7 @@ export default function PickleballHomeScreen() {
 
   const handleLookupScoringCode = async (code: string) => {
     const result = await findPickleballMatchByCode(code);
-    if (result) navigation.navigate("FullScorecard", { matchId: result.id });
+    if (result) navigation.navigate("PickleballLiveScoring", { matchId: result.id });
     return result?.id ?? null;
   };
 
