@@ -207,11 +207,23 @@ export default function MentionComposer({
             // auto-grow depends on (flex-1's flexBasis: 0% governs height
             // in a column parent, not width) — that's what was keeping this
             // field stuck at one line no matter how much was typed.
-            className="border border-border rounded-full px-4 text-ink"
+            // rounded-2xl (not rounded-full) so a grown, multi-line box reads
+            // as a squared-off WhatsApp-style bubble instead of stretching
+            // into a tall capsule/pill shape.
+            className="border border-border rounded-2xl px-4 text-ink"
             // Fixed line height keeps the placeholder (and a single line of
             // typed text) sitting still instead of drifting up/down; extra
-            // lines now grow the field properly, WhatsApp-style.
-            style={{ minHeight: 44, paddingVertical: 11, fontSize: 14, lineHeight: 20, textAlignVertical: "top", includeFontPadding: false }}
+            // lines grow the field, WhatsApp-style, up to maxHeight, past
+            // which it scrolls internally instead of growing further.
+            style={{
+              minHeight: 44,
+              maxHeight: 140,
+              paddingVertical: 11,
+              fontSize: 14,
+              lineHeight: 20,
+              textAlignVertical: "top",
+              includeFontPadding: false,
+            }}
             maxLength={1000}
             multiline
           />

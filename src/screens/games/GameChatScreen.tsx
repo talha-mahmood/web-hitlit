@@ -551,7 +551,8 @@ export default function GameChatScreen() {
           value={draft}
           onChangeText={setDraft}
           placeholder={`Message the ${memberLabel}...`}
-          className="flex-1 border border-border rounded-full px-4 py-2.5 text-ink"
+          className="flex-1 border border-border rounded-2xl px-4 py-2.5 text-ink"
+          style={{ maxHeight: 140, textAlignVertical: "top" }}
           maxLength={500}
           multiline
         />
