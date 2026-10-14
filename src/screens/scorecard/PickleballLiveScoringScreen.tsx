@@ -31,6 +31,7 @@ import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -97,6 +98,11 @@ export default function PickleballLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("PickleballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = usePickleballMatch(params.matchId);
+  // Anyone with the match's scoring code can open this screen to watch
+  // (e.g. via "View Scoring"), but only the match's own creator should be
+  // able to actually add points / undo / complete it.
+  const currentUserId = useAuthStore((s) => s.session?.user.id);
+  const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = usePickleballPendingCount(params.matchId);
   const addRally = useAddPickleballRally(params.matchId);
@@ -561,35 +567,38 @@ export default function PickleballLiveScoringScreen() {
 
         {/* Scoring buttons — both dim and stop accepting taps the instant
             one is pressed, until that rally is actually reflected in the
-            score. */}
-        <View style={{ gap: 10 }}>
-          <View pointerEvents={addRally.isPending ? "none" : "auto"} style={{ gap: 10 }}>
-            <GradientActionButton
-              onPress={() => handleRally("A")}
-              colors={[colors.primary, colors.primaryDark]}
-              icon="add"
-              label={`${match.team_a_name} Point`}
-              watermarkIcon="disc-outline"
-              style={addRally.isPending ? undefined : primaryButtonShadow}
-            />
-            <GradientActionButton
-              onPress={() => handleRally("B")}
-              colors={["#2563EB", "#1D4ED8"]}
-              icon="add"
-              label={`${match.team_b_name} Point`}
-              watermarkIcon="disc-outline"
-              style={addRally.isPending ? undefined : primaryButtonShadow}
+            score. Only the match's own creator sees these — everyone else
+            (e.g. someone who opened this via "View Scoring") is watch-only. */}
+        {isScorer && (
+          <View style={{ gap: 10 }}>
+            <View pointerEvents={addRally.isPending ? "none" : "auto"} style={{ gap: 10 }}>
+              <GradientActionButton
+                onPress={() => handleRally("A")}
+                colors={[colors.primary, colors.primaryDark]}
+                icon="add"
+                label={`${match.team_a_name} Point`}
+                watermarkIcon="disc-outline"
+                style={addRally.isPending ? undefined : primaryButtonShadow}
+              />
+              <GradientActionButton
+                onPress={() => handleRally("B")}
+                colors={["#2563EB", "#1D4ED8"]}
+                icon="add"
+                label={`${match.team_b_name} Point`}
+                watermarkIcon="disc-outline"
+                style={addRally.isPending ? undefined : primaryButtonShadow}
+              />
+            </View>
+
+            <OutlineActionButton
+              onPress={handleUndo}
+              disabled={rallies.length === 0 || deleteLastRally.isPending}
+              icon="arrow-undo-outline"
+              label="Undo Last Point"
+              style={{ marginTop: 2, opacity: rallies.length === 0 ? 0.5 : 1 }}
             />
           </View>
-
-          <OutlineActionButton
-            onPress={handleUndo}
-            disabled={rallies.length === 0 || deleteLastRally.isPending}
-            icon="arrow-undo-outline"
-            label="Undo Last Point"
-            style={{ marginTop: 2, opacity: rallies.length === 0 ? 0.5 : 1 }}
-          />
-        </View>
+        )}
       </ScrollView>
     </View>
   );

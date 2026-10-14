@@ -42,6 +42,7 @@ import {
 } from "../../lib/footballScoring";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -137,6 +138,11 @@ export default function FootballLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("FootballHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useFootballMatch(params.matchId);
+  // Anyone with the match's scoring code can open this screen to watch
+  // (e.g. via "View Scoring"), but only the match's own creator should be
+  // able to actually add goals / undo / complete it.
+  const currentUserId = useAuthStore((s) => s.session?.user.id);
+  const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = useFootballPendingCount(params.matchId);
   const addGoal = useAddFootballGoal(params.matchId);
@@ -704,7 +710,11 @@ export default function FootballLiveScoringScreen() {
           </View>
         )}
 
-        {/* Phase-specific controls */}
+        {/* Phase-specific controls — only the match's own creator sees any
+            of this; everyone else (e.g. someone who opened this via "View
+            Scoring") is watch-only. */}
+        {isScorer && (
+        <>
         {isRunning && (
           <>
             <View
@@ -900,6 +910,8 @@ export default function FootballLiveScoringScreen() {
               <Text className="text-muted text-sm font-semibold">Undo Last Kick</Text>
             </Pressable>
           </>
+        )}
+        </>
         )}
       </ScrollView>
 

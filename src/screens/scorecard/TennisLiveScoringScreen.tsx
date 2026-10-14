@@ -18,6 +18,7 @@ import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -92,6 +93,11 @@ export default function TennisLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("TennisHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useTennisMatch(params.matchId);
+  // Anyone with the match's scoring code can open this screen to watch
+  // (e.g. via "View Scoring"), but only the match's own creator should be
+  // able to actually add points / undo / complete it.
+  const currentUserId = useAuthStore((s) => s.session?.user.id);
+  const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = useTennisPendingCount(params.matchId);
   const addPoint = useAddTennisPoint(params.matchId);
@@ -555,35 +561,39 @@ export default function TennisLiveScoringScreen() {
 
         {/* Scoring buttons — both dim and stop accepting taps the instant
             one is pressed, until that point is actually reflected in the
-            total score. */}
-        <View style={{ gap: 10, marginTop: points.length > 0 ? 0 : 16 }}>
-          <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ gap: 10 }}>
-            <GradientActionButton
-              onPress={() => handlePoint("A")}
-              colors={[colors.primary, colors.primaryDark]}
-              icon="add"
-              label={`${match.player_a_name} Point`}
-              watermarkIcon="tennisball-outline"
-              style={addPoint.isPending ? undefined : primaryButtonShadow}
-            />
-            <GradientActionButton
-              onPress={() => handlePoint("B")}
-              colors={["#2563EB", "#1D4ED8"]}
-              icon="add"
-              label={`${match.player_b_name} Point`}
-              watermarkIcon="tennisball-outline"
-              style={addPoint.isPending ? undefined : primaryButtonShadow}
+            total score. Only the match's own creator sees these — everyone
+            else (e.g. someone who opened this via "View Scoring") is
+            watch-only. */}
+        {isScorer && (
+          <View style={{ gap: 10, marginTop: points.length > 0 ? 0 : 16 }}>
+            <View pointerEvents={addPoint.isPending ? "none" : "auto"} style={{ gap: 10 }}>
+              <GradientActionButton
+                onPress={() => handlePoint("A")}
+                colors={[colors.primary, colors.primaryDark]}
+                icon="add"
+                label={`${match.player_a_name} Point`}
+                watermarkIcon="tennisball-outline"
+                style={addPoint.isPending ? undefined : primaryButtonShadow}
+              />
+              <GradientActionButton
+                onPress={() => handlePoint("B")}
+                colors={["#2563EB", "#1D4ED8"]}
+                icon="add"
+                label={`${match.player_b_name} Point`}
+                watermarkIcon="tennisball-outline"
+                style={addPoint.isPending ? undefined : primaryButtonShadow}
+              />
+            </View>
+
+            <OutlineActionButton
+              onPress={handleUndo}
+              disabled={points.length === 0 || deleteLastPoint.isPending}
+              icon="arrow-undo-outline"
+              label="Undo Last Point"
+              style={{ marginTop: 2, opacity: points.length === 0 ? 0.5 : 1 }}
             />
           </View>
-
-          <OutlineActionButton
-            onPress={handleUndo}
-            disabled={points.length === 0 || deleteLastPoint.isPending}
-            icon="arrow-undo-outline"
-            label="Undo Last Point"
-            style={{ marginTop: 2, opacity: points.length === 0 ? 0.5 : 1 }}
-          />
-        </View>
+        )}
       </ScrollView>
     </View>
   );

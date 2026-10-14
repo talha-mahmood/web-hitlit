@@ -30,6 +30,7 @@ import GradientActionButton from "../../components/GradientActionButton";
 import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
+import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -97,6 +98,11 @@ export default function TableTennisLiveScoringScreen() {
   const leaveScorecard = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("TableTennisHome"));
   const insets = useSafeAreaInsets();
   const { data: match, isLoading } = useTableTennisMatch(params.matchId);
+  // Anyone with the match's scoring code can open this screen to watch
+  // (e.g. via "View Scoring"), but only the match's own creator should be
+  // able to actually add points / undo / complete it.
+  const currentUserId = useAuthStore((s) => s.session?.user.id);
+  const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = useTableTennisPendingCount(params.matchId);
   const addRally = useAddTableTennisRally(params.matchId);
@@ -537,7 +543,9 @@ export default function TableTennisLiveScoringScreen() {
 
         {/* Scoring buttons — both dim and stop accepting taps the instant
             one is pressed, until that rally is actually reflected in the
-            score. */}
+            score. Only the match's own creator sees these — everyone else
+            (e.g. someone who opened this via "View Scoring") is watch-only. */}
+        {isScorer && (
         <View style={{ gap: 10 }}>
           <View pointerEvents={addRally.isPending ? "none" : "auto"} style={{ gap: 10 }}>
             <GradientActionButton
@@ -566,6 +574,7 @@ export default function TableTennisLiveScoringScreen() {
             style={{ marginTop: 2, opacity: rallies.length === 0 ? 0.5 : 1 }}
           />
         </View>
+        )}
       </ScrollView>
     </View>
   );
