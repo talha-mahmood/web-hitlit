@@ -8,7 +8,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useGames, useJoinGame } from "../../hooks/useGames";
-import { hasGameEnded } from "../../lib/api/games";
+import { hasGameEnded, isGameLive } from "../../lib/api/games";
 import { useRequestToJoinTeam } from "../../hooks/useTournamentTeams";
 import { useSports } from "../../hooks/useSports";
 import FieldInput from "../../components/FieldInput";
@@ -376,9 +376,9 @@ export default function GamesListScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationTags, setLocationTags] = useState<string[]>([]);
-  // "All" / "Upcoming" / "My Games" pills, the "Time" range pill, and the
-  // distance dropdown beside them.
-  const [listFilter, setListFilter] = useState<"all" | "upcoming" | "mine">("all");
+  // "All" / "Upcoming" / "Live" / "Completed" / "My Games" pills, the "Time"
+  // range pill, and the distance dropdown beside them.
+  const [listFilter, setListFilter] = useState<"all" | "upcoming" | "live" | "completed" | "mine">("all");
   const [timeRange, setTimeRange] = useState<DateSelection | null>(null);
   const [timeModalOpen, setTimeModalOpen] = useState(false);
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
@@ -387,6 +387,8 @@ export default function GamesListScreen() {
   const { coords: myCoords, status: locationStatus, requestLocation } = useDeviceLocation();
   const myOnly = listFilter === "mine";
   const upcomingOnlyFilter = listFilter === "upcoming";
+  const liveOnlyFilter = listFilter === "live";
+  const completedOnlyFilter = listFilter === "completed";
   const gameType = route.params?.gameType;
   // Off = only regular games, on = only tournaments — an entry point that
   // opens this screen already scoped to tournaments (e.g. "Explore
@@ -435,6 +437,10 @@ export default function GamesListScreen() {
     ? (locationFiltered ?? []).filter((g) => g.creator_id === userId)
     : upcomingOnlyFilter
     ? (locationFiltered ?? []).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time))
+    : liveOnlyFilter
+    ? (locationFiltered ?? []).filter((g) => isGameLive(g.game_date, g.start_time, g.end_date, g.end_time))
+    : completedOnlyFilter
+    ? (locationFiltered ?? []).filter((g) => g.status === "COMPLETED")
     : locationFiltered;
   // "Time": only games whose date falls inside the picked range (a
   // multi-day tournament counts if any of its days overlap the range).
@@ -591,6 +597,8 @@ export default function GamesListScreen() {
             [
               { key: "all", label: "All" },
               { key: "upcoming", label: "Upcoming" },
+              { key: "live", label: "Live" },
+              { key: "completed", label: "Completed" },
               { key: "mine", label: isTournamentList ? "My Tournaments" : "My Games" },
             ] as const
           ).map((p) => {

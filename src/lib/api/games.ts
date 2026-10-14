@@ -123,6 +123,20 @@ export function hasGameEnded(gameDate: string, endDate: string | null, endTime: 
   return new Date(`${endDate ?? gameDate}T${endTime}+05:00`).getTime() < Date.now();
 }
 
+// "Live" = already started and not yet ended — there's no separate status
+// value the app actually sets for this (games only ever move OPEN/FULL ->
+// COMPLETED or -> CANCELLED), so it's derived purely from game_date/
+// start_time/end_time, the same way hasGameEnded already is.
+export function isGameLive(
+  gameDate: string,
+  startTime: string,
+  endDate: string | null,
+  endTime: string
+): boolean {
+  const started = new Date(`${gameDate}T${startTime}+05:00`).getTime() <= Date.now();
+  return started && !hasGameEnded(gameDate, endDate, endTime);
+}
+
 // PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a search
 // term containing them would otherwise malform the request — strip them.
 function sanitizeSearchTerm(term: string): string {
