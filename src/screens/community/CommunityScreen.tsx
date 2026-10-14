@@ -193,7 +193,7 @@ function MyCommunityContent({
             height={imageHeight}
             source={require("../../../assets/community-icons/Top-Players.png")}
             onPress={onOpenPlayers}
-            title="Top Players"
+            title="Find Players"
           />
           <ImageCard
             width={CARD_WIDTH}
