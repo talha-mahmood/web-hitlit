@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -31,6 +32,8 @@ import OutlineActionButton from "../../components/OutlineActionButton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../lib/supabase";
+import { uniqueChannelName } from "../../lib/realtimeChannel";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -102,6 +105,31 @@ export default function BadmintonLiveScoringScreen() {
   // able to actually add points / undo / complete it.
   const currentUserId = useAuthStore((s) => s.session?.user.id);
   const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
+  const qc = useQueryClient();
+
+  // Live push for every viewer (not just the scorer) — a rally the scorer
+  // just added, or a match-level change, lands here instantly instead of
+  // needing a manual refresh. Same pattern cricket's live scoring already
+  // uses.
+  useEffect(() => {
+    if (!params.matchId) return;
+    const channel = supabase
+      .channel(uniqueChannelName(`badmintonLiveScoring:${params.matchId}`))
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "badminton_matches", filter: `id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["badmintonMatch", params.matchId] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "badminton_rallies", filter: `match_id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["badmintonMatch", params.matchId] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [params.matchId, qc]);
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = useBadmintonPendingCount(params.matchId);
   const addRally = useAddBadmintonRally(params.matchId);

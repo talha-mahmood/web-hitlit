@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -43,6 +44,8 @@ import {
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../lib/supabase";
+import { uniqueChannelName } from "../../lib/realtimeChannel";
 import { useProfileStore } from "../../store/profileStore";
 import { buildGenericMatchReportHtml } from "../../lib/matchReport/genericMatchReport";
 import { generateAndShareMatchReport } from "../../lib/matchReport/pdfShare";
@@ -143,6 +146,36 @@ export default function FootballLiveScoringScreen() {
   // able to actually add goals / undo / complete it.
   const currentUserId = useAuthStore((s) => s.session?.user.id);
   const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
+  const qc = useQueryClient();
+
+  // Live push for every viewer (not just the scorer) — a goal/penalty kick
+  // the scorer just added, or a match-level change (clock, phase), lands
+  // here instantly instead of needing a manual refresh. Same pattern
+  // cricket's live scoring already uses.
+  useEffect(() => {
+    if (!params.matchId) return;
+    const channel = supabase
+      .channel(uniqueChannelName(`footballLiveScoring:${params.matchId}`))
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "football_matches", filter: `id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["footballMatch", params.matchId] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "football_goals", filter: `match_id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["footballMatch", params.matchId] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "football_penalty_kicks", filter: `match_id=eq.${params.matchId}` },
+        () => qc.invalidateQueries({ queryKey: ["footballMatch", params.matchId] })
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [params.matchId, qc]);
   const isOnline = useNetworkStore((s) => s.isOnline);
   const pendingCount = useFootballPendingCount(params.matchId);
   const addGoal = useAddFootballGoal(params.matchId);
