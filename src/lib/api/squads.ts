@@ -39,7 +39,7 @@ export type SquadDetail = SquadRow & {
   })[];
 };
 
-export type SquadGroupType = "group" | "club" | "training_camp";
+export type SquadGroupType = "group" | "club" | "training_camp" | "team";
 
 export type CreateSquadParams = {
   ownerId: string;

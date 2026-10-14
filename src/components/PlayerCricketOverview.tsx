@@ -69,9 +69,9 @@ export function usePlayerCricketFigures(fullName: string | null | undefined) {
 // (per explicit instruction) rather than this app's green palette — this is
 // the one screen on the app where that's intentional.
 const PANEL = {
-  bat: { header: "#9B7A80", body: "#F7DEDE", text: "#5C3A3E" },
-  bowl: { header: "#5F7D63", body: "#DCEFD7", text: "#355238" },
-  field: { header: "#5E7489", body: "#D7E6F2", text: "#2E4A5E" },
+  bat: { header: "#8C5E82", body: "#EFE0F2", text: "#4A2F47" },
+  bowl: { header: "#3E6B5C", body: "#DEF2E3", text: "#2C4A3D" },
+  field: { header: "#BD6B45", body: "#FBE4D1", text: "#7A4426" },
 };
 
 function StatPanel({

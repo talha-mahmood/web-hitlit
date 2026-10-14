@@ -37,6 +37,7 @@ const GROUP_TYPE_LABELS: Record<SquadGroupType, string> = {
   group: "Group",
   club: "Club",
   training_camp: "Training Camp",
+  team: "Team",
 };
 
 function SquadCard({

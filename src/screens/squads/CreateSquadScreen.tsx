@@ -391,15 +391,18 @@ export default function CreateSquadScreen() {
 
         {/* Group Type */}
         <FormCard icon="albums" title="Group Type" hint="What kind of group is this?">
-          <ChipRow<SquadGroupType>
-            options={[
-              { label: "Group", value: "group" },
-              { label: "Club", value: "club" },
-              { label: "Training Camp", value: "training_camp" },
-            ]}
-            value={groupType}
-            onChange={setGroupType}
-          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ChipRow<SquadGroupType>
+              options={[
+                { label: "Group", value: "group" },
+                { label: "Club", value: "club" },
+                { label: "Training Camp", value: "training_camp" },
+                { label: "Team", value: "team" },
+              ]}
+              value={groupType}
+              onChange={setGroupType}
+            />
+          </ScrollView>
         </FormCard>
 
         {/* Sport */}

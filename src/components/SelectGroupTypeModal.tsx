@@ -10,12 +10,13 @@ const GROUP_TYPE_OPTIONS: { label: string; value: SquadGroupType }[] = [
   { label: "Group", value: "group" },
   { label: "Club", value: "club" },
   { label: "Training Camp", value: "training_camp" },
+  { label: "Team", value: "team" },
 ];
 
 // Bottom sheet for the groups list's "Group Type" filter — same shape as
 // SelectLocationModal (drag handle, title/subtitle, X, "Apply Filter"
 // button, picked values staying local until Apply is pressed), just a
-// fixed 3-option multi-select instead of free-text + suggestions.
+// fixed 4-option multi-select instead of free-text + suggestions.
 export default function SelectGroupTypeModal({
   visible,
   onClose,
