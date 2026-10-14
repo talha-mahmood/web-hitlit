@@ -4,6 +4,7 @@ import Svg, { Rect, Path, G } from "react-native-svg";
 import { colors, cardShadow } from "../constants/theme";
 import { battingPositionStats, bowlingConcededDistribution } from "../lib/playerCricketStats";
 import { usePlayerCricketFigures, usePlayerCricketMatches } from "./PlayerCricketOverview";
+import GradientFill from "./GradientFill";
 
 type BatMetric = "Inn" | "Run" | "Avg" | "SR";
 const BAT_METRICS: BatMetric[] = ["Inn", "Run", "Avg", "SR"];
@@ -136,11 +137,21 @@ export default function PlayerCricketInsights({ fullName }: { fullName: string }
   return (
     <View>
       <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#E5E7EB" }}>
-        {(["Batting", "Bowling"] as const).map((s) => (
-          <Pressable key={s} onPress={() => setSection(s)} className="px-4 py-1.5" style={{ backgroundColor: section === s ? "#1F2937" : "transparent" }}>
-            <Text className="text-xs font-bold" style={{ color: section === s ? "white" : "#374151" }}>{s}</Text>
-          </Pressable>
-        ))}
+        {(["Batting", "Bowling"] as const).map((s) =>
+          section === s ? (
+            <Pressable key={s} onPress={() => setSection(s)}>
+              <GradientFill className="px-4 py-1.5">
+                <Text className="text-xs font-bold text-white">{s}</Text>
+              </GradientFill>
+            </Pressable>
+          ) : (
+            <Pressable key={s} onPress={() => setSection(s)} className="px-4 py-1.5">
+              <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+                {s}
+              </Text>
+            </Pressable>
+          )
+        )}
       </View>
 
       {section === "Batting" ? (

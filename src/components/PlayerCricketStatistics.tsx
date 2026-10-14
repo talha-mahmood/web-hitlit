@@ -9,6 +9,7 @@ import {
   type MatchFigures,
 } from "../lib/playerCricketStats";
 import { usePlayerCricketFigures } from "./PlayerCricketOverview";
+import GradientFill from "./GradientFill";
 
 type SubTab = "BAT" | "BOWL" | "FIELD" | "MATCH-WISE";
 const SUB_TABS: SubTab[] = ["BAT", "BOWL", "FIELD", "MATCH-WISE"];
@@ -18,13 +19,21 @@ const LABEL_FLEX = 1.2;
 function SubTabBar({ value, onChange }: { value: SubTab; onChange: (v: SubTab) => void }) {
   return (
     <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-      {SUB_TABS.map((t) => (
-        <Pressable key={t} onPress={() => onChange(t)} className="flex-1 items-center py-2" style={{ backgroundColor: value === t ? "#1F2937" : "transparent" }}>
-          <Text className="text-xs font-bold" style={{ color: value === t ? "white" : "#6B7280" }}>
-            {t}
-          </Text>
-        </Pressable>
-      ))}
+      {SUB_TABS.map((t) =>
+        value === t ? (
+          <Pressable key={t} onPress={() => onChange(t)} className="flex-1">
+            <GradientFill className="items-center py-2">
+              <Text className="text-xs font-bold text-white">{t}</Text>
+            </GradientFill>
+          </Pressable>
+        ) : (
+          <Pressable key={t} onPress={() => onChange(t)} className="flex-1 items-center py-2">
+            <Text className="text-xs font-bold" style={{ color: "#6B7280" }}>
+              {t}
+            </Text>
+          </Pressable>
+        )
+      )}
     </View>
   );
 }

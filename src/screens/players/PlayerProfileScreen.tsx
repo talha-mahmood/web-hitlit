@@ -263,18 +263,26 @@ export default function PlayerProfileScreen() {
                 ["clubs", "Clubs"],
                 ["insights", "Insights"],
                 ["compare", "Compare"],
-              ] as [ProfileTab, string][]).map(([key, label]) => (
-                <Pressable
-                  key={key}
-                  onPress={() => setActiveTab(key)}
-                  className="rounded-full px-4 py-2"
-                  style={{ backgroundColor: activeTab === key ? "#1F2937" : "#E5E7EB" }}
-                >
-                  <Text className="text-xs font-bold" style={{ color: activeTab === key ? "white" : "#374151" }}>
-                    {label}
-                  </Text>
-                </Pressable>
-              ))}
+              ] as [ProfileTab, string][]).map(([key, label]) =>
+                activeTab === key ? (
+                  <Pressable key={key} onPress={() => setActiveTab(key)}>
+                    <GradientFill className="rounded-full px-4 py-2">
+                      <Text className="text-xs font-bold text-white">{label}</Text>
+                    </GradientFill>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    key={key}
+                    onPress={() => setActiveTab(key)}
+                    className="rounded-full px-4 py-2"
+                    style={{ backgroundColor: "#E5E7EB" }}
+                  >
+                    <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                )
+              )}
             </ScrollView>
           ) : null}
 

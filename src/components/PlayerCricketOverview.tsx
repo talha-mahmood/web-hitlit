@@ -15,6 +15,7 @@ import {
 } from "../lib/playerCricketStats";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
+import GradientFill from "./GradientFill";
 
 // Every match (any status) this player appears in — shared cache key so the
 // Overview/Statistics/Matches tabs all reuse the same single fetch.
@@ -107,13 +108,21 @@ function StatPanel({
 function TogglePill({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
     <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#E5E7EB" }}>
-      {options.map((o) => (
-        <Pressable key={o} onPress={() => onChange(o)} className="px-4 py-1.5" style={{ backgroundColor: value === o ? "#1F2937" : "transparent" }}>
-          <Text className="text-xs font-bold" style={{ color: value === o ? "white" : "#374151" }}>
-            {o}
-          </Text>
-        </Pressable>
-      ))}
+      {options.map((o) =>
+        value === o ? (
+          <Pressable key={o} onPress={() => onChange(o)}>
+            <GradientFill className="px-4 py-1.5">
+              <Text className="text-xs font-bold text-white">{o}</Text>
+            </GradientFill>
+          </Pressable>
+        ) : (
+          <Pressable key={o} onPress={() => onChange(o)} className="px-4 py-1.5">
+            <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+              {o}
+            </Text>
+          </Pressable>
+        )
+      )}
     </View>
   );
 }
@@ -197,9 +206,9 @@ export default function PlayerCricketOverview({ fullName }: { fullName: string }
 
       <Text className="text-ink font-bold text-base mt-6 mb-3">Recent Form</Text>
       <View className="flex-row items-center" style={{ gap: 8 }}>
-        <View className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#111827" }}>
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 44, height: 44 }}>
           <Text className="text-white font-bold text-xs">Bat</Text>
-        </View>
+        </GradientFill>
         {formEntries.map((f) => (
           <View key={`${f.matchId}-bat`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#E5E7EB" }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
@@ -209,9 +218,9 @@ export default function PlayerCricketOverview({ fullName }: { fullName: string }
         ))}
       </View>
       <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
-        <View className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#111827" }}>
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 44, height: 44 }}>
           <Text className="text-white font-bold text-xs">Bowl</Text>
-        </View>
+        </GradientFill>
         {formEntries.map((f) => (
           <View key={`${f.matchId}-bowl`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#E5E7EB" }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
