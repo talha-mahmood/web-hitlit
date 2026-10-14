@@ -63,16 +63,29 @@ export default function MentionComposer({
   onPressPoll?: () => void;
 }) {
   const [text, setText] = useState("");
-  const [selection, setSelection] = useState({ start: 0, end: 0 });
+  // The cursor position is tracked here purely for our own logic (finding
+  // an active "@" trigger, inserting at the right spot) — it's kept
+  // separate from the TextInput's `selection` prop below, which is left
+  // uncontrolled (undefined) almost all the time. A multiline TextInput
+  // with a *controlled* selection fights Android's own auto-grow height
+  // measurement on every keystroke, so this field would never grow past
+  // one line as long as `selection` stayed permanently controlled.
+  // `forcedSelection` is only set for the one render right after we
+  // programmatically move the cursor ourselves (inserting an emoji or a
+  // mention), then released back to undefined as soon as the native view
+  // confirms it via onSelectionChange.
+  const [cursor, setCursor] = useState({ start: 0, end: 0 });
+  const [forcedSelection, setForcedSelection] = useState<{ start: number; end: number } | undefined>(undefined);
   const [confirmedTokens, setConfirmedTokens] = useState<MentionCandidate[]>([]);
   const [activeType, setActiveType] = useState<MentionEntityType | undefined>(undefined);
   const [emojiOpen, setEmojiOpen] = useState(false);
 
   const insertEmoji = (emoji: string) => {
-    const next = text.slice(0, selection.start) + emoji + text.slice(selection.end);
-    const cursor = selection.start + emoji.length;
+    const next = text.slice(0, cursor.start) + emoji + text.slice(cursor.end);
+    const newCursor = cursor.start + emoji.length;
     setText(next);
-    setSelection({ start: cursor, end: cursor });
+    setCursor({ start: newCursor, end: newCursor });
+    setForcedSelection({ start: newCursor, end: newCursor });
   };
 
   // Enter/refresh edit mode whenever a *different* message is targeted.
@@ -82,11 +95,13 @@ export default function MentionComposer({
     setConfirmedTokens(
       editing.initialMentions.map((m) => ({ entityType: m.entityType, entityId: m.entityId, displayName: m.displayName }))
     );
-    setSelection({ start: editing.initialBody.length, end: editing.initialBody.length });
+    const end = editing.initialBody.length;
+    setCursor({ start: end, end });
+    setForcedSelection({ start: end, end });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing?.messageId]);
 
-  const trigger = findActiveMentionTrigger(text, selection.start);
+  const trigger = findActiveMentionTrigger(text, cursor.start);
   const { data: suggestions, isLoading, isError } = useMentionSearch(trigger?.query ?? "", activeType);
 
   const handleChangeText = (next: string) => {
@@ -95,9 +110,10 @@ export default function MentionComposer({
 
   const handleSelect = (item: MentionSuggestion) => {
     if (!trigger) return;
-    const result = insertMention(text, trigger, selection.end, item);
+    const result = insertMention(text, trigger, cursor.end, item);
     setText(result.text);
-    setSelection({ start: result.cursor, end: result.cursor });
+    setCursor({ start: result.cursor, end: result.cursor });
+    setForcedSelection({ start: result.cursor, end: result.cursor });
     setConfirmedTokens((prev) => [...prev, { entityType: item.entityType, entityId: item.entityId, displayName: item.displayName }]);
     setActiveType(undefined);
   };
@@ -105,7 +121,8 @@ export default function MentionComposer({
   const reset = () => {
     setText("");
     setConfirmedTokens([]);
-    setSelection({ start: 0, end: 0 });
+    setCursor({ start: 0, end: 0 });
+    setForcedSelection({ start: 0, end: 0 });
     setActiveType(undefined);
   };
 
@@ -177,14 +194,24 @@ export default function MentionComposer({
           <TextInput
             value={text}
             onChangeText={handleChangeText}
-            onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
-            selection={selection}
+            onSelectionChange={(e) => {
+              setCursor(e.nativeEvent.selection);
+              setForcedSelection(undefined);
+            }}
+            selection={forcedSelection}
             placeholder={placeholder}
-            className="flex-1 border border-border rounded-full px-4 text-ink"
-            // Fixed line height + vertical centering keeps the placeholder
-            // (and a single line of typed text) dead-center in the field
-            // instead of drifting up/down; extra lines still grow it.
-            style={{ minHeight: 44, paddingVertical: 11, fontSize: 14, lineHeight: 20, textAlignVertical: "center", includeFontPadding: false }}
+            // No `flex-1` here — the wrapping View (a column-flow container)
+            // already stretches this to full width via its default
+            // alignItems, and giving the TextInput itself a flex-grow
+            // fights the intrinsic, content-driven height that multiline
+            // auto-grow depends on (flex-1's flexBasis: 0% governs height
+            // in a column parent, not width) — that's what was keeping this
+            // field stuck at one line no matter how much was typed.
+            className="border border-border rounded-full px-4 text-ink"
+            // Fixed line height keeps the placeholder (and a single line of
+            // typed text) sitting still instead of drifting up/down; extra
+            // lines now grow the field properly, WhatsApp-style.
+            style={{ minHeight: 44, paddingVertical: 11, fontSize: 14, lineHeight: 20, textAlignVertical: "top", includeFontPadding: false }}
             maxLength={1000}
             multiline
           />
