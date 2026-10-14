@@ -273,7 +273,7 @@ export default function SquadsListScreen() {
     ? (locationFiltered ?? []).filter(
         (s) =>
           s.squad_owner_id === userId ||
-          s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE" && m.role === "host")
+          s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE")
       )
     : locationFiltered;
   const scoped =

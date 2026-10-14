@@ -410,13 +410,6 @@ export default function GameChatScreen() {
             <Text className="text-muted text-xs">Messages disappear after 24 hours</Text>
           </View>
         </View>
-        <Pressable
-          onPress={() => {}}
-          className="items-center justify-center bg-white rounded-full ml-2"
-          style={{ width: 44, height: 44, ...cardShadow }}
-        >
-          <Ionicons name="ellipsis-vertical" size={18} color={colors.ink} />
-        </Pressable>
       </View>
 
       {isLoading ? (

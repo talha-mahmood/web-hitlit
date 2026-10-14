@@ -434,7 +434,14 @@ export default function GamesListScreen() {
       )
     : searched;
   const scoped = myOnly
-    ? (locationFiltered ?? []).filter((g) => g.creator_id === userId)
+    ? (locationFiltered ?? []).filter(
+        (g) =>
+          g.creator_id === userId ||
+          g.game_players.some((p) => p.user_id === userId && p.status === "JOINED") ||
+          g.tournament_teams.some((t) =>
+            t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")
+          )
+      )
     : upcomingOnlyFilter
     ? (locationFiltered ?? []).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time))
     : liveOnlyFilter
