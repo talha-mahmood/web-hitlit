@@ -313,6 +313,8 @@ function MatchRow({
   isHost,
   isAssignedScorer,
   scorerName,
+  teamAStatus,
+  teamBStatus,
   nrrByTeam,
   liveCricketMatchIds,
   onGoToScorecard,
@@ -324,6 +326,10 @@ function MatchRow({
 }: {
   match: TournamentMatch;
   matchNumber: number;
+  // Each team's real roster status — drives the blue (approved) vs. yellow
+  // (still FORMING/PENDING) TeamStatusIcon next to its name.
+  teamAStatus?: Database["public"]["Enums"]["tournament_team_status_type"];
+  teamBStatus?: Database["public"]["Enums"]["tournament_team_status_type"];
   nrrByTeam?: Map<string, number>;
   // Cricket scorecards currently IN_PROGRESS — same set the "Live Now"
   // section is built from — so this card's own status pill can show "Live"
@@ -384,14 +390,14 @@ function MatchRow({
           <StatusPill completed />
         </View>
         <View className="flex-row items-center" style={{ gap: 10 }}>
-          <TeamStatusIcon status={match.team_a?.id ? "APPROVED" : undefined} />
+          <TeamStatusIcon status={match.team_a?.id ? teamAStatus : undefined} />
           <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
           <View className="items-center justify-center rounded-full bg-gray-200" style={{ width: 32, height: 32 }}>
             <Text className="text-muted text-xs font-bold">VS</Text>
           </View>
           <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
           {match.team_b ? (
-            <TeamStatusIcon status={match.team_b?.id ? "APPROVED" : undefined} />
+            <TeamStatusIcon status={match.team_b?.id ? teamBStatus : undefined} />
           ) : (
             <View style={{ width: 28 }} />
           )}
@@ -445,7 +451,7 @@ function MatchRow({
         <Text className="text-muted text-xs mb-1.5">Not scheduled yet</Text>
       )}
       <View className="flex-row items-center" style={{ gap: 10 }}>
-        <TeamStatusIcon status={match.team_a ? "APPROVED" : undefined} />
+        <TeamStatusIcon status={match.team_a ? teamAStatus : undefined} />
         <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
         <View
           className="items-center justify-center rounded-full"
@@ -454,7 +460,7 @@ function MatchRow({
           <Text className="text-muted text-xs font-bold">VS</Text>
         </View>
         <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
-        {match.team_b ? <TeamStatusIcon status="APPROVED" /> : <View style={{ width: 28 }} />}
+        {match.team_b ? <TeamStatusIcon status={teamBStatus} /> : <View style={{ width: 28 }} />}
       </View>
       {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       <LinkedMatchScoreDetails match={match} />
@@ -586,6 +592,7 @@ function MatchesPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  teamStatusById,
   liveCricketMatchIds,
   getScorerName,
   onGoToScorecard,
@@ -605,6 +612,7 @@ function MatchesPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  teamStatusById: Map<string, Database["public"]["Enums"]["tournament_team_status_type"]>;
   liveCricketMatchIds: Set<string>;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
@@ -718,6 +726,8 @@ function MatchesPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  teamAStatus={m.team_a ? teamStatusById.get(m.team_a.id) : undefined}
+                  teamBStatus={m.team_b ? teamStatusById.get(m.team_b.id) : undefined}
                   nrrByTeam={nrrByTeam}
                   liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
@@ -973,6 +983,7 @@ function PoolMatchesPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  teamStatusById,
   liveCricketMatchIds,
   getScorerName,
   onGoToScorecard,
@@ -992,6 +1003,7 @@ function PoolMatchesPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  teamStatusById: Map<string, Database["public"]["Enums"]["tournament_team_status_type"]>;
   liveCricketMatchIds: Set<string>;
   getScorerName: (match: TournamentMatch) => string | null;
   onGoToScorecard: (match: TournamentMatch) => void;
@@ -1085,6 +1097,8 @@ function PoolMatchesPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  teamAStatus={m.team_a ? teamStatusById.get(m.team_a.id) : undefined}
+                  teamBStatus={m.team_b ? teamStatusById.get(m.team_b.id) : undefined}
                   nrrByTeam={nrrByTeam}
                   liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
@@ -1125,6 +1139,7 @@ function PoolPlayoffPanel({
   statusFilter,
   stageFilter,
   nrrByTeam,
+  teamStatusById,
   liveCricketMatchIds,
   qualifiersPerGroup,
   getScorerName,
@@ -1145,6 +1160,7 @@ function PoolPlayoffPanel({
   statusFilter: MatchStatusFilter;
   stageFilter: string | null;
   nrrByTeam: Map<string, number> | undefined;
+  teamStatusById: Map<string, Database["public"]["Enums"]["tournament_team_status_type"]>;
   liveCricketMatchIds: Set<string>;
   // Uniform across every group — host-set at creation time
   // (games.pool_qualifiers_per_group); falls back to the pre-existing
@@ -1276,6 +1292,8 @@ function PoolPlayoffPanel({
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
+                  teamAStatus={m.team_a ? teamStatusById.get(m.team_a.id) : undefined}
+                  teamBStatus={m.team_b ? teamStatusById.get(m.team_b.id) : undefined}
                   nrrByTeam={nrrByTeam}
                   liveCricketMatchIds={liveCricketMatchIds}
                   onGoToScorecard={() => onGoToScorecard(m)}
@@ -1864,6 +1882,7 @@ export default function TournamentMatchesScreen() {
               statusFilter={statusFilter}
               stageFilter={stageFilter}
               nrrByTeam={nrrByTeam}
+              teamStatusById={teamStatusById}
               liveCricketMatchIds={liveCricketMatchIds}
               getScorerName={getScorerName}
               onGoToScorecard={handleGoToScorecard}
@@ -1884,6 +1903,7 @@ export default function TournamentMatchesScreen() {
               statusFilter={statusFilter}
               stageFilter={stageFilter}
               nrrByTeam={nrrByTeam}
+              teamStatusById={teamStatusById}
               liveCricketMatchIds={liveCricketMatchIds}
               qualifiersPerGroup={game.pool_qualifiers_per_group ?? ((pools ?? []).length === 2 ? 2 : 1)}
               getScorerName={getScorerName}
@@ -1917,6 +1937,7 @@ export default function TournamentMatchesScreen() {
                 statusFilter={statusFilter}
                 stageFilter={stageFilter}
                 nrrByTeam={nrrByTeam}
+                teamStatusById={teamStatusById}
                 liveCricketMatchIds={liveCricketMatchIds}
                 getScorerName={getScorerName}
                 onGoToScorecard={handleGoToScorecard}
