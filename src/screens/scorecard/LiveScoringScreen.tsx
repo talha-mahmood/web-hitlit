@@ -1241,14 +1241,29 @@ export default function LiveScoringScreen() {
       // cricket_balls has no direct match_id column (only innings_id), so
       // this one stays unfiltered — any ball anywhere invalidates this
       // match's query, a harmless no-op refetch for every other match.
-      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_balls" }, () =>
-        qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] })
-      )
+      //
+      // Skipped entirely for the scorer's own device: every ball they add
+      // already lands in the cache the instant it's tapped, and again (just
+      // an id swap, same content) once the insert confirms — see
+      // useAddCricketBall's own patchInningsBalls calls. Realtime still
+      // echoes that same insert straight back to the device that made it,
+      // and invalidating here on top of that raced the very next ball: a
+      // fresh whole-match refetch kicked off by this echo could still be in
+      // flight when the next tap's own optimistic ball landed, and resolve
+      // *after* it with a snapshot that doesn't have that ball yet —
+      // overwriting (reverting) it until the next realtime echo caught back
+      // up. A spectator (no mutation of their own) still needs this to see
+      // new balls live, so it only skips for the one device where it's both
+      // redundant and actively harmful.
+      .on("postgres_changes", { event: "*", schema: "public", table: "cricket_balls" }, () => {
+        if (isScorer) return;
+        qc.invalidateQueries({ queryKey: ["cricketMatch", params.matchId] });
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [params.matchId, qc]);
+  }, [params.matchId, qc, isScorer]);
 
   const [pendingStriker, setPendingStriker] = useState<string | null>(null);
   const [pendingNonStriker, setPendingNonStriker] = useState<string | null>(null);
