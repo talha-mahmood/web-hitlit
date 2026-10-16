@@ -48,7 +48,7 @@ const TEAM_STATUS_META: Record<
   string,
   { bg: string; text: string; label: string; iconBg: string; iconColor: string }
 > = {
-  FORMING: { bg: "bg-blue-50", text: "text-blue-700", label: "Recruiting", iconBg: "#DBEAFE", iconColor: "#2563EB" },
+  FORMING: { bg: "bg-amber-50", text: "text-amber-700", label: "Recruiting", iconBg: "#FEF3C7", iconColor: "#D97706" },
   PENDING_HOST_APPROVAL: {
     bg: "bg-amber-50",
     text: "text-amber-700",
@@ -210,11 +210,9 @@ function TeamCard({
   const statusIcon: keyof typeof Ionicons.glyphMap =
     team.status === "APPROVED"
       ? "trophy"
-      : team.status === "PENDING_HOST_APPROVAL"
-        ? "hourglass"
-        : team.status === "REJECTED"
-          ? "close-circle"
-          : "person";
+      : team.status === "REJECTED"
+        ? "close-circle"
+        : "hourglass"; // FORMING (still recruiting) and PENDING_HOST_APPROVAL both read as "not completed yet"
   // The "Create Team" squad-registration CTA only makes sense on a genuinely
   // empty team — the server only allows it there too.
   const isEmpty = joinedMembers.length === 0;

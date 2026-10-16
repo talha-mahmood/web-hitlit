@@ -1252,6 +1252,15 @@ export default function LiveScoringScreen() {
 
   const [pendingStriker, setPendingStriker] = useState<string | null>(null);
   const [pendingNonStriker, setPendingNonStriker] = useState<string | null>(null);
+  // Manual strike swap — the scorer tapping the non-striker's name to make
+  // them the one facing, without an actual run/ball happening (e.g. they
+  // crossed mid-over for a reason this app doesn't model, like a mix-up at
+  // the non-striker's end). Purely a local override of which of the two
+  // already-derived ends is "on strike" — it never touches ball history
+  // directly; the next ball submitted just carries whichever name is
+  // currently on strike as its strikerName (see submitBall), so the swap
+  // becomes real history at that point and this flag resets.
+  const [manualStrikeSwapped, setManualStrikeSwapped] = useState(false);
   const [pendingBowler, setPendingBowler] = useState<string | null>(null);
   // Which bottom-panel sheet is showing on the Scoring tab. Keypad sub-panels
   // reuse the extra-type values they already submit through; the rest are
@@ -1481,9 +1490,18 @@ export default function LiveScoringScreen() {
     }
   }, [isMatchCompleted]);
 
-  const effectiveStriker = inningsState?.striker ?? pendingStriker;
-  const effectiveNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
+  const baseStriker = inningsState?.striker ?? pendingStriker;
+  const baseNonStriker = inningsState?.nonStriker ?? pendingNonStriker;
+  const canSwapStrike = !!baseStriker && !!baseNonStriker;
+  const effectiveStriker = manualStrikeSwapped && canSwapStrike ? baseNonStriker : baseStriker;
+  const effectiveNonStriker = manualStrikeSwapped && canSwapStrike ? baseStriker : baseNonStriker;
   const effectiveBowler = inningsState?.currentBowler ?? pendingBowler;
+  // Sets whichever of the two current batsmen is named "on strike" — a
+  // no-op if they already are. See manualStrikeSwapped above.
+  const setCurrentFacer = (name: string) => {
+    if (!canSwapStrike) return;
+    setManualStrikeSwapped(name === baseNonStriker);
+  };
   // Once the last innings is marked complete there's no active innings left
   // (currentInnings is undefined) — without this, the "Select Opening
   // Striker" picker would flash up for the split second between finishing
@@ -1554,6 +1572,7 @@ export default function LiveScoringScreen() {
           setPendingStriker(null);
           setPendingNonStriker(null);
           setPendingBowler(null);
+          setManualStrikeSwapped(false);
           setPanel(null);
           setWicketType(null);
           setWicketEnd(null);
@@ -2173,26 +2192,36 @@ export default function LiveScoringScreen() {
                   </View>
                 </View>
                 {[{ name: effectiveStriker, stat: strikerStat, isStriker: true }, { name: effectiveNonStriker, stat: nonStrikerStat, isStriker: false }].map(
-                  (row) =>
-                    row.name && (
+                  (row) => {
+                    const name = row.name;
+                    if (!name) return null;
+                    // Only the scorer can tap a batsman's name to make them
+                    // the one on strike, and only once both ends are
+                    // actually filled — see setCurrentFacer/manualStrikeSwapped.
+                    const canTapToSwap = isScorer && canSwapStrike && hasActiveInnings && !inningsOver;
+                    return (
                       <View
-                        key={row.name}
+                        key={name}
                         className="flex-row items-center justify-between py-1.5"
                         style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
                       >
-                        {row.isStriker ? (
-                          <View className="flex-1 items-start">
+                        <Pressable
+                          className="flex-1 items-start"
+                          disabled={!canTapToSwap}
+                          onPress={() => setCurrentFacer(name)}
+                        >
+                          {row.isStriker ? (
                             <GradientFill className="rounded-lg px-2.5 py-1">
                               <Text className="text-white text-sm font-bold" numberOfLines={1}>
-                                {row.name} *
+                                {name} *
                               </Text>
                             </GradientFill>
-                          </View>
-                        ) : (
-                          <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>
-                            {row.name}
-                          </Text>
-                        )}
+                          ) : (
+                            <Text className="text-ink text-sm font-semibold" numberOfLines={1}>
+                              {name}
+                            </Text>
+                          )}
+                        </Pressable>
                         <View className="flex-row" style={{ gap: 14 }}>
                           <Text className="font-semibold text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.runs ?? 0}</Text>
                           <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.balls ?? 0}</Text>
@@ -2203,7 +2232,8 @@ export default function LiveScoringScreen() {
                           </Text>
                         </View>
                       </View>
-                    )
+                    );
+                  }
                 )}
 
                 {/* Bowler table */}
