@@ -27,6 +27,7 @@ import { useVenues } from "../../hooks/useVenues";
 import { useCreateGame } from "../../hooks/useGames";
 import { createTournamentTeamPlaceholders } from "../../lib/api/tournamentTeams";
 import { createPools } from "../../lib/api/tournamentPools";
+import { generateMatches, generatePoolMatches } from "../../lib/api/tournamentMatches";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow } from "../../constants/theme";
@@ -734,9 +735,34 @@ export default function CreateGameScreen() {
         poolQualifiersPerGroup: isTournament && tournamentFormat === "POOL" ? qualifiersPerGroup : null,
       });
       if (isTournament) {
-        await createTournamentTeamPlaceholders(game.id, teamNames);
+        // Team slots (and, for Pool, their group assignment) are all decided
+        // at creation time, so the fixtures can be generated immediately
+        // too — the host no longer has to come back and tap "Generate
+        // Matches" once every roster fills up; the match list is there from
+        // the start, with scoring buttons on each card gated per-match at
+        // click time (see TournamentMatchesScreen's requireTeamsReady).
         if (tournamentFormat === "POOL") {
-          await createPools(game.id, trimmedGroupNames);
+          const createdPools = await createPools(game.id, trimmedGroupNames);
+          const groupSizes = distributeTeamsIntoGroups(teams, createdPools.length);
+          const poolIds: string[] = [];
+          createdPools.forEach((pool, gi) => {
+            for (let k = 0; k < groupSizes[gi]; k++) poolIds.push(pool.id);
+          });
+          const createdTeams = await createTournamentTeamPlaceholders(game.id, teamNames, poolIds);
+          await generatePoolMatches(
+            game.id,
+            createdPools.map((pool) => ({
+              poolId: pool.id,
+              teams: createdTeams.filter((t) => t.pool_id === pool.id).map((t) => ({ id: t.id, name: t.name })),
+            }))
+          );
+        } else {
+          const createdTeams = await createTournamentTeamPlaceholders(game.id, teamNames);
+          await generateMatches(
+            game.id,
+            tournamentFormat!,
+            createdTeams.map((t) => ({ id: t.id, name: t.name }))
+          );
         }
       } else {
         // Regular games skip the "create a team" step entirely — both teams

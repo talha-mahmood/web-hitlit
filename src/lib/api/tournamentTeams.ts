@@ -65,9 +65,16 @@ export async function createTeam(
 // (see requestToJoinTeam) the same way they'd join a team someone else
 // already created. sort_order preserves the host's entry order for fixture
 // pairing, since a single bulk insert can give every row the same created_at.
+// `poolIds`, when given, assigns each team's group at insert time (index-
+// aligned with `teamNames`) — used for POOL-format tournaments so matches
+// can be generated immediately without a separate "assign to group" step.
+// This bypasses the enforce_pool_assignment trigger entirely (it only fires
+// BEFORE UPDATE, not INSERT), which is fine here since this whole function
+// already only runs as part of the host's own tournament-creation flow.
 export async function createTournamentTeamPlaceholders(
   gameId: string,
-  teamNames: string[]
+  teamNames: string[],
+  poolIds?: (string | null)[]
 ): Promise<TeamRow[]> {
   const { data, error } = await supabase
     .from("tournament_teams")
@@ -78,6 +85,7 @@ export async function createTournamentTeamPlaceholders(
         captain_id: null,
         status: "FORMING" as const,
         sort_order: i,
+        pool_id: poolIds?.[i] ?? null,
       }))
     )
     .select();
