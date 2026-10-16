@@ -36,6 +36,9 @@ import { describeBallCommentary, computePartnerships, computePlayerOfTheMatch } 
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 import ScoringCodeBadge from "../../components/ScoringCodeBadge";
 import GradientFill from "../../components/GradientFill";
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+import MatchSummaryShareCard, { type ShareCardInningsEntry } from "../../components/MatchSummaryShareCard";
 import { resourcePercent, computeDuckworthLewis } from "../../lib/duckworthLewis";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
@@ -389,12 +392,14 @@ function SummaryTab({
   onShareReport,
   generatingReport,
   onShareSummary,
+  generatingSummaryImage,
 }: {
   match: CricketMatchDetail;
   scorecardInnings: ScorecardInningsEntry[];
   onShareReport: () => void;
   generatingReport: boolean;
   onShareSummary: () => void;
+  generatingSummaryImage: boolean;
 }) {
   if (scorecardInnings.length === 0) {
     return (
@@ -508,11 +513,18 @@ function SummaryTab({
       </Pressable>
       <Pressable
         onPress={onShareSummary}
+        disabled={generatingSummaryImage}
         className="flex-row items-center justify-center rounded-2xl py-3.5"
         style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}
       >
-        <Ionicons name="share-social-outline" size={18} color={colors.ink} />
-        <Text className="font-semibold text-sm" style={{ color: colors.ink }}>Share Match Summary</Text>
+        {generatingSummaryImage ? (
+          <ActivityIndicator size="small" color={colors.ink} />
+        ) : (
+          <>
+            <Ionicons name="share-social-outline" size={18} color={colors.ink} />
+            <Text className="font-semibold text-sm" style={{ color: colors.ink }}>Share Match Summary</Text>
+          </>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -1219,6 +1231,8 @@ export default function LiveScoringScreen() {
   const profile = useProfileStore((s) => s.profile);
   const isScorer = !!currentUserId && !!match && currentUserId === match.user_id;
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [generatingSummaryImage, setGeneratingSummaryImage] = useState(false);
+  const shareCardRef = useRef<View>(null);
 
   // Live push for every viewer (not just the scorer) — a ball the scorer
   // just added, an innings starting/completing, or a match-level settings
@@ -1961,19 +1975,54 @@ export default function LiveScoringScreen() {
     }).catch(() => {});
   };
 
-  // Plain-text version of the Summary tab (final scores, result, Player of
-  // the Match) — same Share.share mechanism as handleShare above, just a
-  // richer composed message instead of the scoring-code invite.
-  const handleShareMatchSummary = () => {
-    const potm = computePlayerOfTheMatch(scorecardInnings);
-    const lines = [
-      `${match.team_a_name} vs ${match.team_b_name}`,
-      ...scorecardInnings.map((si) => `${si.teamName}: ${si.state.runs}/${si.state.wickets} (${formatOvers(si.state.legalBalls)} ov)`),
-      match.result_summary ?? "",
-      potm ? `Player of the Match: ${potm}` : "",
-    ].filter(Boolean);
-    Share.share({ message: lines.join("\n") }).catch(() => {});
+  // Renders the same figures as the Summary tab onto the off-screen
+  // MatchSummaryShareCard (see its render below), rasterizes that view with
+  // react-native-view-shot, and shares the resulting PNG — an image instead
+  // of a text message, per the design the card matches.
+  const handleShareMatchSummary = async () => {
+    if (!shareCardRef.current || generatingSummaryImage) return;
+    setGeneratingSummaryImage(true);
+    try {
+      const uri = await captureRef(shareCardRef, { format: "png", quality: 1 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "Share Match Summary" });
+      } else {
+        await Share.share({ url: uri });
+      }
+    } catch (err) {
+      Alert.alert("Error", friendlyCricketError(err, "Could not generate the match summary image."));
+    } finally {
+      setGeneratingSummaryImage(false);
+    }
   };
+
+  const shareCardInnings: ShareCardInningsEntry[] = scorecardInnings.map((si) => {
+    const opposing = scorecardInnings.find((o) => o.inn.id !== si.inn.id);
+    const topBatters = si.state.battingOrder
+      .map((n) => si.state.battingStats[n])
+      .sort((a, b) => b.runs - a.runs)
+      .slice(0, 3)
+      .map((b) => ({ name: b.name, statLabel: `${b.runs} (${b.balls})` }));
+    const topBowlers = opposing
+      ? opposing.state.bowlingOrder
+          .map((n) => opposing.state.bowlingStats[n])
+          .sort((a, b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded)
+          .slice(0, 3)
+          .map((b) => ({ name: b.name, statLabel: `${b.wickets} - ${b.runsConceded}` }))
+      : [];
+    return {
+      teamName: si.teamName,
+      score: `${si.state.runs}-${si.state.wickets}`,
+      oversLabel: formatOvers(si.state.legalBalls),
+      topBatters,
+      topBowlers,
+    };
+  });
+  const shareCardDate = new Date(match.completed_at ?? match.created_at).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
   // Real partnership (runs/balls added since the last wicket fell by this
   // pair) — derived the same replay-based way as everything else, not a
@@ -2858,7 +2907,14 @@ export default function LiveScoringScreen() {
           )}
         </ScrollView>
       ) : matchCentreTab === "summary" ? (
-        <SummaryTab match={match} scorecardInnings={scorecardInnings} onShareReport={handleGenerateMatchReport} generatingReport={generatingReport} onShareSummary={handleShareMatchSummary} />
+        <SummaryTab
+          match={match}
+          scorecardInnings={scorecardInnings}
+          onShareReport={handleGenerateMatchReport}
+          generatingReport={generatingReport}
+          onShareSummary={handleShareMatchSummary}
+          generatingSummaryImage={generatingSummaryImage}
+        />
       ) : matchCentreTab === "balls" ? (
         <BallsTab
           match={match}
@@ -3082,6 +3138,28 @@ export default function LiveScoringScreen() {
           onConfirm={handleConfirmRainDLChase}
           onCancel={() => setDialog(null)}
         />
+      )}
+
+      {/* Off-screen — never visible, just captured by handleShareMatchSummary
+          via react-native-view-shot. A zero-height/overflow-hidden wrapper
+          looks like it should do the same job, but on-device it made
+          ViewShot fail to capture anything (a clipped, never-composited
+          view isn't reliably rasterizable) — position: "absolute" +
+          opacity: 0 keeps it out of sight without taking it out of the
+          actual render tree, which ViewShot needs. collapsable={false} on
+          the card itself stops Android from flattening the node ViewShot
+          needs a real handle to. */}
+      {scorecardInnings.length > 0 && (
+        <View style={{ position: "absolute", top: 0, left: 0, opacity: 0 }} pointerEvents="none">
+          <MatchSummaryShareCard
+            ref={shareCardRef}
+            scoringCode={match.scoring_code ?? ""}
+            innings={shareCardInnings}
+            resultSummary={match.result_summary ?? ""}
+            playerOfTheMatch={computePlayerOfTheMatch(scorecardInnings)}
+            dateLabel={shareCardDate}
+          />
+        </View>
       )}
     </View>
   );
