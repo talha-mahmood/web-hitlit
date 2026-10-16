@@ -714,7 +714,7 @@ function MatchesPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isEligible={!!m.team_a && !!m.team_b}
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
@@ -1081,7 +1081,7 @@ function PoolMatchesPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isEligible={!!m.team_a && !!m.team_b}
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
@@ -1272,7 +1272,7 @@ function PoolPlayoffPanel({
                   key={m.id}
                   match={m}
                   matchNumber={mi + 1}
-                  isEligible={isVenueBooked && !!m.team_a && !!m.team_b}
+                  isEligible={!!m.team_a && !!m.team_b}
                   isHost={isHost}
                   isAssignedScorer={!!currentUserId && m.scorer_user_id === currentUserId}
                   scorerName={getScorerName(m)}
@@ -1390,6 +1390,16 @@ export default function TournamentMatchesScreen() {
   const approvedTeamsFull = teams.filter((t) => t.status === "APPROVED");
   const approvedTeams = approvedTeamsFull.map((t) => ({ id: t.id, name: t.name }));
   const activeTeams = teams.filter((t) => t.status !== "REJECTED");
+  // Every team *slot* (placeholder "Team A"/"Team B"/...) already exists from
+  // the moment the tournament is created — see createTournamentTeamPlaceholders
+  // — only each slot's roster fills in over time. So match *generation* (who
+  // plays whom) only needs every slot to exist, not every slot to be fully
+  // filled/approved yet: the pairing is by team id, which never changes as
+  // members join. Whether a given match can actually be *scored* is a
+  // separate, per-match check at the moment the host taps in (see
+  // teamIsReadyToScore / handleGoToScorecard below).
+  const teamsForGeneration = activeTeams.map((t) => ({ id: t.id, name: t.name }));
+  const teamStatusById = new Map(teams.map((t) => [t.id, t.status]));
   const requiredTeams = game.number_of_teams ?? 0;
   const hasMatches = (matches?.length ?? 0) > 0;
   const isPoolFormat = game.tournament_format === "POOL";
@@ -1448,10 +1458,15 @@ export default function TournamentMatchesScreen() {
   };
 
   const handleViewMatchDetails = (match: TournamentMatch) => {
+    const bothTeamsReady =
+      !!match.team_a &&
+      !!match.team_b &&
+      teamStatusById.get(match.team_a.id) === "APPROVED" &&
+      teamStatusById.get(match.team_b.id) === "APPROVED";
     const reason = !match.team_a || !match.team_b
       ? "Waiting for both teams to be decided."
-      : !isVenueBooked
-        ? "Waiting for the venue to be booked."
+      : !bothTeamsReady
+        ? "Waiting for both teams' rosters to be filled and approved."
         : "Waiting for a scorer to be assigned.";
     Alert.alert(
       `${match.team_a?.name ?? "TBD"} vs ${match.team_b?.name ?? "Bye"}`,
@@ -1536,9 +1551,33 @@ export default function TournamentMatchesScreen() {
     };
   };
 
+  // Match cards (and their scoring buttons) show immediately once a match
+  // exists — team slots are created up front at tournament creation (see
+  // teamsForGeneration above), so there's no need to wait on roster fill
+  // status to see the card. Whether a *specific* match can actually be
+  // scored still depends on both its own teams having a full, approved
+  // roster (auto_approve_full_team flips a team to APPROVED once its
+  // roster is complete) — checked here, at the moment the host taps in,
+  // rather than hiding the buttons in advance.
+  const teamsReadyToScore = (match: TournamentMatch): boolean =>
+    !!match.team_a &&
+    !!match.team_b &&
+    teamStatusById.get(match.team_a.id) === "APPROVED" &&
+    teamStatusById.get(match.team_b.id) === "APPROVED";
+
+  const requireTeamsReady = (match: TournamentMatch): boolean => {
+    if (teamsReadyToScore(match)) return true;
+    Alert.alert(
+      "Complete the team members",
+      "Both teams in this match need their full roster filled and approved before you can start scoring it."
+    );
+    return false;
+  };
+
   // A draw is only a valid result in a league's group stage / a pool's group
   // matches — every bracket match needs a winner.
   const handleEnterScoreManually = (match: TournamentMatch) => {
+    if (!requireTeamsReady(match)) return;
     const prefill = buildPrefill(match);
     const manualSport = manualSportForName(sportName);
     if (!prefill || !manualSport) return;
@@ -1547,6 +1586,7 @@ export default function TournamentMatchesScreen() {
   };
 
   const handleGoToScorecard = (match: TournamentMatch) => {
+    if (!requireTeamsReady(match)) return;
     const prefill = buildPrefill(match);
     if (!prefill) return;
 
@@ -1809,14 +1849,14 @@ export default function TournamentMatchesScreen() {
             <GroupsPanel
               gameId={game.id}
               pools={pools ?? []}
-              approvedTeams={approvedTeamsFull}
+              approvedTeams={activeTeams}
               requiredTeams={requiredTeams}
               isHost={isHost}
             />
             <PoolMatchesPanel
               gameId={game.id}
               pools={pools ?? []}
-              approvedTeams={approvedTeamsFull}
+              approvedTeams={activeTeams}
               requiredTeams={requiredTeams}
               isHost={isHost}
               isVenueBooked={isVenueBooked}
@@ -1836,7 +1876,7 @@ export default function TournamentMatchesScreen() {
             <PoolPlayoffPanel
               gameId={game.id}
               pools={pools ?? []}
-              approvedTeams={approvedTeamsFull}
+              approvedTeams={activeTeams}
               requiredTeams={requiredTeams}
               isHost={isHost}
               isVenueBooked={isVenueBooked}
@@ -1869,7 +1909,7 @@ export default function TournamentMatchesScreen() {
               <MatchesPanel
                 gameId={game.id}
                 format={game.tournament_format}
-                approvedTeams={approvedTeams}
+                approvedTeams={teamsForGeneration}
                 requiredTeams={requiredTeams}
                 isHost={isHost}
                 isVenueBooked={isVenueBooked}
