@@ -1994,6 +1994,18 @@ export default function LiveScoringScreen() {
   // renders) — and grouping a single innings' balls is cheap enough that it
   // doesn't need memoizing anyway.
   const ballsByOver = groupBallsByOver(ballEvents);
+  // The "Overs so far" strip below groups by recorded balls alone, so a
+  // just-completed over's 6th ball leaves nothing to show the new one until
+  // its own first ball is recorded — the scorer picks the new over's bowler
+  // in the meantime and sees the old, finished over sitting there instead.
+  // Once everything needed to start the new over is in place (readyToScore)
+  // and the last recorded over is actually full, add its own empty page so
+  // the new over shows instantly instead of waiting on its first ball.
+  const lastOverLegalBalls = (ballsByOver[ballsByOver.length - 1] ?? []).filter(
+    (b) => b.extraType !== "WIDE" && b.extraType !== "NOBALL" && b.extraType !== "PENALTY"
+  ).length;
+  const displayOvers =
+    readyToScore && lastOverLegalBalls >= 6 ? [...ballsByOver, []] : ballsByOver;
 
   const runsNeeded = target && inningsState ? Math.max(target - inningsState.runs, 0) : null;
   const ballsLeft = target && inningsState ? Math.max(match.overs_limit * 6 - inningsState.legalBalls, 0) : null;
@@ -2275,7 +2287,7 @@ export default function LiveScoringScreen() {
                     tab: exactly one over visible at a time, no balls from
                     the previous or next over peeking in. Starts on the
                     current over, with its most recent ball highlighted. */}
-                {ballsByOver.length > 0 && (
+                {displayOvers.length > 0 && (
                   <ScrollView
                     ref={mainOverScrollRef}
                     horizontal
@@ -2283,10 +2295,10 @@ export default function LiveScoringScreen() {
                     showsHorizontalScrollIndicator={false}
                     className="mt-4"
                     onContentSizeChange={() =>
-                      mainOverScrollRef.current?.scrollTo({ x: (ballsByOver.length - 1) * (screenWidth - 32), animated: true })
+                      mainOverScrollRef.current?.scrollTo({ x: (displayOvers.length - 1) * (screenWidth - 32), animated: true })
                     }
                   >
-                    {ballsByOver.map((over, overIndex) => (
+                    {displayOvers.map((over, overIndex) => (
                       <View key={overIndex} style={{ width: screenWidth - 32 }}>
                         <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
                         <View className="flex-row" style={{ gap: 8 }}>
