@@ -22,35 +22,12 @@ import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
-import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
-import PhoneNumberField from "../../components/PhoneNumberField";
 import FieldInput from "../../components/FieldInput";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "AccountSettings">;
-
-const PAKISTAN_DIAL = "+92";
-
-function maxDigitsFor(dial: string): number {
-  return dial === PAKISTAN_DIAL ? 10 : 14;
-}
-
-function isPhoneDigitsValid(dial: string, digits: string): boolean {
-  return dial === PAKISTAN_DIAL ? digits.length === 10 : digits.length >= 9 && digits.length <= 14;
-}
-
-// A stored phone is just "<dial><digits>" with no separator — recover the
-// two parts by matching against the known dial codes, longest prefix first
-// so e.g. "+971..." isn't mistaken for a shorter code that happens to be a
-// prefix of it.
-function splitPhone(phone: string | null): { dial: string; number: string } {
-  if (!phone) return { dial: DEFAULT_COUNTRY_CODE.dial, number: "" };
-  const match = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length).find((c) => phone.startsWith(c.dial));
-  if (!match) return { dial: DEFAULT_COUNTRY_CODE.dial, number: phone.replace(/[^0-9]/g, "") };
-  return { dial: match.dial, number: phone.slice(match.dial.length) };
-}
 
 function SectionCard({
   icon,
@@ -93,16 +70,12 @@ export default function AccountSettingsScreen() {
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const userId = useAuthStore((s) => s.session?.user.id);
 
-  const initialPhone = splitPhone(profile?.phone ?? null);
   const [name, setName] = useState(profile?.full_name ?? "");
   const [savingName, setSavingName] = useState(false);
   const [jerseyNumber, setJerseyNumber] = useState(
     profile?.jersey_number != null ? String(profile.jersey_number) : ""
   );
   const [savingJersey, setSavingJersey] = useState(false);
-  const [phoneDial, setPhoneDial] = useState(initialPhone.dial);
-  const [phoneNumber, setPhoneNumber] = useState(initialPhone.number);
-  const [savingPhone, setSavingPhone] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -115,14 +88,6 @@ export default function AccountSettingsScreen() {
 
   const jerseyChanged = jerseyNumber !== (profile?.jersey_number != null ? String(profile.jersey_number) : "");
   const jerseyValid = jerseyNumber === "" || /^\d{1,3}$/.test(jerseyNumber);
-
-  const phoneChanged = `${phoneDial}${phoneNumber}` !== (profile?.phone ?? "");
-  const phoneValid = isPhoneDigitsValid(phoneDial, phoneNumber);
-
-  const handleChangeDial = (dial: string) => {
-    setPhoneDial(dial);
-    setPhoneNumber((prev) => prev.slice(0, maxDigitsFor(dial)));
-  };
 
   const handleSaveName = async () => {
     if (!userId || !nameValid) return;
@@ -147,19 +112,6 @@ export default function AccountSettingsScreen() {
       Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
     } finally {
       setSavingJersey(false);
-    }
-  };
-
-  const handleSavePhone = async () => {
-    if (!userId || !phoneValid) return;
-    setSavingPhone(true);
-    try {
-      await updateProfile(userId, { phone: `${phoneDial}${phoneNumber}` });
-      Alert.alert("Saved", "Your phone number has been updated.");
-    } catch (err) {
-      Alert.alert("Could not save", getFriendlyErrorMessage(err, "Something went wrong."));
-    } finally {
-      setSavingPhone(false);
     }
   };
 
@@ -296,35 +248,6 @@ export default function AccountSettingsScreen() {
             ) : (
               <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
                 <Text className="font-bold text-muted">Save Jersey Number</Text>
-              </View>
-            )}
-          </Pressable>
-        </SectionCard>
-
-        <SectionCard
-          icon="call-outline"
-          title="Phone Number"
-          subtitle="Change your phone number"
-        >
-          <PhoneNumberField
-            dial={phoneDial}
-            onChangeDial={handleChangeDial}
-            number={phoneNumber}
-            onChangeNumber={setPhoneNumber}
-            maxDigits={maxDigitsFor(phoneDial)}
-          />
-          <Pressable onPress={handleSavePhone} disabled={!phoneChanged || !phoneValid || savingPhone}>
-            {phoneChanged && phoneValid ? (
-              <GradientFill className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3">
-                {savingPhone ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="font-bold text-white">Save Phone Number</Text>
-                )}
-              </GradientFill>
-            ) : (
-              <View className="relative rounded-2xl py-3.5 flex-row items-center justify-center mt-3 bg-gray-200">
-                <Text className="font-bold text-muted">Save Phone Number</Text>
               </View>
             )}
           </Pressable>
