@@ -57,11 +57,17 @@ export default function BookingsDateRangeModal({
   initialSelection,
   onClose,
   onSave,
+  onClear,
 }: {
   visible: boolean;
   initialSelection: DateSelection | null;
   onClose: () => void;
   onSave: (selection: DateSelection) => void;
+  // Optional — this same sheet is also used for a required, always-set date
+  // (the admin Bookings tab), where "no date" isn't a meaningful state. Only
+  // passed where a date range is an actual optional filter (the Games
+  // list's own Date filter); the Clear link only renders when it's given.
+  onClear?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const [start, setStart] = useState<string | null>(initialSelection?.start ?? null);
@@ -114,9 +120,18 @@ export default function BookingsDateRangeModal({
             <Pressable onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={24} color="white" />
             </Pressable>
-            <Pressable onPress={handleSave} hitSlop={10}>
-              <Text className="text-white font-bold text-sm">SAVE</Text>
-            </Pressable>
+            <View className="flex-row items-center" style={{ gap: 18 }}>
+              {onClear && start && (
+                <Pressable onPress={onClear} hitSlop={10}>
+                  <Text className="text-white font-semibold text-sm" style={{ opacity: 0.85 }}>
+                    Clear
+                  </Text>
+                </Pressable>
+              )}
+              <Pressable onPress={handleSave} hitSlop={10}>
+                <Text className="text-white font-bold text-sm">SAVE</Text>
+              </Pressable>
+            </View>
           </View>
           <Text className="text-white/80 text-xs font-semibold" style={{ letterSpacing: 1 }}>
             SELECTED {start && start !== (end ?? start) ? "RANGE" : "DAY"}

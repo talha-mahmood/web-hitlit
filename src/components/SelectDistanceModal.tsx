@@ -118,9 +118,18 @@ export default function SelectDistanceModal({
             })}
           </ScrollView>
 
-          <View className="px-5 pt-3">
-            <Pressable onPress={() => onApply(draft)} style={primaryButtonShadow}>
-              <GradientFill className="items-center rounded-2xl py-4">
+          <View className="px-5 pt-3 flex-row" style={{ gap: 10 }}>
+            <Pressable
+              onPress={() => onApply(null)}
+              className="flex-1 items-center justify-center rounded-2xl"
+              style={{ height: 52, backgroundColor: "white", borderWidth: 1.5, borderColor: colors.border }}
+            >
+              <Text className="text-ink font-bold" style={{ fontSize: 16 }}>
+                Clear
+              </Text>
+            </Pressable>
+            <Pressable onPress={() => onApply(draft)} style={[{ flex: 1 }, primaryButtonShadow]}>
+              <GradientFill className="items-center justify-center rounded-2xl" style={{ height: 52 }}>
                 <Text className="text-white font-bold" style={{ fontSize: 16 }}>
                   Apply Filter
                 </Text>

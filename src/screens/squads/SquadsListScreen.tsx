@@ -397,7 +397,9 @@ export default function SquadsListScreen() {
                   key={p.key}
                   onPress={() => {
                     setDistanceOpen(false);
-                    setListFilter(p.key);
+                    // Tapping the already-active pill again clears it back
+                    // to "All" instead of re-selecting itself.
+                    setListFilter(active && p.key !== "all" ? "all" : p.key);
                   }}
                   className="rounded-full"
                   style={{ borderWidth: 1, borderColor: active ? colors.primary : colors.border }}

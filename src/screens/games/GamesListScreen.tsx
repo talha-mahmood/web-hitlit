@@ -622,7 +622,10 @@ export default function GamesListScreen() {
                 key={p.key}
                 onPress={() => {
                   setDistanceOpen(false);
-                  setListFilter(p.key);
+                  // Tapping the already-active pill again clears it back to
+                  // "All" instead of just re-selecting itself — "All" has no
+                  // pill of its own to tap, so it's the natural reset state.
+                  setListFilter(active && p.key !== "all" ? "all" : p.key);
                 }}
                 style={{
                   borderRadius: 999,
@@ -835,6 +838,10 @@ export default function GamesListScreen() {
         onClose={() => setTimeModalOpen(false)}
         onSave={(selection) => {
           setTimeRange(selection);
+          setTimeModalOpen(false);
+        }}
+        onClear={() => {
+          setTimeRange(null);
           setTimeModalOpen(false);
         }}
       />

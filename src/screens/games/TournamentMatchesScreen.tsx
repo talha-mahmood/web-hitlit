@@ -1791,7 +1791,14 @@ export default function TournamentMatchesScreen() {
             ).map((f) => {
               const selected = statusFilter === f.key;
               return (
-                <Pressable key={f.key} onPress={() => setStatusFilter(f.key)}>
+                <Pressable
+                  key={f.key}
+                  onPress={() =>
+                    // Tapping the already-active pill again clears it back
+                    // to "All" instead of re-selecting itself.
+                    setStatusFilter(selected && f.key !== "ALL" ? "ALL" : f.key)
+                  }
+                >
                   {selected ? (
                     <GradientFill className="rounded-full px-4 py-2">
                       <Text className="text-white text-xs font-bold">{f.label}</Text>
