@@ -92,7 +92,7 @@ function ImageCard({
             className="text-ink font-extrabold"
             style={{
               fontSize: 18,
-              lineHeight: 16,
+              lineHeight: 22,
               width: width - 20,
               textTransform: "uppercase",
             }}
