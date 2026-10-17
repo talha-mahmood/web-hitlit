@@ -6,6 +6,7 @@ import { getSportIcon } from "../lib/sportIcons";
 import { isCricketFamily } from "../lib/api/sports";
 import { colors, cardShadow } from "../constants/theme";
 import GradientFill from "./GradientFill";
+import { SkeletonBlock } from "./Skeleton";
 
 // The white stat cards shown on both the Profile screen (your own numbers) and
 // a player's Top Players detail page (theirs): rating, Games Win, the stat
@@ -237,7 +238,10 @@ export default function PlayerStatCards({
         </View>
 
         {isLoading ? (
-          <ActivityIndicator color={colors.primary} className="my-8" />
+          <View className="flex-row mb-6" style={{ gap: 12 }}>
+            <SkeletonBlock height={88} borderRadius={16} style={{ flex: 1 }} />
+            <SkeletonBlock height={88} borderRadius={16} style={{ flex: 1 }} />
+          </View>
         ) : (
           <>
             {/* Games Win + Followers — two compact cards side by side, right under the rating card */}

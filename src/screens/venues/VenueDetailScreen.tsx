@@ -24,6 +24,7 @@ import { getVenuePhoto } from "../../lib/venuePhotos";
 import { useMarkGameVenueContacted } from "../../hooks/useGames";
 import { colors, cardShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
+import { SkeletonDetailHeader } from "../../components/Skeleton";
 
 type VenueDetailParams = { VenueDetail: { venueId: string; forGameId?: string } };
 type VenueDetailNav = NativeStackNavigationProp<VenuesStackParamList, "VenueDetail">;
@@ -69,8 +70,8 @@ export default function VenueDetailScreen() {
 
   if (isLoading || !venue) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color={colors.primary} />
+      <View className="flex-1 bg-white px-4 pt-4">
+        <SkeletonDetailHeader />
       </View>
     );
   }

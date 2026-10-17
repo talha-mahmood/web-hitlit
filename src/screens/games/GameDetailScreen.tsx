@@ -39,6 +39,7 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { addMinutesWithOverflow } from "../../lib/gameFormHelpers";
 import WaveDivider from "../../components/WaveDivider";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonDetailHeader } from "../../components/Skeleton";
 
 type DetailRoute = RouteProp<GamesStackParamList, "GameDetail">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameDetail">;
@@ -314,8 +315,8 @@ export default function GameDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator color={colors.primary} />
+      <View className="flex-1 bg-white px-4 pt-4">
+        <SkeletonDetailHeader />
       </View>
     );
   }

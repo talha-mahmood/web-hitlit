@@ -28,6 +28,7 @@ import WavingHandIcon from "../../components/WavingHandIcon";
 import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
+import { SkeletonBlock, SkeletonCardRows } from "../../components/Skeleton";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -102,7 +103,14 @@ function NearbySection<T>({
         </Pressable>
       </View>
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} />
+        horizontal ? (
+          <View className="flex-row" style={{ gap: 10 }}>
+            <SkeletonBlock width={160} height={120} borderRadius={16} />
+            <SkeletonBlock width={160} height={120} borderRadius={16} />
+          </View>
+        ) : (
+          <SkeletonCardRows count={2} />
+        )
       ) : data.length === 0 ? (
         <NearbyEmptyRow icon={emptyIcon} label={emptyLabel} />
       ) : horizontal ? (

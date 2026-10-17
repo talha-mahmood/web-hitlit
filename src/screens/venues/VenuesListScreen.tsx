@@ -20,6 +20,7 @@ import SelectDistanceModal from "../../components/SelectDistanceModal";
 import SelectPriceModal, { type PriceRange } from "../../components/SelectPriceModal";
 import SelectLocationModal from "../../components/SelectLocationModal";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
@@ -423,7 +424,9 @@ export default function VenuesListScreen() {
       />
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-3.5 pt-1">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={venues ?? []}

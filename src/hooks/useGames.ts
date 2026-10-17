@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchGames,
   fetchGameDetail,
@@ -34,6 +34,10 @@ export function useGames(
     queryKey: ["games", filters],
     queryFn: () => fetchGames(filters),
     staleTime: 30_000,
+    // Every filter combo is its own query key with no data of its own yet —
+    // without this, changing a filter would flash the list behind a loading
+    // state instead of just quietly swapping it once the new results land.
+    placeholderData: keepPreviousData,
   });
 
   // A game being created, cancelled, or expiring off the list (cron

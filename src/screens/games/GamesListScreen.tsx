@@ -34,6 +34,7 @@ import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm } from "../../lib/distance";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GamesList">;
 type GamesListRoute = RouteProp<GamesStackParamList, "GamesList">;
@@ -834,7 +835,9 @@ export default function GamesListScreen() {
 
       {/* Games list */}
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-10" />
+        <View className="px-3.5 pt-1">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={games ?? []}

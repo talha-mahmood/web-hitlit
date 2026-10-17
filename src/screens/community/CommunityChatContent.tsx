@@ -22,6 +22,7 @@ import type { Mention } from "../../lib/mentionParser";
 import { shareComment } from "../../lib/commentShareLink";
 import PollCreateModal from "../../components/PollCreateModal";
 import PollMessageCard from "../../components/PollMessageCard";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { useCreatePoll } from "../../hooks/usePolls";
 
 function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: string | null; size?: number }) {
@@ -272,7 +273,9 @@ export default function CommunityChatContent({
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="p-4">
+          <SkeletonCardRows />
+        </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2">Couldn't load comments</Text>

@@ -35,6 +35,7 @@ import InviteUsersModal from "../../components/InviteUsersModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import WaveDivider from "../../components/WaveDivider";
+import { SkeletonDetailHeader } from "../../components/Skeleton";
 import type { Database } from "../../types/database.types";
 import { SQUAD_SKILL_COLORS } from "../../lib/badgeColors";
 import { getSportIcon } from "../../lib/sportIcons";
@@ -306,8 +307,8 @@ export default function SquadDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator color={colors.primary} />
+      <View className="flex-1 bg-white px-4 pt-4">
+        <SkeletonDetailHeader />
       </View>
     );
   }

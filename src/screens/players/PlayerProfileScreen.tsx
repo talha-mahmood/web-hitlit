@@ -32,6 +32,7 @@ import PlayerSportTournaments from "../../components/PlayerSportTournaments";
 import PlayerSportClubs from "../../components/PlayerSportClubs";
 import PlayerSportInsights from "../../components/PlayerSportInsights";
 import PlayerSportCompare from "../../components/PlayerSportCompare";
+import { SkeletonDetailHeader } from "../../components/Skeleton";
 import { classifySportKind, type GenericSport } from "../../lib/genericSportStats";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
@@ -243,7 +244,9 @@ export default function PlayerProfileScreen() {
       />
 
       {isLoading || !player ? (
-        <ActivityIndicator color={colors.primary} className="mt-10" />
+        <View className="px-5 pt-4">
+          <SkeletonDetailHeader />
+        </View>
       ) : (
         <>
           {hasActiveSportData ? (

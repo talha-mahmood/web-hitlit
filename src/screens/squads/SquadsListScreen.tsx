@@ -20,6 +20,7 @@ import Bouncy from "../../components/Bouncy";
 import AvatarStack from "../../components/AvatarStack";
 import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import type { SquadListItem, SquadGroupType } from "../../lib/api/squads";
 import type { Database } from "../../types/database.types";
@@ -568,7 +569,9 @@ export default function SquadsListScreen() {
 
       {/* Squads list */}
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-10" />
+        <View className="px-3.5 pt-1">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={squads ?? []}

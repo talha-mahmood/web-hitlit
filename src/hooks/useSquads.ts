@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   fetchSquads,
   fetchSquadDetail,
@@ -24,6 +24,8 @@ export function useSquads(filters: { search?: string; sportId?: string } = {}) {
     queryKey: ["squads", filters],
     queryFn: () => fetchSquads(filters),
     staleTime: 30_000,
+    // See useGames' identical comment — same filter-change flash otherwise.
+    placeholderData: keepPreviousData,
   });
 
   // A squad being created or disbanded should show up (or disappear)
