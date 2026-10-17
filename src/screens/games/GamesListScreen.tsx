@@ -444,7 +444,9 @@ export default function GamesListScreen() {
           )
       )
     : upcomingOnlyFilter
-    ? (locationFiltered ?? []).filter((g) => !hasGameEnded(g.game_date, g.end_date, g.end_time))
+    ? (locationFiltered ?? []).filter(
+        (g) => !hasGameEnded(g.game_date, g.end_date, g.end_time) && !isGameLive(g.game_date, g.start_time, g.end_date, g.end_time)
+      )
     : liveOnlyFilter
     ? (locationFiltered ?? []).filter((g) => isGameLive(g.game_date, g.start_time, g.end_date, g.end_time))
     : completedOnlyFilter
