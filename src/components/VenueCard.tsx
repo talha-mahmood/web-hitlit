@@ -75,33 +75,35 @@ export default function VenueCard({
     >
       <View className="bg-white rounded-2xl border border-border overflow-hidden">
         <View className="relative">
+          {/* Landscape, not square — this card's width (home screen: ~48% of
+              the device width) made a flat h-36 read as near-square. */}
           {coverImage ? (
-            <Image source={{ uri: coverImage }} className="w-full h-36" resizeMode="cover" />
+            <Image source={{ uri: coverImage }} className="w-full h-24" resizeMode="cover" />
           ) : sportFallbackImage ? (
-            <Image source={sportFallbackImage} className="w-full h-36" resizeMode="cover" />
+            <Image source={sportFallbackImage} className="w-full h-24" resizeMode="cover" />
           ) : (
-            <View className="w-full h-36 bg-primary-light" />
+            <View className="w-full h-24 bg-primary-light" />
           )}
           {showFavorite && (
             <Bouncy
               onPress={onToggleFavorite}
               scaleTo={0.75}
-              className="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 items-center justify-center"
+              className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full bg-white/90 items-center justify-center"
             >
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
-                size={18}
+                size={16}
                 color={isFavorite ? colors.danger : colors.ink}
-                margin={9}
+                margin={8}
               />
             </Bouncy>
           )}
           {minimal && (
             <View
               className="absolute flex-row items-center bg-black/60 rounded-full"
-              style={{ left: 8, bottom: 8, paddingHorizontal: 8, paddingVertical: 4, gap: 4 }}
+              style={{ left: 6, bottom: 6, paddingHorizontal: 7, paddingVertical: 3, gap: 3 }}
             >
-              <Ionicons name="star" size={12} color={colors.warning} />
+              <Ionicons name="star" size={11} color={colors.warning} />
               <Text className="text-white text-xs font-bold">
                 {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
               </Text>
@@ -110,7 +112,7 @@ export default function VenueCard({
           {minimal && distanceLabel ? (
             <View
               className="absolute bg-black/60 rounded-full"
-              style={{ left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4 }}
+              style={{ left: 6, top: 6, paddingHorizontal: 7, paddingVertical: 3 }}
             >
               <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
             </View>
@@ -121,9 +123,9 @@ export default function VenueCard({
             </View>
           ) : null}
         </View>
-        <View className="p-3">
+        <View className="p-2.5">
           <View className="flex-row items-center justify-between">
-            <Text className="text-ink font-semibold text-base flex-1" numberOfLines={1}>
+            <Text className="text-ink font-semibold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
               {venue.name}
             </Text>
             {!minimal && (

@@ -42,7 +42,7 @@ export type PromoSlide = {
 // screen-edge-to-edge, etc.), so this component makes no assumption about
 // its own placement/padding.
 const FALLBACK_WIDTH = Dimensions.get("window").width - 28;
-const CARD_HEIGHT = 172;
+const CARD_HEIGHT = 132;
 const AUTO_ADVANCE_MS = 4500;
 
 function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
@@ -67,7 +67,7 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ width, height: CARD_HEIGHT }}
-        className="rounded-3xl overflow-hidden px-6 py-5 justify-between"
+        className="rounded-3xl overflow-hidden px-5 py-4 justify-between"
       >
       {/* Soft translucent "glow" shapes layer on top of the background for
           extra depth. */}
@@ -75,58 +75,58 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
         pointerEvents="none"
         style={{
           position: "absolute",
-          width: 240,
-          height: 240,
-          borderRadius: 120,
+          width: 185,
+          height: 185,
+          borderRadius: 93,
           backgroundColor: slide.accentColor,
           opacity: 0.16,
-          top: -90,
-          right: -70,
+          top: -70,
+          right: -55,
         }}
       />
       <View
         pointerEvents="none"
         style={{
           position: "absolute",
-          width: 150,
-          height: 150,
-          borderRadius: 75,
+          width: 115,
+          height: 115,
+          borderRadius: 58,
           backgroundColor: slide.accentColor,
           opacity: 0.1,
-          bottom: -60,
-          left: -40,
+          bottom: -46,
+          left: -30,
         }}
       />
       <Ionicons
         name={slide.icon}
-        size={104}
+        size={80}
         color={slide.accentColor}
-        style={{ position: "absolute", right: -6, bottom: -14, opacity: 0.16 }}
+        style={{ position: "absolute", right: -5, bottom: -11, opacity: 0.16 }}
       />
 
       <View style={{ maxWidth: "76%" }}>
         <Text
-          style={{ color: slide.accentColor, letterSpacing: 1.4 }}
-          className="text-[11px] font-bold uppercase mb-1.5"
+          style={{ color: slide.accentColor, letterSpacing: 1.2 }}
+          className="text-[10px] font-bold uppercase mb-1"
         >
           HitLit
         </Text>
-        <Text className="text-white text-xl font-extrabold leading-6" numberOfLines={2}>
+        <Text className="text-white text-lg font-extrabold leading-5" numberOfLines={2}>
           {slide.title}
         </Text>
-        <Text className="text-white text-sm mt-1.5 opacity-80" numberOfLines={2}>
+        <Text className="text-white text-xs mt-1 opacity-80" numberOfLines={2}>
           {slide.subtitle}
         </Text>
       </View>
 
       <View
-        className="flex-row items-center self-start rounded-full px-4 py-2"
-        style={{ backgroundColor: slide.accentColor, gap: 6 }}
+        className="flex-row items-center self-start rounded-full px-3.5 py-1.5"
+        style={{ backgroundColor: slide.accentColor, gap: 5 }}
       >
         <Text className="text-xs font-bold" style={{ color: slide.bgColor }}>
           {slide.cta}
         </Text>
-        <Ionicons name="arrow-forward" size={14} color={slide.bgColor} />
+        <Ionicons name="arrow-forward" size={12} color={slide.bgColor} />
       </View>
       </LinearGradient>
     </Pressable>
@@ -164,7 +164,7 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
   if (slides.length === 0) return null;
 
   return (
-    <View className="mb-6" onLayout={handleLayout}>
+    <View className="mb-4" onLayout={handleLayout}>
       <FlatList
         ref={listRef}
         data={slides}
@@ -180,7 +180,7 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
         )}
       />
       {slides.length > 1 && (
-        <View className="flex-row justify-center mt-3" style={{ gap: 6 }}>
+        <View className="flex-row justify-center mt-2" style={{ gap: 5 }}>
           {slides.map((s, i) =>
             i === activeIndex ? (
               <GradientFill key={s.key} style={{ width: 18, height: 6, borderRadius: 3 }} />

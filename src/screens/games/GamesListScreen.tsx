@@ -203,18 +203,18 @@ function GameCard({
           {/* Join/Joined/Requested/Full/hosting CTA — pinned to the top-right
               corner. Nested Bouncy so a tap here doesn't also trigger the
               card's own onPress. */}
-          <View style={{ position: "absolute", top: 16, right: 16, zIndex: 5 }}>
+          <View style={{ position: "absolute", top: 10, right: 10, zIndex: 5 }}>
             {isMyGame ? (
-              <View className="bg-blue-50 rounded-2xl px-3 py-2">
-                <Text className="text-blue-600 font-bold text-sm">{isTournament ? "My Tournament" : "My Game"}</Text>
+              <View className="bg-blue-50 rounded-2xl px-2 py-1">
+                <Text className="text-blue-600 font-bold" style={{ fontSize: 11.5 }}>{isTournament ? "My Tournament" : "My Game"}</Text>
               </View>
             ) : isCompleted ? (
-              <View className="bg-gray-100 rounded-2xl px-3 py-2">
-                <Text className="text-muted font-bold text-sm">Completed</Text>
+              <View className="bg-gray-100 rounded-2xl px-2 py-1">
+                <Text className="text-muted font-bold" style={{ fontSize: 11.5 }}>Completed</Text>
               </View>
             ) : isFull && !hasJoined ? (
-              <View className="bg-red-50 rounded-2xl px-3 py-2">
-                <Text className="text-red-600 font-bold text-sm">Full</Text>
+              <View className="bg-red-50 rounded-2xl px-2 py-1">
+                <Text className="text-red-600 font-bold" style={{ fontSize: 11.5 }}>Full</Text>
               </View>
             ) : (
               <Bouncy
@@ -223,22 +223,22 @@ function GameCard({
               >
                 {hasJoined ? (
                   <View
-                    className="flex-row items-center justify-center bg-green-50 rounded-2xl px-3 py-2"
-                    style={{ gap: 4, minWidth: 78 }}
+                    className="flex-row items-center justify-center bg-green-50 rounded-2xl px-2 py-1"
+                    style={{ gap: 3, minWidth: 60 }}
                   >
-                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                    <Text className="text-primary font-semibold text-sm">Joined</Text>
+                    <Ionicons name="checkmark-circle" size={13} color={colors.primary} />
+                    <Text className="text-primary font-semibold" style={{ fontSize: 11.5 }}>Joined</Text>
                   </View>
                 ) : hasRequested ? (
-                  <View className="items-center justify-center bg-orange-50 rounded-2xl px-3 py-2" style={{ minWidth: 78 }}>
-                    <Text className="text-orange-600 font-semibold text-sm">Requested</Text>
+                  <View className="items-center justify-center bg-orange-50 rounded-2xl px-2 py-1" style={{ minWidth: 60 }}>
+                    <Text className="text-orange-600 font-semibold" style={{ fontSize: 11.5 }}>Requested</Text>
                   </View>
                 ) : (
                   <GradientFill
-                    className="items-center justify-center rounded-2xl px-3 py-2"
-                    style={{ minWidth: 78, ...primaryButtonShadow }}
+                    className="items-center justify-center rounded-2xl px-2 py-1"
+                    style={{ minWidth: 60, ...primaryButtonShadow }}
                   >
-                    <Text className="text-white font-bold text-sm">Join</Text>
+                    <Text className="text-white font-bold" style={{ fontSize: 11.5 }}>Join</Text>
                   </GradientFill>
                 )}
               </Bouncy>
@@ -251,27 +251,27 @@ function GameCard({
             className="items-center justify-center overflow-hidden"
             style={{
               position: "absolute",
-              right: -30,
-              top: 56,
-              width: 128,
-              height: 128,
-              borderRadius: 64,
+              right: -22,
+              top: 32,
+              width: 82,
+              height: 82,
+              borderRadius: 41,
               backgroundColor: "#DCEFE4",
             }}
           >
             {sportPhoto ? (
-              <View style={{ width: 132, height: 74, marginRight: 26, mixBlendMode: "multiply" }}>
+              <View style={{ width: 86, height: 48, marginRight: 17, mixBlendMode: "multiply" }}>
                 <Image source={sportPhoto} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
               </View>
             ) : (
-              <MaterialCommunityIcons name={sportGlyph.icon} size={54} color={sportGlyph.fg} style={{ marginRight: 26, opacity: 0.8 }} />
+              <MaterialCommunityIcons name={sportGlyph.icon} size={35} color={sportGlyph.fg} style={{ marginRight: 17, opacity: 0.8 }} />
             )}
           </View>
 
-          <View className="px-4 pt-4 pb-4">
+          <View className="px-2.5 pt-2 pb-2">
             {/* Row 1: Icon (if the host set a custom one) + Title — kept clear
                 of the corner CTA via a wider right gutter, one line. */}
-            <View className="flex-row items-center mb-1.5" style={{ gap: 8, paddingRight: 100 }}>
+            <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
               {game.icon_url && (
                 <Image
                   source={{ uri: game.icon_url }}
@@ -279,15 +279,15 @@ function GameCard({
                   resizeMode="cover"
                 />
               )}
-              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 20 }} numberOfLines={1}>
+              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 15 }} numberOfLines={1}>
                 {game.title}
               </Text>
             </View>
 
             {/* Row 2: Location */}
-            <View className="flex-row items-center mb-2.5" style={{ gap: 5, ...rightGutter }}>
-              <Ionicons name="location-outline" size={15} color={colors.muted} />
-              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+            <View className="flex-row items-center mb-1" style={{ gap: 4, ...rightGutter }}>
+              <Ionicons name="location-outline" size={12} color={colors.muted} />
+              <Text className="text-muted flex-1" style={{ fontSize: 11.5 }} numberOfLines={1}>
                 {game.venues
                   ? `${game.venues.name}${game.venues.city ? ` · ${game.venues.city}` : ""}`
                   : game.custom_venue_name ?? "Location not set"}
@@ -296,20 +296,20 @@ function GameCard({
 
             {/* Row 3: avatar stack + going/teams count and how many are left
                 + the sport pill, pinned to the right of that text. */}
-            <View className="flex-row items-center mb-3" style={{ gap: 8, ...rightGutter }}>
+            <View className="flex-row items-center mb-1.5" style={{ gap: 5, ...rightGutter }}>
               <AvatarStack
                 people={joined.map((p) => ({
                   avatar: p.profiles?.avatar ?? null,
                   name: p.profiles?.full_name ?? p.manual_name ?? null,
                 }))}
-                size={30}
+                size={20}
               />
-              <Text className="text-muted font-medium" style={{ fontSize: 14, flexShrink: 1 }} numberOfLines={1}>
+              <Text className="text-muted font-medium" style={{ fontSize: 11.5, flexShrink: 1 }} numberOfLines={1}>
                 {isTeamBased
                   ? `${approvedTeams.length} team${approvedTeams.length !== 1 ? "s" : ""} · ${Math.max(teamsLeft, 0)} left`
                   : `${joined.length} Going · ${Math.max(spotsLeft, 0)} left`}
               </Text>
-              <View className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 0 }}>
+              <View className="bg-primary-light px-2.5 py-0.5 rounded-full" style={{ flexShrink: 0 }}>
                 <Text className="text-primary text-xs font-bold" numberOfLines={1}>
                   {game.sports?.name ?? "Sport"}
                 </Text>
@@ -320,12 +320,12 @@ function GameCard({
                 moved up to Row 3. */}
             <View className="flex-row items-center" style={{ gap: 8 }}>
               <View
-                className="flex-row items-center px-3 py-1 rounded-full"
-                style={{ backgroundColor: badgeColor, gap: 5, flexShrink: 1 }}
+                className="flex-row items-center px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: badgeColor, gap: 3, flexShrink: 1 }}
               >
                 <Ionicons
                   name={isTournament && game.end_date && game.end_date !== game.game_date ? "calendar-outline" : "time-outline"}
-                  size={13}
+                  size={11}
                   color="white"
                 />
                 <Text className="text-white text-xs font-bold" numberOfLines={1} style={{ flexShrink: 1 }}>
@@ -335,21 +335,21 @@ function GameCard({
             </View>
 
             {/* Row 5: skill pill + entry fee */}
-            <View className="flex-row items-center mt-3" style={{ minHeight: 30 }}>
+            <View className="flex-row items-center mt-1.5" style={{ minHeight: 22 }}>
               {skillColor && skillLabel && (
                 <View
                   className="flex-row items-center"
-                  style={{ backgroundColor: skillColor, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, gap: 6 }}
+                  style={{ backgroundColor: skillColor, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, gap: 4 }}
                 >
-                  <Ionicons name="stats-chart" size={13} color="white" />
-                  <Text style={{ color: "white", fontSize: 12.5, fontWeight: "700" }}>{skillLabel}</Text>
+                  <Ionicons name="stats-chart" size={11} color="white" />
+                  <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>{skillLabel}</Text>
                 </View>
               )}
               {skillColor && skillLabel ? (
-                <View style={{ width: 1, height: 22, backgroundColor: colors.border, marginHorizontal: 12 }} />
+                <View style={{ width: 1, height: 16, backgroundColor: colors.border, marginHorizontal: 8 }} />
               ) : null}
-              <Ionicons name="ticket-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
-              <Text className="flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+              <Ionicons name="ticket-outline" size={13} color={colors.muted} style={{ marginRight: 5 }} />
+              <Text className="flex-1" style={{ fontSize: 12 }} numberOfLines={1}>
                 <Text className="font-bold" style={{ color: colors.primary }}>
                   {game.entry_fee > 0 ? `Rs ${game.entry_fee.toLocaleString()}` : "Free"}
                 </Text>
@@ -626,8 +626,8 @@ export default function GamesListScreen() {
                   borderColor: active ? colors.primary : colors.border,
                 }}
               >
-                <FilterPillFill active={active} className="rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: active ? "white" : colors.muted }}>
+                <FilterPillFill active={active} className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5 }}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: active ? "white" : colors.muted }}>
                     {p.label}
                   </Text>
                 </FilterPillFill>
@@ -651,10 +651,10 @@ export default function GamesListScreen() {
               <FilterPillFill
                 active={showTournaments}
                 className="flex-row items-center rounded-full"
-                style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+                style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
               >
                 <Ionicons name="trophy-outline" size={14} color={showTournaments ? "white" : colors.muted} />
-                <Text className="font-medium" style={{ fontSize: 13.5, color: showTournaments ? "white" : colors.muted }}>
+                <Text className="font-medium" style={{ fontSize: 11.5, color: showTournaments ? "white" : colors.muted }}>
                   Tournaments
                 </Text>
               </FilterPillFill>
@@ -674,12 +674,12 @@ export default function GamesListScreen() {
             <FilterPillFill
               active={locationTags.length > 0}
               className="flex-row items-center rounded-full"
-              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
             >
               <Ionicons name="location-outline" size={14} color={locationTags.length > 0 ? "white" : colors.muted} />
               <Text
                 className="font-medium"
-                style={{ fontSize: 13.5, color: locationTags.length > 0 ? "white" : colors.muted }}
+                style={{ fontSize: 11.5, color: locationTags.length > 0 ? "white" : colors.muted }}
                 numberOfLines={1}
               >
                 {locationTags.length > 0
@@ -706,12 +706,12 @@ export default function GamesListScreen() {
             <FilterPillFill
               active={!!selectedSportId}
               className="flex-row items-center rounded-full"
-              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
             >
               <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
               <Text
                 className="font-medium"
-                style={{ fontSize: 13.5, color: selectedSportId ? "white" : colors.muted }}
+                style={{ fontSize: 11.5, color: selectedSportId ? "white" : colors.muted }}
                 numberOfLines={1}
               >
                 Sports
@@ -735,12 +735,12 @@ export default function GamesListScreen() {
             <FilterPillFill
               active={!!timeRange}
               className="flex-row items-center rounded-full"
-              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
             >
               <Ionicons name="calendar-outline" size={12} color={timeRange ? "white" : colors.muted} />
               <Text
                 className="font-medium"
-                style={{ fontSize: 13.5, color: timeRange ? "white" : colors.muted }}
+                style={{ fontSize: 11.5, color: timeRange ? "white" : colors.muted }}
                 numberOfLines={1}
               >
                 {timeRange
@@ -777,12 +777,12 @@ export default function GamesListScreen() {
             <FilterPillFill
               active={distanceKmFilter != null}
               className="flex-row items-center rounded-full"
-              style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}
+              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
             >
               <Ionicons name="navigate-outline" size={14} color={distanceKmFilter != null ? "white" : colors.muted} />
               <Text
                 className="font-medium"
-                style={{ fontSize: 13.5, color: distanceKmFilter != null ? "white" : colors.muted }}
+                style={{ fontSize: 11.5, color: distanceKmFilter != null ? "white" : colors.muted }}
                 numberOfLines={1}
               >
                 {distanceKmFilter != null ? `${distanceKmFilter} km` : "Distance"}
@@ -844,7 +844,7 @@ export default function GamesListScreen() {
         <FlatList
           data={games ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 8 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             debouncedSearch || locationTags.length > 0 || listFilter !== "all" || timeRange ? (

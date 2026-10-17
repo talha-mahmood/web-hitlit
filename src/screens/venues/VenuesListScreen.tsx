@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl, BackHandler } from "react-native";
+import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl, BackHandler, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";
@@ -21,7 +21,7 @@ import SelectPriceModal, { type PriceRange } from "../../components/SelectPriceM
 import SelectLocationModal from "../../components/SelectLocationModal";
 import GradientFill from "../../components/GradientFill";
 import { SkeletonCardRows } from "../../components/Skeleton";
-import { colors, cardShadow, primaryButtonShadow, LIST_CARD_MIN_HEIGHT } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { VenuesStackParamList } from "../../navigation/VenuesStackNavigator";
 
 type VenuesListRouteProp = RouteProp<VenuesStackParamList, "VenuesList">;
@@ -49,6 +49,14 @@ function VenueListCard({
   // else the curated photo for this venue, else a photo of its sport.
   const fallbackImage = getVenuePhoto(venue.id) ?? getSportImage(sportNames[0] ?? "");
   const MAX_SPORT_CHIPS = 2;
+  // A fixed pixel height made the banner's proportion (relative to the
+  // card's own width, which is always the full screen width here) look
+  // different from one device to another — wider on a wide phone, skinnier
+  // on a narrow one. Scaling it off the actual screen width keeps the same
+  // visual proportion everywhere; the text block below it just sizes to
+  // its own content instead of needing a matching fixed total.
+  const { width: screenWidth } = useWindowDimensions();
+  const imageHeight = Math.round(screenWidth * 0.21);
 
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
@@ -57,8 +65,8 @@ function VenueListCard({
         style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, height: LIST_CARD_MIN_HEIGHT }}>
-          <View style={{ position: "relative", flex: 1 }}>
+        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24 }}>
+          <View style={{ position: "relative", height: imageHeight }}>
             {coverImage ? (
               <Image source={{ uri: coverImage }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="cover" />
             ) : fallbackImage ? (
@@ -68,56 +76,56 @@ function VenueListCard({
             )}
             <View
               className="absolute flex-row items-center bg-black/60 rounded-full"
-              style={{ left: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 5, gap: 4 }}
+              style={{ left: 6, bottom: 6, paddingHorizontal: 7, paddingVertical: 3, gap: 3 }}
             >
-              <Ionicons name="star" size={13} color={colors.warning} />
-              <Text className="text-white font-bold" style={{ fontSize: 12.5 }}>
+              <Ionicons name="star" size={10} color={colors.warning} />
+              <Text className="text-white font-bold" style={{ fontSize: 10 }}>
                 {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
               </Text>
             </View>
             {distanceLabel ? (
               <View
                 className="absolute bg-black/60 rounded-full"
-                style={{ right: 12, bottom: 12, paddingHorizontal: 10, paddingVertical: 5 }}
+                style={{ right: 6, bottom: 6, paddingHorizontal: 7, paddingVertical: 3 }}
               >
-                <Text className="text-white font-semibold" style={{ fontSize: 12.5 }}>{distanceLabel}</Text>
+                <Text className="text-white font-semibold" style={{ fontSize: 10 }}>{distanceLabel}</Text>
               </View>
             ) : null}
           </View>
 
-          <View className="px-4 pt-3 pb-3">
-            <Text className="text-ink font-extrabold mb-0.5" style={{ fontSize: 20 }} numberOfLines={1}>
+          <View className="px-2.5 pt-1.5 pb-1.5">
+            <Text className="text-ink font-extrabold mb-0.5" style={{ fontSize: 15 }} numberOfLines={1}>
               {venue.name}
             </Text>
 
-            <View className="flex-row items-center mb-2" style={{ gap: 5 }}>
-              <Ionicons name="location-outline" size={15} color={colors.muted} />
-              <Text className="text-muted flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
+            <View className="flex-row items-center mb-1" style={{ gap: 4 }}>
+              <Ionicons name="location-outline" size={12} color={colors.muted} />
+              <Text className="text-muted flex-1" style={{ fontSize: 11.5 }} numberOfLines={1}>
                 {[venue.address, venue.city].filter(Boolean).join(" · ") || "Location not set"}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center flex-1" style={{ gap: 8, marginRight: 8 }}>
+              <View className="flex-row items-center flex-1" style={{ gap: 5, marginRight: 8 }}>
                 {sportNames.slice(0, MAX_SPORT_CHIPS).map((name) => (
-                  <View key={name} className="bg-primary-light px-3 py-1 rounded-full" style={{ flexShrink: 1 }}>
+                  <View key={name} className="bg-primary-light px-2 py-0.5 rounded-full" style={{ flexShrink: 1 }}>
                     <Text className="text-primary text-xs font-bold" numberOfLines={1}>
                       {name}
                     </Text>
                   </View>
                 ))}
                 {sportNames.length > MAX_SPORT_CHIPS && (
-                  <View className="bg-primary-light px-3 py-1 rounded-full">
+                  <View className="bg-primary-light px-2 py-0.5 rounded-full">
                     <Text className="text-primary text-xs font-bold">+{sportNames.length - MAX_SPORT_CHIPS}</Text>
                   </View>
                 )}
               </View>
               <GradientFill
-                className="flex-row items-center justify-center rounded-2xl px-3 py-1.5"
-                style={{ gap: 4, ...primaryButtonShadow }}
+                className="flex-row items-center justify-center rounded-2xl px-2 py-1"
+                style={{ gap: 3, ...primaryButtonShadow }}
               >
-                <Text className="text-white font-bold text-sm">View</Text>
-                <Ionicons name="arrow-forward" size={14} color="white" />
+                <Text className="text-white font-bold" style={{ fontSize: 11.5 }}>View</Text>
+                <Ionicons name="arrow-forward" size={11} color="white" />
               </GradientFill>
             </View>
           </View>
@@ -284,16 +292,16 @@ export default function VenuesListScreen() {
               style={{ borderWidth: 1, borderColor: locationTags.length > 0 ? colors.primary : colors.border }}
             >
               {locationTags.length > 0 ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
                   <Ionicons name="location-outline" size={14} color="white" />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
                     {locationTags.length === 1 ? locationTags[0] : `${locationTags.length} locations`}
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
                   <Ionicons name="location-outline" size={14} color={colors.muted} />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Location
                   </Text>
                 </View>
@@ -310,16 +318,16 @@ export default function VenuesListScreen() {
               style={{ borderWidth: 1, borderColor: selectedSportId ? colors.primary : colors.border }}
             >
               {selectedSportId ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
                   <Ionicons name="options-outline" size={14} color="white" />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
                     Sports
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
                   <Ionicons name="options-outline" size={14} color={colors.muted} />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Sports
                   </Text>
                 </View>
@@ -336,16 +344,16 @@ export default function VenuesListScreen() {
               style={{ borderWidth: 1, borderColor: distanceKmFilter != null ? colors.primary : colors.border }}
             >
               {distanceKmFilter != null ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
                   <Ionicons name="navigate-outline" size={14} color="white" />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
                     {`${distanceKmFilter} km`}
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
                   <Ionicons name="navigate-outline" size={14} color={colors.muted} />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Distance
                   </Text>
                 </View>
@@ -359,16 +367,16 @@ export default function VenuesListScreen() {
               style={{ borderWidth: 1, borderColor: priceRangeFilter != null ? colors.primary : colors.border }}
             >
               {priceRangeFilter != null ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5 }}>
+                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
                   <Ionicons name="pricetag-outline" size={14} color="white" />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: "white" }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
                     Price
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 5, backgroundColor: "white" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
                   <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
-                  <Text className="font-medium" style={{ fontSize: 13.5, color: colors.muted }} numberOfLines={1}>
+                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Price
                   </Text>
                 </View>
@@ -431,7 +439,7 @@ export default function VenuesListScreen() {
         <FlatList
           data={venues ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 8 }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }

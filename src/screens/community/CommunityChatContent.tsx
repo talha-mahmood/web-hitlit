@@ -79,10 +79,10 @@ function CommentCard({
   };
 
   return (
-    <View className="bg-white rounded-2xl border border-border p-4 mb-3" style={cardShadow}>
-      <View className="flex-row items-start" style={{ gap: 10 }}>
+    <View className="bg-white rounded-2xl border border-border p-2.5 mb-1.5" style={cardShadow}>
+      <View className="flex-row items-start" style={{ gap: 8 }}>
         <Pressable onPress={onOpenProfile} hitSlop={4}>
-          <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} />
+          <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} size={30} />
         </Pressable>
         <View className="flex-1">
           <View className="flex-row items-center justify-between">
