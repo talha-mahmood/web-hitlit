@@ -103,14 +103,23 @@ const PoppinsText = forwardRef<unknown, TextProps & { className?: string }>(func
   const { override } = resolveStyle(props.style, props.className, nested);
   return (
     <NestedTextContext.Provider value>
-      <RNText {...props} ref={ref} style={override ? [props.style, override] : props.style} />
+      {/* Every screen's card/list layouts are built to tight, hand-tuned
+          fixed dimensions — left scaling with the device's own
+          accessibility font-size setting (RN's default), a few extra
+          points on every row of text in a card compounds into real extra
+          height, which is why the same screen could show a different
+          number of cards depending on the phone/user's font-size setting,
+          not just its actual screen size. Pass allowFontScaling explicitly
+          on any one Text that should still respect it — {...props} is
+          spread after this default specifically so that override wins. */}
+      <RNText allowFontScaling={false} {...props} ref={ref} style={override ? [props.style, override] : props.style} />
     </NestedTextContext.Provider>
   );
 });
 
 const PoppinsTextInput = forwardRef<unknown, TextInputProps & { className?: string }>(function PoppinsTextInput(props, ref) {
   const { override } = resolveStyle(props.style, props.className, false);
-  return <RNTextInput {...props} ref={ref} style={override ? [props.style, override] : props.style} />;
+  return <RNTextInput allowFontScaling={false} {...props} ref={ref} style={override ? [props.style, override] : props.style} />;
 });
 
 for (const [name, component] of [
