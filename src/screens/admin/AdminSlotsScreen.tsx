@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -49,7 +49,7 @@ export default function AdminSlotsScreen() {
   const todayStr = toLocalDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(days[0]);
 
-  const { data: bookings = [], isLoading } = useCourtBookingsForDate(params.courtId, selectedDate);
+  const { data: bookings = [], isLoading, refetch, isRefetching } = useCourtBookingsForDate(params.courtId, selectedDate);
   const { data: priceRules = [] } = useCourtPriceRules(params.courtId);
   const blockSlot = useBlockSlot(params.courtId, selectedDate);
   const unblockSlot = useUnblockSlot(params.courtId, selectedDate);
@@ -154,7 +154,11 @@ export default function AdminSlotsScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        className="flex-1 px-4 pt-4"
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      >
         {isLoading ? (
           <View className="items-center mt-12">
             <ActivityIndicator color={colors.primary} />

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, Image, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, FlatList, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -17,7 +17,7 @@ export default function AdminVenueListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
-  const { data: venues, isLoading } = useMyVenues(userId);
+  const { data: venues, isLoading, refetch, isRefetching } = useMyVenues(userId);
 
   // Deliberately no auto-advance to the dashboard when there's only one
   // venue: this screen is also reached mid-session via the sidebar's "My
@@ -44,6 +44,7 @@ export default function AdminVenueListScreen() {
         data={venues ?? []}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 40, gap: 12 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         ListEmptyComponent={
           <View className="border border-dashed border-border rounded-2xl p-8 items-center">
             <Ionicons name="business-outline" size={32} color={colors.border} />

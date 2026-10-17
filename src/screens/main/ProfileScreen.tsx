@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert, BackHandler } from "react-native";
+import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert, BackHandler, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect, useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
@@ -159,7 +159,7 @@ export default function ProfileScreen() {
   const { data: allSports } = useSports();
   // Every card below (rating, stat grid, sports chart, activity, Games Win)
   // follows the selected sport, so they're all fetched narrowed to it.
-  const { data: stats, isLoading } = useProfileStats(userId, filterSportId);
+  const { data: stats, isLoading, refetch, isRefetching } = useProfileStats(userId, filterSportId);
   // The same public-profile numbers other players see on this person's
   // Top Players detail page (Games Win, sport totals, Sports Played, followers).
   // Tapping a "Sports Played" card narrows Games Win + the sport totals to that
@@ -345,6 +345,7 @@ export default function ProfileScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
       {hasActiveSportData && (
         <ScrollView

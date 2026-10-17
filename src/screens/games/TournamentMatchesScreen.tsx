@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, Pressable, Alert, ActivityIndicator, ScrollView, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -1354,9 +1354,9 @@ export default function TournamentMatchesScreen() {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
 
-  const { data: game, isLoading: gameLoading } = useGameDetail(params.gameId);
-  const { data: teamsData, isLoading: teamsLoading } = useTournamentTeams(params.gameId);
-  const { data: matches } = useTournamentMatches(params.gameId);
+  const { data: game, isLoading: gameLoading, refetch: refetchGame, isRefetching: gameRefetching } = useGameDetail(params.gameId);
+  const { data: teamsData, isLoading: teamsLoading, refetch: refetchTeams, isRefetching: teamsRefetching } = useTournamentTeams(params.gameId);
+  const { data: matches, refetch: refetchMatches, isRefetching: matchesRefetching } = useTournamentMatches(params.gameId);
   const { data: nrrByTeam } = useTournamentNRR(params.gameId, matches);
   const linkedCricketMatchIds = (matches ?? []).filter((m) => m.cricket_match_id).map((m) => m.cricket_match_id as string);
   const { data: liveCricketMatchesRaw } = useLiveCricketMatches(linkedCricketMatchIds);
@@ -1378,7 +1378,16 @@ export default function TournamentMatchesScreen() {
   // StatusPill show "Live" without every MatchRow needing the full
   // LiveCricketMatchSummary objects.
   const liveCricketMatchIds = new Set(liveCricketMatches.map((lm) => lm.id));
-  const { data: pools } = useTournamentPools(params.gameId);
+  const { data: pools, refetch: refetchPools, isRefetching: poolsRefetching } = useTournamentPools(params.gameId);
+  // Every query here already has its own realtime subscription, so this is
+  // a manual "just in case" fallback more than something load-bearing.
+  const isRefreshing = gameRefetching || teamsRefetching || matchesRefetching || poolsRefetching;
+  const handleRefresh = () => {
+    refetchGame();
+    refetchTeams();
+    refetchMatches();
+    refetchPools();
+  };
   const setMatchScorer = useSetMatchScorer(params.gameId);
   const updateMatchSchedule = useUpdateMatchSchedule(params.gameId);
   const [scorerModalMatchId, setScorerModalMatchId] = useState<string | null>(null);
@@ -1834,7 +1843,10 @@ export default function TournamentMatchesScreen() {
         </>
       )}
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+      >
         {activeTab === "POINTS" ? (
           isPoolFormat ? (
             (pools ?? []).map((pool) => {

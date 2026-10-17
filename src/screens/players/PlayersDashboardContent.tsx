@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Image, Pressable } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Image, Pressable, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useTopPlayers } from "../../hooks/usePlayers";
@@ -88,7 +88,7 @@ export default function PlayersDashboardContent({
   const [search, setSearch] = useState("");
   const [sportSheetOpen, setSportSheetOpen] = useState(false);
   const { data: sports } = useSports();
-  const { data: players, isLoading } = useTopPlayers(sportId ?? undefined);
+  const { data: players, isLoading, refetch, isRefetching } = useTopPlayers(sportId ?? undefined);
 
   const selectedSport = useMemo(() => {
     const match = sportId ? (sports ?? []).find((s) => s.id === sportId) : undefined;
@@ -122,6 +122,7 @@ export default function PlayersDashboardContent({
       keyboardShouldPersistTaps="handled"
       keyExtractor={(item) => item.player.userId}
       contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 40 }}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       ListHeaderComponent={
         <View className="mb-1 flex-row items-center" style={{ gap: 10 }}>
           <View className="flex-1">

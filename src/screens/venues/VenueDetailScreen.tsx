@@ -11,6 +11,7 @@ import {
   NativeScrollEvent,
   Linking,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -42,7 +43,7 @@ export default function VenueDetailScreen() {
   const { width } = useWindowDimensions();
   const [activeImage, setActiveImage] = useState(0);
 
-  const { data: venue, isLoading } = useVenueDetail(params.venueId);
+  const { data: venue, isLoading, refetch, isRefetching } = useVenueDetail(params.venueId);
   const markVenueContacted = useMarkGameVenueContacted();
 
   const handleOpenWhatsApp = async (number: string) => {
@@ -86,7 +87,11 @@ export default function VenueDetailScreen() {
   const amenities = Array.from(new Set(venue.court.flatMap((c) => c.amenities ?? [])));
 
   return (
-    <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+    <ScrollView
+      className="flex-1 bg-white"
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+    >
       <View className="relative">
         {images.length > 0 ? (
           <ScrollView

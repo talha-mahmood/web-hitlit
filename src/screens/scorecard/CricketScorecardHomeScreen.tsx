@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -166,7 +166,7 @@ export default function CricketScorecardHomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
-  const { data: matches, isLoading } = useMyCricketMatches(userId);
+  const { data: matches, isLoading, refetch, isRefetching } = useMyCricketMatches(userId);
   const deleteMatch = useDeleteCricketMatch();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
 
@@ -275,6 +275,7 @@ export default function CricketScorecardHomeScreen() {
           keyExtractor={(item) => `${item.id}:${item.status}`}
           removeClippedSubviews={false}
           contentContainerStyle={{ padding: 20, paddingTop: 0, gap: 14 }}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListFooterComponent={
             <View className="items-center" style={{ gap: 4, marginTop: filteredMatches.length > 0 ? 24 : 64 }}>
               <View

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";
@@ -147,7 +147,7 @@ export default function CommunityChatContent({
   const [editingComment, setEditingComment] = useState<CommunityComment | null>(null);
   const [pollModalOpen, setPollModalOpen] = useState(false);
 
-  const { data: comments, isLoading, error } = useCommunityFeed(userId);
+  const { data: comments, isLoading, error, refetch, isRefetching } = useCommunityFeed(userId);
   const postComment = usePostComment();
   const updateComment = useUpdateComment();
   const deleteComment = useDeleteComment();
@@ -285,6 +285,7 @@ export default function CommunityChatContent({
           data={visibleComments}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />

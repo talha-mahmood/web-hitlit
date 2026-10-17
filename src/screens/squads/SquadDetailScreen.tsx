@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -286,7 +286,7 @@ export default function SquadDetailScreen() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
-  const { data: squad, isLoading, error } = useSquadDetail(params.squadId);
+  const { data: squad, isLoading, error, refetch, isRefetching } = useSquadDetail(params.squadId);
   const { data: chatUnreadCount } = useSquadChatUnreadCount(squad?.id, userId);
   const joinSquad = useJoinSquad();
   const leaveSquad = useLeaveSquad();
@@ -717,7 +717,11 @@ export default function SquadDetailScreen() {
         <WaveDivider color={colors.background} height={30} />
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: hasJoined ? 40 : 120 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: hasJoined ? 40 : 120 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      >
         {mySquadInvite && !isInviteDismissed(mySquadInvite.id) && (
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
             <View className="flex-row items-start">

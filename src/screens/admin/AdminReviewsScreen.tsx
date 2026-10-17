@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -57,7 +57,7 @@ export default function AdminReviewsScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { data: venue } = useAdminVenueDetail(params.venueId);
-  const { data: reviews, isLoading } = useVenueReviews(params.venueId);
+  const { data: reviews, isLoading, refetch, isRefetching } = useVenueReviews(params.venueId);
   const respond = useRespondToVenueReview(params.venueId);
 
   const [respondingTo, setRespondingTo] = useState<VenueReview | null>(null);
@@ -97,6 +97,7 @@ export default function AdminReviewsScreen() {
           data={reviews ?? []}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListHeaderComponent={
             (reviews ?? []).length > 0 ? (
               <View className="bg-white rounded-2xl p-5 mb-4 items-center" style={{ borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" }}>

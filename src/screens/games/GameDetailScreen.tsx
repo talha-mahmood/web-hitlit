@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, Image, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -284,7 +284,7 @@ export default function GameDetailScreen() {
   const sendSquadInvite = useSendGameSquadInvite(params.gameId);
   const { data: squadInvites } = useGameSquadInvitesForGame(params.gameId);
 
-  const { data: game, isLoading, error } = useGameDetail(params.gameId);
+  const { data: game, isLoading, error, refetch, isRefetching } = useGameDetail(params.gameId);
   // Team-based joining (create/join Team A or Team B) now applies to any
   // game with a team structure, not just real tournaments — regular games
   // created after this change default to 2 teams. "" keeps the query/
@@ -667,7 +667,11 @@ export default function GameDetailScreen() {
         <WaveDivider color={colors.background} height={30} />
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: showsFixedBottomBar ? 120 : 40 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: showsFixedBottomBar ? 120 : 40 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      >
         {/* Pending host invite — shown regardless of game_type, since the
             normal bottom join CTA is hidden entirely for a tournament
             non-host (joining a tournament happens via a team below instead). */}

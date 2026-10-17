@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -74,10 +74,15 @@ export default function VenueBookingsScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
-  const { data: venue, isLoading: venueLoading } = useAdminVenueDetail(params.venueId);
-  const { data: bookings, isLoading: bookingsLoading } = useVenueBookings(params.venueId);
+  const { data: venue, isLoading: venueLoading, refetch: refetchVenue, isRefetching: venueRefetching } = useAdminVenueDetail(params.venueId);
+  const { data: bookings, isLoading: bookingsLoading, refetch: refetchBookings, isRefetching: bookingsRefetching } = useVenueBookings(params.venueId);
 
   const isLoading = venueLoading || bookingsLoading;
+  const isRefreshing = venueRefetching || bookingsRefetching;
+  const handleRefresh = () => {
+    refetchVenue();
+    refetchBookings();
+  };
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [dateSelection, setDateSelection] = useState<DateSelection | null>(null);
@@ -192,7 +197,10 @@ export default function VenueBookingsScreen() {
       {isLoading || !stats ? (
         <ActivityIndicator color={colors.primary} className="mt-8" />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+        <ScrollView
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+        >
           {sportOptions.length > 0 && (
             <ScrollView
               horizontal

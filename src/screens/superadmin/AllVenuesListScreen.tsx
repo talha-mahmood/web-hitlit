@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -20,7 +20,7 @@ export default function AllVenuesListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
-  const { data: venues, isLoading } = useAllVenues(search || undefined);
+  const { data: venues, isLoading, refetch, isRefetching } = useAllVenues(search || undefined);
   const deleteVenue = useDeleteVenue();
 
   const handleDelete = (venueId: string, venueName: string) => {
@@ -66,6 +66,7 @@ export default function AllVenuesListScreen() {
           data={venues ?? []}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 40, gap: 10 }}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
             <View className="border border-dashed border-border rounded-2xl p-8 items-center">
               <Ionicons name="business-outline" size={32} color={colors.border} />

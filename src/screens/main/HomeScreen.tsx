@@ -1,5 +1,5 @@
 import { useMemo, useState, type ComponentProps, type ReactElement } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
@@ -135,18 +135,27 @@ export default function HomeScreen() {
   const [selectedSportId, setSelectedSportId] = useState<string | null>(null);
 
   const { data: sports } = useSports();
-  const { data: venues, isLoading: venuesLoading } = useVenues({
+  const { data: venues, isLoading: venuesLoading, refetch: refetchVenues, isRefetching: venuesRefetching } = useVenues({
     sportId: selectedSportId ?? undefined,
   });
   const { data: unreadCount } = useUnreadNotificationCount(userId);
 
   const { coords } = useDeviceLocation();
-  const { data: games, isLoading: gamesLoading } = useGames({
+  const { data: games, isLoading: gamesLoading, refetch: refetchGames, isRefetching: gamesRefetching } = useGames({
     sportId: selectedSportId ?? undefined,
   });
-  const { data: squads, isLoading: squadsLoading } = useSquads({
+  const { data: squads, isLoading: squadsLoading, refetch: refetchSquads, isRefetching: squadsRefetching } = useSquads({
     sportId: selectedSportId ?? undefined,
   });
+  // Pull-to-refresh refetches everything this screen shows at once rather
+  // than picking one "main" query — there isn't a single source of truth
+  // here, just three independent lists.
+  const isRefreshing = venuesRefetching || gamesRefetching || squadsRefetching;
+  const handleRefresh = () => {
+    refetchVenues();
+    refetchGames();
+    refetchSquads();
+  };
 
   const nearbyRegularGames = useMemo(
     () =>
@@ -261,7 +270,11 @@ export default function HomeScreen() {
         </View>
       </GradientFill>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+      >
       <View className="px-3.5" style={{ paddingTop: 20 }}>
         <PromoCarousel slides={promoSlides} />
 

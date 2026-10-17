@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Image, ScrollView, ActivityIndicator, Pressable } from "react-native";
+import { View, Text, Image, ScrollView, ActivityIndicator, Pressable, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -50,7 +50,7 @@ export default function PlayerProfileScreen() {
   // instead — tapping the same one again clears it back to unfiltered.
   const [filterSportId, setFilterSportId] = useState(route.params.sportId);
   const [filterSportName, setFilterSportName] = useState(route.params.sportName);
-  const { data: player, isLoading } = usePlayerPublicProfile(route.params.userId, filterSportId);
+  const { data: player, isLoading, refetch, isRefetching } = usePlayerPublicProfile(route.params.userId, filterSportId);
   // The "Filter By Sports" list is the sport selector, so it always lists every
   // sport (the filtered profile above only returns the selected one).
   const { data: allSportsProfile } = usePlayerPublicProfile(route.params.userId);
@@ -290,6 +290,7 @@ export default function PlayerProfileScreen() {
             className="flex-1"
             contentContainerStyle={{ padding: 20, paddingTop: hasActiveSportData ? 0 : 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           >
             {activeTab !== "profile" && resolvedSportKind === "cricket" && player.fullName ? (
               <>
