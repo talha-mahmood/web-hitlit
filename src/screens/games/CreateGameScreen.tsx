@@ -1022,7 +1022,7 @@ export default function CreateGameScreen() {
           <>
             <VenueSearchField
               venues={venues}
-              loading={sportId != null && venuesLoading}
+              loading={venuesLoading}
               selectedVenueId={venueId}
               customVenueName={customVenueName}
               onSelect={(id) => setVenueId(id || null)}
@@ -1031,7 +1031,12 @@ export default function CreateGameScreen() {
               // (the map picker below) for a venue that isn't in the app's
               // list, so this field must only ever accept a real venue picked
               // from its own dropdown, never arbitrary typed text.
-              disabledReason={!sportId ? "Select a sport to see venues that offer it." : undefined}
+              //
+              // No disabledReason either — useVenues already searches across
+              // every sport's venues when no sport is picked yet (fetchVenues
+              // only filters by sportId when one is actually passed), so
+              // there's nothing to block here; a host can search venues
+              // before or after choosing a sport.
               thumbnailSource={selectedSportName ? getSportImage(selectedSportName) : null}
             />
             {venueId && (
