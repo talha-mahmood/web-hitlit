@@ -405,10 +405,6 @@ export default function GameChatScreen() {
               </Text>
             </View>
           ) : null}
-          <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-            <Ionicons name="time-outline" size={12} color={colors.muted} />
-            <Text className="text-muted text-xs">Messages disappear after 24 hours</Text>
-          </View>
         </View>
       </View>
 
