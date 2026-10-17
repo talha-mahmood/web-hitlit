@@ -7,9 +7,6 @@ import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
-import { DEFAULT_COUNTRY_CODE } from "../../lib/countryCodes";
-import PhoneNumberField from "../../components/PhoneNumberField";
-import FieldInput from "../../components/FieldInput";
 import type { Database } from "../../types/database.types";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
@@ -21,39 +18,19 @@ const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: "female", label: "Female" },
 ];
 
-// Pakistan's mobile numbers are always exactly 10 digits after +92; every
-// other country code uses the looser 9-14 digit range.
-const PAKISTAN_DIAL = "+92";
-
-function maxDigitsFor(dial: string): number {
-  return dial === PAKISTAN_DIAL ? 10 : 14;
-}
-
-function isPhoneDigitsValid(dial: string, digits: string): boolean {
-  return dial === PAKISTAN_DIAL ? digits.length === 10 : digits.length >= 9 && digits.length <= 14;
-}
-
 // Shown once, right after a brand-new Google/Apple sign-in — those
-// providers hand us a name/email/avatar but never a phone number or gender,
-// so RootNavigator routes here until both are filled in. A returning user
-// who already has them skips this screen entirely (see isProfileComplete).
+// providers hand us a name/email/avatar but never a gender, so
+// RootNavigator routes here until it's filled in. A returning user who
+// already has one skips this screen entirely (see isProfileComplete).
 export default function CompleteDetailsScreen() {
   const session = useAuthStore((s) => s.session);
   const updateProfile = useProfileStore((s) => s.updateProfile);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isGoingBack, setIsGoingBack] = useState(false);
-  const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY_CODE.dial);
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [gender, setGender] = useState<Gender | null>(null);
-  const [age, setAge] = useState("");
 
-  // Phone is optional here — only validated (not required) once the user
-  // actually starts typing one, so a half-entered number can't be silently
-  // saved as if it were complete.
-  const phoneProvided = phoneNumber.length > 0;
-  const isPhoneOk = !phoneProvided || isPhoneDigitsValid(phoneDial, phoneNumber);
-  const isValid = isPhoneOk && !!gender;
+  const isValid = !!gender;
 
   // There's no previous screen to pop to — this is rendered directly by
   // RootNavigator, not pushed onto a stack — so "back" means abandoning
@@ -73,32 +50,14 @@ export default function CompleteDetailsScreen() {
     }
   };
 
-  // Changing the country mid-entry can tighten the allowed length (e.g.
-  // switching to Pakistan's fixed 10 digits) — trim any digits that no
-  // longer fit instead of leaving an invalid, uneditable-looking number.
-  const handleChangeDial = (dial: string) => {
-    setPhoneDial(dial);
-    setPhoneNumber((prev) => prev.slice(0, maxDigitsFor(dial)));
-  };
-
   const handleContinue = async () => {
     const userId = session?.user.id;
     if (!userId || !isValid) return;
 
-    let dateOfBirth: string | null = null;
-    if (age.trim()) {
-      const ageNum = parseInt(age, 10);
-      if (ageNum > 0 && ageNum < 120) {
-        dateOfBirth = `${new Date().getFullYear() - ageNum}-01-01`;
-      }
-    }
-
     setIsSaving(true);
     try {
       await updateProfile(userId, {
-        phone: phoneProvided ? `${phoneDial}${phoneNumber}` : null,
         gender: gender as Gender,
-        date_of_birth: dateOfBirth,
       });
       // RootNavigator re-evaluates isProfileComplete() once the store's
       // profile updates and takes it from here.
@@ -174,19 +133,6 @@ export default function CompleteDetailsScreen() {
 
             <View className="w-full mt-6">
               <View className="flex-row items-center mb-2">
-                <Text className="text-muted text-sm">Phone number (optional)</Text>
-              </View>
-              <PhoneNumberField
-                dial={phoneDial}
-                onChangeDial={handleChangeDial}
-                number={phoneNumber}
-                onChangeNumber={setPhoneNumber}
-                maxDigits={maxDigitsFor(phoneDial)}
-              />
-            </View>
-
-            <View className="w-full mt-4">
-              <View className="flex-row items-center mb-2">
                 <Text className="text-muted text-sm">Gender</Text>
                 <Text className="text-red-500 ml-1">*</Text>
               </View>
@@ -224,17 +170,6 @@ export default function CompleteDetailsScreen() {
               </View>
             </View>
 
-            <View className="w-full mt-4">
-              <Text className="text-muted text-sm mb-2">Age (optional)</Text>
-              <FieldInput
-                value={age}
-                onChangeText={(t) => setAge(t.replace(/[^0-9]/g, "").slice(0, 2))}
-                placeholder="e.g. 25"
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-
             <Pressable
               onPress={handleContinue}
               disabled={isSaving || !isValid}
@@ -251,7 +186,7 @@ export default function CompleteDetailsScreen() {
             </Pressable>
             {!isValid && (
               <Text className="text-muted text-xs text-center mt-3">
-                {!isPhoneOk ? "Enter a valid phone number, or leave it blank." : "Select your gender to continue."}
+                Select your gender to continue.
               </Text>
             )}
           </View>
