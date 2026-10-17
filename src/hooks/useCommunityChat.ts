@@ -7,6 +7,7 @@ import {
   updateComment,
   deleteComment,
   setCommentLiked,
+  type CommunityComment,
 } from "../lib/api/communityChat";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -121,6 +122,17 @@ export function useDeleteComment() {
   });
 }
 
+function patchCommentLike(
+  comments: CommunityComment[] | undefined,
+  commentId: string,
+  liked: boolean
+): CommunityComment[] | undefined {
+  if (!comments) return comments;
+  return comments.map((c) =>
+    c.id === commentId ? { ...c, likedByMe: liked, likeCount: c.likeCount + (liked ? 1 : -1) } : c
+  );
+}
+
 export function useToggleCommentLike() {
   const qc = useQueryClient();
   return useMutation({
@@ -133,7 +145,35 @@ export function useToggleCommentLike() {
       userId: string;
       liked: boolean;
     }) => setCommentLiked(commentId, userId, liked),
-    onSuccess: () => {
+    // Flips the heart and +/-1's the count in the cache the instant it's
+    // tapped, instead of waiting on the write to land and then a *second*
+    // round trip (the onSuccess invalidate below used to be the only thing
+    // that ever updated this) before anything visibly changed. commentId
+    // alone doesn't say which thread(s) hold it, so every currently-cached
+    // "commentThread" query gets the same patch attempt — one of them will
+    // actually contain this comment, the rest are harmless no-ops.
+    onMutate: async ({ commentId, userId, liked }) => {
+      await qc.cancelQueries({ queryKey: ["communityFeed", userId] });
+      await qc.cancelQueries({ queryKey: ["commentThread"] });
+
+      const previousFeed = qc.getQueryData<CommunityComment[]>(["communityFeed", userId]);
+      const previousThreads = qc.getQueriesData<CommunityComment[]>({ queryKey: ["commentThread"] });
+
+      qc.setQueryData<CommunityComment[]>(["communityFeed", userId], (old) => patchCommentLike(old, commentId, liked));
+      qc.setQueriesData<CommunityComment[]>({ queryKey: ["commentThread"] }, (old) => patchCommentLike(old, commentId, liked));
+
+      return { previousFeed, previousThreads, userId };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      qc.setQueryData(["communityFeed", context.userId], context.previousFeed);
+      for (const [key, data] of context.previousThreads) {
+        qc.setQueryData(key, data);
+      }
+    },
+    // Still reconciles with the server afterward (in case of a late realtime
+    // echo or a second device), it just no longer gates the initial feedback.
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["communityFeed"] });
       qc.invalidateQueries({ queryKey: ["commentThread"] });
     },
