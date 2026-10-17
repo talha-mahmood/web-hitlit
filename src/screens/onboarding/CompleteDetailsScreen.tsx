@@ -48,7 +48,12 @@ export default function CompleteDetailsScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [age, setAge] = useState("");
 
-  const isValid = isPhoneDigitsValid(phoneDial, phoneNumber) && !!gender;
+  // Phone is optional here — only validated (not required) once the user
+  // actually starts typing one, so a half-entered number can't be silently
+  // saved as if it were complete.
+  const phoneProvided = phoneNumber.length > 0;
+  const isPhoneOk = !phoneProvided || isPhoneDigitsValid(phoneDial, phoneNumber);
+  const isValid = isPhoneOk && !!gender;
 
   // There's no previous screen to pop to — this is rendered directly by
   // RootNavigator, not pushed onto a stack — so "back" means abandoning
@@ -91,7 +96,7 @@ export default function CompleteDetailsScreen() {
     setIsSaving(true);
     try {
       await updateProfile(userId, {
-        phone: `${phoneDial}${phoneNumber}`,
+        phone: phoneProvided ? `${phoneDial}${phoneNumber}` : null,
         gender: gender as Gender,
         date_of_birth: dateOfBirth,
       });
@@ -164,13 +169,12 @@ export default function CompleteDetailsScreen() {
               Just one more step
             </Text>
             <Text className="text-muted text-center mt-1.5 text-sm px-2">
-              Add your phone number and gender to finish setting up your account.
+              Add your gender to finish setting up your account.
             </Text>
 
             <View className="w-full mt-6">
               <View className="flex-row items-center mb-2">
-                <Text className="text-muted text-sm">Phone number</Text>
-                <Text className="text-red-500 ml-1">*</Text>
+                <Text className="text-muted text-sm">Phone number (optional)</Text>
               </View>
               <PhoneNumberField
                 dial={phoneDial}
@@ -247,7 +251,7 @@ export default function CompleteDetailsScreen() {
             </Pressable>
             {!isValid && (
               <Text className="text-muted text-xs text-center mt-3">
-                Enter your phone number and gender to continue.
+                {!isPhoneOk ? "Enter a valid phone number, or leave it blank." : "Select your gender to continue."}
               </Text>
             )}
           </View>

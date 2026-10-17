@@ -30,10 +30,12 @@ type ProfileState = {
   clear: () => void;
 };
 
-// A profile counts as fully onboarded once it has the phone number and
-// gender we require post-auth — gates CompleteDetailsScreen. Google/Apple
-// don't hand us these, so a brand-new sign-in stops here until filled in;
-// a returning user who already filled them in skips straight past.
+// A profile counts as fully onboarded once it has the gender we require
+// post-auth — gates CompleteDetailsScreen. Google/Apple don't hand this
+// over, so a brand-new sign-in stops here until it's filled in; a returning
+// user who already filled it in skips straight past. Phone number is
+// collected on the same screen but is optional — not part of this gate —
+// so leaving it blank there must never re-trigger CompleteDetailsScreen.
 //
 // Deliberately does NOT require a display name: there used to be a
 // dedicated screen asking for it, but Apple's own App Review guidelines
@@ -42,7 +44,7 @@ type ProfileState = {
 // since a missing name is handled gracefully everywhere it's shown (falls
 // back to "Profile"/"?") and can always be set later in Account Settings.
 export function isProfileComplete(profile: Profile | null): boolean {
-  return !!profile?.phone && !!profile?.gender;
+  return !!profile?.gender;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
