@@ -94,7 +94,7 @@ function VenueListCard({
           </View>
 
           <View className="px-2.5 pt-1.5 pb-1.5">
-            <Text className="text-ink font-extrabold mb-0.5" style={{ fontSize: 15 }} numberOfLines={1}>
+            <Text className="text-ink font-extrabold mb-0.5" style={{ fontSize: 14 }} numberOfLines={1}>
               {venue.name}
             </Text>
 

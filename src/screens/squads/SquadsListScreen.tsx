@@ -134,14 +134,18 @@ function SquadCard({
             )}
           </View>
 
-          {/* Sport picture in a soft green disc, tucked into the right edge */}
+          {/* Sport picture in a soft green disc, tucked into the right edge
+              — pushed down (and slightly further off-card) below the CTA
+              badge above it, since a longer badge ("Male Only", "Female
+              Only") is wider than "Join"/"Full" and was overlapping this
+              disc when the two sat closer together. */}
           <View
             pointerEvents="none"
             className="items-center justify-center overflow-hidden"
             style={{
               position: "absolute",
-              right: -22,
-              top: 32,
+              right: -28,
+              top: 44,
               width: 82,
               height: 82,
               borderRadius: 41,
@@ -167,7 +171,7 @@ function SquadCard({
               {squad.icon_url && (
                 <Image source={{ uri: squad.icon_url }} style={{ width: 22, height: 22, borderRadius: 6 }} resizeMode="cover" />
               )}
-              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 15 }} numberOfLines={1}>
+              <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {squad.name}
               </Text>
             </View>

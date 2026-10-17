@@ -304,10 +304,18 @@ export default function ProfileScreen() {
           </Pressable>
           <View className="flex-1 mr-2">
             <View className="flex-row items-center" style={{ gap: 6 }}>
-              <Text className="text-white font-bold text-2xl" numberOfLines={1}>
+              {/* flexShrink on both the text and its row — without it, the
+                  name renders at its full natural width regardless of how
+                  little room is left, pushing the checkmark (and this whole
+                  row) out past the header into the settings button. */}
+              <Text
+                className="text-white font-bold flex-shrink"
+                style={{ flexShrink: 1, fontSize: 19 }}
+                numberOfLines={1}
+              >
                 {profile?.full_name ?? "Profile"}
               </Text>
-              <Ionicons name="checkmark-circle" size={17} color="#4ADE80" />
+              <Ionicons name="checkmark-circle" size={17} color="#4ADE80" style={{ flexShrink: 0 }} />
             </View>
             <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
               <Ionicons name="pricetag-outline" size={12} color="white" />
