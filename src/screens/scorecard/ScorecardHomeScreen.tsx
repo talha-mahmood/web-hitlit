@@ -52,37 +52,37 @@ function SportCard({
   const [active, setActive] = useState(false);
 
   const body = (
-    <View className="flex-row items-center" style={{ padding: 12, gap: 14 }}>
+    <View className="flex-row items-center" style={{ padding: 9, gap: 10 }}>
       <View
         className="items-center justify-center overflow-hidden rounded-full"
-        style={{ width: 72, height: 72, backgroundColor: disc }}
+        style={{ width: 54, height: 54, backgroundColor: disc }}
       >
         {photo ? (
-          <View style={{ width: 96, height: 54, mixBlendMode: "multiply" }}>
+          <View style={{ width: 72, height: 40, mixBlendMode: "multiply" }}>
             <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
           </View>
         ) : (
-          <MaterialCommunityIcons name={icon} size={34} color={fg} />
+          <MaterialCommunityIcons name={icon} size={26} color={fg} />
         )}
       </View>
       <View className="flex-1">
-        <Text className="text-ink font-bold" style={{ fontSize: 18 }}>
+        <Text className="text-ink font-bold" style={{ fontSize: 15 }}>
           {title}
         </Text>
-        <Text className="text-muted mt-1" style={{ fontSize: 13, lineHeight: 18 }}>
+        <Text className="text-muted mt-0.5" style={{ fontSize: 11.5, lineHeight: 15 }}>
           {subtitle}
         </Text>
       </View>
       {active ? (
-        <GradientFill className="items-center justify-center rounded-full" style={{ width: 36, height: 36, ...primaryButtonShadow }}>
-          <Ionicons name="chevron-forward" size={18} color="white" />
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 28, height: 28, ...primaryButtonShadow }}>
+          <Ionicons name="chevron-forward" size={15} color="white" />
         </GradientFill>
       ) : (
         <View
           className="items-center justify-center rounded-full"
-          style={{ width: 34, height: 34, backgroundColor: "#F1F3F5" }}
+          style={{ width: 27, height: 27, backgroundColor: "#F1F3F5" }}
         >
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          <Ionicons name="chevron-forward" size={15} color={colors.muted} />
         </View>
       )}
     </View>
@@ -207,7 +207,7 @@ export default function ScorecardHomeScreen() {
         </View>
       </GradientFill>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 14 }} style={{ marginTop: 0 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 10 }} style={{ marginTop: 0 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"
