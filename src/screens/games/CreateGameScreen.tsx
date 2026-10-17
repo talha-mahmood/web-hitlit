@@ -999,6 +999,24 @@ export default function CreateGameScreen() {
                 selectedLabel={customVenueName}
               />
             )}
+            {/* The map's own reverse-geocoded label isn't always exact (an
+                unmapped building, a generic area name, ...) — once a spot is
+                picked, let the host type over it with the real address
+                instead. Pre-filled with whatever was auto-detected so
+                there's nothing to redo when it's already correct. */}
+            {customVenueName && (
+              <View className="mt-3">
+                <Text className="text-ink text-sm font-semibold mb-1.5">
+                  Address <Text className="text-muted font-normal">(optional — edit if this isn't exact)</Text>
+                </Text>
+                <FieldInput
+                  value={customVenueName}
+                  onChangeText={setCustomVenueName}
+                  placeholder="Enter the exact address"
+                  multiline
+                />
+              </View>
+            )}
           </>
         ) : (
           <>
