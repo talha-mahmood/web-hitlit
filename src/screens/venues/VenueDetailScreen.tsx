@@ -63,6 +63,10 @@ export default function VenueDetailScreen() {
     }
   };
 
+  const handleCall = (number: string) => {
+    Linking.openURL(`tel:${number.replace(/\D/g, "")}`);
+  };
+
   const onScrollImages = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / width);
     setActiveImage(index);
@@ -185,25 +189,47 @@ export default function VenueDetailScreen() {
           </View>
         )}
 
-        {venue.whatsapp_number && (
+        {(venue.whatsapp_number || venue.contact_phone) && (
           <View className="mt-4">
             <Text className="text-ink font-bold text-base mb-2">Book Venue Here</Text>
-            <Pressable
-              onPress={() => handleOpenWhatsApp(venue.whatsapp_number as string)}
-              className="flex-row items-center rounded-2xl px-4 py-3"
-              style={{ backgroundColor: colors.primaryLight, gap: 10 }}
-            >
-              <View
-                className="items-center justify-center rounded-full bg-white"
-                style={{ width: 38, height: 38 }}
-              >
-                <Ionicons name="logo-whatsapp" size={20} color={colors.primaryDark} />
-              </View>
-              <Text className="font-bold flex-1" style={{ color: colors.primaryDark, fontSize: 15.5 }}>
-                {venue.whatsapp_number}
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
-            </Pressable>
+            <View style={{ gap: 10 }}>
+              {venue.whatsapp_number && (
+                <Pressable
+                  onPress={() => handleOpenWhatsApp(venue.whatsapp_number as string)}
+                  className="flex-row items-center rounded-2xl px-4 py-3"
+                  style={{ backgroundColor: colors.primaryLight, gap: 10 }}
+                >
+                  <View
+                    className="items-center justify-center rounded-full bg-white"
+                    style={{ width: 38, height: 38 }}
+                  >
+                    <Ionicons name="logo-whatsapp" size={20} color={colors.primaryDark} />
+                  </View>
+                  <Text className="font-bold flex-1" style={{ color: colors.primaryDark, fontSize: 15.5 }}>
+                    {venue.whatsapp_number}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+                </Pressable>
+              )}
+              {venue.contact_phone && (
+                <Pressable
+                  onPress={() => handleCall(venue.contact_phone as string)}
+                  className="flex-row items-center rounded-2xl px-4 py-3"
+                  style={{ backgroundColor: colors.primaryLight, gap: 10 }}
+                >
+                  <View
+                    className="items-center justify-center rounded-full bg-white"
+                    style={{ width: 38, height: 38 }}
+                  >
+                    <Ionicons name="call-outline" size={20} color={colors.primaryDark} />
+                  </View>
+                  <Text className="font-bold flex-1" style={{ color: colors.primaryDark, fontSize: 15.5 }}>
+                    {venue.contact_phone}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.primaryDark} />
+                </Pressable>
+              )}
+            </View>
           </View>
         )}
 
