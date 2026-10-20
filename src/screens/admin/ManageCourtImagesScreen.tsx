@@ -11,6 +11,7 @@ import {
   useReorderCourtImage,
 } from "../../hooks/useVenuesAdmin";
 import { pickImages, uploadImage } from "../../lib/upload";
+import { downloadAndShareImage } from "../../lib/shareImage";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -28,6 +29,7 @@ export default function ManageCourtImagesScreen() {
   const deleteImage = useDeleteCourtImage(params.venueId);
   const reorderImage = useReorderCourtImage(params.venueId);
   const [uploading, setUploading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const court = venue?.court.find((c) => c.id === params.courtId);
   const images = [...(court?.court_images ?? [])].sort((a, b) => a.display_order - b.display_order);
@@ -63,6 +65,17 @@ export default function ManageCourtImagesScreen() {
           }),
       },
     ]);
+  };
+
+  const handleDownload = async (imageId: string, imageUrl: string) => {
+    setDownloadingId(imageId);
+    try {
+      await downloadAndShareImage(imageUrl);
+    } catch (err) {
+      Alert.alert("Download failed", getFriendlyErrorMessage(err, "Could not download photo."));
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const handleMove = (index: number, direction: -1 | 1) => {
@@ -133,9 +146,18 @@ export default function ManageCourtImagesScreen() {
                       />
                     </Pressable>
                   </View>
-                  <Pressable onPress={() => handleDelete(img.id)} hitSlop={6}>
-                    <Ionicons name="trash-outline" size={18} color={colors.danger} />
-                  </Pressable>
+                  <View className="flex-row items-center" style={{ gap: 10 }}>
+                    <Pressable onPress={() => handleDownload(img.id, img.image_url)} disabled={downloadingId === img.id} hitSlop={6}>
+                      {downloadingId === img.id ? (
+                        <ActivityIndicator size="small" color={colors.muted} />
+                      ) : (
+                        <Ionicons name="download-outline" size={18} color={colors.muted} />
+                      )}
+                    </Pressable>
+                    <Pressable onPress={() => handleDelete(img.id)} hitSlop={6}>
+                      <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             ))}
