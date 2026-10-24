@@ -99,26 +99,16 @@ export async function fetchProfileStats(userId: string, sportId?: string): Promi
   const allHistory = (historyRes.data ?? []) as unknown as HistoryRow[];
   const history = sportId ? allHistory.filter((r) => r.sport_id === sportId) : allHistory;
 
-  const sportCounts = new Map<string, { sportName: string; count: number }>();
   let hoursPlayedTotal = 0;
   let gamesHostedTotal = 0;
   let tournamentsPlayedTotal = 0;
   for (const row of history) {
-    if (row.sport_id) {
-      const existing = sportCounts.get(row.sport_id);
-      const sportName = row.sports?.name ?? "Other";
-      sportCounts.set(row.sport_id, { sportName, count: (existing?.count ?? 0) + 1 });
-    }
     if (row.role === "creator") gamesHostedTotal += 1;
     if (row.game_type === "TOURNAMENT") tournamentsPlayedTotal += 1;
     if (row.start_time && row.end_time) {
       hoursPlayedTotal += diffHours(row.start_time.slice(0, 5), row.end_time.slice(0, 5));
     }
   }
-
-  const sportBreakdown: SportBreakdownEntry[] = Array.from(sportCounts.entries())
-    .map(([sportId, v]) => ({ sportId, sportName: v.sportName, count: v.count }))
-    .sort((a, b) => b.count - a.count);
 
   // Only these statuses count as "still upcoming" — matches exactly what
   // expire_past_games() treats as not-yet-expired. COMPLETED/CANCELLED games
@@ -166,9 +156,15 @@ export async function fetchProfileStats(userId: string, sportId?: string): Promi
 
   const { data: matchResultRows, error: matchResultsError } = await supabase
     .from("match_results")
-    .select("game_id, sport_id, result")
+    .select("game_id, sport_id, result, sports(name)")
     .eq("user_id", userId);
   if (matchResultsError) throw new Error(matchResultsError.message);
+  const allScoredRows = (matchResultRows ?? []) as unknown as {
+    game_id: string | null;
+    sport_id: string | null;
+    result: string;
+    sports: { name: string } | null;
+  }[];
 
   // match_results carries its own sport_id directly (populated whether the
   // match came from a booked game or a standalone one, e.g. a quick-
@@ -176,12 +172,29 @@ export async function fetchProfileStats(userId: string, sportId?: string): Promi
   // directly, instead of looking the sport up via game_history by game_id,
   // is what lets a standalone match be found even though it has no game_id
   // to look up in the first place.
-  const scoredRows = (matchResultRows ?? []).filter((m) => !sportId || m.sport_id === sportId);
+  const scoredRows = allScoredRows.filter((m) => !sportId || m.sport_id === sportId);
   const scoredGamesTotal = scoredRows.length;
   const scoredWinsTotal = scoredRows.filter((m) => m.result === "WON").length;
   const scoredRegularGamesTotal = scoredRows.filter(
     (m) => (m.game_id ? gameTypeByGameId.get(m.game_id) : undefined) !== "TOURNAMENT"
   ).length;
+
+  // "Sports Played" (the pie chart) needs to reflect every sport this
+  // player has actually completed a match in — same match_results source
+  // (and the same sport_id-direct grouping) get_player_public_stats already
+  // uses for another player's profile, so a standalone-only sport like a
+  // quick-scorecard cricket match shows up here too, not just ones tied to
+  // a booked game in game_history.
+  const sportCounts = new Map<string, { sportName: string; count: number }>();
+  for (const row of scoredRows) {
+    if (!row.sport_id) continue;
+    const existing = sportCounts.get(row.sport_id);
+    const sportName = row.sports?.name ?? "Other";
+    sportCounts.set(row.sport_id, { sportName, count: (existing?.count ?? 0) + 1 });
+  }
+  const sportBreakdown: SportBreakdownEntry[] = Array.from(sportCounts.entries())
+    .map(([sportId, v]) => ({ sportId, sportName: v.sportName, count: v.count }))
+    .sort((a, b) => b.count - a.count);
 
   const computedSkillLevel = mostCommonSkillLevel(
     (skillLevelsRes.data ?? []).map((r) => r.skill_level)
