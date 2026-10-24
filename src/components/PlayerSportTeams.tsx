@@ -13,7 +13,9 @@ export default function PlayerSportTeams({ sport, fullName }: { sport: GenericSp
 
   const teamCounts = new Map<string, number>();
   for (const m of matches ?? []) {
-    const onA = m.sideAPlayers.includes(fullName);
+    // A singles match has no players array — the player's identity lives
+    // only in the side-name column.
+    const onA = m.sideAPlayers.includes(fullName) || m.sideAName === fullName;
     const name = onA ? m.sideAName : m.sideBName;
     teamCounts.set(name, (teamCounts.get(name) ?? 0) + 1);
   }

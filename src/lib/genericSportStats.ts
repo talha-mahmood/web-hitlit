@@ -155,10 +155,19 @@ export async function fetchGenericMatches(sport: GenericSport, fullName: string)
   // user input — the `any` here is only to get past supabase-js wanting a
   // literal table-name union, since this function is deliberately generic
   // across sports.
+  // A SINGLES match (padel/badminton/pickleball/table tennis/tennis all
+  // support it) stores the player's identity only in the side-NAME column
+  // (e.g. team_a_name = "Hamza Mahmood") and leaves the side-PLAYERS array
+  // empty — only a DOUBLES/team match populates that array. Matching on the
+  // players array alone silently found nothing for anyone whose only
+  // matches in a sport were singles, which is why their whole Overview/
+  // Statistics tab bar never showed up at all.
   const { data, error } = await supabase
     .from(cfg.table as any)
     .select("*")
-    .or(`${cfg.sideAPlayersCol}.cs.{${quoted}},${cfg.sideBPlayersCol}.cs.{${quoted}}`)
+    .or(
+      `${cfg.sideAPlayersCol}.cs.{${quoted}},${cfg.sideBPlayersCol}.cs.{${quoted}},${cfg.sideANameCol}.eq.${quoted},${cfg.sideBNameCol}.eq.${quoted}`
+    )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => ({
@@ -212,8 +221,11 @@ export async function fetchPlayerGenericFigures(sport: GenericSport, fullName: s
 
   const figures: GenericFigures[] = [];
   for (const m of completed) {
-    const onA = m.sideAPlayers.includes(fullName);
-    const onB = m.sideBPlayers.includes(fullName);
+    // A singles match has no players array at all — the player's identity
+    // lives only in the side-name column, same reasoning as the query fix
+    // above.
+    const onA = m.sideAPlayers.includes(fullName) || m.sideAName === fullName;
+    const onB = m.sideBPlayers.includes(fullName) || m.sideBName === fullName;
     if (!onA && !onB) continue;
     const mySide = onA ? "A" : "B";
     const mySideName = onA ? m.sideAName : m.sideBName;
