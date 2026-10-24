@@ -2161,18 +2161,18 @@ export default function LiveScoringScreen() {
 
             {/* Score card */}
             <View className="items-center">
-              <Text className="text-ink font-extrabold text-xl text-center" numberOfLines={1}>
+              <Text className="text-ink font-extrabold text-lg text-center" numberOfLines={1}>
                 {(battingTeamName ?? "").toUpperCase()}
               </Text>
               <Text className="text-muted text-sm font-bold mt-0.5">
                 {currentInnings?.innings_number === 2 ? "2nd Innings" : "1st Innings"}
               </Text>
-              <Text style={{ fontSize: 52, fontWeight: "800", color: colors.primary, marginTop: 2 }}>
+              <Text style={{ fontSize: 52, fontWeight: "800", color: colors.primary, marginTop: -2, lineHeight: 56 }}>
                 {inningsState?.runs ?? 0}-{inningsState?.wickets ?? 0}
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-center flex-wrap mt-0.5" style={{ gap: 18 }}>
+            <View className="flex-row items-center justify-center flex-wrap" style={{ gap: 18, marginTop: -2 }}>
               <Text className="text-muted text-sm font-bold">Extras - {extrasTotal}</Text>
               <Text className="text-muted text-sm font-bold">
                 Overs - {formatOvers(inningsState?.legalBalls ?? 0)} / {match.overs_limit}
@@ -2357,14 +2357,14 @@ export default function LiveScoringScreen() {
                     horizontal
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
-                    className="mt-4"
+                    className="mt-1"
                     onContentSizeChange={() =>
                       mainOverScrollRef.current?.scrollTo({ x: (displayOvers.length - 1) * (screenWidth - 32), animated: true })
                     }
                   >
                     {displayOvers.map((over, overIndex) => (
                       <View key={overIndex} style={{ width: screenWidth - 32 }}>
-                        <Text className="text-muted text-xs font-semibold mb-2">Over {overIndex + 1}</Text>
+                        <Text className="text-muted font-semibold mb-2" style={{ fontSize: 11 }}>Over {overIndex + 1}</Text>
                         <View className="flex-row" style={{ gap: 8 }}>
                           {over.map((b, i) => {
                             const isLast = i === over.length - 1;
