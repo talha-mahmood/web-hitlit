@@ -193,8 +193,17 @@ export default function ProfileScreen() {
       setFilterSportName(sportName);
     }
   };
-  const matchesWon = player?.matchesWonTotal ?? 0;
-  const matchesPlayed = player?.matchesPlayedTotal ?? 0;
+  // "Games Played"/"Games Win" normally come from match_results, which only
+  // ever gets a row for matches scored through the tournament booking flow —
+  // a standalone "quick scorecard" cricket match never gets one. Cricket's
+  // own figures (cricketFigures, computed by replaying every cricket match
+  // this player appears in, booked or not) are the complete picture, so for
+  // a cricket sub-sport these numbers come from there instead, matching what
+  // the Player Overview/Statistics tabs already show.
+  const cricketMatchesPlayed = cricketFigures?.length ?? 0;
+  const cricketMatchesWon = cricketFigures?.filter((f) => f.won === true).length ?? 0;
+  const matchesWon = resolvedSportKind === "cricket" ? cricketMatchesWon : player?.matchesWonTotal ?? 0;
+  const matchesPlayed = resolvedSportKind === "cricket" ? cricketMatchesPlayed : player?.matchesPlayedTotal ?? 0;
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [savingSkill, setSavingSkill] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -426,7 +435,7 @@ export default function ProfileScreen() {
           <PlayerStatCards
             data={{
               rating,
-              gamesPlayed: stats?.gamesPlayedTotal ?? 0,
+              gamesPlayed: resolvedSportKind === "cricket" ? cricketMatchesPlayed : stats?.gamesPlayedTotal ?? 0,
               tournamentsPlayed: stats?.tournamentsPlayedTotal ?? 0,
               gamesHosted: stats?.gamesHostedTotal ?? 0,
               activeSquads: stats?.activeSquads.length ?? 0,

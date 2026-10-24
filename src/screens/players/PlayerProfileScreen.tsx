@@ -84,8 +84,17 @@ export default function PlayerProfileScreen() {
     }
   };
 
-  const matchesWon = player?.matchesWonTotal ?? 0;
-  const matchesPlayed = player?.matchesPlayedTotal ?? 0;
+  // "Games Played"/"Games Win" normally come from match_results, which only
+  // ever gets a row for matches scored through the tournament booking flow —
+  // a standalone "quick scorecard" cricket match never gets one. Cricket's
+  // own figures (cricketFigures, computed by replaying every cricket match
+  // this player appears in, booked or not) are the complete picture, so for
+  // a cricket sub-sport these numbers come from there instead, matching what
+  // the Player Overview/Statistics tabs already show.
+  const cricketMatchesPlayed = cricketFigures?.length ?? 0;
+  const cricketMatchesWon = cricketFigures?.filter((f) => f.won === true).length ?? 0;
+  const matchesWon = resolvedSportKind === "cricket" ? cricketMatchesWon : player?.matchesWonTotal ?? 0;
+  const matchesPlayed = resolvedSportKind === "cricket" ? cricketMatchesPlayed : player?.matchesPlayedTotal ?? 0;
   // Participation Score: the old activity-based number (games, tournaments,
   // hosting) — shown on its own card.
   const participationScore = computeRating(player);
@@ -325,7 +334,7 @@ export default function PlayerProfileScreen() {
               <PlayerStatCards
                 data={{
                   rating,
-                  gamesPlayed: player.gamesPlayedTotal,
+                  gamesPlayed: resolvedSportKind === "cricket" ? cricketMatchesPlayed : player.gamesPlayedTotal,
                   tournamentsPlayed: player.tournamentsPlayedTotal,
                   gamesHosted: player.gamesHostedTotal,
                   activeSquads: player.activeSquads,
