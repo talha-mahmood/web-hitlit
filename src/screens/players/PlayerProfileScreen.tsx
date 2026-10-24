@@ -60,16 +60,12 @@ export default function PlayerProfileScreen() {
   const isOwnProfile = viewerId === route.params.userId;
   const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
-  // Which sport's tabs to show: whatever's explicitly filtered, else cricket
-  // if this player has any (preserving the original behavior), else their
-  // most-played sport if it's one of the other scorecard sports. Basketball/
-  // Squash/Volleyball have no scorecard module at all, so they resolve to
-  // null — same as a player with no scorecard data of any kind.
+  // Which sport's tabs to show: only once a specific sport is explicitly
+  // filtered to. "All Sports" (no filter) shows no tabs — same as Basketball/
+  // Squash/Volleyball, which have no scorecard module at all.
   const resolvedSportKind: "cricket" | GenericSport | null = filterSportName
     ? classifySportKind(filterSportName)
-    : hasCricketData
-      ? "cricket"
-      : classifySportKind(player?.sportBreakdown?.[0]?.sportName);
+    : null;
   const genericSport: GenericSport | null = resolvedSportKind && resolvedSportKind !== "cricket" ? resolvedSportKind : null;
   const { data: genericFigures } = usePlayerGenericFigures(genericSport, player?.fullName);
   const hasGenericData = !!genericFigures && genericFigures.length > 0;

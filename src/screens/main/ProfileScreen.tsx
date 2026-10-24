@@ -173,14 +173,12 @@ export default function ProfileScreen() {
   const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
   // Same tab-set resolution PlayerProfileScreen uses when viewing someone
-  // else's profile — whatever sport is explicitly filtered, else cricket if
-  // this player has any, else their most-played sport if it has its own
-  // scorecard module.
+  // else's profile — the Overview/Statistics/etc. tabs only ever show once a
+  // specific sport is explicitly filtered to; "All Sports" shows no tabs,
+  // same as any other sport with no stats module.
   const resolvedSportKind: "cricket" | GenericSport | null = filterSportName
     ? classifySportKind(filterSportName)
-    : hasCricketData
-      ? "cricket"
-      : classifySportKind(player?.sportBreakdown?.[0]?.sportName);
+    : null;
   const genericSport: GenericSport | null = resolvedSportKind && resolvedSportKind !== "cricket" ? resolvedSportKind : null;
   const { data: genericFigures } = usePlayerGenericFigures(genericSport, player?.fullName);
   const hasGenericData = !!genericFigures && genericFigures.length > 0;
