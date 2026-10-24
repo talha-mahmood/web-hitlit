@@ -327,6 +327,18 @@ export default function AccountSettingsScreen() {
             </Text>
           </Pressable>
         </SectionCard>
+
+        <Pressable
+          onPress={async () => {
+            await signOutGoogle();
+            signOutWithPushCleanup();
+          }}
+          className="mt-4"
+        >
+          <GradientFill className="rounded-xl py-4 items-center">
+            <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
+          </GradientFill>
+        </Pressable>
       </ScrollView>
 
       <Modal

@@ -9,7 +9,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { supabase } from "../../lib/supabase";
-import { signOutGoogle } from "../../lib/googleAuth";
 import { useProfileStore } from "../../store/profileStore";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStats } from "../../hooks/useProfileStats";
@@ -45,7 +44,6 @@ import { colors, cardShadow } from "../../constants/theme";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import type { Database } from "../../types/database.types";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
-import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 
@@ -468,17 +466,6 @@ export default function ProfileScreen() {
         />
 
         {profile?.jersey_number != null && <JerseyNumberCard number={profile.jersey_number} />}
-
-        <Pressable
-          onPress={async () => {
-            await signOutGoogle();
-            signOutWithPushCleanup();
-          }}
-        >
-          <GradientFill className="rounded-xl py-4 items-center mt-2">
-            <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
-          </GradientFill>
-        </Pressable>
       </View>
 
       <Modal visible={skillPickerOpen} transparent animationType="fade" onRequestClose={() => setSkillPickerOpen(false)}>
