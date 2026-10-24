@@ -112,7 +112,11 @@ export default function PlayersDashboardContent({
     const query = search.trim().toLowerCase();
     const withRank = rankedPlayers.map((player, index) => ({ player, rank: index + 1 }));
     if (!query) return withRank;
-    return withRank.filter(({ player }) => (player.fullName ?? "").toLowerCase().includes(query));
+    return withRank.filter(
+      ({ player }) =>
+        (player.fullName ?? "").toLowerCase().includes(query) ||
+        (player.userCode ?? "").toLowerCase().includes(query)
+    );
   }, [rankedPlayers, search]);
 
   return (
@@ -129,7 +133,7 @@ export default function PlayersDashboardContent({
             <FieldInput
               value={search}
               onChangeText={setSearch}
-              placeholder="Search players by name"
+              placeholder="Search players by name or ID"
               autoCorrect={false}
               returnKeyType="search"
               left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}

@@ -1508,7 +1508,7 @@ export type Database = {
           cricket_match_id: string | null
           football_match_id: string | null
           game_date: string | null
-          game_id: string
+          game_id: string | null
           game_title: string | null
           id: string
           match_id: string
@@ -1522,7 +1522,7 @@ export type Database = {
           cricket_match_id?: string | null
           football_match_id?: string | null
           game_date?: string | null
-          game_id: string
+          game_id?: string | null
           game_title?: string | null
           id?: string
           match_id: string
@@ -1536,7 +1536,7 @@ export type Database = {
           cricket_match_id?: string | null
           football_match_id?: string | null
           game_date?: string | null
-          game_id?: string
+          game_id?: string | null
           game_title?: string | null
           id?: string
           match_id?: string
@@ -3591,6 +3591,7 @@ export type Database = {
           matches_won: number
           skill_level: Database["public"]["Enums"]["skill_level_type"]
           tournaments_played: number
+          user_code: string
           user_id: string
         }[]
       }

@@ -166,17 +166,22 @@ export async function fetchProfileStats(userId: string, sportId?: string): Promi
 
   const { data: matchResultRows, error: matchResultsError } = await supabase
     .from("match_results")
-    .select("game_id, result")
+    .select("game_id, sport_id, result")
     .eq("user_id", userId);
   if (matchResultsError) throw new Error(matchResultsError.message);
 
-  // A scored match belongs to the sport of the game it was played in.
-  const sportByGameId = new Map<string, string | null>();
-  for (const row of allHistory) sportByGameId.set(row.game_id, row.sport_id);
-  const scoredRows = (matchResultRows ?? []).filter((m) => !sportId || sportByGameId.get(m.game_id) === sportId);
+  // match_results carries its own sport_id directly (populated whether the
+  // match came from a booked game or a standalone one, e.g. a quick-
+  // scorecard cricket match with no game_id at all) — filtering on that
+  // directly, instead of looking the sport up via game_history by game_id,
+  // is what lets a standalone match be found even though it has no game_id
+  // to look up in the first place.
+  const scoredRows = (matchResultRows ?? []).filter((m) => !sportId || m.sport_id === sportId);
   const scoredGamesTotal = scoredRows.length;
   const scoredWinsTotal = scoredRows.filter((m) => m.result === "WON").length;
-  const scoredRegularGamesTotal = scoredRows.filter((m) => gameTypeByGameId.get(m.game_id) !== "TOURNAMENT").length;
+  const scoredRegularGamesTotal = scoredRows.filter(
+    (m) => (m.game_id ? gameTypeByGameId.get(m.game_id) : undefined) !== "TOURNAMENT"
+  ).length;
 
   const computedSkillLevel = mostCommonSkillLevel(
     (skillLevelsRes.data ?? []).map((r) => r.skill_level)

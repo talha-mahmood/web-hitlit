@@ -14,6 +14,7 @@ export type TopPlayer = {
   avatar: string | null;
   city: string | null;
   skillLevel: SkillLevel | null;
+  userCode: string | null;
   gamesPlayedTotal: number;
   tournamentsPlayedTotal: number;
   gamesHostedTotal: number;
@@ -45,6 +46,7 @@ export async function fetchTopPlayers(sportId?: string): Promise<TopPlayer[]> {
     avatar: row.avatar,
     city: row.city,
     skillLevel: row.skill_level,
+    userCode: row.user_code,
     gamesPlayedTotal: row.matches_played,
     tournamentsPlayedTotal: row.tournaments_played,
     gamesHostedTotal: row.games_hosted,
