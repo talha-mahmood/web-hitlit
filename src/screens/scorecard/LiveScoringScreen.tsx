@@ -2365,7 +2365,11 @@ export default function LiveScoringScreen() {
                     {displayOvers.map((over, overIndex) => (
                       <View key={overIndex} style={{ width: screenWidth - 32 }}>
                         <Text className="text-muted font-semibold mb-2" style={{ fontSize: 11 }}>Over {overIndex + 1}</Text>
-                        <View className="flex-row" style={{ gap: 8 }}>
+                        {/* flex-wrap so an over padded out with extra
+                            wide/no-ball deliveries drops the overflow onto a
+                            new line below instead of running off the edge of
+                            the screen and becoming invisible. */}
+                        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                           {over.map((b, i) => {
                             const isLast = i === over.length - 1;
                             const label = ballLabel(b);
