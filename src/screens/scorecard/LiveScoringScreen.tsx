@@ -2138,7 +2138,7 @@ export default function LiveScoringScreen() {
 
       {matchCentreTab === "scoring" ? (
         <>
-          <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+          <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 0 }}>
             {(!isOnline || pendingBallCount > 0) && (
               <View
                 className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
@@ -2259,9 +2259,9 @@ export default function LiveScoringScreen() {
                     <Ionicons name="pencil" size={13} color={colors.muted} />
                     <Text className="text-ink font-bold text-sm">Batsman</Text>
                   </View>
-                  <View className="flex-row" style={{ gap: 14 }}>
+                  <View className="flex-row" style={{ gap: 10 }}>
                     {["R", "B", "4s", "6s", "SR"].map((h) => (
-                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: 26, textAlign: "center" }}>
+                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: h === "SR" ? 38 : 26, textAlign: "center" }}>
                         {h}
                       </Text>
                     ))}
@@ -2298,12 +2298,12 @@ export default function LiveScoringScreen() {
                             </Text>
                           )}
                         </Pressable>
-                        <View className="flex-row" style={{ gap: 14 }}>
+                        <View className="flex-row" style={{ gap: 10 }}>
                           <Text className="font-semibold text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.runs ?? 0}</Text>
                           <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.balls ?? 0}</Text>
                           <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.fours ?? 0}</Text>
                           <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{row.stat?.sixes ?? 0}</Text>
-                          <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>
+                          <Text className="text-sm" numberOfLines={1} style={{ width: 38, textAlign: "center", color: colors.muted }}>
                             {row.stat && row.stat.balls > 0 ? ((row.stat.runs / row.stat.balls) * 100).toFixed(1) : "0.0"}
                           </Text>
                         </View>
@@ -2321,9 +2321,9 @@ export default function LiveScoringScreen() {
                     <Ionicons name="pencil" size={13} color={colors.muted} />
                     <Text className="text-ink font-bold text-sm">Bowler</Text>
                   </View>
-                  <View className="flex-row" style={{ gap: 14 }}>
+                  <View className="flex-row" style={{ gap: 10 }}>
                     {["O", "M", "R", "W", "Eco"].map((h) => (
-                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: 26, textAlign: "center" }}>
+                      <Text key={h} className="text-muted text-sm font-bold" style={{ width: h === "Eco" ? 38 : 26, textAlign: "center" }}>
                         {h}
                       </Text>
                     ))}
@@ -2335,12 +2335,12 @@ export default function LiveScoringScreen() {
                     style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
                   >
                     <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{effectiveBowler}</Text>
-                    <View className="flex-row" style={{ gap: 14 }}>
+                    <View className="flex-row" style={{ gap: 10 }}>
                       <Text className="font-semibold text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{formatOvers(bowlerStat?.legalBalls ?? 0)}</Text>
                       <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.maidens ?? 0}</Text>
                       <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.runsConceded ?? 0}</Text>
                       <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>{bowlerStat?.wickets ?? 0}</Text>
-                      <Text className="text-sm" style={{ width: 26, textAlign: "center", color: colors.muted }}>
+                      <Text className="text-sm" numberOfLines={1} style={{ width: 38, textAlign: "center", color: colors.muted }}>
                         {bowlerStat && bowlerStat.legalBalls > 0 ? ((bowlerStat.runsConceded / bowlerStat.legalBalls) * 6).toFixed(1) : "0.0"}
                       </Text>
                     </View>
@@ -2425,7 +2425,7 @@ export default function LiveScoringScreen() {
           {isScorer && hasActiveInnings && !inningsOver && !isMatchCompleted && (
             <GradientFill
               pointerEvents={addBall.isPending ? "none" : "auto"}
-              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: 18 }}
+              style={{ paddingTop: 8, paddingHorizontal: 20, paddingBottom: 18 }}
             >
               {!readyToScore ? (
                 <>
