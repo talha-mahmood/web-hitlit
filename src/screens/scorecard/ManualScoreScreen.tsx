@@ -16,7 +16,6 @@ import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
 type Nav = NativeStackNavigationProp<GamesStackParamList, "ManualScore">;
 type Route = RouteProp<GamesStackParamList, "ManualScore">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
 const OVERS_PRESETS = ["2", "5", "10", "20", "50"];
 
 function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
@@ -233,44 +232,33 @@ export default function ManualScoreScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        <InfoBox text="Team names, players and venue come from the tournament match and can't be changed here." />
-
-        {(["A", "B"] as const).map((letter) => {
-          const name = letter === "A" ? teamAName : teamBName;
-          const players = letter === "A" ? prefill.teamAPlayers : prefill.teamBPlayers;
-          return (
-            <View key={letter} className="bg-white rounded-2xl overflow-hidden mb-4 mt-4" style={cardShadow}>
-              <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
-                <GradientFill className="items-center justify-center rounded-full" style={{ width: 30, height: 30 }}>
-                  <Text className="text-white font-extrabold text-sm">{letter}</Text>
-                </GradientFill>
-                <Text className="text-ink font-bold text-sm flex-1">Team {letter}</Text>
-              </View>
-              <View className="px-4 pt-4 pb-4">
-                <Text className="text-ink font-semibold text-sm mb-2">Team {letter} Name</Text>
-                <FieldInput value={name} editable={false} containerStyle={LOCKED_FIELD_STYLE} />
-                {players.length > 0 && (
-                  <>
-                    <Text className="text-ink font-semibold text-sm mb-2 mt-4">Team {letter} Players</Text>
-                    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                      {players.map((p, i) => (
-                        <View key={`${p.name}-${i}`} className="bg-primary-light rounded-full px-3 py-1.5">
-                          <Text className="text-primary text-sm font-medium">{p.name}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
-              </View>
+        {/* Team names, players and venue already come from the tournament
+            match and can't be changed here — shown as plain read-only
+            context instead of locked, grayed-out form fields, since
+            there's nothing left for the host to actually fill in for them. */}
+        <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+          <View className="flex-row items-center">
+            <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{teamAName}</Text>
+            <Text className="text-muted text-xs font-bold mx-2">VS</Text>
+            <Text className="text-ink font-bold text-base flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+          </View>
+          {(prefill.teamAPlayers.length > 0 || prefill.teamBPlayers.length > 0) && (
+            <View className="flex-row mt-3" style={{ gap: 10 }}>
+              <Text className="text-muted text-xs flex-1" numberOfLines={2}>
+                {prefill.teamAPlayers.map((p) => p.name).join(", ")}
+              </Text>
+              <Text className="text-muted text-xs flex-1 text-right" numberOfLines={2}>
+                {prefill.teamBPlayers.map((p) => p.name).join(", ")}
+              </Text>
             </View>
-          );
-        })}
-
-        {prefill.venue ? (
-          <CardSection icon="location-outline" title="Venue">
-            <FieldInput value={prefill.venue} editable={false} containerStyle={LOCKED_FIELD_STYLE} />
-          </CardSection>
-        ) : null}
+          )}
+          {prefill.venue ? (
+            <View className="flex-row items-center mt-3 pt-3" style={{ gap: 6, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <Ionicons name="location-outline" size={14} color={colors.muted} />
+              <Text className="text-muted text-xs flex-1" numberOfLines={1}>{prefill.venue}</Text>
+            </View>
+          ) : null}
+        </View>
 
         {sport === "cricket" && (
           <>

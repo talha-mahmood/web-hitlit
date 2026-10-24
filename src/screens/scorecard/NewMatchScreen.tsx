@@ -428,28 +428,39 @@ export default function NewMatchScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        {prefill && (
-          <View className="flex-row rounded-xl px-3 py-2.5 mb-4" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>
-            <Ionicons name="information-circle" size={16} color={colors.primaryDark} style={{ marginTop: 1 }} />
-            <Text className="text-xs flex-1" style={{ color: colors.primaryDark }}>
-              Team names, players and venue come from the tournament match and can't be changed here — everything else is up to you.
-            </Text>
+        {prefill ? (
+          // Team names, players and venue already come from the tournament
+          // match and can't be changed here — shown as plain read-only
+          // context instead of locked, grayed-out form fields, since
+          // there's nothing left for the host to actually fill in for them.
+          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+            <View className="flex-row items-center">
+              <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{teamAName}</Text>
+              <Text className="text-muted text-xs font-bold mx-2">VS</Text>
+              <Text className="text-ink font-bold text-base flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+            </View>
+            {venue ? (
+              <View className="flex-row items-center mt-3 pt-3" style={{ gap: 6, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <Ionicons name="location-outline" size={14} color={colors.muted} />
+                <Text className="text-muted text-xs flex-1" numberOfLines={1}>{venue}</Text>
+              </View>
+            ) : null}
           </View>
+        ) : (
+          <>
+            <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} otherTeamName={teamBName} otherTeamPlayers={teamBPlayers} />
+            <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} otherTeamName={teamAName} otherTeamPlayers={teamAPlayers} />
+
+            <CardSection icon="location-outline" title="Venue">
+              <FieldInput
+                value={venue}
+                onChangeText={setVenue}
+                placeholder="e.g. Karachi Cricket Ground"
+                maxLength={60}
+              />
+            </CardSection>
+          </>
         )}
-
-        <TeamCard letter="A" name={teamAName} onNameChange={setTeamAName} players={teamAPlayers} onPlayersChange={setTeamAPlayers} nameLocked={!!prefill} playersLocked={!!prefill} otherTeamName={teamBName} otherTeamPlayers={teamBPlayers} />
-        <TeamCard letter="B" name={teamBName} onNameChange={setTeamBName} players={teamBPlayers} onPlayersChange={setTeamBPlayers} nameLocked={!!prefill} playersLocked={!!prefill} otherTeamName={teamAName} otherTeamPlayers={teamAPlayers} />
-
-        <CardSection icon="location-outline" title="Venue">
-          <FieldInput
-            value={venue}
-            onChangeText={setVenue}
-            placeholder="e.g. Karachi Cricket Ground"
-            maxLength={60}
-            editable={!prefill}
-            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
-          />
-        </CardSection>
 
         <CardSection icon="baseball-outline" title="Overs per Innings">
           <PillRow
