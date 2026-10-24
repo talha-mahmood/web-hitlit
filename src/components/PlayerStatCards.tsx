@@ -69,21 +69,22 @@ function ActivityBarRow({
   return (
     <View className="mb-3">
       <View className="flex-row items-center justify-between mb-1.5">
-        <View className="flex-row items-center flex-1 mr-2" style={{ gap: 8 }}>
+        <View className="flex-row items-center" style={{ flex: 1, minWidth: 0, marginRight: 8, gap: 8 }}>
           <View
             className="items-center justify-center rounded-full"
-            style={{ width: 24, height: 24, backgroundColor: iconBg }}
+            style={{ width: 24, height: 24, backgroundColor: iconBg, flexShrink: 0 }}
           >
             <Ionicons name={icon} size={12} color={color} />
           </View>
           <Text
             className="text-sm font-medium"
-            style={{ color: light ? "rgba(255,255,255,0.9)" : colors.ink }}
+            style={{ color: light ? "rgba(255,255,255,0.9)" : colors.ink, flexShrink: 1 }}
+            numberOfLines={1}
           >
             {label}
           </Text>
         </View>
-        <Text className="text-sm font-bold" style={{ color: light ? "white" : colors.ink }}>
+        <Text className="text-sm font-bold" style={{ color: light ? "white" : colors.ink, flexShrink: 0 }}>
           {value}
         </Text>
       </View>
