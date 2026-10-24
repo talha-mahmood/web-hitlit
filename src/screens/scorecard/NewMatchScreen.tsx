@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import { useAuthStore } from "../../store/authStore";
+import { useSports } from "../../hooks/useSports";
 import { useCreateCricketMatch } from "../../hooks/useCricket";
 import { friendlyCricketError } from "../../lib/api/cricket";
 import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
@@ -275,11 +276,24 @@ export default function NewMatchScreen() {
   const [lastManStand, setLastManStand] = useState<"on" | "off">("off");
   const [venue, setVenue] = useState(prefill?.venue ?? "");
 
+  // A match started from a booked tournament game already knows its sport
+  // (Hard Ball/Tape Ball/Outdoor Cricket) — only a standalone "quick
+  // scorecard" match needs this picked explicitly, so a player's cricket
+  // stats can later be scoped to the right sub-sport instead of lumped
+  // together. Outdoor Cricket isn't offered here by design — it's rare
+  // enough that only booked games for it carry that sport through.
+  const { data: allSports } = useSports();
+  const cricketSportOptions = (allSports ?? []).filter((s) =>
+    ["hard ball", "tape ball"].includes(s.name.trim().toLowerCase())
+  );
+  const [cricketSportId, setCricketSportId] = useState<string | null>(null);
+
   // Surfaced below the Start button when disabled — the first unmet
   // requirement, in the order a host would naturally fill the form, instead
   // of leaving the button silently gray with no explanation.
   const validationReason =
     describeRosterIssue(teamAName, teamBName, teamAPlayers, teamBPlayers, 2) ??
+    (!prefill?.sportId && !cricketSportId ? "Pick Hard Ball or Tape Ball." : null) ??
     (!oversLimit || parseInt(oversLimit, 10) <= 0 ? "Set the overs per innings." : null) ??
     (!format ? "Pick a match format." : null) ??
     (!tossWinner ? "Pick who won the toss." : null) ??
@@ -308,6 +322,7 @@ export default function NewMatchScreen() {
         tossDecision,
         venue: venue.trim() || undefined,
         lastManStand: lastManStand === "on",
+        sportId: prefill?.sportId ?? cricketSportId,
       },
       {
         onSuccess: ({ matchId }) => {
@@ -451,6 +466,16 @@ export default function NewMatchScreen() {
             maxLength={3}
           />
         </CardSection>
+
+        {!prefill?.sportId && cricketSportOptions.length > 0 && (
+          <CardSection icon="baseball-outline" title="Cricket Format">
+            <PillRow
+              options={cricketSportOptions.map((s) => ({ label: s.name, value: s.id }))}
+              value={cricketSportId}
+              onChange={setCricketSportId}
+            />
+          </CardSection>
+        )}
 
         <CardSection icon="trophy-outline" title="Match Format">
           <PillRow

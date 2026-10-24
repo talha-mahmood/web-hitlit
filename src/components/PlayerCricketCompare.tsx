@@ -98,9 +98,21 @@ function PlayerSearch({ onSelect }: { onSelect: (u: UserSearchResult) => void })
   );
 }
 
-function ComparePanel({ fullNameA, nameA, fullNameB, nameB }: { fullNameA: string; nameA: string; fullNameB: string; nameB: string }) {
-  const { data: figuresA, isLoading: loadingA } = usePlayerCricketFigures(fullNameA);
-  const { data: figuresB, isLoading: loadingB } = usePlayerCricketFigures(fullNameB);
+function ComparePanel({
+  fullNameA,
+  nameA,
+  fullNameB,
+  nameB,
+  sportId,
+}: {
+  fullNameA: string;
+  nameA: string;
+  fullNameB: string;
+  nameB: string;
+  sportId?: string | null;
+}) {
+  const { data: figuresA, isLoading: loadingA } = usePlayerCricketFigures(fullNameA, sportId);
+  const { data: figuresB, isLoading: loadingB } = usePlayerCricketFigures(fullNameB, sportId);
 
   if (loadingA || loadingB) return <ActivityIndicator color={colors.primary} className="mt-6" />;
 
@@ -139,14 +151,28 @@ function ComparePanel({ fullNameA, nameA, fullNameB, nameB }: { fullNameA: strin
   );
 }
 
-export default function PlayerCricketCompare({ fullName, displayName }: { fullName: string; displayName: string }) {
+export default function PlayerCricketCompare({
+  fullName,
+  displayName,
+  sportId,
+}: {
+  fullName: string;
+  displayName: string;
+  sportId?: string | null;
+}) {
   const [opponent, setOpponent] = useState<UserSearchResult | null>(null);
 
   return (
     <View>
       <PlayerSearch onSelect={setOpponent} />
       {opponent?.full_name ? (
-        <ComparePanel fullNameA={fullName} nameA={displayName} fullNameB={opponent.full_name} nameB={opponent.full_name} />
+        <ComparePanel
+          fullNameA={fullName}
+          nameA={displayName}
+          fullNameB={opponent.full_name}
+          nameB={opponent.full_name}
+          sportId={sportId}
+        />
       ) : null}
     </View>
   );

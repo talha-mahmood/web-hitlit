@@ -99,6 +99,12 @@ export async function createCricketMatch(params: {
   // totalPlayers-1 wickets. When on, the lone last batsman keeps playing
   // without a partner until overs run out or they're out too.
   lastManStand?: boolean;
+  // Which cricket sub-sport (Hard Ball/Tape Ball/Outdoor Cricket) this match
+  // belongs to — known upfront when scoring a booked game, or picked by the
+  // user on NewMatchScreen for a standalone match. Used to scope a player's
+  // stats to the right sub-sport instead of lumping every cricket match
+  // together.
+  sportId?: string | null;
 }): Promise<{ matchId: string; inningsId: string; battingTeam: "A" | "B" }> {
   const { data: match, error } = await supabase
     .from("cricket_matches")
@@ -114,6 +120,7 @@ export async function createCricketMatch(params: {
       toss_decision: params.tossDecision,
       venue: params.venue?.trim() || null,
       last_man_stand: params.lastManStand ?? false,
+      sport_id: params.sportId ?? null,
     })
     .select()
     .single();

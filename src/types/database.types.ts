@@ -660,6 +660,7 @@ export type Database = {
           overs_limit: number
           result_summary: string | null
           scoring_code: string | null
+          sport_id: string | null
           status: string
           target_override: number | null
           team_a_name: string
@@ -682,6 +683,7 @@ export type Database = {
           overs_limit: number
           result_summary?: string | null
           scoring_code?: string | null
+          sport_id?: string | null
           status?: string
           target_override?: number | null
           team_a_name: string
@@ -704,6 +706,7 @@ export type Database = {
           overs_limit?: number
           result_summary?: string | null
           scoring_code?: string | null
+          sport_id?: string | null
           status?: string
           target_override?: number | null
           team_a_name?: string
@@ -718,6 +721,13 @@ export type Database = {
           venue?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cricket_matches_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cricket_matches_user_id_fkey"
             columns: ["user_id"]
@@ -3602,6 +3612,10 @@ export type Database = {
       }
       revoke_venue_admin: {
         Args: { target_user_id: string; target_venue_id: string }
+        Returns: undefined
+      }
+      send_personalized_invite: {
+        Args: { p_message: string; p_recipient_id: string }
         Returns: undefined
       }
       squad_add_members_to_team: {

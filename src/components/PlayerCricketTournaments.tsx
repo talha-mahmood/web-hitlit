@@ -38,9 +38,9 @@ async function fetchTournamentsForMatches(cricketMatchIds: string[]): Promise<To
   return (games ?? []).map((g) => ({ gameId: g.id, title: g.title ?? "Tournament", iconUrl: g.icon_url, gameDate: g.game_date }));
 }
 
-export default function PlayerCricketTournaments({ fullName }: { fullName: string }) {
+export default function PlayerCricketTournaments({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
   const navigation = useNavigation<Nav>();
-  const { data: matches, isLoading: matchesLoading } = usePlayerCricketMatches(fullName);
+  const { data: matches, isLoading: matchesLoading } = usePlayerCricketMatches(fullName, sportId);
   const [tournaments, setTournaments] = useState<TournamentEntry[] | null>(null);
 
   useEffect(() => {

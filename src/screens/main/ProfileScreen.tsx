@@ -170,7 +170,7 @@ export default function ProfileScreen() {
   const { data: allSportsProfile } = usePlayerPublicProfile(userId);
   const sportsPlayed = allSportsProfile?.sportBreakdown ?? [];
   const { data: followState } = useFollowState(userId, userId);
-  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
+  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName, filterSportId);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
   // Same tab-set resolution PlayerProfileScreen uses when viewing someone
   // else's profile — the Overview/Statistics/etc. tabs only ever show once a
@@ -398,14 +398,16 @@ export default function ProfileScreen() {
       <View className="px-6" style={{ paddingTop: hasActiveSportData ? 16 : 20 }}>
         {activeTab !== "profile" && resolvedSportKind === "cricket" && player?.fullName ? (
           <>
-            {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}
-            {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} />}
-            {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} />}
-            {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} />}
-            {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} />}
+            {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} sportId={filterSportId} />}
             {activeTab === "clubs" && userId && <PlayerCricketClubs userId={userId} />}
-            {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} />}
-            {activeTab === "compare" && <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />}
+            {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "compare" && (
+              <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} sportId={filterSportId} />
+            )}
           </>
         ) : activeTab !== "profile" && genericSport && player?.fullName ? (
           <>

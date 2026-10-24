@@ -14,7 +14,7 @@ const SPORT_ORDER = ["Hard Ball", "Tape Ball", "Padel", "Football", "Badminton",
 // so they can be filtered independently everywhere a sport filter shows up.
 // "cricket" stays in the list too as a safety net for any sport named that
 // directly (e.g. a fresh seed, or before this split existed).
-const CRICKET_FAMILY_NAMES = ["cricket", "hard ball", "tape ball"];
+const CRICKET_FAMILY_NAMES = ["cricket", "hard ball", "tape ball", "outdoor cricket"];
 
 export function isCricketFamily(sportName: string | null | undefined): boolean {
   return CRICKET_FAMILY_NAMES.includes((sportName ?? "").trim().toLowerCase());

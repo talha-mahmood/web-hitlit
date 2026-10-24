@@ -581,6 +581,7 @@ function HeadToHeadMatchCard({
       teamAPlayers,
       teamBPlayers,
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
+      sportId: game.sports?.id,
     };
 
     if (isCricketSport) {

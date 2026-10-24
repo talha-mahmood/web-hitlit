@@ -247,6 +247,11 @@ export type ScorecardPrefill = {
   teamAPlayers: ScorecardPrefillPlayer[];
   teamBPlayers: ScorecardPrefillPlayer[];
   venue?: string;
+  // The booked game's own sport (Hard Ball/Tape Ball/Outdoor Cricket) — only
+  // meaningful for cricket, but harmless to carry for every sport. Lets
+  // NewMatchScreen skip its own cricket-format picker, since this is
+  // already known.
+  sportId?: string;
 };
 
 const SPORT_MATCH_ID_COLUMN: Record<ScorecardSport, string> = {

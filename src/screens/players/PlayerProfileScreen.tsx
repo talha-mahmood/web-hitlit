@@ -58,7 +58,7 @@ export default function PlayerProfileScreen() {
   const { data: followState } = useFollowState(viewerId, route.params.userId);
   const toggleFollow = useToggleFollow(route.params.userId, viewerId);
   const isOwnProfile = viewerId === route.params.userId;
-  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName);
+  const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName, filterSportId);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
   // Which sport's tabs to show: only once a specific sport is explicitly
   // filtered to. "All Sports" (no filter) shows no tabs — same as Basketball/
@@ -293,15 +293,15 @@ export default function PlayerProfileScreen() {
           >
             {activeTab !== "profile" && resolvedSportKind === "cricket" && player.fullName ? (
               <>
-                {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} />}
-                {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} />}
-                {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} />}
-                {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} />}
-                {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} />}
+                {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} sportId={filterSportId} />}
+                {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} sportId={filterSportId} />}
+                {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} sportId={filterSportId} />}
+                {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} sportId={filterSportId} />}
+                {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} sportId={filterSportId} />}
                 {activeTab === "clubs" && <PlayerCricketClubs userId={route.params.userId} />}
-                {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} />}
+                {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} sportId={filterSportId} />}
                 {activeTab === "compare" && (
-                  <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} />
+                  <PlayerCricketCompare fullName={player.fullName} displayName={player.fullName} sportId={filterSportId} />
                 )}
               </>
             ) : activeTab !== "profile" && genericSport && player.fullName ? (

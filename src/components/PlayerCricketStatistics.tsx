@@ -117,8 +117,8 @@ function MatchWiseCard({ row }: { row: { matchId: string; date: string; format: 
   );
 }
 
-export default function PlayerCricketStatistics({ fullName }: { fullName: string }) {
-  const { data: figures, isLoading } = usePlayerCricketFigures(fullName);
+export default function PlayerCricketStatistics({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
+  const { data: figures, isLoading } = usePlayerCricketFigures(fullName, sportId);
   const [subTab, setSubTab] = useState<SubTab>("BAT");
 
   if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;

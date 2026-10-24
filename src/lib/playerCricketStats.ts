@@ -48,16 +48,21 @@ export type MatchFigures = {
 // Every match (any status) this player appears in — the Matches tab shows
 // scheduled/live matches too. Stat aggregation below filters to COMPLETED
 // only, since an in-progress match's figures aren't final yet.
-export async function fetchPlayerCricketMatches(fullName: string): Promise<CricketMatchDetail[]> {
+// `sportId` narrows to one cricket sub-sport (Hard Ball/Tape Ball/Outdoor
+// Cricket) — omitted, this returns every cricket match regardless of
+// sub-sport, same as before sport_id existed on cricket_matches.
+export async function fetchPlayerCricketMatches(fullName: string, sportId?: string | null): Promise<CricketMatchDetail[]> {
   // Postgres array-literal element, double-quoted so names containing commas,
   // braces or quotes (which would otherwise break the two-condition `.or()`
   // filter string below) are passed through safely.
   const quoted = `"${fullName.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
-  const { data, error } = await supabase
+  let query = supabase
     .from("cricket_matches")
     .select("*, cricket_innings(*, cricket_balls(*))")
     .or(`team_a_players.cs.{${quoted}},team_b_players.cs.{${quoted}}`)
     .order("created_at", { ascending: false });
+  if (sportId) query = query.eq("sport_id", sportId);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as CricketMatchDetail[];
 }

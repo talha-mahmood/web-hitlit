@@ -122,9 +122,9 @@ function ConcededPieChart({ byValue, totalRuns }: { byValue: { value: string; ru
   );
 }
 
-export default function PlayerCricketInsights({ fullName }: { fullName: string }) {
-  const { data: figures, isLoading: figuresLoading } = usePlayerCricketFigures(fullName);
-  const { data: matches, isLoading: matchesLoading } = usePlayerCricketMatches(fullName);
+export default function PlayerCricketInsights({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
+  const { data: figures, isLoading: figuresLoading } = usePlayerCricketFigures(fullName, sportId);
+  const { data: matches, isLoading: matchesLoading } = usePlayerCricketMatches(fullName, sportId);
   const [section, setSection] = useState<"Batting" | "Bowling">("Batting");
   const [batMetric, setBatMetric] = useState<BatMetric>("Run");
 

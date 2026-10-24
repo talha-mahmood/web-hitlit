@@ -1575,6 +1575,7 @@ export default function TournamentMatchesScreen() {
       teamAPlayers: rawTeamAPlayers.map((p, i) => ({ ...p, name: teamANames[i] })),
       teamBPlayers: rawTeamBPlayers.map((p, i) => ({ ...p, name: teamBNames[i] })),
       venue: game.venues?.name ?? game.custom_venue_name ?? undefined,
+      sportId: game.sports?.id,
     };
   };
 

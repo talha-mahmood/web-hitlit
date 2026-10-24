@@ -4,8 +4,8 @@ import { colors } from "../constants/theme";
 import PlayerCricketEntityCard from "./PlayerCricketEntityCard";
 import { usePlayerCricketMatches } from "./PlayerCricketOverview";
 
-export default function PlayerCricketTeams({ fullName }: { fullName: string }) {
-  const { data: matches, isLoading } = usePlayerCricketMatches(fullName);
+export default function PlayerCricketTeams({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
+  const { data: matches, isLoading } = usePlayerCricketMatches(fullName, sportId);
 
   if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
 

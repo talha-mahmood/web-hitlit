@@ -63,8 +63,8 @@ function MatchRow({ match }: { match: CricketMatchDetail }) {
   );
 }
 
-export default function PlayerCricketMatches({ fullName }: { fullName: string }) {
-  const { data: matches, isLoading } = usePlayerCricketMatches(fullName);
+export default function PlayerCricketMatches({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
+  const { data: matches, isLoading } = usePlayerCricketMatches(fullName, sportId);
 
   if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
   if (!matches || matches.length === 0) {
