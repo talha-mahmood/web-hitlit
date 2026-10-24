@@ -2425,7 +2425,7 @@ export default function LiveScoringScreen() {
           {isScorer && hasActiveInnings && !inningsOver && !isMatchCompleted && (
             <GradientFill
               pointerEvents={addBall.isPending ? "none" : "auto"}
-              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: insets.bottom + 18 }}
+              style={{ paddingTop: 18, paddingHorizontal: 20, paddingBottom: 18 }}
             >
               {!readyToScore ? (
                 <>
