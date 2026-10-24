@@ -3,7 +3,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import PieChart from "./PieChart";
 import { getRatingTierInfo } from "../lib/playerRating";
 import { getSportIcon } from "../lib/sportIcons";
-import { isCricketFamily } from "../lib/api/sports";
 import { colors, cardShadow } from "../constants/theme";
 import GradientFill from "./GradientFill";
 import { SkeletonBlock } from "./Skeleton";
@@ -373,39 +372,9 @@ export default function PlayerStatCards({
               </View>
             </View>
 
-            {/* Sport-specific totals — only once filtered to that one sport */}
-            {totals && isCricketFamily(filterSportName) && (
-              <View className="flex-row mb-4" style={{ gap: 12 }}>
-                <View
-                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
-                  >
-                    <MaterialCommunityIcons name="cricket" size={22} color="#1D9254" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{totals.runs}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Runs</Text>
-                  </View>
-                </View>
-                <View
-                  style={{ backgroundColor: "white", ...cardShadow, flex: 1, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10 }}
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
-                  >
-                    <MaterialCommunityIcons name="bowling" size={22} color="#1D9254" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-ink font-extrabold text-xl">{totals.wickets}</Text>
-                    <Text className="text-xs mt-0.5" style={{ color: colors.muted }}>Total Wickets</Text>
-                  </View>
-                </View>
-              </View>
-            )}
+            {/* Sport-specific totals — only once filtered to that one sport.
+                Cricket has its own dedicated Statistics tab once selected, so
+                no redundant runs/wickets card here. */}
             {totals && filterSportName?.toLowerCase() === "football" && (
               <View
                   style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
