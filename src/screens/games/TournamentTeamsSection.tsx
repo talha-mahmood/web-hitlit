@@ -513,18 +513,14 @@ function HeadToHeadMatchCard({
   const teamAName = displayName(teams[0], "Team A");
   const teamBName = displayName(teams[1], "Team B");
 
-  // Same rule as the tournament's "Book Venue"/"Go To Scorecard": a real
-  // (dropdown-picked) venue counts as booked once there's either an actual
-  // booking or the host has contacted the venue (see GameDetailScreen's
-  // own isVenueBooked), a manually typed one is treated as already
-  // settled. The button itself only ever appears once the match row
-  // exists (both teams approved).
-  const isVenueBooked = game.venue_id ? !!game.booking_id || game.venue_contacted : !!game.custom_venue_name;
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = isCricketFamily(sportName);
   // Once the match has a result (scored live or entered by hand) there's
-  // nothing left to score, so neither scoring button is offered.
-  const canGoToScorecard = isHost && isVenueBooked && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
+  // nothing left to score, so neither scoring button is offered. Scoring no
+  // longer waits on the venue being booked — a host can start scoring as
+  // soon as both teams are set, same as the button itself only ever
+  // appearing once the match row exists.
+  const canGoToScorecard = isHost && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
 
   const rosterByTeamId = new Map<string, ScorecardPrefillPlayer[]>();
   for (const t of teams) {
