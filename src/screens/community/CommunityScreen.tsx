@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler, type LayoutChangeEvent } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, Pressable, ScrollView, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, cardShadow } from "../../constants/theme";
+import { colors } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import GradientFill from "../../components/GradientFill";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
@@ -16,139 +15,42 @@ import CommunityChatContent from "./CommunityChatContent";
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommunityHome">;
 type Segment = "community" | "players" | "chat";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SIDE_PADDING = 16;
-// The cards run almost edge to edge: a slim margin on each side and a slim
-// gap between the two columns, so each card is as wide as the screen allows.
-const GRID_SIDE_PADDING = 8;
-const GRID_COL_GAP = 8;
-const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
-const CARD_TEXT_HEIGHT = 46;
-// Every card uses a provided illustration that already has its own title +
-// subtitle baked into the image itself — no extra text/icon overlay needed,
-// except the Create Squad card, which gets a banner-image-then-title layout
-// copied from VenueListCard (VenuesListScreen.tsx): a top image, then a
-// padded title/subtitle block underneath.
-function ImageCard({
-  source,
-  visual,
-  onPress,
+// Same row card the Scorecard listing screen uses (ScorecardHomeScreen's
+// SportCard): white card, 2px pale-green border, white icon badge on the
+// left, bold single-line title, plain chevron on the right.
+function FeatureCard({
+  icon,
   title,
-  width,
-  height,
+  onPress,
 }: {
-  width: number;
-  // Height of the picture area (the title strip sits under it).
-  height: number;
-  source?: number;
-  // A drawn visual (see HeroVisual) used instead of a picture.
-  visual?: ReactNode;
-  onPress: () => void;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
+  onPress: () => void;
 }) {
   return (
-    <Bouncy
-      onPress={onPress}
-      scaleTo={0.97}
-      style={{
-        ...cardShadow,
-        backgroundColor: "white",
-        width,
-        borderRadius: 22,
-      }}
-    >
+    <Bouncy onPress={onPress} scaleTo={0.97}>
       <View
         style={{
           backgroundColor: "white",
           borderRadius: 22,
-          borderWidth: 1,
-          borderColor: colors.border,
-          overflow: "hidden",
+          borderWidth: 2,
+          borderColor: "#BFE8D0",
         }}
       >
-        {/* IMAGE — stays the same size */}
-        {visual ?? (
-          <Image
-            source={source}
-            style={{
-              width,
-              height,
-            }}
-            resizeMode="cover"
-          />
-        )}
-
-        {/* TEXT AREA — this is what gets bigger */}
-        <View
-          style={{
-            height: CARD_TEXT_HEIGHT,
-            paddingHorizontal: 10,
-            paddingTop: 0,
-            paddingBottom: 0,
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            className="text-ink font-extrabold"
-            style={{
-              fontSize: 18,
-              lineHeight: 22,
-              width: width - 20,
-              textTransform: "uppercase",
-            }}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
+        <View className="flex-row items-center" style={{ padding: 7, gap: 10 }}>
+          <View
+            className="items-center justify-center overflow-hidden"
+            style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: "white", padding: 6 }}
           >
+            <MaterialCommunityIcons name={icon} size={28} color={colors.primary} />
+          </View>
+          <Text className="text-ink font-bold flex-1" style={{ fontSize: 15 }} numberOfLines={1}>
             {title}
           </Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.ink} />
         </View>
       </View>
     </Bouncy>
-  );
-}
-
-// Drawn artwork for the two feature cards (Top Players / Community Chat) that
-// have no bundled picture: a green gradient tile with soft circles and a big
-// icon, sized like the pictures on the other four cards.
-function HeroVisual({
-  colorsFrom,
-  icon,
-  accentIcons,
-  width,
-  height,
-}: {
-  width: number;
-  height: number;
-  colorsFrom: [string, string];
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  accentIcons: (keyof typeof MaterialCommunityIcons.glyphMap)[];
-}) {
-  const size = Math.min(width, height);
-  return (
-    <LinearGradient
-      colors={colorsFrom}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ width, height, alignItems: "center", justifyContent: "center" }}
-    >
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: "white", opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
-      />
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: "white", opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
-      />
-      <View
-        className="items-center justify-center"
-        style={{ width: size * 0.52, height: size * 0.52, borderRadius: size, backgroundColor: "rgba(255,255,255,0.2)" }}
-      >
-        <MaterialCommunityIcons name={icon} size={size * 0.3} color="white" />
-      </View>
-      <MaterialCommunityIcons name={accentIcons[0]} size={24} color="white" style={{ position: "absolute", top: 14, left: 14, opacity: 0.6 }} />
-      <MaterialCommunityIcons name={accentIcons[1]} size={22} color="white" style={{ position: "absolute", bottom: 14, right: 14, opacity: 0.6 }} />
-    </LinearGradient>
   );
 }
 
@@ -161,71 +63,19 @@ function MyCommunityContent({
   onOpenPlayers: () => void;
   onOpenChat: () => void;
 }) {
-  // All six cards (3 rows of 2) are sized to fit the space between the header
-  // and the bottom tab bar, so nothing needs scrolling. The card is capped at
-  // its regular width-based size on tall screens.
-  const [areaHeight, setAreaHeight] = useState(0);
-  const onLayout = (e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height);
-  const ROWS = 3;
-  const TOP_PAD = 12;
-  const BOTTOM_PAD = 12;
-  const ROW_GAP = 12;
-  const fitted = areaHeight > 0
-    ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - CARD_TEXT_HEIGHT * ROWS) / ROWS
-    : CARD_WIDTH;
-  // Picture height fits the available space; the width is always the full
-  // column width, so on short screens the cards are wider than they are tall.
-  const imageHeight = Math.floor(Math.max(96, Math.min(CARD_WIDTH, fitted)));
-
   return (
-    <View style={{ flex: 1 }} onLayout={onLayout}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: BOTTOM_PAD }}>
-        <View className="flex-row flex-wrap justify-between" style={{ rowGap: ROW_GAP }}>
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/community-chat.png")}
-            onPress={onOpenChat}
-            title="Community Chat"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/Top-Players.png")}
-            onPress={onOpenPlayers}
-            title="Find Players"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/host-game.png")}
-            onPress={() => navigation.navigate("CreateGame", undefined)}
-            title="Host Game"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-games.png")}
-            onPress={() => navigation.navigate("GamesList", undefined)}
-            title="Explore Games"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/create-squad.png")}
-            onPress={() => navigation.navigate("CreateSquad")}
-            title="Create Group"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-squad.png")}
-            onPress={() => navigation.navigate("SquadsList")}
-            title="Explore Groups"
-          />
-        </View>
-      </ScrollView>
-    </View>
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 10 }}>
+      <FeatureCard icon="chat" title="Community Chat" onPress={onOpenChat} />
+      <FeatureCard icon="account-search" title="Find Players" onPress={onOpenPlayers} />
+      <FeatureCard icon="trophy" title="Host Game" onPress={() => navigation.navigate("CreateGame", undefined)} />
+      <FeatureCard
+        icon="calendar-search"
+        title="Explore Games"
+        onPress={() => navigation.navigate("GamesList", undefined)}
+      />
+      <FeatureCard icon="account-group" title="Create Group" onPress={() => navigation.navigate("CreateSquad")} />
+      <FeatureCard icon="account-group" title="Explore Groups" onPress={() => navigation.navigate("SquadsList")} />
+    </ScrollView>
   );
 }
 
