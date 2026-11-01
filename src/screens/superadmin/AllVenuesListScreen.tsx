@@ -10,6 +10,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
+import SuperAdminSectionSwitcher from "../../components/SuperAdminSectionSwitcher";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
@@ -56,6 +57,7 @@ export default function AllVenuesListScreen() {
             </GradientFill>
           </Pressable>
         </View>
+        <SuperAdminSectionSwitcher active="venues" />
         <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["venue name"]} />
       </View>
 

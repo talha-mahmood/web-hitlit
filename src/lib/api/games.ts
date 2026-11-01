@@ -200,6 +200,41 @@ export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
   return data as GameDetail;
 }
 
+export type AllGamesListItem = GameRow & {
+  sports: { id: string; name: string } | null;
+  profiles: { id: string; full_name: string | null; email: string | null } | null;
+};
+
+const SUPERADMIN_LIST_SELECT =
+  "*, sports(id, name), profiles!games_creator_id_fkey(id, full_name, email)";
+
+// Superadmin-only: every game/tournament regardless of creator, visibility,
+// status or deleted_at — relies on the games_select_superadmin RLS policy
+// (is_superadmin()), separate from fetchGames' public/own/invited-only view.
+export async function fetchAllGames(search?: string): Promise<AllGamesListItem[]> {
+  let query = supabase
+    .from("games")
+    .select(SUPERADMIN_LIST_SELECT)
+    .order("created_at", { ascending: false });
+
+  const term = search ? sanitizeSearchTerm(search) : "";
+  if (term) {
+    query = query.or(`title.ilike.%${term}%,game_code.ilike.%${term}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AllGamesListItem[];
+}
+
+// Superadmin-only true hard delete (games_delete_superadmin RLS policy) —
+// distinct from cancelGame above, which is just a status flip any host can
+// already do to their own game. Cascades teams/matches/invites/messages.
+export async function deleteGame(gameId: string): Promise<void> {
+  const { error } = await supabase.from("games").delete().eq("id", gameId);
+  if (error) throw new Error(error.message);
+}
+
 // Links a completed venue booking back to the tournament that sent the host
 // there — this is how the "Book Venue" button on the tournament detail
 // screen knows to flip to "Venue Booked" afterward. Host-only (games_update_own).

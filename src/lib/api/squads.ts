@@ -77,6 +77,34 @@ function sanitizeSearchTerm(term: string): string {
   return term.replace(/[,()]/g, " ").trim();
 }
 
+export type AllSquadsListItem = SquadRow & {
+  sports: { id: string; name: string } | null;
+  profiles: { id: string; full_name: string | null; email: string | null } | null;
+};
+
+const SUPERADMIN_LIST_SELECT =
+  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, email)";
+
+// Superadmin-only: every group regardless of owner — squads_select_all
+// already lets anyone see non-deleted squads, so this only adds search +
+// the superadmin-shaped select (owner email, for identifying who made it).
+export async function fetchAllSquads(search?: string): Promise<AllSquadsListItem[]> {
+  let query = supabase
+    .from("squads")
+    .select(SUPERADMIN_LIST_SELECT)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  const term = search ? sanitizeSearchTerm(search) : "";
+  if (term) {
+    query = query.or(`name.ilike.%${term}%,squad_code.ilike.%${term}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AllSquadsListItem[];
+}
+
 export async function fetchSquads(
   filters: { search?: string; sportId?: string } = {}
 ): Promise<SquadListItem[]> {
