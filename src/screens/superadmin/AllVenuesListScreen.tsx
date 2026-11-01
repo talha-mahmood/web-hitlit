@@ -5,15 +5,12 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAllVenues, useDeleteVenue } from "../../hooks/useSuperadmin";
-import { supabase } from "../../lib/supabase";
-import { signOutGoogle } from "../../lib/googleAuth";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
 import SuperAdminSectionSwitcher from "../../components/SuperAdminSectionSwitcher";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
-import { signOutWithPushCleanup } from "../../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 
@@ -74,17 +71,6 @@ export default function AllVenuesListScreen() {
               <Ionicons name="business-outline" size={32} color={colors.border} />
               <Text className="text-muted text-sm text-center mt-2">No venues found.</Text>
             </View>
-          }
-          ListFooterComponent={
-            <Pressable
-              onPress={async () => {
-                await signOutGoogle();
-                signOutWithPushCleanup();
-              }}
-              className="border border-danger rounded-xl py-3 items-center mt-4"
-            >
-              <Text className="text-danger font-semibold">Sign out</Text>
-            </Pressable>
           }
           renderItem={({ item }) => (
             <Pressable

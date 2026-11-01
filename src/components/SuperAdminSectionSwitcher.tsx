@@ -4,6 +4,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import type { SuperAdminStackParamList } from "../navigation/SuperAdminNavigator";
+import { signOutGoogle } from "../lib/googleAuth";
+import { signOutWithPushCleanup } from "../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList>;
 
@@ -20,7 +22,7 @@ export default function SuperAdminSectionSwitcher({ active }: { active: "venues"
   const navigation = useNavigation<Nav>();
 
   return (
-    <View className="flex-row bg-gray-100 rounded-xl p-1 mb-4" style={{ gap: 4 }}>
+    <View className="flex-row items-center bg-gray-100 rounded-xl p-1 mb-4" style={{ gap: 4 }}>
       {TABS.map((tab) => {
         const isActive = tab.key === active;
         return (
@@ -37,6 +39,16 @@ export default function SuperAdminSectionSwitcher({ active }: { active: "venues"
           </Pressable>
         );
       })}
+      <Pressable
+        onPress={async () => {
+          await signOutGoogle();
+          signOutWithPushCleanup();
+        }}
+        hitSlop={8}
+        className="items-center justify-center rounded-lg py-2 px-2.5"
+      >
+        <Ionicons name="log-out-outline" size={17} color={colors.danger} />
+      </Pressable>
     </View>
   );
 }
