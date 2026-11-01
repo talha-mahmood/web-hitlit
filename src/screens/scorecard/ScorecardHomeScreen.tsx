@@ -55,10 +55,14 @@ function SportCard({
     <View className="flex-row items-center" style={{ padding: 9, gap: 10 }}>
       <View
         className="items-center justify-center overflow-hidden rounded-full"
-        style={{ width: 54, height: 54, backgroundColor: disc }}
+        style={{ width: 54, height: 54, backgroundColor: disc, padding: 9 }}
       >
         {photo ? (
-          <View style={{ width: 72, height: 40, mixBlendMode: "multiply" }}>
+          // Sized to exactly fill the (padded) disc — same approach the
+          // Home screen's "Filter by Sport" tiles use — so the whole photo
+          // scales down to fit instead of being cropped by the disc's
+          // overflow:hidden like the old oversized fixed-size box was.
+          <View style={{ width: "100%", height: "100%", mixBlendMode: "multiply" }}>
             <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
           </View>
         ) : (
@@ -99,7 +103,9 @@ function SportCard({
         backgroundColor: active ? "#F0FDF4" : "white",
         borderRadius: 24,
         borderWidth: 1.5,
-        borderColor: active ? colors.primary : "transparent",
+        // Always-visible, per-sport colored border (same pastel as the
+        // icon disc) instead of only showing a border while pressed.
+        borderColor: active ? colors.primary : disc,
       }}
     >
       {active ? (
