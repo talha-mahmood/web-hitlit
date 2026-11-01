@@ -18,7 +18,9 @@ import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
 
-// Pastel disc behind each sport's photo (matches the design mock-up).
+// Pastel per-sport colour — used for each card's border, not the disc
+// itself (the disc behind the photo/icon is plain white, same as the
+// "Filter by Sport" tiles on the home screen).
 const SPORT_DISC: Record<string, string> = {
   cricket: "#DCF5E4",
   padel: "#FEF3D6",
@@ -30,10 +32,8 @@ const SPORT_DISC: Record<string, string> = {
 };
 
 // Same sport photos/icons used for the "Filter by Sport" tiles on the home
-// screen (see getSportImage/getSportIcon + HomeSportTile), shown in a round
-// pastel disc. The photos have a white backdrop, so they're multiplied onto the
-// disc colour — the white turns into the pastel and the equipment keeps its
-// colours.
+// screen (see getSportImage/getSportIcon + HomeSportTile), shown on a plain
+// white disc the same way.
 function SportCard({
   sportName,
   title,
@@ -54,17 +54,15 @@ function SportCard({
   const body = (
     <View className="flex-row items-center" style={{ padding: 9, gap: 10 }}>
       <View
-        className="items-center justify-center overflow-hidden rounded-full"
-        style={{ width: 54, height: 54, backgroundColor: disc, padding: 9 }}
+        className="items-center justify-center overflow-hidden rounded-full bg-white"
+        style={{ width: 54, height: 54, padding: 9 }}
       >
         {photo ? (
           // Sized to exactly fill the (padded) disc — same approach the
           // Home screen's "Filter by Sport" tiles use — so the whole photo
           // scales down to fit instead of being cropped by the disc's
           // overflow:hidden like the old oversized fixed-size box was.
-          <View style={{ width: "100%", height: "100%", mixBlendMode: "multiply" }}>
-            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-          </View>
+          <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
         ) : (
           <MaterialCommunityIcons name={icon} size={26} color={fg} />
         )}
