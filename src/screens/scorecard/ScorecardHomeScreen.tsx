@@ -203,8 +203,8 @@ export default function ScorecardHomeScreen() {
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
-            <Text className="text-white font-bold" style={{ fontSize: 24 }} numberOfLines={1}>Scorecard</Text>
-            <Text style={{ fontSize: 13, marginTop: 2, color: "white" }} numberOfLines={1}>
+            <Text className="text-white font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
+            <Text style={{ fontSize: 11, marginTop: 2, color: "white" }} numberOfLines={1}>
               Live score your game
             </Text>
           </View>

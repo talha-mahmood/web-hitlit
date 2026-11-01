@@ -259,12 +259,12 @@ export default function HomeScreen() {
             )}
             <View className="flex-1">
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Text className="text-white font-bold" style={{ fontSize: 23 }}>
+                <Text className="text-white font-bold" style={{ fontSize: 19 }}>
                   Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
                 </Text>
-                <WavingHandIcon size={17} />
+                <WavingHandIcon size={14} />
               </View>
-              <Text style={{ fontSize: 14, color: "white", marginTop: 2 }}>What are you playing today?</Text>
+              <Text style={{ fontSize: 12, color: "white", marginTop: 2 }}>What are you playing today?</Text>
             </View>
           </Pressable>
           <View className="flex-row items-center" style={{ gap: 10, paddingRight: 6 }}>

@@ -247,10 +247,10 @@ export default function VenuesListScreen() {
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
+            <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
               Venues
             </Text>
-            <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+            <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
               Find and book venues nearby
             </Text>
           </View>

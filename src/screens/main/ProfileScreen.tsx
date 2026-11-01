@@ -316,25 +316,25 @@ export default function ProfileScreen() {
               >
                 {profile?.full_name ?? "Profile"}
               </Text>
-              <Ionicons name="checkmark-circle" size={17} color="#4ADE80" style={{ flexShrink: 0 }} />
+              <Ionicons name="checkmark-circle" size={14} color="#4ADE80" style={{ flexShrink: 0 }} />
             </View>
             <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
-              <Ionicons name="pricetag-outline" size={12} color="white" />
-              <Text style={{ color: "white" }} className="text-sm" numberOfLines={1}>
+              <Ionicons name="pricetag-outline" size={10} color="white" />
+              <Text style={{ color: "white", fontSize: 12 }} numberOfLines={1}>
                 ID: {profile?.user_code ?? "—"}
               </Text>
-              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="white" />
+              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={10} color="white" />
             </Pressable>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="calendar-outline" size={12} color="white" />
-                <Text style={{ color: "white" }} className="text-xs">Member since {formatMonthYear(profile.created_at)}</Text>
+                <Ionicons name="calendar-outline" size={10} color="white" />
+                <Text style={{ color: "white", fontSize: 10 }}>Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
             {(followState?.followerCount ?? 0) > 0 && (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="people-outline" size={12} color="white" />
-                <Text style={{ color: "white" }} className="text-xs">
+                <Ionicons name="people-outline" size={10} color="white" />
+                <Text style={{ color: "white", fontSize: 10 }}>
                   {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
                 </Text>
               </View>

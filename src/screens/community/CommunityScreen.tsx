@@ -302,10 +302,10 @@ export default function CommunityScreen() {
             <MaterialCommunityIcons name="account-group" size={32} color="white" />
           </GradientFill>
           <View className="flex-1">
-            <Text className="text-white font-extrabold" style={{ fontSize: 23 }}>
+            <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
               {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
             </Text>
-            <Text style={{ fontSize: 14, lineHeight: 19, color: "white", marginTop: 2 }}>
+            <Text style={{ fontSize: 12, lineHeight: 16, color: "white", marginTop: 2 }}>
               Play Together, Stay Active
             </Text>
           </View>

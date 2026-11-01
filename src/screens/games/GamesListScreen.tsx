@@ -552,10 +552,10 @@ export default function GamesListScreen() {
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-white font-extrabold" style={{ fontSize: 26 }}>
+              <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
                 {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
               </Text>
-              <Text style={{ fontSize: 12.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+              <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
                 {isTournamentList ? "Find and join tournaments nearby" : "Find and join games nearby"}
               </Text>
             </View>
