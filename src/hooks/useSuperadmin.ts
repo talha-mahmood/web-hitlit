@@ -12,6 +12,7 @@ import {
 import { createVenue, type CreateVenueInput } from "../lib/api/venuesAdmin";
 import { fetchAllGames, deleteGame } from "../lib/api/games";
 import { fetchAllSquads, disbandSquad } from "../lib/api/squads";
+import { fetchAllEvents, disbandEvent } from "../lib/api/events";
 
 export function useAllVenues(search?: string) {
   return useQuery({
@@ -121,5 +122,20 @@ export function useDisbandSquadAsSuperadmin() {
   return useMutation({
     mutationFn: (squadId: string) => disbandSquad(squadId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["allSquads"] }),
+  });
+}
+
+export function useAllEvents(search?: string) {
+  return useQuery({
+    queryKey: ["allEvents", search],
+    queryFn: () => fetchAllEvents(search),
+  });
+}
+
+export function useDisbandEventAsSuperadmin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) => disbandEvent(eventId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allEvents"] }),
   });
 }

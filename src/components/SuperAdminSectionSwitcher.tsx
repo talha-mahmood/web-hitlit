@@ -9,16 +9,17 @@ import { signOutWithPushCleanup } from "../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList>;
 
-const TABS: { key: "venues" | "games" | "groups"; label: string; icon: keyof typeof Ionicons.glyphMap; screen: "AllVenuesList" | "AllGamesList" | "AllGroupsList" }[] = [
+const TABS: { key: "venues" | "games" | "groups" | "events"; label: string; icon: keyof typeof Ionicons.glyphMap; screen: "AllVenuesList" | "AllGamesList" | "AllGroupsList" | "AllEventsList" }[] = [
   { key: "venues", label: "Venues", icon: "business-outline", screen: "AllVenuesList" },
   { key: "games", label: "Games", icon: "trophy-outline", screen: "AllGamesList" },
   { key: "groups", label: "Groups", icon: "people-outline", screen: "AllGroupsList" },
+  { key: "events", label: "Events", icon: "calendar-outline", screen: "AllEventsList" },
 ];
 
-// Lets a superadmin jump between the three moderation lists — this is the
-// only way they can reach "All Games"/"All Groups" at all, since superadmin
-// accounts never see MainTabNavigator (see RootNavigator).
-export default function SuperAdminSectionSwitcher({ active }: { active: "venues" | "games" | "groups" }) {
+// Lets a superadmin jump between the four moderation lists — this is the
+// only way they can reach "All Games"/"All Groups"/"All Events" at all,
+// since superadmin accounts never see MainTabNavigator (see RootNavigator).
+export default function SuperAdminSectionSwitcher({ active }: { active: "venues" | "games" | "groups" | "events" }) {
   const navigation = useNavigation<Nav>();
 
   return (
