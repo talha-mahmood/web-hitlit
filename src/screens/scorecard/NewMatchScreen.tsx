@@ -268,6 +268,7 @@ export default function NewMatchScreen() {
   );
   const [oversLimit, setOversLimit] = useState<string | null>(null);
   const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
+  const [tossMode, setTossMode] = useState<"manual" | "auto">("manual");
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
   // Standard ICC rule by default — off. On means the last batsman keeps
@@ -501,17 +502,58 @@ export default function NewMatchScreen() {
           />
         </CardSection>
 
+        <CardSection icon="shuffle-outline" title="Toss Mode">
+          <PillRow
+            options={[
+              { label: "Manual Toss", value: "manual" as const },
+              { label: "Auto Toss", value: "auto" as const },
+            ]}
+            value={tossMode}
+            onChange={(mode) => {
+              setTossMode(mode);
+              // Auto mode picks the winner the instant it's switched on; a
+              // "Toss Again" button below lets the host re-roll. Switching
+              // back to manual clears it so a stale auto-picked winner can't
+              // slip through without the host actually choosing one.
+              setTossWinner(mode === "auto" ? (Math.random() < 0.5 ? "A" : "B") : null);
+            }}
+          />
+        </CardSection>
+
         <View className="flex-row" style={{ gap: 12 }}>
           <View className="flex-1">
             <CardSection icon="trophy-outline" title="Toss Winner">
-              <PillRow
-                options={[
-                  { label: teamAName.trim() || "Team A", value: "A" as const },
-                  { label: teamBName.trim() || "Team B", value: "B" as const },
-                ]}
-                value={tossWinner}
-                onChange={setTossWinner}
-              />
+              {tossMode === "manual" ? (
+                <PillRow
+                  options={[
+                    { label: teamAName.trim() || "Team A", value: "A" as const },
+                    { label: teamBName.trim() || "Team B", value: "B" as const },
+                  ]}
+                  value={tossWinner}
+                  onChange={setTossWinner}
+                />
+              ) : (
+                <View>
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    <Ionicons name="trophy" size={16} color={colors.primary} />
+                    <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
+                      {tossWinner === "A"
+                        ? teamAName.trim() || "Team A"
+                        : tossWinner === "B"
+                          ? teamBName.trim() || "Team B"
+                          : "Tossing..."}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => setTossWinner(Math.random() < 0.5 ? "A" : "B")}
+                    className="flex-row items-center justify-center mt-3"
+                    style={{ gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border }}
+                  >
+                    <Ionicons name="shuffle" size={14} color={colors.primary} />
+                    <Text className="text-primary font-semibold text-xs">Toss Again</Text>
+                  </Pressable>
+                </View>
+              )}
             </CardSection>
           </View>
           <View className="flex-1">
