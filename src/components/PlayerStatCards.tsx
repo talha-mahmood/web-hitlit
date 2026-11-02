@@ -213,10 +213,10 @@ export default function PlayerStatCards({
                 />
                 <Ionicons name="trophy" size={22} color={ratingTier.color} />
               </View>
-              <Text className="text-ink font-extrabold" style={{ fontSize: 34, lineHeight: 38 }}>
+              <Text className="text-ink font-extrabold" style={{ fontSize: 25, lineHeight: 29 }}>
                 {rating}
               </Text>
-              <Ionicons name="star" size={16} color="#FACC15" style={{ marginTop: -18 }} />
+              <Ionicons name="star" size={16} color="#FACC15" style={{ marginTop: -13 }} />
             </View>
           </View>
           <View className="flex-row items-center mb-2" style={{ gap: 4 }}>
