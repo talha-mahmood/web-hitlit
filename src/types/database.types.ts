@@ -885,9 +885,13 @@ export type Database = {
       events: {
         Row: {
           created_at: string
+          daily_hours: number | null
           deleted_at: string | null
           description: string | null
+          end_date: string | null
+          end_time: string
           event_code: string
+          event_date: string
           event_owner_id: string
           event_type: string
           gender: Database["public"]["Enums"]["game_gender_type"]
@@ -896,13 +900,18 @@ export type Database = {
           join_requests_blocked: boolean
           location: string | null
           name: string
+          start_time: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          daily_hours?: number | null
           deleted_at?: string | null
           description?: string | null
+          end_date?: string | null
+          end_time: string
           event_code?: string
+          event_date: string
           event_owner_id: string
           event_type: string
           gender?: Database["public"]["Enums"]["game_gender_type"]
@@ -911,13 +920,18 @@ export type Database = {
           join_requests_blocked?: boolean
           location?: string | null
           name: string
+          start_time: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          daily_hours?: number | null
           deleted_at?: string | null
           description?: string | null
+          end_date?: string | null
+          end_time?: string
           event_code?: string
+          event_date?: string
           event_owner_id?: string
           event_type?: string
           gender?: Database["public"]["Enums"]["game_gender_type"]
@@ -926,6 +940,7 @@ export type Database = {
           join_requests_blocked?: boolean
           location?: string | null
           name?: string
+          start_time?: string
           updated_at?: string
         }
         Relationships: [
@@ -4070,4 +4085,3 @@ export const Constants = {
     },
   },
 } as const
-

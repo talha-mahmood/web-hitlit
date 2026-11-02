@@ -35,6 +35,11 @@ export type CreateEventParams = {
   location: string;
   description: string;
   gender: Database["public"]["Enums"]["game_gender_type"];
+  eventDate: string;
+  startTime: string;
+  endDate: string | null;
+  endTime: string;
+  dailyHours: number;
 };
 
 export type UpdateEventParams = {
@@ -47,6 +52,25 @@ export type UpdateEventParams = {
   description: string;
   gender: Database["public"]["Enums"]["game_gender_type"];
 };
+
+// A multi-day event's real finish line is end_date (its last day), not
+// event_date (its first day) — a single-day event leaves end_date null.
+// Mirrors hasGameEnded/isGameLive in lib/api/games.ts exactly — events have
+// no separate status value for this either, so it's derived purely from
+// event_date/start_time/end_date/end_time, same as games/tournaments.
+export function hasEventEnded(eventDate: string, endDate: string | null, endTime: string): boolean {
+  return new Date(`${endDate ?? eventDate}T${endTime}+05:00`).getTime() < Date.now();
+}
+
+export function isEventLive(
+  eventDate: string,
+  startTime: string,
+  endDate: string | null,
+  endTime: string
+): boolean {
+  const started = new Date(`${eventDate}T${startTime}+05:00`).getTime() <= Date.now();
+  return started && !hasEventEnded(eventDate, endDate, endTime);
+}
 
 const LIST_SELECT =
   "*, profiles!events_event_owner_id_fkey(id, full_name, avatar, latitude, longitude), event_members(id, status, user_id, role, profiles(avatar, full_name))";
@@ -142,6 +166,11 @@ export async function createEvent(params: CreateEventParams): Promise<EventRow> 
       location: params.location || null,
       description: params.description || null,
       gender: params.gender,
+      event_date: params.eventDate,
+      start_time: params.startTime,
+      end_date: params.endDate,
+      end_time: params.endTime,
+      daily_hours: params.dailyHours,
     })
     .select()
     .single();

@@ -29,6 +29,14 @@ import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import {
+  DAYS,
+  TIME_SLOTS,
+  TOURNAMENT_DURATIONS_DAYS,
+  addMinutesWithOverflow,
+  addDays,
+  isTimeSlotPast,
+} from "../../lib/gameFormHelpers";
 
 type Nav = NativeStackNavigationProp<CommunityStackParamList, "HostEvent">;
 type Gender = Database["public"]["Enums"]["game_gender_type"];
@@ -147,6 +155,16 @@ export default function HostEventScreen() {
   const [description, setDescription] = useState("");
   const [gender, setGender] = useState<Gender>("mixed");
 
+  // Date/Duration/Start Time/Hours — same fields, options and end-date/time
+  // derivation as Host Tournament's single-day/multi-day logic
+  // (CreateGameScreen.tsx), since an event is a multi-day thing the same way
+  // a tournament is (no fixed hour-long "regular game" slot).
+  const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
+  const [durationDays, setDurationDays] = useState<number>(1);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [hoursPerDay, setHoursPerDay] = useState<number>(1);
+  const HOURS_PER_DAY_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
+
   const handleCreate = async () => {
     if (!userId) return;
     if (!isValidName(name)) {
@@ -161,6 +179,28 @@ export default function HostEventScreen() {
       Alert.alert("Missing Info", "Please enter a location.");
       return;
     }
+    if (!startTime) {
+      Alert.alert("Missing Info", "Please select a start time.");
+      return;
+    }
+    if (selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, startTime)) {
+      Alert.alert("Invalid Start Time", "That time has already passed. Please pick a later start time.");
+      return;
+    }
+
+    // A single-day event works the same way a single-day tournament does:
+    // start time + hours per day fully determines its one day's end time.
+    // A multi-day event's last day instead closes at 23:59:59, since there's
+    // no single predetermined end hour across multiple days.
+    const singleDayEnd = durationDays === 1 ? addMinutesWithOverflow(startTime, hoursPerDay * 60) : null;
+    const endDateValue =
+      durationDays === 1
+        ? singleDayEnd!.daysOverflow > 0
+          ? addDays(selectedDate, singleDayEnd!.daysOverflow)
+          : null
+        : addDays(selectedDate, durationDays - 1);
+    const endTimeValue = durationDays === 1 ? `${singleDayEnd!.time}:00` : "23:59:59";
+
     try {
       const event = await createEvent.mutateAsync({
         ownerId: userId,
@@ -169,6 +209,11 @@ export default function HostEventScreen() {
         location: location.trim(),
         description: description.trim(),
         gender,
+        eventDate: selectedDate,
+        startTime: `${startTime}:00`,
+        endDate: endDateValue,
+        endTime: endTimeValue,
+        dailyHours: hoursPerDay,
       });
       // The icon bucket's RLS requires the event to already exist (it checks
       // event_owner_id via the event row), so the upload can only happen
@@ -294,6 +339,63 @@ export default function HostEventScreen() {
         {/* Event Type — free text, replaces Squad's Sport picker. */}
         <FormCard icon="albums" title="Event Type" required hint="What kind of event is this?">
           <FieldInput value={eventType} onChangeText={setEventType} placeholder="e.g. Cricket Tournament, Fitness Camp" maxLength={60} />
+        </FormCard>
+
+        {/* Date / Duration / Start Time / Hours — same fields, options and
+            scrolling-chip behavior as Host Tournament's scheduling section
+            (CreateGameScreen.tsx), since an event can span multiple days the
+            same way a tournament can. */}
+        <FormCard icon="calendar-outline" title="Date & Time" required>
+          <Text className="text-ink font-semibold" style={{ fontSize: 13, marginBottom: 8 }}>
+            Date
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {DAYS.filter((d) => TIME_SLOTS.some((t) => !isTimeSlotPast(d.iso, t.value))).map((d) => (
+              <Chip
+                key={d.iso}
+                label={`${d.day} ${d.label}`}
+                selected={selectedDate === d.iso}
+                onPress={() => {
+                  setSelectedDate(d.iso);
+                  // A time picked for a later date can be in the past once
+                  // the user switches to today — clear it rather than leave
+                  // an invalid selection sitting there.
+                  if (startTime && d.iso === DAYS[0].iso && isTimeSlotPast(d.iso, startTime)) {
+                    setStartTime(null);
+                  }
+                }}
+              />
+            ))}
+          </ScrollView>
+
+          <Text className="text-ink font-semibold" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>
+            Duration
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {TOURNAMENT_DURATIONS_DAYS.map((d) => (
+              <Chip key={d} label={`${d} day${d > 1 ? "s" : ""}`} selected={durationDays === d} onPress={() => setDurationDays(d)} />
+            ))}
+          </ScrollView>
+
+          <Text className="text-ink font-semibold" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>
+            Start Time (Each Day)
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {TIME_SLOTS.filter(
+              (t) => !(selectedDate === DAYS[0].iso && isTimeSlotPast(selectedDate, t.value))
+            ).map((t) => (
+              <Chip key={t.value} label={t.label} selected={startTime === t.value} onPress={() => setStartTime(t.value)} />
+            ))}
+          </ScrollView>
+
+          <Text className="text-ink font-semibold" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>
+            Hours (Each Day)
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {HOURS_PER_DAY_OPTIONS.map((h) => (
+              <Chip key={h} label={h === 1 ? "1 hr" : `${h} hrs`} selected={hoursPerDay === h} onPress={() => setHoursPerDay(h)} />
+            ))}
+          </ScrollView>
         </FormCard>
 
         {/* Open To */}

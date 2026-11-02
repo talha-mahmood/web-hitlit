@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useEvents, useJoinEvent } from "../../hooks/useEvents";
+import { isEventLive, hasEventEnded } from "../../lib/api/events";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
 import { distanceKm } from "../../lib/distance";
 import FieldInput from "../../components/FieldInput";
@@ -169,12 +170,14 @@ export default function ExploreEventsScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationTags, setLocationTags] = useState<string[]>([]);
-  // "All" / "My Events" pill, and the Distance dropdown beside it — same
-  // row as the Groups list, minus its Sport/Group Type filters (events
-  // aren't tied to a sport, and "event type" is free text, so it's covered
-  // by the search box instead of a separate picker).
-  const [listFilter, setListFilter] = useState<"all" | "mine">("all");
+  // "All" / "Upcoming" / "Live" / "Completed" / "My Events" pills, and the
+  // Distance dropdown beside it — same row (and same mutually-exclusive
+  // single-select pattern) as the Explore Tournaments list.
+  const [listFilter, setListFilter] = useState<"all" | "upcoming" | "live" | "completed" | "mine">("all");
   const myOnly = listFilter === "mine";
+  const upcomingOnlyFilter = listFilter === "upcoming";
+  const liveOnlyFilter = listFilter === "live";
+  const completedOnlyFilter = listFilter === "completed";
   const DISTANCE_OPTIONS_KM = [5, 10, 20, 30] as const;
   const [distanceKmFilter, setDistanceKmFilter] = useState<number | null>(null);
   const [distanceOpen, setDistanceOpen] = useState(false);
@@ -193,7 +196,17 @@ export default function ExploreEventsScreen() {
     ? (locationFiltered ?? []).filter(
         (e) => e.event_owner_id === userId || e.event_members.some((m) => m.user_id === userId && m.status === "ACTIVE")
       )
-    : locationFiltered;
+    : upcomingOnlyFilter
+      ? (locationFiltered ?? []).filter(
+          (e) =>
+            !hasEventEnded(e.event_date, e.end_date, e.end_time) &&
+            !isEventLive(e.event_date, e.start_time, e.end_date, e.end_time)
+        )
+      : liveOnlyFilter
+        ? (locationFiltered ?? []).filter((e) => isEventLive(e.event_date, e.start_time, e.end_date, e.end_time))
+        : completedOnlyFilter
+          ? (locationFiltered ?? []).filter((e) => hasEventEnded(e.event_date, e.end_date, e.end_time))
+          : locationFiltered;
   // Events don't carry their own coordinates (just a typed-in location
   // label), so "near me" is measured from the event owner's own registered
   // location instead — the closest real coordinates available today.
@@ -288,6 +301,9 @@ export default function ExploreEventsScreen() {
               {(
                 [
                   { key: "all", label: "All" },
+                  { key: "upcoming", label: "Upcoming" },
+                  { key: "live", label: "Live" },
+                  { key: "completed", label: "Completed" },
                   { key: "mine", label: "My Events" },
                 ] as const
               ).map((p) => {
@@ -401,7 +417,7 @@ export default function ExploreEventsScreen() {
           contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 8 }}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={
-            debouncedSearch || locationTags.length > 0 || myOnly || distanceKmFilter != null ? (
+            debouncedSearch || locationTags.length > 0 || listFilter !== "all" || distanceKmFilter != null ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
                 <Text className="text-ink font-semibold text-base">No events found</Text>
@@ -414,7 +430,13 @@ export default function ExploreEventsScreen() {
                         ? `No events match "${debouncedSearch}". Try a different name or event type.`
                         : myOnly
                           ? "You haven't hosted any events yet."
-                          : `No events found within ${distanceKmFilter} km.`}
+                          : upcomingOnlyFilter
+                            ? "No upcoming events right now."
+                            : liveOnlyFilter
+                              ? "No events are live right now."
+                              : completedOnlyFilter
+                                ? "No completed events yet."
+                                : `No events found within ${distanceKmFilter} km.`}
                 </Text>
               </View>
             ) : (
