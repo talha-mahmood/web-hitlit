@@ -20,8 +20,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_PADDING = 16;
 // The cards run almost edge to edge: a slim margin on each side and a slim
 // gap between the two columns, so each card is as wide as the screen allows.
-const GRID_SIDE_PADDING = 8;
-const GRID_COL_GAP = 8;
+const GRID_SIDE_PADDING = 12;
+const GRID_COL_GAP = 12;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
 const CARD_TEXT_HEIGHT = 58;
 // Every card uses a provided illustration that already has its own title +
@@ -63,7 +63,7 @@ function ImageCard({
         style={{
           backgroundColor: "white",
           borderRadius: 22,
-          borderWidth: 1,
+          borderWidth: 2,
           borderColor: colors.border,
           overflow: "hidden",
         }}
