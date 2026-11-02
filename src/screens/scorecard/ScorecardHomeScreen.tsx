@@ -1,13 +1,14 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Image, ScrollView, Pressable, BackHandler } from "react-native";
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors } from "../../constants/theme";
+import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
 import GradientFill from "../../components/GradientFill";
 import { getSportImage } from "../../lib/sportImages";
@@ -17,48 +18,108 @@ import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "ScorecardHome">;
 
-// One row per sport: a rounded-square light-green badge holding the sport's
-// photo (same photos as everywhere else in the app — getSportImage), a bold
-// title, and a plain chevron — matching the reference layout exactly.
+// Pastel disc behind each sport's photo (matches the design mock-up).
+const SPORT_DISC: Record<string, string> = {
+  cricket: "#DCF5E4",
+  padel: "#FEF3D6",
+  football: "#E0ECFB",
+  badminton: "#DDF4E6",
+  pickleball: "#EAE6F8",
+  tennis: "#FCE8EA",
+  "table tennis": "#DCE9FA",
+};
+
+// Same sport photos/icons used for the "Filter by Sport" tiles on the home
+// screen (see getSportImage/getSportIcon + HomeSportTile), shown in a round
+// pastel disc. The photos have a white backdrop, so they're multiplied onto the
+// disc colour — the white turns into the pastel and the equipment keeps its
+// colours.
 function SportCard({
   sportName,
   title,
+  subtitle,
   onPress,
 }: {
   sportName: string;
   title: string;
+  subtitle: string;
   onPress: () => void;
 }) {
   const photo = getSportImage(sportName);
-  const { icon, fg } = getSportIcon(sportName);
+  const { icon, bg, fg } = getSportIcon(sportName);
+  const disc = SPORT_DISC[sportName] ?? bg;
+  // A card only turns green while it's being pressed.
+  const [active, setActive] = useState(false);
+
+  const body = (
+    <View className="flex-row items-center" style={{ padding: 9, gap: 10 }}>
+      <View
+        className="items-center justify-center overflow-hidden rounded-full"
+        style={{ width: 54, height: 54, backgroundColor: disc, padding: 9 }}
+      >
+        {photo ? (
+          // Sized to exactly fill the (padded) disc — same approach the
+          // Home screen's "Filter by Sport" tiles use — so the whole photo
+          // scales down to fit instead of being cropped by the disc's
+          // overflow:hidden like the old oversized fixed-size box was.
+          <View style={{ width: "100%", height: "100%", mixBlendMode: "multiply" }}>
+            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+          </View>
+        ) : (
+          <MaterialCommunityIcons name={icon} size={26} color={fg} />
+        )}
+      </View>
+      <View className="flex-1">
+        <Text className="text-ink font-bold" style={{ fontSize: 15 }}>
+          {title}
+        </Text>
+        <Text className="text-muted mt-0.5" style={{ fontSize: 11.5, lineHeight: 15 }}>
+          {subtitle}
+        </Text>
+      </View>
+      {active ? (
+        <GradientFill className="items-center justify-center rounded-full" style={{ width: 28, height: 28, ...primaryButtonShadow }}>
+          <Ionicons name="chevron-forward" size={15} color="white" />
+        </GradientFill>
+      ) : (
+        <View
+          className="items-center justify-center rounded-full"
+          style={{ width: 27, height: 27, backgroundColor: "#F1F3F5" }}
+        >
+          <Ionicons name="chevron-forward" size={15} color={colors.muted} />
+        </View>
+      )}
+    </View>
+  );
 
   return (
-    <Bouncy onPress={onPress} scaleTo={0.97}>
-      <View
-        style={{
-          backgroundColor: "white",
-          borderRadius: 22,
-          borderWidth: 2,
-          borderColor: "#BFE8D0",
-        }}
-      >
-        <View className="flex-row items-center" style={{ padding: 7, gap: 10 }}>
-          <View
-            className="items-center justify-center overflow-hidden"
-            style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: "white", padding: 6 }}
-          >
-            {photo ? (
-              <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-            ) : (
-              <MaterialCommunityIcons name={icon} size={28} color={fg} />
-            )}
-          </View>
-          <Text className="text-ink font-bold flex-1" style={{ fontSize: 15 }} numberOfLines={1}>
-            {title}
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.ink} />
-        </View>
-      </View>
+    <Bouncy
+      onPress={onPress}
+      onPressIn={() => setActive(true)}
+      onPressOut={() => setActive(false)}
+      scaleTo={0.97}
+      style={{
+        ...cardShadow,
+        backgroundColor: active ? "#F0FDF4" : "white",
+        borderRadius: 24,
+        borderWidth: 1.5,
+        // Always-visible, per-sport colored border (same pastel as the
+        // icon disc) instead of only showing a border while pressed.
+        borderColor: active ? colors.primary : disc,
+      }}
+    >
+      {active ? (
+        <LinearGradient
+          colors={["#D1F5DD", "#F0FDF4"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ borderRadius: 22.5 }}
+        >
+          {body}
+        </LinearGradient>
+      ) : (
+        <View className="rounded-3xl bg-white">{body}</View>
+      )}
     </Bouncy>
   );
 }
@@ -144,8 +205,8 @@ export default function ScorecardHomeScreen() {
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
-            <Text className="text-white font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
-            <Text style={{ fontSize: 11, marginTop: 2, color: "white" }} numberOfLines={1}>
+            <Text className="text-white font-bold" style={{ fontSize: 24 }} numberOfLines={1}>Scorecard</Text>
+            <Text style={{ fontSize: 13, marginTop: 2, color: "white" }} numberOfLines={1}>
               Live score your game
             </Text>
           </View>
@@ -153,15 +214,46 @@ export default function ScorecardHomeScreen() {
       </GradientFill>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 10 }} style={{ marginTop: 0 }}>
-        <SportCard sportName="cricket" title="Cricket" onPress={() => navigation.navigate("CricketHome")} />
-        <SportCard sportName="padel" title="Padel" onPress={() => navigation.navigate("PadelHome")} />
-        <SportCard sportName="football" title="Football" onPress={() => navigation.navigate("FootballHome")} />
-        <SportCard sportName="badminton" title="Badminton" onPress={() => navigation.navigate("BadmintonHome")} />
-        <SportCard sportName="pickleball" title="Pickleball" onPress={() => navigation.navigate("PickleballHome")} />
-        <SportCard sportName="tennis" title="Tennis" onPress={() => navigation.navigate("TennisHome")} />
+        <SportCard
+          sportName="cricket"
+          title="Cricket"
+          subtitle="Ball-by-ball scoring with full innings & wickets"
+          onPress={() => navigation.navigate("CricketHome")}
+        />
+        <SportCard
+          sportName="padel"
+          title="Padel"
+          subtitle="Points, games & sets — FIP scoring rules"
+          onPress={() => navigation.navigate("PadelHome")}
+        />
+        <SportCard
+          sportName="football"
+          title="Football"
+          subtitle="Live match clock, halves, extra time & penalties"
+          onPress={() => navigation.navigate("FootballHome")}
+        />
+        <SportCard
+          sportName="badminton"
+          title="Badminton"
+          subtitle="Rally scoring to 21, with the 29-29 golden point rule"
+          onPress={() => navigation.navigate("BadmintonHome")}
+        />
+        <SportCard
+          sportName="pickleball"
+          title="Pickleball"
+          subtitle="Side-out or rally scoring, singles & doubles"
+          onPress={() => navigation.navigate("PickleballHome")}
+        />
+        <SportCard
+          sportName="tennis"
+          title="Tennis"
+          subtitle="Points, games & sets with game/break/set/match point"
+          onPress={() => navigation.navigate("TennisHome")}
+        />
         <SportCard
           sportName="table tennis"
           title="Table Tennis"
+          subtitle="11-point games, best of 5 or 7"
           onPress={() => navigation.navigate("TableTennisHome")}
         />
       </ScrollView>
