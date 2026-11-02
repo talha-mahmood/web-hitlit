@@ -251,7 +251,10 @@ function StatusPill({ completed, live }: { completed: boolean; live?: boolean })
 // round for real.
 function TbdMatchRow({ matchNumber }: { matchNumber: number }) {
   return (
-    <View className="bg-gray-50 rounded-2xl px-3 py-2.5" style={{ opacity: 0.65 }}>
+    <View
+      className="rounded-2xl px-3 py-2.5"
+      style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0", opacity: 0.65 }}
+    >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text className="text-muted text-xs font-bold">Match {matchNumber}</Text>
         <StatusPill completed={false} />
@@ -381,7 +384,10 @@ function MatchRow({
           ? "—"
           : `${teamAName} advances`; // a bye, auto-completed at generation
     return (
-      <View className="bg-gray-50 rounded-2xl px-3 py-2.5">
+      <View
+        className="rounded-2xl px-3 py-2.5"
+        style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0" }}
+      >
         <View className="flex-row items-center justify-between mb-1.5">
           <Text className="text-muted text-xs font-bold">
             Match {matchNumber}
@@ -429,7 +435,7 @@ function MatchRow({
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: isReady ? colors.primaryLight : "#F9FAFB" }}
+      style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0" }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text
@@ -454,8 +460,8 @@ function MatchRow({
         <TeamStatusIcon status={match.team_a ? teamAStatus : undefined} />
         <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
         <View
-          className="items-center justify-center rounded-full"
-          style={{ width: 32, height: 32, backgroundColor: isReady ? "white" : "#E5E7EB" }}
+          className="items-center justify-center rounded-full bg-gray-200"
+          style={{ width: 32, height: 32 }}
         >
           <Text className="text-muted text-xs font-bold">VS</Text>
         </View>
