@@ -465,7 +465,9 @@ export default function ProfileScreen() {
           }}
         />
 
-        {profile?.jersey_number != null && <JerseyNumberCard number={profile.jersey_number} />}
+        {profile?.jersey_number != null && (activeTab === "profile" || activeTab === "overview") && (
+          <JerseyNumberCard number={profile.jersey_number} />
+        )}
       </View>
 
       <Modal visible={skillPickerOpen} transparent animationType="fade" onRequestClose={() => setSkillPickerOpen(false)}>

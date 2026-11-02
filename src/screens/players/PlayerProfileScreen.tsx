@@ -355,7 +355,9 @@ export default function PlayerProfileScreen() {
               />
             )}
 
-            {player.jerseyNumber != null && <JerseyNumberCard number={player.jerseyNumber} />}
+            {player.jerseyNumber != null && (activeTab === "profile" || activeTab === "overview") && (
+              <JerseyNumberCard number={player.jerseyNumber} />
+            )}
           </ScrollView>
         </>
       )}
