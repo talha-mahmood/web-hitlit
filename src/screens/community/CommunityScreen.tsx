@@ -74,7 +74,7 @@ function ImageCard({
               width,
               height,
             }}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         )}
 
