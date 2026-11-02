@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, Easing, runOnJS } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -59,6 +60,56 @@ function CardSection({
         <Text className="text-ink font-bold text-base">{title}</Text>
       </View>
       {children}
+    </View>
+  );
+}
+
+// A coin that spins (rotateY) and hops (translateY) for ~1.4s, picks its own
+// 50/50 outcome internally, then reports it once the animation actually
+// finishes — the caller never knows the result until the coin visually lands.
+function CoinFlip({ onLand }: { onLand: (side: "HEADS" | "TAILS") => void }) {
+  const rotation = useSharedValue(0);
+  const lift = useSharedValue(0);
+
+  useEffect(() => {
+    const landedHeads = Math.random() < 0.5;
+    // A few full spins before settling on the face that matches the result —
+    // 0deg reads as the front (Heads) face, 180deg as the back (Tails) face.
+    const finalDeg = 4 * 360 + (landedHeads ? 0 : 180);
+    lift.value = withSequence(
+      withTiming(-28, { duration: 450, easing: Easing.out(Easing.quad) }),
+      withTiming(0, { duration: 950, easing: Easing.in(Easing.quad) })
+    );
+    rotation.value = withTiming(finalDeg, { duration: 1400, easing: Easing.out(Easing.cubic) }, (finished) => {
+      if (finished) runOnJS(onLand)(landedHeads ? "HEADS" : "TAILS");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 800 }, { translateY: lift.value }, { rotateY: `${rotation.value}deg` }],
+  }));
+
+  return (
+    <View className="items-center justify-center" style={{ height: 96 }}>
+      <Animated.View
+        style={[
+          {
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.primary,
+            borderWidth: 3,
+            borderColor: colors.primaryDark,
+          },
+          animatedStyle,
+        ]}
+      >
+        <Ionicons name="disc-outline" size={28} color="white" />
+      </Animated.View>
+      <Text className="text-muted text-xs mt-3">Flipping...</Text>
     </View>
   );
 }
@@ -271,6 +322,11 @@ export default function NewMatchScreen() {
   const [tossMode, setTossMode] = useState<"manual" | "auto">("manual");
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
+  // Auto Toss's own mini flow: Team A calls a side, the coin animates, then
+  // whoever called the landed side is the winner (tossWinner above).
+  const [tossCallSide, setTossCallSide] = useState<"HEADS" | "TAILS" | null>(null);
+  const [tossFlipping, setTossFlipping] = useState(false);
+  const [tossResultSide, setTossResultSide] = useState<"HEADS" | "TAILS" | null>(null);
   // Standard ICC rule by default — off. On means the last batsman keeps
   // playing alone once their team is down to one, instead of the innings
   // ending at totalPlayers-1 wickets.
@@ -511,19 +567,20 @@ export default function NewMatchScreen() {
             value={tossMode}
             onChange={(mode) => {
               setTossMode(mode);
-              // Auto mode picks the winner the instant it's switched on; a
-              // "Toss Again" button below lets the host re-roll. Switching
-              // back to manual clears it so a stale auto-picked winner can't
-              // slip through without the host actually choosing one.
-              setTossWinner(mode === "auto" ? (Math.random() < 0.5 ? "A" : "B") : null);
+              // Fresh start either way — Auto Toss now runs through its own
+              // call → flip → result flow instead of picking a winner outright.
+              setTossWinner(null);
+              setTossCallSide(null);
+              setTossFlipping(false);
+              setTossResultSide(null);
             }}
           />
         </CardSection>
 
-        <View className="flex-row" style={{ gap: 12 }}>
-          <View className="flex-1">
-            <CardSection icon="trophy-outline" title="Toss Winner">
-              {tossMode === "manual" ? (
+        {tossMode === "manual" ? (
+          <View className="flex-row" style={{ gap: 12 }}>
+            <View className="flex-1">
+              <CardSection icon="trophy-outline" title="Toss Winner">
                 <PillRow
                   options={[
                     { label: teamAName.trim() || "Team A", value: "A" as const },
@@ -532,31 +589,100 @@ export default function NewMatchScreen() {
                   value={tossWinner}
                   onChange={setTossWinner}
                 />
-              ) : (
-                <View>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <Ionicons name="trophy" size={16} color={colors.primary} />
-                    <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
-                      {tossWinner === "A"
-                        ? teamAName.trim() || "Team A"
-                        : tossWinner === "B"
-                          ? teamBName.trim() || "Team B"
-                          : "Tossing..."}
-                    </Text>
+              </CardSection>
+            </View>
+            <View className="flex-1">
+              <CardSection icon="albums-outline" title="Toss Decision">
+                <PillRow
+                  options={[
+                    { label: "Bat", value: "BAT" as const },
+                    { label: "Bowl", value: "BOWL" as const },
+                  ]}
+                  value={tossDecision}
+                  onChange={setTossDecision}
+                />
+              </CardSection>
+            </View>
+          </View>
+        ) : (
+          <>
+            <CardSection icon="disc-outline" title="Coin Toss">
+              {tossResultSide ? (
+                <View className="items-center">
+                  <View
+                    className="items-center justify-center rounded-full"
+                    style={{ width: 64, height: 64, backgroundColor: colors.primaryLight, borderWidth: 2, borderColor: colors.primary }}
+                  >
+                    <Ionicons name="disc-outline" size={28} color={colors.primary} />
                   </View>
+                  <Text className="text-ink font-bold text-sm mt-3">
+                    {tossResultSide === "HEADS" ? "Heads!" : "Tails!"}
+                  </Text>
+                  <Text className="text-primary font-semibold text-xs mt-1">
+                    {(tossWinner === "A" ? teamAName.trim() || "Team A" : teamBName.trim() || "Team B")} won the toss
+                  </Text>
                   <Pressable
-                    onPress={() => setTossWinner(Math.random() < 0.5 ? "A" : "B")}
+                    onPress={() => {
+                      setTossCallSide(null);
+                      setTossResultSide(null);
+                      setTossWinner(null);
+                    }}
                     className="flex-row items-center justify-center mt-3"
-                    style={{ gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border }}
+                    style={{ gap: 6, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border }}
                   >
                     <Ionicons name="shuffle" size={14} color={colors.primary} />
                     <Text className="text-primary font-semibold text-xs">Toss Again</Text>
                   </Pressable>
                 </View>
+              ) : tossFlipping ? (
+                <CoinFlip
+                  onLand={(side) => {
+                    setTossResultSide(side);
+                    setTossFlipping(false);
+                    setTossWinner(tossCallSide === side ? "A" : "B");
+                  }}
+                />
+              ) : (
+                <View>
+                  <Text className="text-muted text-xs mb-2">
+                    {teamAName.trim() || "Team A"} calls heads or tails:
+                  </Text>
+                  <PillRow
+                    options={[
+                      { label: "Heads", value: "HEADS" as const },
+                      { label: "Tails", value: "TAILS" as const },
+                    ]}
+                    value={tossCallSide}
+                    onChange={setTossCallSide}
+                  />
+                  <Text className="text-muted text-xs mt-2.5">
+                    {teamBName.trim() || "Team B"} gets{" "}
+                    {tossCallSide === "HEADS" ? "Tails" : tossCallSide === "TAILS" ? "Heads" : "the other side"}.
+                  </Text>
+                  <Pressable
+                    onPress={() => setTossFlipping(true)}
+                    disabled={!tossCallSide}
+                    className="mt-3"
+                    style={tossCallSide ? primaryButtonShadow : undefined}
+                  >
+                    {tossCallSide ? (
+                      <GradientFill className="flex-row items-center justify-center rounded-xl py-3" style={{ gap: 6 }}>
+                        <Ionicons name="disc-outline" size={16} color="white" />
+                        <Text className="text-white font-bold text-sm">Flip Coin</Text>
+                      </GradientFill>
+                    ) : (
+                      <View
+                        className="flex-row items-center justify-center rounded-xl py-3"
+                        style={{ gap: 6, backgroundColor: "#E5E7EB" }}
+                      >
+                        <Ionicons name="disc-outline" size={16} color={colors.muted} />
+                        <Text className="text-muted font-bold text-sm">Flip Coin</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                </View>
               )}
             </CardSection>
-          </View>
-          <View className="flex-1">
             <CardSection icon="albums-outline" title="Toss Decision">
               <PillRow
                 options={[
@@ -567,8 +693,8 @@ export default function NewMatchScreen() {
                 onChange={setTossDecision}
               />
             </CardSection>
-          </View>
-        </View>
+          </>
+        )}
 
         <CardSection icon="person-outline" title="Last Man Stand">
           <PillRow
