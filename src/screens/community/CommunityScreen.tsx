@@ -67,10 +67,14 @@ function MyCommunityContent({
     <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 10 }}>
       <FeatureCard icon="chat" title="Community Chat" onPress={onOpenChat} />
       <FeatureCard icon="account-search" title="Find Players" onPress={onOpenPlayers} />
-      <FeatureCard icon="trophy" title="Host Game" onPress={() => navigation.navigate("CreateGame", undefined)} />
+      <FeatureCard
+        icon="trophy"
+        title="Host Game/Tournament"
+        onPress={() => navigation.navigate("CreateGame", undefined)}
+      />
       <FeatureCard
         icon="calendar-search"
-        title="Explore Games"
+        title="Explore Games/Tournaments"
         onPress={() => navigation.navigate("GamesList", undefined)}
       />
       <FeatureCard icon="account-group" title="Create Group" onPress={() => navigation.navigate("CreateSquad")} />
