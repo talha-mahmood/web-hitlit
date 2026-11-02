@@ -208,7 +208,7 @@ export default function PickleballHomeScreen() {
                 key={tab.key}
                 onPress={() => setActiveTab(tab.key)}
                 className="flex-1 flex-row items-center justify-center rounded-xl py-2"
-                style={{ gap: 5, backgroundColor: selected ? colors.primaryLight : "transparent" }}
+                style={{ gap: 5, borderBottomWidth: 3, borderBottomColor: selected ? colors.primary : "transparent" }}
               >
                 {tab.key === "live" ? (
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#EF4444" }} />
