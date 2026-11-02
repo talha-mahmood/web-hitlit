@@ -96,7 +96,6 @@ function ImageCard({
               fontSize: 12,
               lineHeight: 15,
               width: width - 20,
-              textTransform: "uppercase",
             }}
             numberOfLines={1}
           >
