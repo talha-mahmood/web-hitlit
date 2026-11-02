@@ -281,7 +281,7 @@ function MyCommunityContent({
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
-              source={require("../../../assets/community-icons/host-game.png")}
+              source={require("../../../assets/community-icons/host-tournament.png")}
               onPress={() => navigation.navigate("CreateGame", { gameType: "TOURNAMENT" })}
               title="Host Tournament"
               description="Organize a tournament"
@@ -289,7 +289,7 @@ function MyCommunityContent({
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
-              source={require("../../../assets/community-icons/explore-games.png")}
+              source={require("../../../assets/community-icons/explore-tournaments.png")}
               onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
               title="Explore Tournaments"
               description="Browse live tournaments"
@@ -325,7 +325,7 @@ function MyCommunityContent({
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
-              source={require("../../../assets/community-icons/create-squad.png")}
+              source={require("../../../assets/community-icons/host-event.png")}
               onPress={() => navigation.navigate("HostEvent")}
               title="Host Event"
               description="Plan a community event"
@@ -333,7 +333,7 @@ function MyCommunityContent({
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
-              source={require("../../../assets/community-icons/explore-squad.png")}
+              source={require("../../../assets/community-icons/explore-events.png")}
               onPress={() => navigation.navigate("ExploreEvents")}
               title="Explore Events"
               description="Discover upcoming events"
