@@ -1,6 +1,6 @@
 import { supabase } from "../supabase";
 
-export type MessageSource = "game_message" | "squad_message" | "team_message";
+export type MessageSource = "game_message" | "squad_message" | "team_message" | "event_message";
 
 export async function reportMessage(params: {
   reporterId: string;

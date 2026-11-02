@@ -9,6 +9,7 @@ const LIST_QUERY_KEY: Record<ChatKind, string> = {
   game: "gameMessages",
   team: "teamMessages",
   squad: "squadMessages",
+  event: "eventMessages",
 };
 
 export function useDeleteChatMessage(kind: ChatKind, contextId: string) {

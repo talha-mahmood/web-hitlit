@@ -9,6 +9,7 @@ import AvatarStack from "./AvatarStack";
 import Bouncy from "./Bouncy";
 import type { GameListItem } from "../lib/api/games";
 import type { SquadListItem } from "../lib/api/squads";
+import type { EventListItem } from "../lib/api/events";
 
 // Home-screen-only variant of the "Filter by Sport" tile — a taller, photo-
 // led rounded-square card instead of SportsBySportSection's circular badge,
@@ -132,6 +133,80 @@ export function HomeSquadCard({
             </Text>
             <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
               {active.length}{squad.max_players ? `/${squad.max_players}` : ""} players
+            </Text>
+          </View>
+        </View>
+        <View className="flex-row items-center justify-between mt-3">
+          <AvatarStack
+            people={active.map((m) => ({ avatar: m.profiles?.avatar ?? null, name: m.profiles?.full_name ?? null }))}
+            size={22}
+          />
+          <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusBg }}>
+            <Text className="text-xs font-bold" style={{ color: statusColor }}>
+              {statusLabel}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Bouncy>
+  );
+}
+
+// Wide event card — same shell as HomeSquadCard, minus the sport photo
+// (events aren't tied to a sport) and the max_players capacity (events have
+// no capacity field) — a generic calendar icon stands in for the photo.
+export function HomeEventCard({
+  event,
+  currentUserId,
+  myGender,
+  onPress,
+}: {
+  event: EventListItem;
+  currentUserId?: string;
+  myGender?: string | null;
+  onPress: () => void;
+}) {
+  const active = event.event_members.filter((m) => m.status === "ACTIVE");
+  const isClosedToJoins = event.join_requests_blocked;
+  const hasJoined = event.event_members.some((m) => m.user_id === currentUserId && m.status === "ACTIVE");
+  const hasRequested = event.event_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
+  const isGenderRestricted =
+    event.gender !== "mixed" && (!myGender || myGender !== event.gender) && !hasJoined && !hasRequested;
+  const photo = event.icon_url ? { uri: event.icon_url } : null;
+
+  const statusLabel = isClosedToJoins
+    ? "Closed"
+    : isGenderRestricted
+      ? event.gender === "male"
+        ? "Male Only"
+        : "Female Only"
+      : hasJoined
+        ? "Joined"
+        : "Join";
+  const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : colors.primary;
+  const statusBg = isClosedToJoins || isGenderRestricted ? "#F3F4F6" : colors.primaryLight;
+
+  return (
+    <Bouncy
+      onPress={onPress}
+      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, flex: 1 }}
+      scaleTo={0.98}
+    >
+      <View className="border border-border rounded-2xl bg-white p-3">
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          {photo ? (
+            <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
+          ) : (
+            <View className="items-center justify-center" style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryLight }}>
+              <Ionicons name="calendar" size={18} color={colors.primary} />
+            </View>
+          )}
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+              {event.name}
+            </Text>
+            <Text className="text-muted text-xs mt-0.5" numberOfLines={1}>
+              {active.length} player{active.length !== 1 ? "s" : ""}
             </Text>
           </View>
         </View>

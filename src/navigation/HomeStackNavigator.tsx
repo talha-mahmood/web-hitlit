@@ -16,6 +16,10 @@ import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
+import HostEventScreen from "../screens/events/HostEventScreen";
+import ExploreEventsScreen from "../screens/events/ExploreEventsScreen";
+import EventDetailScreen from "../screens/events/EventDetailScreen";
+import EventChatScreen from "../screens/events/EventChatScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
@@ -87,6 +91,13 @@ export type HomeStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
+  // Events, same reasoning — reachable from the Home screen's "Events near
+  // you" row, hosted here so browsing never jumps the tab bar's highlight
+  // over to Community.
+  HostEvent: undefined;
+  ExploreEvents: undefined;
+  EventDetail: { eventId: string };
+  EventChat: { eventId: string; eventName?: string };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -130,6 +141,10 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
+      <Stack.Screen name="HostEvent" component={HostEventScreen} />
+      <Stack.Screen name="ExploreEvents" component={ExploreEventsScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+      <Stack.Screen name="EventChat" component={EventChatScreen} />
     </Stack.Navigator>
   );
 }

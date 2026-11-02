@@ -1,16 +1,18 @@
 import { supabase } from "../supabase";
 import type { ChatKind } from "./chatThreads";
 
-const READS_TABLE: Record<ChatKind, "game_chat_reads" | "team_chat_reads" | "squad_chat_reads"> = {
+const READS_TABLE: Record<ChatKind, "game_chat_reads" | "team_chat_reads" | "squad_chat_reads" | "event_chat_reads"> = {
   game: "game_chat_reads",
   team: "team_chat_reads",
   squad: "squad_chat_reads",
+  event: "event_chat_reads",
 };
 
-const CONTEXT_COL: Record<ChatKind, "game_id" | "team_id" | "squad_id"> = {
+const CONTEXT_COL: Record<ChatKind, "game_id" | "team_id" | "squad_id" | "event_id"> = {
   game: "game_id",
   team: "team_id",
   squad: "squad_id",
+  event: "event_id",
 };
 
 export type SeenByUser = {

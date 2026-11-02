@@ -75,6 +75,8 @@ function MyCommunityContent({
       />
       <FeatureCard icon="account-group" title="Create Group" onPress={() => navigation.navigate("CreateSquad")} />
       <FeatureCard icon="account-group" title="Explore Groups" onPress={() => navigation.navigate("SquadsList")} />
+      <FeatureCard icon="calendar-plus" title="Host Event" onPress={() => navigation.navigate("HostEvent")} />
+      <FeatureCard icon="calendar-month" title="Explore Events" onPress={() => navigation.navigate("ExploreEvents")} />
     </ScrollView>
   );
 }

@@ -13,6 +13,10 @@ import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
 import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
+import HostEventScreen from "../screens/events/HostEventScreen";
+import ExploreEventsScreen from "../screens/events/ExploreEventsScreen";
+import EventDetailScreen from "../screens/events/EventDetailScreen";
+import EventChatScreen from "../screens/events/EventChatScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import VenueDetailScreen from "../screens/venues/VenueDetailScreen";
 import SlotPickerScreen from "../screens/venues/SlotPickerScreen";
@@ -69,6 +73,10 @@ export type CommunityStackParamList = {
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
+  HostEvent: undefined;
+  ExploreEvents: undefined;
+  EventDetail: { eventId: string };
+  EventChat: { eventId: string; eventName?: string };
   // sportId/sportName: set when opened from Top Players with a sport filter on.
   PlayerProfile: { userId: string; sportId?: string; sportName?: string };
   // Reachable from a tournament's "Book Venue" button (see GameDetailScreen)
@@ -116,6 +124,10 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
       <Stack.Screen name="EditSquad" component={EditSquadScreen} />
+      <Stack.Screen name="HostEvent" component={HostEventScreen} />
+      <Stack.Screen name="ExploreEvents" component={ExploreEventsScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+      <Stack.Screen name="EventChat" component={EventChatScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />

@@ -12,6 +12,7 @@ import { useProfileStore } from "../../store/profileStore";
 import { useSports } from "../../hooks/useSports";
 import { useGames } from "../../hooks/useGames";
 import { useSquads } from "../../hooks/useSquads";
+import { useEvents } from "../../hooks/useEvents";
 import { useVenues } from "../../hooks/useVenues";
 import { useUnreadNotificationCount } from "../../hooks/useNotifications";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
@@ -19,8 +20,9 @@ import { distanceKm, formatDistanceKm } from "../../lib/distance";
 import { isVenueBoosted, type VenueListItem } from "../../lib/api/venues";
 import type { GameListItem } from "../../lib/api/games";
 import type { SquadListItem } from "../../lib/api/squads";
+import type { EventListItem } from "../../lib/api/events";
 import VenueCard from "../../components/VenueCard";
-import { HomeSportTile, HomeSquadCard, HomeGameRowCard } from "../../components/HomeWideCards";
+import { HomeSportTile, HomeSquadCard, HomeEventCard, HomeGameRowCard } from "../../components/HomeWideCards";
 import { NearbyEmptyRow } from "../../components/NearbyCards";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
@@ -155,14 +157,16 @@ export default function HomeScreen() {
   const { data: squads, isLoading: squadsLoading, refetch: refetchSquads, isRefetching: squadsRefetching } = useSquads({
     sportId: selectedSportId ?? undefined,
   });
+  const { data: events, isLoading: eventsLoading, refetch: refetchEvents, isRefetching: eventsRefetching } = useEvents();
   // Pull-to-refresh refetches everything this screen shows at once rather
   // than picking one "main" query — there isn't a single source of truth
-  // here, just three independent lists.
-  const isRefreshing = venuesRefetching || gamesRefetching || squadsRefetching;
+  // here, just four independent lists.
+  const isRefreshing = venuesRefetching || gamesRefetching || squadsRefetching || eventsRefetching;
   const handleRefresh = () => {
     refetchVenues();
     refetchGames();
     refetchSquads();
+    refetchEvents();
   };
 
   const nearbyRegularGames = useMemo(
@@ -190,6 +194,14 @@ export default function HomeScreen() {
         lng: s.profiles?.longitude ?? null,
       })),
     [squads, coords]
+  );
+  const nearbyEvents = useMemo(
+    () =>
+      withDistance(events ?? [], coords, (e: EventListItem) => ({
+        lat: e.profiles?.latitude ?? null,
+        lng: e.profiles?.longitude ?? null,
+      })),
+    [events, coords]
   );
   const nearbyVenues = useMemo(() => {
     const sorted = withDistance(venues ?? [], coords, (v: VenueListItem) => ({
@@ -348,6 +360,27 @@ export default function HomeScreen() {
             </View>
           )}
           onSeeAll={() => navigation.navigate("SquadsList", undefined)}
+        />
+
+        <NearbySection
+          title="Events near you"
+          titleIcon="calendar-outline"
+          data={nearbyEvents}
+          isLoading={eventsLoading}
+          emptyIcon="calendar-outline"
+          emptyLabel="No events near you yet"
+          keyExtractor={(e: EventListItem) => e.id}
+          renderItem={({ item }) => (
+            <View style={{ width: VENUE_CARD_WIDTH }}>
+              <HomeEventCard
+                event={item}
+                currentUserId={userId}
+                myGender={profile?.gender}
+                onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
+              />
+            </View>
+          )}
+          onSeeAll={() => navigation.navigate("ExploreEvents", undefined)}
         />
 
         <NearbySection

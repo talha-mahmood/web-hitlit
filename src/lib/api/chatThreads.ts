@@ -1,16 +1,18 @@
 import { supabase } from "../supabase";
 
-// Shared delete layer for the three ephemeral chat tables (game_messages,
-// team_messages, squad_messages) — they're structurally identical, so one
-// generic module covers all three instead of tripling this logic. Replies
-// themselves are handled inline in each chat screen (WhatsApp-style quoted
-// reply, same flat message list) via parent_id on the message itself.
-export type ChatKind = "game" | "team" | "squad";
+// Shared delete layer for the four ephemeral chat tables (game_messages,
+// team_messages, squad_messages, event_messages) — they're structurally
+// identical, so one generic module covers all four instead of quadrupling
+// this logic. Replies themselves are handled inline in each chat screen
+// (WhatsApp-style quoted reply, same flat message list) via parent_id on
+// the message itself.
+export type ChatKind = "game" | "team" | "squad" | "event";
 
-const TABLE: Record<ChatKind, "game_messages" | "team_messages" | "squad_messages"> = {
+const TABLE: Record<ChatKind, "game_messages" | "team_messages" | "squad_messages" | "event_messages"> = {
   game: "game_messages",
   team: "team_messages",
   squad: "squad_messages",
+  event: "event_messages",
 };
 
 // Soft-deletes the sender's own message (deleted_at) — only that single

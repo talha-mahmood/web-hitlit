@@ -737,6 +737,207 @@ export type Database = {
           },
         ]
       }
+      event_chat_reads: {
+        Row: {
+          event_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chat_reads_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_chat_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_members: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          event_id: string
+          id: string
+          joined_at: string
+          location: string | null
+          role: Database["public"]["Enums"]["squad_role_type"]
+          status: Database["public"]["Enums"]["squad_member_status_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          event_id: string
+          id?: string
+          joined_at?: string
+          location?: string | null
+          role?: Database["public"]["Enums"]["squad_role_type"]
+          status?: Database["public"]["Enums"]["squad_member_status_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          event_id?: string
+          id?: string
+          joined_at?: string
+          location?: string | null
+          role?: Database["public"]["Enums"]["squad_role_type"]
+          status?: Database["public"]["Enums"]["squad_member_status_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_members_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_messages: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          event_id: string
+          id: string
+          message: string
+          parent_id: string | null
+          poll_id: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          event_id: string
+          id?: string
+          message: string
+          parent_id?: string | null
+          poll_id?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          event_id?: string
+          id?: string
+          message?: string
+          parent_id?: string | null
+          poll_id?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "event_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          event_code: string
+          event_owner_id: string
+          event_type: string
+          gender: Database["public"]["Enums"]["game_gender_type"]
+          icon_url: string | null
+          id: string
+          join_requests_blocked: boolean
+          location: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          event_code?: string
+          event_owner_id: string
+          event_type: string
+          gender?: Database["public"]["Enums"]["game_gender_type"]
+          icon_url?: string | null
+          id?: string
+          join_requests_blocked?: boolean
+          location?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          event_code?: string
+          event_owner_id?: string
+          event_type?: string
+          gender?: Database["public"]["Enums"]["game_gender_type"]
+          icon_url?: string | null
+          id?: string
+          join_requests_blocked?: boolean
+          location?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_event_owner_id_fkey"
+            columns: ["event_owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_games: {
         Row: {
           created_at: string
@@ -3537,6 +3738,7 @@ export type Database = {
         Returns: undefined
       }
       expire_past_games: { Args: never; Returns: undefined }
+      generate_event_code: { Args: never; Returns: string }
       generate_game_code: { Args: never; Returns: string }
       generate_squad_code: { Args: never; Returns: string }
       generate_team_code: { Args: never; Returns: string }
@@ -3868,3 +4070,4 @@ export const Constants = {
     },
   },
 } as const
+
