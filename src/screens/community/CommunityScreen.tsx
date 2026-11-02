@@ -28,6 +28,17 @@ const GRID_SIDE_PADDING = 16;
 const GRID_COL_GAP = 16;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
 const CARD_TEXT_HEIGHT = 58;
+// Section heading above each pair of cards — same icon + text row style as
+// the Home screen's NearbySection title (e.g. "Games near you").
+function PairHeading({ icon, title }: { icon: keyof typeof Ionicons.glyphMap; title: string }) {
+  return (
+    <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+      <Ionicons name={icon} size={17} color={colors.primary} />
+      <Text className="text-lg font-semibold text-ink">{title}</Text>
+    </View>
+  );
+}
+
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
 // except the Create Squad card, which gets a banner-image-then-title layout
@@ -206,8 +217,12 @@ function MyCommunityContent({
   // 12 ≈ 18px) — otherwise the next row's card paints right over the
   // previous row's shadow instead of leaving it visible underneath.
   const ROW_GAP = 24;
+  // Each row now has its own PairHeading above it (icon + text line, ~17px
+  // tall, plus its own mb-3/12px) — factored in here so "fits without
+  // scrolling" still accounts for the real space every row now takes.
+  const HEADING_HEIGHT = 29;
   const fitted = areaHeight > 0
-    ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - CARD_TEXT_HEIGHT * ROWS) / ROWS
+    ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - (CARD_TEXT_HEIGHT + HEADING_HEIGHT) * ROWS) / ROWS
     : CARD_WIDTH;
   // Picture height fits the available space; the width is always the full
   // column width, so on short screens the cards are wider than they are tall.
@@ -216,87 +231,114 @@ function MyCommunityContent({
   return (
     <View style={{ flex: 1 }} onLayout={onLayout}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: BOTTOM_PAD }}>
-        <View className="flex-row flex-wrap justify-between" style={{ rowGap: ROW_GAP }}>
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/community-chat.png")}
-            onPress={onOpenChat}
-            title="Community Chat"
-            description="Chat with the community"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/Top-Players.png")}
-            onPress={onOpenPlayers}
-            title="Find Players"
-            description="Discover players near you"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/host-game.png")}
-            onPress={() => navigation.navigate("CreateGame", undefined)}
-            title="Host Game"
-            description="Start your own match"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-games.png")}
-            onPress={() => navigation.navigate("GamesList", undefined)}
-            title="Explore Games"
-            description="Join games near you"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/host-game.png")}
-            onPress={() => navigation.navigate("CreateGame", { gameType: "TOURNAMENT" })}
-            title="Host Tournament"
-            description="Organize a tournament"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-games.png")}
-            onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
-            title="Explore Tournaments"
-            description="Browse live tournaments"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/create-squad.png")}
-            onPress={() => navigation.navigate("CreateSquad")}
-            title="Create Group"
-            description="Build your own squad"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-squad.png")}
-            onPress={() => navigation.navigate("SquadsList")}
-            title="Explore Groups"
-            description="Find groups to join"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/create-squad.png")}
-            onPress={() => navigation.navigate("HostEvent")}
-            title="Host Event"
-            description="Plan a community event"
-          />
-          <ImageCard
-            width={CARD_WIDTH}
-            height={imageHeight}
-            source={require("../../../assets/community-icons/explore-squad.png")}
-            onPress={() => navigation.navigate("ExploreEvents")}
-            title="Explore Events"
-            description="Discover upcoming events"
-          />
+        <View style={{ marginBottom: ROW_GAP }}>
+          <PairHeading icon="chatbubbles-outline" title="Connect & Chat" />
+          <View className="flex-row justify-between">
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/community-chat.png")}
+              onPress={onOpenChat}
+              title="Community Chat"
+              description="Chat with the community"
+            />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/Top-Players.png")}
+              onPress={onOpenPlayers}
+              title="Find Players"
+              description="Discover players near you"
+            />
+          </View>
+        </View>
+
+        <View style={{ marginBottom: ROW_GAP }}>
+          <PairHeading icon="tennisball-outline" title="Games" />
+          <View className="flex-row justify-between">
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/host-game.png")}
+              onPress={() => navigation.navigate("CreateGame", undefined)}
+              title="Host Game"
+              description="Start your own match"
+            />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/explore-games.png")}
+              onPress={() => navigation.navigate("GamesList", undefined)}
+              title="Explore Games"
+              description="Join games near you"
+            />
+          </View>
+        </View>
+
+        <View style={{ marginBottom: ROW_GAP }}>
+          <PairHeading icon="trophy-outline" title="Tournaments" />
+          <View className="flex-row justify-between">
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/host-game.png")}
+              onPress={() => navigation.navigate("CreateGame", { gameType: "TOURNAMENT" })}
+              title="Host Tournament"
+              description="Organize a tournament"
+            />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/explore-games.png")}
+              onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
+              title="Explore Tournaments"
+              description="Browse live tournaments"
+            />
+          </View>
+        </View>
+
+        <View style={{ marginBottom: ROW_GAP }}>
+          <PairHeading icon="people-outline" title="Groups" />
+          <View className="flex-row justify-between">
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/create-squad.png")}
+              onPress={() => navigation.navigate("CreateSquad")}
+              title="Create Group"
+              description="Build your own squad"
+            />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/explore-squad.png")}
+              onPress={() => navigation.navigate("SquadsList")}
+              title="Explore Groups"
+              description="Find groups to join"
+            />
+          </View>
+        </View>
+
+        <View>
+          <PairHeading icon="calendar-outline" title="Events" />
+          <View className="flex-row justify-between">
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/create-squad.png")}
+              onPress={() => navigation.navigate("HostEvent")}
+              title="Host Event"
+              description="Plan a community event"
+            />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/explore-squad.png")}
+              onPress={() => navigation.navigate("ExploreEvents")}
+              title="Explore Events"
+              description="Discover upcoming events"
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
