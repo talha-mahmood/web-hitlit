@@ -20,8 +20,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SIDE_PADDING = 16;
 // The cards run almost edge to edge: a slim margin on each side and a slim
 // gap between the two columns, so each card is as wide as the screen allows.
-const GRID_SIDE_PADDING = 12;
-const GRID_COL_GAP = 12;
+// Wide enough to clear cardShadow's own reach (offset 6 + radius 12) on
+// every side — any tighter and a card's shadow gets painted over by its
+// neighbor (the next sibling's opaque white background fully covers
+// whatever shadow bled into that gap) instead of actually being visible.
+const GRID_SIDE_PADDING = 16;
+const GRID_COL_GAP = 16;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
 const CARD_TEXT_HEIGHT = 58;
 // Every card uses a provided illustration that already has its own title +
@@ -53,8 +57,8 @@ function ImageCard({
       onPress={onPress}
       scaleTo={0.97}
       style={{
-        ...cardShadow,
         backgroundColor: "white",
+        ...cardShadow,
         width,
         borderRadius: 22,
       }}
@@ -198,7 +202,10 @@ function MyCommunityContent({
   const ROWS = 5;
   const TOP_PAD = 12;
   const BOTTOM_PAD = 12;
-  const ROW_GAP = 12;
+  // Tall enough to clear cardShadow's vertical reach (offset 6 + radius
+  // 12 ≈ 18px) — otherwise the next row's card paints right over the
+  // previous row's shadow instead of leaving it visible underneath.
+  const ROW_GAP = 24;
   const fitted = areaHeight > 0
     ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - CARD_TEXT_HEIGHT * ROWS) / ROWS
     : CARD_WIDTH;
