@@ -253,7 +253,7 @@ function TbdMatchRow({ matchNumber }: { matchNumber: number }) {
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0", opacity: 0.65 }}
+      style={{ backgroundColor: "white", ...cardShadow, opacity: 0.65 }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text className="text-muted text-xs font-bold">Match {matchNumber}</Text>
@@ -386,7 +386,7 @@ function MatchRow({
     return (
       <View
         className="rounded-2xl px-3 py-2.5"
-        style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0" }}
+        style={{ backgroundColor: "white", ...cardShadow }}
       >
         <View className="flex-row items-center justify-between mb-1.5">
           <Text className="text-muted text-xs font-bold">
@@ -435,7 +435,7 @@ function MatchRow({
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "white", borderWidth: 2, borderColor: "#BFE8D0" }}
+      style={{ backgroundColor: "white", ...cardShadow }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text
