@@ -69,13 +69,23 @@ function MyCommunityContent({
       <FeatureCard icon="account-search" title="Find Players" onPress={onOpenPlayers} />
       <FeatureCard
         icon="trophy"
-        title="Host Game/Tournament"
+        title="Host Game"
         onPress={() => navigation.navigate("CreateGame", undefined)}
       />
       <FeatureCard
         icon="calendar-search"
-        title="Explore Games/Tournaments"
+        title="Explore Games"
         onPress={() => navigation.navigate("GamesList", undefined)}
+      />
+      <FeatureCard
+        icon="trophy-award"
+        title="Host Tournament"
+        onPress={() => navigation.navigate("CreateGame", { gameType: "TOURNAMENT" })}
+      />
+      <FeatureCard
+        icon="podium-gold"
+        title="Explore Tournaments"
+        onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
       />
       <FeatureCard icon="account-group" title="Create Group" onPress={() => navigation.navigate("CreateSquad")} />
       <FeatureCard icon="account-group" title="Explore Groups" onPress={() => navigation.navigate("SquadsList")} />
