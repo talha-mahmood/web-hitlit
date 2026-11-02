@@ -23,7 +23,7 @@ const SIDE_PADDING = 16;
 const GRID_SIDE_PADDING = 8;
 const GRID_COL_GAP = 8;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
-const CARD_TEXT_HEIGHT = 46;
+const CARD_TEXT_HEIGHT = 58;
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
 // except the Create Squad card, which gets a banner-image-then-title layout
@@ -34,6 +34,7 @@ function ImageCard({
   visual,
   onPress,
   title,
+  description,
   width,
   height,
 }: {
@@ -45,6 +46,7 @@ function ImageCard({
   visual?: ReactNode;
   onPress: () => void;
   title: string;
+  description: string;
 }) {
   return (
     <Bouncy
@@ -91,16 +93,26 @@ function ImageCard({
           <Text
             className="text-ink font-extrabold"
             style={{
-              fontSize: 18,
-              lineHeight: 22,
+              fontSize: 12,
+              lineHeight: 15,
               width: width - 20,
               textTransform: "uppercase",
             }}
             numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
           >
             {title}
+          </Text>
+          <Text
+            className="text-muted"
+            style={{
+              fontSize: 10,
+              lineHeight: 13,
+              width: width - 20,
+              marginTop: 2,
+            }}
+            numberOfLines={1}
+          >
+            {description}
           </Text>
         </View>
       </View>
@@ -161,12 +173,13 @@ function MyCommunityContent({
   onOpenPlayers: () => void;
   onOpenChat: () => void;
 }) {
-  // All six cards (3 rows of 2) are sized to fit the space between the header
-  // and the bottom tab bar, so nothing needs scrolling. The card is capped at
-  // its regular width-based size on tall screens.
+  // All ten cards (5 rows of 2) are sized to fit the space between the header
+  // and the bottom tab bar when possible; the card is capped at its regular
+  // width-based size on tall screens, and the ScrollView lets the grid scroll
+  // instead of being squashed on short screens.
   const [areaHeight, setAreaHeight] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height);
-  const ROWS = 3;
+  const ROWS = 5;
   const TOP_PAD = 12;
   const BOTTOM_PAD = 12;
   const ROW_GAP = 12;
@@ -187,6 +200,7 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/community-chat.png")}
             onPress={onOpenChat}
             title="Community Chat"
+            description="Chat with the community"
           />
           <ImageCard
             width={CARD_WIDTH}
@@ -194,6 +208,7 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/Top-Players.png")}
             onPress={onOpenPlayers}
             title="Find Players"
+            description="Discover players near you"
           />
           <ImageCard
             width={CARD_WIDTH}
@@ -201,6 +216,7 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/host-game.png")}
             onPress={() => navigation.navigate("CreateGame", undefined)}
             title="Host Game"
+            description="Start your own match"
           />
           <ImageCard
             width={CARD_WIDTH}
@@ -208,6 +224,23 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/explore-games.png")}
             onPress={() => navigation.navigate("GamesList", undefined)}
             title="Explore Games"
+            description="Join games near you"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/host-game.png")}
+            onPress={() => navigation.navigate("CreateGame", { gameType: "TOURNAMENT" })}
+            title="Host Tournament"
+            description="Organize a tournament"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/explore-games.png")}
+            onPress={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
+            title="Explore Tournaments"
+            description="Browse live tournaments"
           />
           <ImageCard
             width={CARD_WIDTH}
@@ -215,6 +248,7 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/create-squad.png")}
             onPress={() => navigation.navigate("CreateSquad")}
             title="Create Group"
+            description="Build your own squad"
           />
           <ImageCard
             width={CARD_WIDTH}
@@ -222,6 +256,23 @@ function MyCommunityContent({
             source={require("../../../assets/community-icons/explore-squad.png")}
             onPress={() => navigation.navigate("SquadsList")}
             title="Explore Groups"
+            description="Find groups to join"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/create-squad.png")}
+            onPress={() => navigation.navigate("HostEvent")}
+            title="Host Event"
+            description="Plan a community event"
+          />
+          <ImageCard
+            width={CARD_WIDTH}
+            height={imageHeight}
+            source={require("../../../assets/community-icons/explore-squad.png")}
+            onPress={() => navigation.navigate("ExploreEvents")}
+            title="Explore Events"
+            description="Discover upcoming events"
           />
         </View>
       </ScrollView>
