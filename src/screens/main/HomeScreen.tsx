@@ -363,27 +363,6 @@ export default function HomeScreen() {
         />
 
         <NearbySection
-          title="Events near you"
-          titleIcon="calendar-outline"
-          data={nearbyEvents}
-          isLoading={eventsLoading}
-          emptyIcon="calendar-outline"
-          emptyLabel="No events near you yet"
-          keyExtractor={(e: EventListItem) => e.id}
-          renderItem={({ item }) => (
-            <View style={{ width: VENUE_CARD_WIDTH }}>
-              <HomeEventCard
-                event={item}
-                currentUserId={userId}
-                myGender={profile?.gender}
-                onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
-              />
-            </View>
-          )}
-          onSeeAll={() => navigation.navigate("ExploreEvents", undefined)}
-        />
-
-        <NearbySection
           title="Games near you"
           titleIcon="calendar"
           horizontal={false}
@@ -419,6 +398,27 @@ export default function HomeScreen() {
             />
           )}
           onSeeAll={() => navigation.navigate("GamesList", { gameType: "TOURNAMENT" })}
+        />
+
+        <NearbySection
+          title="Events near you"
+          titleIcon="calendar-outline"
+          data={nearbyEvents}
+          isLoading={eventsLoading}
+          emptyIcon="calendar-outline"
+          emptyLabel="No events near you yet"
+          keyExtractor={(e: EventListItem) => e.id}
+          renderItem={({ item }) => (
+            <View style={{ width: VENUE_CARD_WIDTH }}>
+              <HomeEventCard
+                event={item}
+                currentUserId={userId}
+                myGender={profile?.gender}
+                onPress={() => navigation.navigate("EventDetail", { eventId: item.id })}
+              />
+            </View>
+          )}
+          onSeeAll={() => navigation.navigate("ExploreEvents", undefined)}
         />
       </View>
       </ScrollView>
