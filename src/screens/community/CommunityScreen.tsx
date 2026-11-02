@@ -93,8 +93,8 @@ function ImageCard({
           <Text
             className="text-ink font-extrabold"
             style={{
-              fontSize: 12,
-              lineHeight: 15,
+              fontSize: 15,
+              lineHeight: 18,
               width: width - 20,
             }}
             numberOfLines={1}
