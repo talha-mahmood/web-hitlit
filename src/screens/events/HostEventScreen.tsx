@@ -94,32 +94,25 @@ function FormCard({
   );
 }
 
-// Date chip — same two-line "weekday / date number" card as Host
-// Tournament's own Date picker (CreateGameScreen.tsx's DateChipItem), copied
-// here verbatim since that one isn't exported.
+// Date chip — same two-line "weekday / date number" card shape as Host
+// Tournament's own Date picker (CreateGameScreen.tsx's DateChipItem), but
+// using this screen's own Duration/Start Time/Hours chip's selected
+// treatment (flat pale-green fill + dark-green text) instead of that one's
+// gradient, so every selected chip on this form matches.
 function dateChipStyle(selected: boolean) {
   return {
     borderWidth: 1.5,
     borderRadius: 16,
     borderColor: selected ? colors.primary : colors.border,
-    ...(selected
-      ? {
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.2,
-          shadowRadius: 6,
-          elevation: 2,
-        }
-      : null),
   };
 }
 
 function DateChipFill({ selected, children }: { selected: boolean; children: React.ReactNode }) {
-  if (selected) {
-    return <GradientFill className="items-center px-3 py-2.5 rounded-2xl">{children}</GradientFill>;
-  }
   return (
-    <View className="items-center px-3 py-2.5 rounded-2xl" style={{ backgroundColor: "white" }}>
+    <View
+      className="items-center px-3 py-2.5 rounded-2xl"
+      style={{ backgroundColor: selected ? "#DCEFE4" : "white" }}
+    >
       {children}
     </View>
   );
@@ -141,8 +134,15 @@ function DateChipItem({
     <Animated.View style={pulseStyle}>
       <Pressable onPress={onPress} style={dateChipStyle(selected)}>
         <DateChipFill selected={selected}>
-          <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
-          <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{label}</Text>
+          <Text className="text-xs" style={{ color: selected ? colors.primaryDark : colors.muted }}>
+            {day}
+          </Text>
+          <Text
+            className="text-base font-bold mt-0.5"
+            style={{ color: selected ? colors.primaryDark : colors.ink }}
+          >
+            {label}
+          </Text>
         </DateChipFill>
       </Pressable>
     </Animated.View>
