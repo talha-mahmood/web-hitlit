@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler, type LayoutChangeEvent } from "react-native";
+import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -204,32 +204,20 @@ function MyCommunityContent({
   onOpenPlayers: () => void;
   onOpenChat: () => void;
 }) {
-  // All ten cards (5 rows of 2) are sized to fit the space between the header
-  // and the bottom tab bar when possible; the card is capped at its regular
-  // width-based size on tall screens, and the ScrollView lets the grid scroll
-  // instead of being squashed on short screens.
-  const [areaHeight, setAreaHeight] = useState(0);
-  const onLayout = (e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height);
-  const ROWS = 5;
   const TOP_PAD = 12;
   const BOTTOM_PAD = 12;
   // Tall enough to clear cardShadow's vertical reach (offset 6 + radius
   // 12 ≈ 18px) — otherwise the next row's card paints right over the
   // previous row's shadow instead of leaving it visible underneath.
   const ROW_GAP = 24;
-  // Each row now has its own PairHeading above it (icon + text line, ~17px
-  // tall, plus its own mb-3/12px) — factored in here so "fits without
-  // scrolling" still accounts for the real space every row now takes.
-  const HEADING_HEIGHT = 29;
-  const fitted = areaHeight > 0
-    ? (areaHeight - TOP_PAD - BOTTOM_PAD - ROW_GAP * (ROWS - 1) - (CARD_TEXT_HEIGHT + HEADING_HEIGHT) * ROWS) / ROWS
-    : CARD_WIDTH;
-  // Picture height fits the available space; the width is always the full
-  // column width, so on short screens the cards are wider than they are tall.
-  const imageHeight = Math.floor(Math.max(96, Math.min(CARD_WIDTH, fitted)));
+  // Every source illustration is a square image — sizing the picture area to
+  // exactly the card's own width (instead of a shorter, screen-fit height)
+  // keeps it filling the card edge to edge instead of shrinking narrower
+  // than the card and leaving empty space on either side.
+  const imageHeight = CARD_WIDTH;
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayout}>
+    <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: BOTTOM_PAD }}>
         <View style={{ marginBottom: ROW_GAP }}>
           <PairHeading icon="chatbubbles-outline" title="Connect & Chat" />
