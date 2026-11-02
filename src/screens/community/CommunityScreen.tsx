@@ -63,8 +63,6 @@ function ImageCard({
         style={{
           backgroundColor: "white",
           borderRadius: 22,
-          borderWidth: 2,
-          borderColor: colors.border,
           overflow: "hidden",
         }}
       >
@@ -114,6 +112,25 @@ function ImageCard({
             {description}
           </Text>
         </View>
+
+        {/* Border drawn as its own translucent overlay, painted last so it
+            sits on top of the image instead of being covered by it (the
+            image is flush with the card's top edge). Opacity applies only
+            to the border, not the image/text content underneath it. */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: 22,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            opacity: 5.6,
+          }}
+        />
       </View>
     </Bouncy>
   );
