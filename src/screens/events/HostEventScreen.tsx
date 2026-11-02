@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import type * as ImagePicker from "expo-image-picker";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,13 +22,15 @@ import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
 import type { Database } from "../../types/database.types";
-import LocationPickerField from "../../components/LocationPickerField";
+import LocationMapPicker from "../../components/LocationMapPicker";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
+import { useSelectPulse } from "../../lib/useSelectPulse";
 import GradientFill from "../../components/GradientFill";
 import {
   DAYS,
@@ -88,6 +91,61 @@ function FormCard({
         <View style={{ marginTop: 12 }}>{children}</View>
       </View>
     </View>
+  );
+}
+
+// Date chip — same two-line "weekday / date number" card as Host
+// Tournament's own Date picker (CreateGameScreen.tsx's DateChipItem), copied
+// here verbatim since that one isn't exported.
+function dateChipStyle(selected: boolean) {
+  return {
+    borderWidth: 1.5,
+    borderRadius: 16,
+    borderColor: selected ? colors.primary : colors.border,
+    ...(selected
+      ? {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          elevation: 2,
+        }
+      : null),
+  };
+}
+
+function DateChipFill({ selected, children }: { selected: boolean; children: React.ReactNode }) {
+  if (selected) {
+    return <GradientFill className="items-center px-3 py-2.5 rounded-2xl">{children}</GradientFill>;
+  }
+  return (
+    <View className="items-center px-3 py-2.5 rounded-2xl" style={{ backgroundColor: "white" }}>
+      {children}
+    </View>
+  );
+}
+
+function DateChipItem({
+  day,
+  label,
+  selected,
+  onPress,
+}: {
+  day: string;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const pulseStyle = useSelectPulse(selected);
+  return (
+    <Animated.View style={pulseStyle}>
+      <Pressable onPress={onPress} style={dateChipStyle(selected)}>
+        <DateChipFill selected={selected}>
+          <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
+          <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>{label}</Text>
+        </DateChipFill>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -164,6 +222,41 @@ export default function HostEventScreen() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [hoursPerDay, setHoursPerDay] = useState<number>(1);
   const HOURS_PER_DAY_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
+
+  // Location — same interactive map-pin picker as Host Tournament's "Enter
+  // Location Manually" flow (CreateGameScreen.tsx). Events have no app venue
+  // list to fall back to, so this is the only mode and starts centered on
+  // the host's current location automatically, instead of behind a toggle.
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingDevice, setLocatingDevice] = useState(true);
+  const [confirmingLocation, setConfirmingLocation] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { latitude, longitude } = await detectCurrentCoordinates();
+        setMapCenter({ lat: latitude, lng: longitude });
+      } catch {
+        // Permission denied or GPS unavailable — a sensible default center
+        // (Lahore; this app is Pakistan-only) beats blocking the picker.
+        setMapCenter({ lat: 31.5204, lng: 74.3587 });
+      } finally {
+        setLocatingDevice(false);
+      }
+    })();
+  }, []);
+
+  const handleConfirmMapLocation = async (lat: number, lng: number) => {
+    setConfirmingLocation(true);
+    try {
+      const label = await reverseGeocodeViaNominatim(lat, lng);
+      setLocation(label);
+    } catch (err) {
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not look up an address for this location."));
+    } finally {
+      setConfirmingLocation(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -346,14 +439,19 @@ export default function HostEventScreen() {
             (CreateGameScreen.tsx), since an event can span multiple days the
             same way a tournament can. */}
         <FormCard icon="calendar-outline" title="Date & Time" required>
-          <Text className="text-ink font-semibold" style={{ fontSize: 13, marginBottom: 8 }}>
-            Date
-          </Text>
+          <View className="flex-row items-center" style={{ gap: 6, marginBottom: 10 }}>
+            <Ionicons name="calendar-outline" size={17} color={colors.primary} />
+            <Text className="text-ink font-extrabold" style={{ fontSize: 15 }}>
+              Date
+            </Text>
+            <Text style={{ color: colors.danger }}>*</Text>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {DAYS.filter((d) => TIME_SLOTS.some((t) => !isTimeSlotPast(d.iso, t.value))).map((d) => (
-              <Chip
+              <DateChipItem
                 key={d.iso}
-                label={`${d.day} ${d.label}`}
+                day={d.day}
+                label={d.label}
                 selected={selectedDate === d.iso}
                 onPress={() => {
                   setSelectedDate(d.iso);
@@ -403,9 +501,34 @@ export default function HostEventScreen() {
           <ChipRow<Gender> options={genderOptions} value={gender} onChange={setGender} />
         </FormCard>
 
-        {/* Location */}
+        {/* Location — same interactive map-pin picker as Host Tournament's
+            "Enter Location Manually" flow. Events have no app venue list, so
+            this is the only mode (no toggle). */}
         <FormCard icon="location" title="Location" required>
-          <LocationPickerField value={location} onChange={setLocation} variant="card" />
+          {locatingDevice || !mapCenter ? (
+            <View className="rounded-2xl items-center justify-center" style={{ height: 260, backgroundColor: colors.primaryLight }}>
+              <ActivityIndicator color={colors.primary} />
+              <Text className="text-primary text-xs font-semibold mt-2">Finding your location…</Text>
+            </View>
+          ) : (
+            <LocationMapPicker
+              initialLat={mapCenter.lat}
+              initialLng={mapCenter.lng}
+              onConfirm={handleConfirmMapLocation}
+              confirming={confirmingLocation}
+              selectedLabel={location}
+            />
+          )}
+          {/* The map's own reverse-geocoded label isn't always exact — once a
+              spot is picked, let the host type over it with the real address. */}
+          {location && (
+            <View className="mt-3">
+              <Text className="text-ink text-sm font-semibold mb-1.5">
+                Address <Text className="text-muted font-normal">(optional — edit if this isn't exact)</Text>
+              </Text>
+              <FieldInput value={location} onChangeText={setLocation} placeholder="Enter the exact address" multiline />
+            </View>
+          )}
         </FormCard>
 
         {/* Description */}
