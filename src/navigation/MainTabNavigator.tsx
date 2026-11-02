@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StackActions, type NavigatorScreenParams } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import HomeStackNavigator, { type HomeStackParamList } from "./HomeStackNavigator";
 import VenuesStackNavigator, { type VenuesStackParamList } from "./VenuesStackNavigator";
@@ -54,6 +55,12 @@ const ICONS: Partial<Record<keyof MainTabParamList, keyof typeof Ionicons.glyphM
 const COMMUNITY_ICON = "account-group" as const;
 
 export default function MainTabNavigator() {
+  // Setting an explicit tabBarStyle.height opts out of React Navigation's
+  // own safe-area-aware default height, so without adding the bottom inset
+  // back in here, the icon row sits too low and gets covered by the
+  // device's own gesture bar / 3-button nav bar.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       // Default is "history": once you've switched tabs at least once,
@@ -69,6 +76,24 @@ export default function MainTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
+        // Rounded top corners only, flush with the bottom edge — the bar
+        // reads as an arch ("upside-down U") instead of a flat rectangle.
+        // A taller bar + a bigger radius makes that curve read clearly
+        // instead of just softened corners.
+        tabBarStyle: {
+          backgroundColor: "white",
+          height: 58 + insets.bottom,
+          paddingTop: 10,
+          paddingBottom: insets.bottom,
+          borderTopLeftRadius: 44,
+          borderTopRightRadius: 44,
+          borderTopWidth: 0,
+          shadowColor: "#000000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+        },
         tabBarIcon: ({ focused, color, size }) => (
           <View style={{ alignItems: "center" }}>
             <View
