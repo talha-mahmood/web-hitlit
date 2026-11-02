@@ -267,16 +267,16 @@ export default function VenueDetailScreen() {
               {amenities.map((label) => (
                 <View
                   key={label}
-                  className="flex-row items-center rounded-2xl px-3 py-2.5"
-                  style={{ width: "31%", gap: 8, borderWidth: 1, borderColor: colors.border }}
+                  className="flex-row items-center rounded-2xl px-3.5 py-3"
+                  style={{ width: "47%", gap: 10, borderWidth: 1, borderColor: colors.border }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 30, height: 30, backgroundColor: colors.primaryLight }}
+                    style={{ width: 34, height: 34, backgroundColor: colors.primaryLight }}
                   >
-                    <MaterialCommunityIcons name={getAmenityIcon(label)} size={15} color={colors.primaryDark} />
+                    <MaterialCommunityIcons name={getAmenityIcon(label)} size={17} color={colors.primaryDark} />
                   </View>
-                  <Text className="text-ink text-xs font-medium flex-1" numberOfLines={2}>
+                  <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
                     {label}
                   </Text>
                 </View>
