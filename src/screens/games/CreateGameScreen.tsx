@@ -417,12 +417,14 @@ export default function CreateGameScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   // Reached via the Tournaments section (Home card / Tournaments list "Create"
-  // button) — game type is fixed, not a Regular/Tournament toggle.
+  // button) — game type is fixed, not a Regular/Tournament toggle. The form
+  // itself no longer shows a Game Type field at all; this is just read from
+  // the route the host arrived through (Host Game vs Host Tournament).
   const forcedTournament = route.params?.gameType === "TOURNAMENT";
 
   const [title, setTitle] = useState("");
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [gameType, setGameType] = useState<GameType>(forcedTournament ? "TOURNAMENT" : "REGULAR");
+  const gameType: GameType = forcedTournament ? "TOURNAMENT" : "REGULAR";
   const [sportId, setSportId] = useState<string | null>(null);
   const [venueId, setVenueId] = useState<string | null>(null);
   const [customVenueName, setCustomVenueName] = useState<string | null>(null);
@@ -950,23 +952,6 @@ export default function CreateGameScreen() {
             />
           ))}
         </ScrollView>
-
-        {/* Game Type */}
-        <SectionLabel title={forcedTournament ? "Tournament Type" : "Game Type"} icon="game-controller-outline" compact />
-        {forcedTournament ? (
-          <View className="bg-purple-50 self-start px-4 py-2 rounded-2xl">
-            <Text className="text-purple-700 text-sm font-semibold">🏆 Tournament</Text>
-          </View>
-        ) : (
-          <PillRow<GameType>
-            options={[
-              { label: "Regular", value: "REGULAR" },
-              { label: "Tournament", value: "TOURNAMENT" },
-            ]}
-            value={gameType}
-            onChange={setGameType}
-          />
-        )}
 
         {/* Venue */}
         <SectionLabel title="Venue" required icon="location-outline" compact />
