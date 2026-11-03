@@ -28,7 +28,6 @@ import SeenByModal from "../../components/SeenByModal";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { getSportIcon } from "../../lib/sportIcons";
 import GradientFill from "../../components/GradientFill";
-import EmojiPickerSheet from "../../components/EmojiPickerSheet";
 import PollCreateModal from "../../components/PollCreateModal";
 import PollMessageCard from "../../components/PollMessageCard";
 import { useCreatePoll } from "../../hooks/usePolls";
@@ -247,7 +246,6 @@ export default function GameChatScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const listRef = useRef<FlatList>(null);
   const [draft, setDraft] = useState("");
-  const [emojiOpen, setEmojiOpen] = useState(false);
   const [replyTarget, setReplyTarget] = useState<GameMessage | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [seenByTarget, setSeenByTarget] = useState<GameMessage | null>(null);
@@ -529,13 +527,6 @@ export default function GameChatScreen() {
         >
           <Ionicons name="bar-chart-outline" size={19} color={colors.primary} />
         </Pressable>
-        <Pressable
-          onPress={() => setEmojiOpen(true)}
-          className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="happy-outline" size={19} color={colors.primary} />
-        </Pressable>
         <TextInput
           value={draft}
           onChangeText={setDraft}
@@ -577,14 +568,6 @@ export default function GameChatScreen() {
         creating={createPoll.isPending || sendMessage.isPending}
       />
 
-      <EmojiPickerSheet
-        visible={emojiOpen}
-        onClose={() => setEmojiOpen(false)}
-        onPick={(emoji) => {
-          setDraft((prev) => prev + emoji);
-          setEmojiOpen(false);
-        }}
-      />
     </KeyboardAvoidingView>
   );
 }

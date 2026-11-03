@@ -22,7 +22,6 @@ import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/u
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
-import EmojiPickerSheet from "../../components/EmojiPickerSheet";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import { markSquadChatRead, type SquadMessage } from "../../lib/api/squadMessages";
 import ChatIcon from "../../components/ChatIcon";
@@ -229,7 +228,6 @@ export default function SquadChatScreen() {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [seenByTarget, setSeenByTarget] = useState<SquadMessage | null>(null);
   const [pollModalOpen, setPollModalOpen] = useState(false);
-  const [emojiOpen, setEmojiOpen] = useState(false);
 
   const { data: allMessages, isLoading, error } = useSquadMessages(params.squadId);
   const sendMessage = useSendSquadMessage(params.squadId);
@@ -503,13 +501,6 @@ export default function SquadChatScreen() {
         >
           <Ionicons name="bar-chart-outline" size={19} color={colors.primary} />
         </Pressable>
-        <Pressable
-          onPress={() => setEmojiOpen(true)}
-          className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="happy-outline" size={19} color={colors.primary} />
-        </Pressable>
         <TextInput
           value={draft}
           onChangeText={setDraft}
@@ -551,14 +542,6 @@ export default function SquadChatScreen() {
         creating={createPoll.isPending || sendMessage.isPending}
       />
 
-      <EmojiPickerSheet
-        visible={emojiOpen}
-        onClose={() => setEmojiOpen(false)}
-        onPick={(emoji) => {
-          setDraft((prev) => prev + emoji);
-          setEmojiOpen(false);
-        }}
-      />
     </KeyboardAvoidingView>
   );
 }

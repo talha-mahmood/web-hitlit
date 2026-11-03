@@ -26,7 +26,7 @@ import type { GameListItem } from "../../lib/api/games";
 import type { Database } from "../../types/database.types";
 import { useAuthStore } from "../../store/authStore";
 import { GAME_SKILL_COLORS, timeBadgeColor } from "../../lib/badgeColors";
-import { getSportImage } from "../../lib/sportImages";
+import { getSportCardThumb } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { matchesLocationQuery } from "../../lib/locationFilter";
 import BookingsDateRangeModal, { type DateSelection } from "../../components/BookingsDateRangeModal";
@@ -175,7 +175,7 @@ function GameCard({
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
 
   const sportName = game.sports?.name ?? "";
-  const sportPhoto = getSportImage(sportName);
+  const sportPhoto = getSportCardThumb(sportName);
   const sportGlyph = getSportIcon(sportName);
   // The title/location/people rows keep clear of the sport picture on the right.
   const rightGutter = { paddingRight: 92 };

@@ -2,7 +2,7 @@ import { View, Text, Image, Pressable } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
-import { getSportImage } from "../lib/sportImages";
+import { getSportImage, getSportCardThumb } from "../lib/sportImages";
 import { formatDistanceKm } from "../lib/distance";
 import { dayLabel, timeBadgeColor } from "../lib/badgeColors";
 import AvatarStack from "./AvatarStack";
@@ -256,7 +256,7 @@ export function HomeGameRowCard({
   const joined = game.game_players.filter((p) => p.status === "JOINED");
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
   const placeName = game.venues?.name ?? game.custom_venue_name ?? "Location TBD";
-  const photo = getSportImage(game.sports?.name ?? "");
+  const photo = getSportCardThumb(game.sports?.name ?? "");
   const { icon, bg, fg } = getSportIcon(game.sports?.name ?? "");
   const isFull = game.status === "FULL" || (!isTeamBased && joined.length >= game.max_players);
 

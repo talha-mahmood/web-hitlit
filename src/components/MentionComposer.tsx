@@ -3,7 +3,6 @@ import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from "reac
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import GradientFill from "./GradientFill";
-import EmojiPickerSheet from "./EmojiPickerSheet";
 import { useMentionSearch } from "../hooks/useMentions";
 import MentionSuggestionsList from "./MentionSuggestionsList";
 import {
@@ -78,15 +77,6 @@ export default function MentionComposer({
   const [forcedSelection, setForcedSelection] = useState<{ start: number; end: number } | undefined>(undefined);
   const [confirmedTokens, setConfirmedTokens] = useState<MentionCandidate[]>([]);
   const [activeType, setActiveType] = useState<MentionEntityType | undefined>(undefined);
-  const [emojiOpen, setEmojiOpen] = useState(false);
-
-  const insertEmoji = (emoji: string) => {
-    const next = text.slice(0, cursor.start) + emoji + text.slice(cursor.end);
-    const newCursor = cursor.start + emoji.length;
-    setText(next);
-    setCursor({ start: newCursor, end: newCursor });
-    setForcedSelection({ start: newCursor, end: newCursor });
-  };
 
   // Enter/refresh edit mode whenever a *different* message is targeted.
   useEffect(() => {
@@ -183,13 +173,6 @@ export default function MentionComposer({
             <Ionicons name="bar-chart-outline" size={17} color={colors.primary} />
           </Pressable>
         )}
-        <Pressable
-          onPress={() => setEmojiOpen(true)}
-          className="items-center justify-center rounded-full"
-          style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="happy-outline" size={18} color={colors.primary} />
-        </Pressable>
         <View className="flex-1" style={{ position: "relative" }}>
           <TextInput
             value={text}
@@ -259,14 +242,6 @@ export default function MentionComposer({
           )}
         </Pressable>
       </View>
-      <EmojiPickerSheet
-        visible={emojiOpen}
-        onClose={() => setEmojiOpen(false)}
-        onPick={(emoji) => {
-          insertEmoji(emoji);
-          setEmojiOpen(false);
-        }}
-      />
     </View>
   );
 }

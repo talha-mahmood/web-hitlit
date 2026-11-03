@@ -22,7 +22,6 @@ import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/u
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import GradientFill from "../../components/GradientFill";
-import EmojiPickerSheet from "../../components/EmojiPickerSheet";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
 import { markEventChatRead, type EventMessage } from "../../lib/api/eventMessages";
 import ChatIcon from "../../components/ChatIcon";
@@ -229,7 +228,6 @@ export default function EventChatScreen() {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [seenByTarget, setSeenByTarget] = useState<EventMessage | null>(null);
   const [pollModalOpen, setPollModalOpen] = useState(false);
-  const [emojiOpen, setEmojiOpen] = useState(false);
 
   const { data: allMessages, isLoading, error } = useEventMessages(params.eventId);
   const sendMessage = useSendEventMessage(params.eventId);
@@ -497,13 +495,6 @@ export default function EventChatScreen() {
         >
           <Ionicons name="bar-chart-outline" size={19} color={colors.primary} />
         </Pressable>
-        <Pressable
-          onPress={() => setEmojiOpen(true)}
-          className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
-        >
-          <Ionicons name="happy-outline" size={19} color={colors.primary} />
-        </Pressable>
         <TextInput
           value={draft}
           onChangeText={setDraft}
@@ -545,14 +536,6 @@ export default function EventChatScreen() {
         creating={createPoll.isPending || sendMessage.isPending}
       />
 
-      <EmojiPickerSheet
-        visible={emojiOpen}
-        onClose={() => setEmojiOpen(false)}
-        onPick={(emoji) => {
-          setDraft((prev) => prev + emoji);
-          setEmojiOpen(false);
-        }}
-      />
     </KeyboardAvoidingView>
   );
 }

@@ -46,63 +46,6 @@ function StatCard({
 }
 
 
-function ActivityBarRow({
-  icon,
-  iconBg,
-  label,
-  value,
-  max,
-  color,
-  light,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconBg: string;
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-  // On a dark/gradient card the label+value need light text and a
-  // translucent track instead of the default dark-on-white styling.
-  light?: boolean;
-}) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <View className="mb-3">
-      <View className="flex-row items-center justify-between mb-1.5">
-        <View className="flex-row items-center" style={{ flex: 1, minWidth: 0, marginRight: 8, gap: 8 }}>
-          <View
-            className="items-center justify-center rounded-full"
-            style={{ width: 24, height: 24, backgroundColor: iconBg, flexShrink: 0 }}
-          >
-            <Ionicons name={icon} size={12} color={color} />
-          </View>
-          <Text
-            className="text-sm font-medium"
-            style={{ color: light ? "rgba(255,255,255,0.9)" : colors.ink, flexShrink: 1 }}
-            numberOfLines={1}
-          >
-            {label}
-          </Text>
-        </View>
-        <Text className="text-sm font-bold" style={{ color: light ? "white" : colors.ink, flexShrink: 0 }}>
-          {value}
-        </Text>
-      </View>
-      <View
-        style={{
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: light ? "rgba(255,255,255,0.18)" : "#F3F4F6",
-          overflow: "hidden",
-        }}
-      >
-        <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: color }} />
-      </View>
-    </View>
-  );
-}
-
-
 export type PlayerStatCardsData = {
   rating: number;
   gamesPlayed: number;
@@ -158,7 +101,6 @@ export default function PlayerStatCards({
     hoursPlayed,
     participationScore,
     followerCount,
-    regularGamesPlayed,
     matchesWon,
     matchesPlayed,
     sportSegments,
@@ -174,7 +116,6 @@ export default function PlayerStatCards({
   // Percentages are each sport's share of the chart's own total, so every one
   // is between 0 and 100 and together they make up the whole pie.
   const sportTotal = Math.max(1, sportSegments.reduce((sum, s) => sum + s.value, 0));
-  const activityMax = Math.max(regularGamesPlayed, tournamentsPlayed, gamesHosted, 1);
 
   return (
     <>
@@ -304,73 +245,59 @@ export default function PlayerStatCards({
               <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
             </View>
 
-            {/* Sport breakdown + activity, side by side */}
-            <View className="flex-row mb-6 items-stretch" style={{ gap: 12 }}>
-              <View
-                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1, position: "relative" }}
-              >
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="pie-chart" size={15} color={colors.primary} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Sports Played
+            {/* Sport breakdown — now the only card in this row, full width
+                after removing the "Your Activity" card beside it. */}
+            <View
+              className="mb-6"
+              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, position: "relative" }}
+            >
+              <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+                <Ionicons name="pie-chart" size={15} color={colors.primary} />
+                <Text className="text-ink font-semibold" numberOfLines={1}>
+                  Sports Played
+                </Text>
+              </View>
+              {sportSegments.length === 0 ? (
+                <View className="items-center py-4">
+                  <Ionicons name="bar-chart-outline" size={24} color="#9CA3AF" />
+                  <Text className="text-xs mt-2 text-center" style={{ color: colors.muted }}>
+                    Play your first game to see this here.
                   </Text>
                 </View>
-                {sportSegments.length === 0 ? (
-                  <View className="items-center py-4">
-                    <Ionicons name="bar-chart-outline" size={24} color="#9CA3AF" />
-                    <Text className="text-xs mt-2 text-center" style={{ color: colors.muted }}>
-                      Play your first game to see this here.
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="items-center">
-                    <View style={{ width: 110, height: 110 }}>
-                      <PieChart segments={sportSegments} size={110} gapColor="white" />
+              ) : (
+                <View className="items-center">
+                  <View style={{ width: 110, height: 110 }}>
+                    <PieChart segments={sportSegments} size={110} gapColor="white" />
+                    <View
+                      pointerEvents="none"
+                      style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
+                    >
                       <View
-                        pointerEvents="none"
-                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
+                        className="items-center justify-center rounded-full"
+                        style={{ width: 60, height: 60, backgroundColor: "white" }}
                       >
-                        <View
-                          className="items-center justify-center rounded-full"
-                          style={{ width: 60, height: 60, backgroundColor: "white" }}
-                        >
-                          <Text className="text-ink font-extrabold" style={{ fontSize: 20 }}>
-                            {sportSegments.length}
-                          </Text>
-                          <Text style={{ color: colors.muted, fontSize: 10 }}>Sports</Text>
-                        </View>
+                        <Text className="text-ink font-extrabold" style={{ fontSize: 20 }}>
+                          {sportSegments.length}
+                        </Text>
+                        <Text style={{ color: colors.muted, fontSize: 10 }}>Sports</Text>
                       </View>
                     </View>
-                    <View className="w-full mt-3" style={{ gap: 6 }}>
-                      {sportSegments.map((s) => (
-                        <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
-                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
-                          <Text className="text-xs flex-1" style={{ color: colors.muted }} numberOfLines={1}>
-                            {s.label}
-                          </Text>
-                          <Text className="text-[11px]" style={{ color: colors.muted }}>
-                            {Math.round((s.value / sportTotal) * 100)}%
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
                   </View>
-                )}
-              </View>
-
-              <View
-                style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flex: 1 }}
-              >
-                <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-                  <Ionicons name="bar-chart" size={15} color={colors.primary} />
-                  <Text className="text-ink font-semibold" numberOfLines={1}>
-                    Your Activity
-                  </Text>
+                  <View className="w-full mt-3" style={{ gap: 6 }}>
+                    {sportSegments.map((s) => (
+                      <View key={s.label} className="flex-row items-center" style={{ gap: 6 }}>
+                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: s.color }} />
+                        <Text className="text-xs flex-1" style={{ color: colors.muted }} numberOfLines={1}>
+                          {s.label}
+                        </Text>
+                        <Text className="text-[11px]" style={{ color: colors.muted }}>
+                          {Math.round((s.value / sportTotal) * 100)}%
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-                <ActivityBarRow icon="game-controller" iconBg="#F0FDF4" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
-                <ActivityBarRow icon="trophy" iconBg="#FFFBEB" label="Tournaments" value={tournamentsPlayed} max={activityMax} color="#FBBF24" />
-                <ActivityBarRow icon="people" iconBg="#FAF5FF" label="Games Hosted" value={gamesHosted} max={activityMax} color="#C084FC" />
-              </View>
+              )}
             </View>
 
             {/* Sport-specific totals — only once filtered to that one sport.
