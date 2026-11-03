@@ -179,18 +179,21 @@ export default function PlayerProfileScreen() {
                     )}
                   </View>
                 ) : (
-                  <GradientFill className="flex-row items-center rounded-full px-4 py-2" style={{ gap: 6 }}>
+                  <View
+                    className="flex-row items-center rounded-full px-4 py-2 bg-white"
+                    style={{ gap: 6 }}
+                  >
                     {toggleFollow.isPending ? (
-                      <ActivityIndicator size="small" color="white" />
+                      <ActivityIndicator size="small" color={colors.primaryDark} />
                     ) : (
                       <>
-                        <Ionicons name="add" size={16} color="white" />
-                        <Text className="text-sm font-bold" style={{ color: "white" }}>
+                        <Ionicons name="add" size={16} color={colors.primaryDark} />
+                        <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
                           Follow
                         </Text>
                       </>
                     )}
-                  </GradientFill>
+                  </View>
                 )}
               </Pressable>
             )}
