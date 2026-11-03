@@ -35,7 +35,6 @@ import { disambiguateRoster } from "../../lib/matchNameValidation";
 import type { TournamentPool } from "../../lib/api/tournamentPools";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
-import { getSportIcon } from "../../lib/sportIcons";
 import {
   computeFixtures,
   computeStandings,
@@ -1411,7 +1410,6 @@ export default function TournamentMatchesScreen() {
   }
 
   const isHost = game.creator_id === userId;
-  const sportIconInfo = game.sports?.name ? getSportIcon(game.sports.name) : null;
   // A team with just one joined player is shown by that player's name.
   const teams = (teamsData ?? []).map((t) => ({
     ...t,
@@ -1660,26 +1658,6 @@ export default function TournamentMatchesScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background, position: "relative" }}>
-      {/* Decorative sport watermark, behind everything on the page. */}
-      {sportIconInfo && (
-        <>
-          <MaterialCommunityIcons
-            name={sportIconInfo.icon}
-            size={220}
-            color={colors.primary}
-            style={{ position: "absolute", right: -50, top: -10, opacity: 0.1, transform: [{ rotate: "12deg" }] }}
-            pointerEvents="none"
-          />
-          <MaterialCommunityIcons
-            name={sportIconInfo.icon}
-            size={170}
-            color={colors.primary}
-            style={{ position: "absolute", right: 20, bottom: 90, opacity: 0.08, transform: [{ rotate: "-18deg" }] }}
-            pointerEvents="none"
-          />
-        </>
-      )}
-
       {/* Fixed dark-green banner — same treatment as GamesListScreen/the
           Community tab's header (CLAUDE.md's "tab-root screens" recipe). */}
       <GradientFill
