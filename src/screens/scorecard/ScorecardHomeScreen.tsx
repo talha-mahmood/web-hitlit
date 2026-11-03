@@ -220,11 +220,11 @@ export default function ScorecardHomeScreen() {
         </View>
       </GradientFill>
 
-      {/* gap is wide enough to clear cardShadow's own reach (offset 6 +
-          radius 12 ≈ 18px) — any tighter and a card's shadow gets painted
-          over by the next card's opaque white background instead of
-          actually being visible. */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 24 }} style={{ marginTop: 0 }}>
+      {/* gap stays just above cardShadow's own reach (offset 6 + radius 12
+          ≈ 18px) — any tighter and a card's shadow gets painted over by the
+          next card's opaque white background instead of actually being
+          visible. */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 15 }} style={{ marginTop: 0 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"
