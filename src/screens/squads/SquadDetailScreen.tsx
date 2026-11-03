@@ -595,14 +595,14 @@ export default function SquadDetailScreen() {
           colors={["#07301D", "#0E5C34", "#1D9254"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ paddingTop: insets.top + 16, paddingBottom: 44, paddingHorizontal: 16, overflow: "hidden" }}
+          style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
         >
           {sportIconInfo && (
             <MaterialCommunityIcons
               name={sportIconInfo.icon}
-              size={130}
+              size={84}
               color="white"
-              style={{ position: "absolute", right: -20, bottom: -16, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
+              style={{ position: "absolute", right: -14, bottom: -10, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
             />
           )}
 
@@ -614,10 +614,13 @@ export default function SquadDetailScreen() {
             >
               <Ionicons name="arrow-back" size={20} color="white" />
             </Pressable>
+            <Text className="text-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
+              {squad.name}
+            </Text>
             {(isOwner || hasJoined) && (
               <Pressable
                 onPress={() => navigation.navigate("SquadChat", { squadId: squad.id, squadName: squad.name })}
-                className="ml-auto items-center justify-center rounded-full"
+                className="ml-3 items-center justify-center rounded-full"
                 style={{
                   width: 42,
                   height: 42,
@@ -634,9 +637,6 @@ export default function SquadDetailScreen() {
             )}
           </View>
 
-          <Text className="text-white font-extrabold mt-3" style={{ fontSize: 26 }} numberOfLines={1}>
-            {squad.name}
-          </Text>
           <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
             {sportIconInfo && squad.sports?.name && (
               <View
@@ -715,7 +715,7 @@ export default function SquadDetailScreen() {
             )}
           </View>
         </LinearGradient>
-        <WaveDivider color={colors.background} height={30} />
+        <WaveDivider color={colors.background} height={22} />
       </View>
 
       <ScrollView

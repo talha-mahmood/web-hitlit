@@ -432,13 +432,13 @@ export default function EventDetailScreen() {
           colors={["#07301D", "#0E5C34", "#1D9254"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ paddingTop: insets.top + 16, paddingBottom: 44, paddingHorizontal: 16, overflow: "hidden" }}
+          style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
         >
           <MaterialCommunityIcons
             name="calendar-star"
-            size={130}
+            size={84}
             color="white"
-            style={{ position: "absolute", right: -20, bottom: -16, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
+            style={{ position: "absolute", right: -14, bottom: -10, opacity: 0.14, transform: [{ rotate: "-10deg" }] }}
           />
 
           <View className="flex-row items-center">
@@ -449,10 +449,13 @@ export default function EventDetailScreen() {
             >
               <Ionicons name="arrow-back" size={20} color="white" />
             </Pressable>
+            <Text className="text-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
+              {event.name}
+            </Text>
             {(isOwner || hasJoined) && (
               <Pressable
                 onPress={() => navigation.navigate("EventChat", { eventId: event.id, eventName: event.name })}
-                className="ml-auto items-center justify-center rounded-full"
+                className="ml-3 items-center justify-center rounded-full"
                 style={{ width: 42, height: 42, backgroundColor: "white", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 2 }}
               >
                 <ChatIcon size={23} unreadCount={chatUnreadCount} />
@@ -460,9 +463,6 @@ export default function EventDetailScreen() {
             )}
           </View>
 
-          <Text className="text-white font-extrabold mt-3" style={{ fontSize: 26 }} numberOfLines={1}>
-            {event.name}
-          </Text>
           <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
             <View className="flex-row items-center bg-white" style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}>
               <MaterialCommunityIcons name="calendar" size={13} color={colors.primary} />
@@ -511,7 +511,7 @@ export default function EventDetailScreen() {
             )}
           </View>
         </LinearGradient>
-        <WaveDivider color={colors.background} height={30} />
+        <WaveDivider color={colors.background} height={22} />
       </View>
 
       <ScrollView
