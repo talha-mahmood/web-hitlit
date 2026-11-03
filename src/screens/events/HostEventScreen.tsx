@@ -357,18 +357,18 @@ export default function HostEventScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Intro banner */}
-        <GradientFill style={{ borderRadius: 18, paddingHorizontal: 18, paddingVertical: 16, overflow: "hidden", ...cardShadow }}>
+        <GradientFill style={{ borderRadius: 16, paddingHorizontal: 14, paddingVertical: 11, overflow: "hidden", ...cardShadow }}>
           <View className="flex-row items-center">
             <View className="flex-1" style={{ paddingRight: 8 }}>
-              <Text className="text-white font-extrabold" style={{ fontSize: 22 }}>
+              <Text className="text-white font-extrabold" style={{ fontSize: 18 }}>
                 Host an Event
               </Text>
-              <Text className="text-white" style={{ fontSize: 13.5, lineHeight: 19, marginTop: 4, opacity: 0.8 }}>
+              <Text className="text-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
                 Create an event and bring people together!
               </Text>
             </View>
-            <View className="items-center justify-center" style={{ width: 70, height: 60 }}>
-              <MaterialCommunityIcons name="calendar-star" size={56} color="#8FD9AE" />
+            <View className="items-center justify-center" style={{ width: 56, height: 48 }}>
+              <MaterialCommunityIcons name="calendar-star" size={44} color="#8FD9AE" />
             </View>
           </View>
         </GradientFill>

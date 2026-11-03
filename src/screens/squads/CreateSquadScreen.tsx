@@ -300,24 +300,24 @@ export default function CreateSquadScreen() {
         {/* Same brand gradient as the custom-icon banner on Create Game. */}
         <GradientFill
           style={{
-            borderRadius: 18,
-            paddingHorizontal: 18,
-            paddingVertical: 16,
+            borderRadius: 16,
+            paddingHorizontal: 14,
+            paddingVertical: 11,
             overflow: "hidden",
             ...cardShadow,
           }}
         >
           <View className="flex-row items-center">
             <View className="flex-1" style={{ paddingRight: 8 }}>
-              <Text className="text-white font-extrabold" style={{ fontSize: 22 }}>
+              <Text className="text-white font-extrabold" style={{ fontSize: 18 }}>
                 Play Together
               </Text>
-              <Text className="text-white" style={{ fontSize: 13.5, lineHeight: 19, marginTop: 4, opacity: 0.8 }}>
+              <Text className="text-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
                 Create a group and bring people together!
               </Text>
             </View>
-            <View className="items-center justify-center" style={{ width: 70, height: 60 }}>
-              <MaterialCommunityIcons name="account-group" size={58} color="#8FD9AE" />
+            <View className="items-center justify-center" style={{ width: 56, height: 48 }}>
+              <MaterialCommunityIcons name="account-group" size={46} color="#8FD9AE" />
               {[
                 { left: 2, top: 2, rotate: "-40deg" },
                 { left: 30, top: -4, rotate: "0deg" },
@@ -338,11 +338,11 @@ export default function CreateSquadScreen() {
                 />
               ))}
             </View>
-            <View style={{ width: 78, transform: [{ rotate: "-9deg" }] }}>
-              <Text style={{ fontSize: 13, lineHeight: 17, fontStyle: "italic", fontWeight: "700", color: "white" }}>
+            <View style={{ width: 64, transform: [{ rotate: "-9deg" }] }}>
+              <Text style={{ fontSize: 11, lineHeight: 14, fontStyle: "italic", fontWeight: "700", color: "white" }}>
                 {"More\nPlayers\nMore Fun!"}
               </Text>
-              <View style={{ width: 60, height: 2.5, borderRadius: 2, backgroundColor: "#8FD9AE", marginTop: 1 }} />
+              <View style={{ width: 48, height: 2, borderRadius: 2, backgroundColor: "#8FD9AE", marginTop: 1 }} />
             </View>
           </View>
         </GradientFill>
