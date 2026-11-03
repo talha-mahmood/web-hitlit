@@ -108,9 +108,9 @@ export default function PlayerProfileScreen() {
       <View
         style={{
           backgroundColor: "#E3F6EA",
-          paddingTop: insets.top + 12,
+          paddingTop: insets.top + 10,
           paddingHorizontal: 14,
-          paddingBottom: 26,
+          paddingBottom: 16,
           borderBottomLeftRadius: 32,
           borderBottomRightRadius: 32,
           overflow: "hidden",
@@ -118,46 +118,40 @@ export default function PlayerProfileScreen() {
       >
         <MaterialCommunityIcons
           name={heroSportIcon}
-          size={150}
+          size={110}
           color={colors.primaryDark}
-          style={{ position: "absolute", right: -26, top: 28, opacity: 0.1, transform: [{ rotate: "-8deg" }] }}
+          style={{ position: "absolute", right: -20, top: 20, opacity: 0.1, transform: [{ rotate: "-8deg" }] }}
         />
 
-        <View className="flex-row items-center mb-5">
+        <View className="flex-row items-start">
           <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Bouncy>
-          <Text className="text-base font-bold text-ink flex-1" numberOfLines={1}>
-            {player?.fullName ?? "Player Profile"}
-          </Text>
-        </View>
-
-        <View className="flex-row items-center">
           <View className="relative mr-4">
             {player?.avatar ? (
               <Image
                 source={{ uri: player.avatar }}
-                style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: "white" }}
+                style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: "white" }}
               />
             ) : (
               <GradientFill
                 className="items-center justify-center"
-                style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: "white" }}
+                style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: "white" }}
               >
-                <Text className="text-3xl font-bold text-white">
+                <Text className="text-2xl font-bold text-white">
                   {(player?.fullName ?? "?").charAt(0).toUpperCase()}
                 </Text>
               </GradientFill>
             )}
             <View
               className="absolute items-center justify-center bg-white rounded-full"
-              style={{ width: 30, height: 30, bottom: -2, right: -2, borderWidth: 2, borderColor: "white", ...cardShadow }}
+              style={{ width: 24, height: 24, bottom: -2, right: -2, borderWidth: 2, borderColor: "white", ...cardShadow }}
             >
-              <MaterialCommunityIcons name="crown" size={16} color={tier.color} />
+              <MaterialCommunityIcons name="crown" size={13} color={tier.color} />
             </View>
           </View>
           <View className="flex-1">
-            <Text className="font-extrabold text-ink" style={{ fontSize: 22 }} numberOfLines={1}>
+            <Text className="font-extrabold text-ink" style={{ fontSize: 19 }} numberOfLines={1}>
               {player?.fullName ?? "Player"}
             </Text>
             {player?.userCode ? (
@@ -166,68 +160,61 @@ export default function PlayerProfileScreen() {
               </Text>
             ) : null}
             <Text className="text-muted text-xs mt-1">Play Together, Stay Active</Text>
-            <View className="flex-row items-center flex-wrap mt-2" style={{ gap: 8 }}>
-              <View
-                className="flex-row items-center self-start rounded-full px-3 py-1"
-                style={{ backgroundColor: tier.bg, gap: 5 }}
-              >
-                <MaterialCommunityIcons name="crown" size={14} color={tier.color} />
-                <Text className="text-xs font-bold" style={{ color: tier.color }}>
-                  {tier.label}
-                </Text>
-              </View>
-
-              {/* Sport filter — opens the same sport-select sheet the Top
-                  Players list's filter icon opens, shown as a dropdown pill
-                  right here (filling the space under the name) instead of a
-                  bare icon floating under the Follow button. */}
-              <Pressable onPress={() => setSportSheetOpen(true)} className="self-start">
-                <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
-                  <Text className="text-xs font-bold text-white" numberOfLines={1}>
-                    {filterSportName ?? "All Sports"}
-                  </Text>
-                  <Ionicons name="chevron-down" size={13} color="white" />
-                </GradientFill>
-              </Pressable>
-            </View>
           </View>
-          {!isOwnProfile && (
-            <Pressable
-              onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
-              disabled={toggleFollow.isPending || !viewerId}
-            >
-              {followState?.isFollowing ? (
-                <View
-                  className="flex-row items-center rounded-full px-4 py-2"
-                  style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
-                >
-                  {toggleFollow.isPending ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark" size={16} color={colors.primaryDark} />
-                      <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
-                        Following
-                      </Text>
-                    </>
-                  )}
-                </View>
-              ) : (
-                <GradientFill className="flex-row items-center rounded-full px-4 py-2" style={{ gap: 6 }}>
-                  {toggleFollow.isPending ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <>
-                      <Ionicons name="add" size={16} color="white" />
-                      <Text className="text-sm font-bold" style={{ color: "white" }}>
-                        Follow
-                      </Text>
-                    </>
-                  )}
-                </GradientFill>
-              )}
+          {/* Follow + sport filter stacked on the right instead of their own
+              row below the name — the tier badge (shown again on the Rating
+              card just below) is dropped here as redundant, so this header
+              doesn't need that extra row at all. */}
+          <View className="items-end" style={{ gap: 8 }}>
+            {!isOwnProfile && (
+              <Pressable
+                onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
+                disabled={toggleFollow.isPending || !viewerId}
+              >
+                {followState?.isFollowing ? (
+                  <View
+                    className="flex-row items-center rounded-full px-4 py-2"
+                    style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                  >
+                    {toggleFollow.isPending ? (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark" size={16} color={colors.primaryDark} />
+                        <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
+                          Following
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                ) : (
+                  <GradientFill className="flex-row items-center rounded-full px-4 py-2" style={{ gap: 6 }}>
+                    {toggleFollow.isPending ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Ionicons name="add" size={16} color="white" />
+                        <Text className="text-sm font-bold" style={{ color: "white" }}>
+                          Follow
+                        </Text>
+                      </>
+                    )}
+                  </GradientFill>
+                )}
+              </Pressable>
+            )}
+
+            {/* Sport filter — opens the same sport-select sheet the Top
+                Players list's filter icon opens. */}
+            <Pressable onPress={() => setSportSheetOpen(true)}>
+              <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
+                <Text className="text-xs font-bold text-white" numberOfLines={1}>
+                  {filterSportName ?? "All Sports"}
+                </Text>
+                <Ionicons name="chevron-down" size={13} color="white" />
+              </GradientFill>
             </Pressable>
-          )}
+          </View>
         </View>
       </View>
 
