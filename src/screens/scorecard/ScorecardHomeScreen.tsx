@@ -93,34 +93,41 @@ function SportCard({
   );
 
   return (
-    <Bouncy
-      onPress={onPress}
-      onPressIn={() => setActive(true)}
-      onPressOut={() => setActive(false)}
-      scaleTo={0.97}
+    // Shadow + border live on a plain View (exactly PlayerStatCards.tsx's
+    // own card container: backgroundColor white + ...cardShadow +
+    // borderRadius), not on the Bouncy/AnimatedPressable itself — Bouncy
+    // nests inside, carrying only the press-scale animation, so the card's
+    // visible edge is guaranteed to render the same reliable way the
+    // Profile section's cards do.
+    <View
       style={{
+        backgroundColor: "white",
         ...cardShadow,
-        backgroundColor: active ? "#F0FDF4" : "white",
         borderRadius: 24,
         borderWidth: 1.5,
-        // Always-visible, per-sport colored border (same pastel as the
-        // icon disc) instead of only showing a border while pressed.
-        borderColor: active ? colors.primary : disc,
+        borderColor: active ? colors.primary : colors.border,
       }}
     >
-      {active ? (
-        <LinearGradient
-          colors={["#D1F5DD", "#F0FDF4"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 22.5 }}
-        >
-          {body}
-        </LinearGradient>
-      ) : (
-        <View className="rounded-3xl bg-white">{body}</View>
-      )}
-    </Bouncy>
+      <Bouncy
+        onPress={onPress}
+        onPressIn={() => setActive(true)}
+        onPressOut={() => setActive(false)}
+        scaleTo={0.97}
+      >
+        {active ? (
+          <LinearGradient
+            colors={["#D1F5DD", "#F0FDF4"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ borderRadius: 22.5 }}
+          >
+            {body}
+          </LinearGradient>
+        ) : (
+          <View className="rounded-3xl bg-white">{body}</View>
+        )}
+      </Bouncy>
+    </View>
   );
 }
 
@@ -213,7 +220,11 @@ export default function ScorecardHomeScreen() {
         </View>
       </GradientFill>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 10 }} style={{ marginTop: 0 }}>
+      {/* gap is wide enough to clear cardShadow's own reach (offset 6 +
+          radius 12 ≈ 18px) — any tighter and a card's shadow gets painted
+          over by the next card's opaque white background instead of
+          actually being visible. */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 14, gap: 24 }} style={{ marginTop: 0 }}>
         <SportCard
           sportName="cricket"
           title="Cricket"
