@@ -67,28 +67,28 @@ function FormCard({
   return (
     <View
       className="flex-row bg-white"
-      style={{ borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
+      style={{ borderRadius: 16, padding: 13, gap: 11, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
     >
-      <Ionicons name={icon} size={22} color={colors.primary} style={{ marginTop: 1 }} />
+      <Ionicons name={icon} size={19} color={colors.primary} style={{ marginTop: 1 }} />
       <View className="flex-1">
         <View className="flex-row items-center justify-between">
-          <Text className="text-ink" style={{ fontSize: 15.5 }}>
+          <Text className="text-ink" style={{ fontSize: 14 }}>
             <Text className="font-bold">{title}</Text>
             {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
             {optional ? <Text className="text-muted" style={{ fontWeight: "400" }}> (Optional)</Text> : null}
           </Text>
           {hint ? (
-            <Text className="text-muted" style={{ fontSize: 12.5 }}>
+            <Text className="text-muted" style={{ fontSize: 11.5 }}>
               {hint}
             </Text>
           ) : null}
         </View>
         {subtitle ? (
-          <Text className="text-muted" style={{ fontSize: 13, marginTop: 3 }}>
+          <Text className="text-muted" style={{ fontSize: 12, marginTop: 3 }}>
             {subtitle}
           </Text>
         ) : null}
-        <View style={{ marginTop: 12 }}>{children}</View>
+        <View style={{ marginTop: 10 }}>{children}</View>
       </View>
     </View>
   );
@@ -155,15 +155,15 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
       onPress={onPress}
       className="flex-row items-center rounded-full"
       style={{
-        paddingHorizontal: 14,
-        paddingVertical: 9,
-        gap: 7,
+        paddingHorizontal: 11,
+        paddingVertical: 6.5,
+        gap: 6,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
         backgroundColor: selected ? "#DCEFE4" : "white",
       }}
     >
-      <Text className={selected ? "font-bold" : "font-medium"} style={{ fontSize: 13.5, color: selected ? colors.primaryDark : colors.ink }}>
+      <Text className={selected ? "font-bold" : "font-medium"} style={{ fontSize: 12, color: selected ? colors.primaryDark : colors.ink }}>
         {label}
       </Text>
     </Pressable>
@@ -387,9 +387,9 @@ export default function HostEventScreen() {
               <View
                 className="items-center justify-center overflow-hidden"
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 16,
+                  width: 52,
+                  height: 52,
+                  borderRadius: 13,
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "#8FD9AE",
@@ -397,20 +397,20 @@ export default function HostEventScreen() {
                 }}
               >
                 {iconAsset ? (
-                  <Image source={{ uri: iconAsset.uri }} style={{ width: 64, height: 64 }} resizeMode="cover" />
+                  <Image source={{ uri: iconAsset.uri }} style={{ width: 52, height: 52 }} resizeMode="cover" />
                 ) : (
-                  <Ionicons name="image-outline" size={26} color={colors.muted} />
+                  <Ionicons name="image-outline" size={22} color={colors.muted} />
                 )}
               </View>
               <GradientFill
                 className="items-center justify-center"
-                style={{ position: "absolute", right: -5, bottom: -5, width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: "white" }}
+                style={{ position: "absolute", right: -4, bottom: -4, width: 17, height: 17, borderRadius: 8.5, borderWidth: 2, borderColor: "white" }}
               >
-                <Ionicons name="add" size={13} color="white" />
+                <Ionicons name="add" size={11} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#DCEFE4", paddingHorizontal: 22, paddingVertical: 14 }}>
-              <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 14.5 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: "#DCEFE4", paddingHorizontal: 16, paddingVertical: 10 }}>
+              <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>
             </View>
@@ -424,14 +424,14 @@ export default function HostEventScreen() {
               <Ionicons name="calendar" size={20} color="#4B5563" />
             </View>
             <View className="flex-1">
-              <FieldInput value={name} onChangeText={setName} placeholder="e.g. Sunday Sports Fest" maxLength={80} />
+              <FieldInput value={name} onChangeText={setName} placeholder="e.g. Sunday Sports Fest" maxLength={80} compact />
             </View>
           </View>
         </FormCard>
 
         {/* Event Type — free text, replaces Squad's Sport picker. */}
         <FormCard icon="albums" title="Event Type" required hint="What kind of event is this?">
-          <FieldInput value={eventType} onChangeText={setEventType} placeholder="e.g. Cricket Tournament, Fitness Camp" maxLength={60} />
+          <FieldInput value={eventType} onChangeText={setEventType} placeholder="e.g. Cricket Tournament, Fitness Camp" maxLength={60} compact />
         </FormCard>
 
         {/* Date / Duration / Start Time / Hours — same fields, options and
@@ -526,7 +526,7 @@ export default function HostEventScreen() {
               <Text className="text-ink text-sm font-semibold mb-1.5">
                 Address <Text className="text-muted font-normal">(optional — edit if this isn't exact)</Text>
               </Text>
-              <FieldInput value={location} onChangeText={setLocation} placeholder="Enter the exact address" multiline />
+              <FieldInput value={location} onChangeText={setLocation} placeholder="Enter the exact address" multiline compact />
             </View>
           )}
         </FormCard>
@@ -540,7 +540,8 @@ export default function HostEventScreen() {
             multiline
             numberOfLines={3}
             maxLength={300}
-            style={{ height: 88, textAlignVertical: "top" }}
+            style={{ height: 76, textAlignVertical: "top" }}
+            compact
           />
         </FormCard>
       </ScrollView>

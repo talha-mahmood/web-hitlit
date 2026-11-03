@@ -15,12 +15,17 @@ export default function FieldInput({
   left,
   right,
   multiline,
+  // Slightly smaller padding/text — opt-in so every other screen's fields
+  // keep their current size; only passed by forms that asked for a more
+  // compact look (Create Group, Host Event).
+  compact,
   ...props
 }: ComponentProps<typeof TextInput> & {
   containerStyle?: object;
   containerClassName?: string;
   left?: ReactNode;
   right?: ReactNode;
+  compact?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
 
@@ -28,7 +33,7 @@ export default function FieldInput({
     <View
       className={
         containerClassName ??
-        `flex-row rounded-2xl px-4 ${multiline ? "items-start py-1" : "items-center"}`
+        `flex-row rounded-2xl ${compact ? "px-3.5" : "px-4"} ${multiline ? "items-start py-1" : "items-center"}`
       }
       style={[
         {
@@ -52,7 +57,7 @@ export default function FieldInput({
           props.onBlur?.(e);
         }}
         placeholderTextColor={colors.muted}
-        style={[{ paddingVertical: 12 }, props.style]}
+        style={[{ paddingVertical: compact ? 9 : 12 }, compact ? { fontSize: 13.5 } : null, props.style]}
         className={`flex-1 text-ink ${props.className ?? ""}`}
       />
       {right}
