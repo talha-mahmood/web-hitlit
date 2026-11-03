@@ -267,11 +267,11 @@ export default function ExploreEventsScreen() {
           </View>
           <Pressable
             onPress={() => navigation.navigate("HostEvent")}
-            className="flex-row items-center bg-white rounded-full px-5 py-3"
-            style={{ gap: 6, ...cardShadow }}
+            className="flex-row items-center bg-white rounded-full px-3.5 py-2"
+            style={{ gap: 4, ...cardShadow }}
           >
-            <Ionicons name="add" size={20} color={colors.primaryDark} />
-            <Text className="font-bold" style={{ fontSize: 15, color: colors.primaryDark }}>
+            <Ionicons name="add" size={16} color={colors.primaryDark} />
+            <Text className="font-bold" style={{ fontSize: 13, color: colors.primaryDark }}>
               Host
             </Text>
           </Pressable>
