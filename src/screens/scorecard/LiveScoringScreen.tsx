@@ -2112,7 +2112,7 @@ export default function LiveScoringScreen() {
               </View>
             ) : isMatchCompleted ? (
               <View className="flex-row items-center bg-white/20 rounded-full px-2 py-0.5">
-                <Text className="text-white text-[10px] font-bold">MATCH COMPLETED</Text>
+                <Text className="text-white text-[10px] font-bold">COMPLETED</Text>
               </View>
             ) : null}
           </View>
