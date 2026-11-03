@@ -441,7 +441,7 @@ export default function HostEventScreen() {
         <FormCard icon="calendar-outline" title="Date & Time" required>
           <View className="flex-row items-center" style={{ gap: 6, marginBottom: 10 }}>
             <Ionicons name="calendar-outline" size={17} color={colors.primary} />
-            <Text className="text-ink font-extrabold" style={{ fontSize: 15 }}>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 13 }}>
               Date
             </Text>
             <Text style={{ color: colors.danger }}>*</Text>
