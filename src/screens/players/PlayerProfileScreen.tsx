@@ -98,9 +98,6 @@ export default function PlayerProfileScreen() {
   // number the Top Players list ranks by.
   const rating = computeRankingRating(player);
   const tier = getRatingTierInfo(rating);
-  const heroSportIcon = player?.sportBreakdown?.[0]
-    ? getSportIcon(player.sportBreakdown[0].sportName).icon
-    : "trophy-outline";
 
   return (
     <View className="flex-1 bg-white">
@@ -116,12 +113,6 @@ export default function PlayerProfileScreen() {
           overflow: "hidden",
         }}
       >
-        <MaterialCommunityIcons
-          name={heroSportIcon}
-          size={110}
-          color={colors.primaryDark}
-          style={{ position: "absolute", right: -20, top: 20, opacity: 0.1, transform: [{ rotate: "-8deg" }] }}
-        />
 
         <View className="flex-row items-start">
           <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
