@@ -130,9 +130,6 @@ export default function PlayerStatCards({
               </Text>
             </View>
           </View>
-          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
-            Rating
-          </Text>
           {onOpenSportFilter && (
             <Pressable onPress={onOpenSportFilter} className="self-start mb-3">
               <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
@@ -143,6 +140,9 @@ export default function PlayerStatCards({
               </GradientFill>
             </Pressable>
           )}
+          <Text className="text-xs font-bold mb-2" style={{ letterSpacing: 0.5, color: colors.muted }}>
+            Rating
+          </Text>
           <View className="flex-row items-center justify-between mb-2" style={{ maxWidth: "70%" }}>
             <View className="flex-row items-center" style={{ gap: 10 }}>
               <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>
