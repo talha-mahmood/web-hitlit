@@ -19,7 +19,7 @@ type ProfileState = {
   updateProfile: (
     userId: string,
     changes: Partial<
-      Pick<Profile, "full_name" | "avatar" | "skill_level" | "phone" | "gender" | "date_of_birth" | "visibility" | "jersey_number">
+      Pick<Profile, "full_name" | "avatar" | "skill_level" | "phone" | "gender" | "date_of_birth" | "visibility" | "jersey_number" | "terms_accepted_at">
     >
   ) => Promise<void>;
   // Keeps the store's own profile in sync live — e.g. a superadmin revoking
@@ -45,6 +45,16 @@ type ProfileState = {
 // back to "Profile"/"?") and can always be set later in Account Settings.
 export function isProfileComplete(profile: Profile | null): boolean {
   return !!profile?.gender;
+}
+
+// Gates AcceptTermsScreen — required under App Store guideline 1.2 (every
+// user must agree to terms, including the app's zero-tolerance stance on
+// objectionable content/abusive users, before using the app). Checked
+// before isProfileComplete so it's the very first thing a signed-in user
+// without a recorded acceptance sees, whether they're brand new or an
+// existing account/session that predates this requirement.
+export function termsAccepted(profile: Profile | null): boolean {
+  return !!profile?.terms_accepted_at;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({

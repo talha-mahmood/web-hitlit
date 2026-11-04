@@ -13,6 +13,12 @@ import { createVenue, type CreateVenueInput } from "../lib/api/venuesAdmin";
 import { fetchAllGames, deleteGame } from "../lib/api/games";
 import { fetchAllSquads, disbandSquad } from "../lib/api/squads";
 import { fetchAllEvents, disbandEvent } from "../lib/api/events";
+import {
+  fetchContentReports,
+  removeReportedContent,
+  ejectReportedUser,
+  dismissReport,
+} from "../lib/api/moderation";
 
 export function useAllVenues(search?: string) {
   return useQuery({
@@ -137,5 +143,37 @@ export function useDisbandEventAsSuperadmin() {
   return useMutation({
     mutationFn: (eventId: string) => disbandEvent(eventId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["allEvents"] }),
+  });
+}
+
+export function useContentReports() {
+  return useQuery({
+    queryKey: ["contentReports"],
+    queryFn: fetchContentReports,
+  });
+}
+
+export function useRemoveReportedContent(reviewerId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reportId: string) => removeReportedContent(reportId, reviewerId as string),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contentReports"] }),
+  });
+}
+
+export function useEjectUser(reviewerId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reportId, userId }: { reportId: string; userId: string }) =>
+      ejectReportedUser(reportId, userId, reviewerId as string),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contentReports"] }),
+  });
+}
+
+export function useDismissReport(reviewerId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reportId: string) => dismissReport(reportId, reviewerId as string),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contentReports"] }),
   });
 }

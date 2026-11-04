@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { View, Text, Image, ScrollView, ActivityIndicator, Pressable, RefreshControl } from "react-native";
+import { View, Text, Image, ScrollView, ActivityIndicator, Pressable, RefreshControl, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { usePlayerPublicProfile } from "../../hooks/usePlayers";
 import { useFollowState, useToggleFollow } from "../../hooks/usePlayerFollows";
+import { useBlockUser, useReportMessage } from "../../hooks/useModeration";
+import { showReportBlockActions } from "../../lib/moderationActions";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { useAuthStore } from "../../store/authStore";
 import { useSports } from "../../hooks/useSports";
 import { computeRating, computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
@@ -57,7 +60,42 @@ export default function PlayerProfileScreen() {
   const { data: allSportsProfile } = usePlayerPublicProfile(route.params.userId);
   const { data: followState } = useFollowState(viewerId, route.params.userId);
   const toggleFollow = useToggleFollow(route.params.userId, viewerId);
+  const reportMessage = useReportMessage();
+  const blockUser = useBlockUser(viewerId);
   const isOwnProfile = viewerId === route.params.userId;
+
+  // Report/Block for guideline 1.2 — there's no message here to attach the
+  // report to, so source_id/context_id both reuse the only real id
+  // available: the reported user's own profile id.
+  const handleOpenProfileMenu = () => {
+    if (!viewerId) return;
+    showReportBlockActions({
+      targetName: player?.fullName ?? "this player",
+      onReport: (reason) => {
+        reportMessage.mutate(
+          {
+            reporterId: viewerId,
+            reportedUserId: route.params.userId,
+            source: "profile",
+            sourceId: route.params.userId,
+            contextId: route.params.userId,
+            messageSnapshot: "",
+            reason,
+          },
+          {
+            onSuccess: () => Alert.alert("Reported", "Thanks — we'll review this profile."),
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not submit report.")),
+          }
+        );
+      },
+      onBlock: () => {
+        blockUser.mutate(route.params.userId, {
+          onSuccess: () => navigation.goBack(),
+          onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not block user.")),
+        });
+      },
+    });
+  };
   const { data: cricketFigures } = usePlayerCricketFigures(player?.fullName, filterSportId);
   const hasCricketData = !!cricketFigures && cricketFigures.length > 0;
   // Which sport's tabs to show: only once a specific sport is explicitly
@@ -158,44 +196,54 @@ export default function PlayerProfileScreen() {
               doesn't need that extra row at all. */}
           <View className="items-end" style={{ gap: 8 }}>
             {!isOwnProfile && (
-              <Pressable
-                onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
-                disabled={toggleFollow.isPending || !viewerId}
-              >
-                {followState?.isFollowing ? (
-                  <View
-                    className="flex-row items-center rounded-full px-4 py-2"
-                    style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
-                  >
-                    {toggleFollow.isPending ? (
-                      <ActivityIndicator size="small" color={colors.primary} />
-                    ) : (
-                      <>
-                        <Ionicons name="checkmark" size={16} color={colors.primaryDark} />
-                        <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
-                          Following
-                        </Text>
-                      </>
-                    )}
-                  </View>
-                ) : (
-                  <View
-                    className="flex-row items-center rounded-full px-4 py-2 bg-white"
-                    style={{ gap: 6 }}
-                  >
-                    {toggleFollow.isPending ? (
-                      <ActivityIndicator size="small" color={colors.primaryDark} />
-                    ) : (
-                      <>
-                        <Ionicons name="add" size={16} color={colors.primaryDark} />
-                        <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
-                          Follow
-                        </Text>
-                      </>
-                    )}
-                  </View>
-                )}
-              </Pressable>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Pressable
+                  onPress={handleOpenProfileMenu}
+                  className="items-center justify-center rounded-full bg-white"
+                  style={{ width: 32, height: 32, ...cardShadow }}
+                  hitSlop={8}
+                >
+                  <Ionicons name="ellipsis-vertical" size={16} color={colors.ink} />
+                </Pressable>
+                <Pressable
+                  onPress={() => toggleFollow.mutate(!followState?.isFollowing)}
+                  disabled={toggleFollow.isPending || !viewerId}
+                >
+                  {followState?.isFollowing ? (
+                    <View
+                      className="flex-row items-center rounded-full px-4 py-2"
+                      style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                    >
+                      {toggleFollow.isPending ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark" size={16} color={colors.primaryDark} />
+                          <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
+                            Following
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  ) : (
+                    <View
+                      className="flex-row items-center rounded-full px-4 py-2 bg-white"
+                      style={{ gap: 6 }}
+                    >
+                      {toggleFollow.isPending ? (
+                        <ActivityIndicator size="small" color={colors.primaryDark} />
+                      ) : (
+                        <>
+                          <Ionicons name="add" size={16} color={colors.primaryDark} />
+                          <Text className="text-sm font-bold" style={{ color: colors.primaryDark }}>
+                            Follow
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  )}
+                </Pressable>
+              </View>
             )}
 
             {/* Sport filter — opens the same sport-select sheet the Top

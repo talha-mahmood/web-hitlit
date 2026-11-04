@@ -9,17 +9,19 @@ import { signOutWithPushCleanup } from "../lib/pushNotifications";
 
 type Nav = NativeStackNavigationProp<SuperAdminStackParamList>;
 
-const TABS: { key: "venues" | "games" | "groups" | "events"; label: string; icon: keyof typeof Ionicons.glyphMap; screen: "AllVenuesList" | "AllGamesList" | "AllGroupsList" | "AllEventsList" }[] = [
+const TABS: { key: "venues" | "games" | "groups" | "events" | "moderation"; label: string; icon: keyof typeof Ionicons.glyphMap; screen: "AllVenuesList" | "AllGamesList" | "AllGroupsList" | "AllEventsList" | "AdminModeration" }[] = [
   { key: "venues", label: "Venues", icon: "business-outline", screen: "AllVenuesList" },
   { key: "games", label: "Games", icon: "trophy-outline", screen: "AllGamesList" },
   { key: "groups", label: "Groups", icon: "people-outline", screen: "AllGroupsList" },
   { key: "events", label: "Events", icon: "calendar-outline", screen: "AllEventsList" },
+  { key: "moderation", label: "Reports", icon: "flag-outline", screen: "AdminModeration" },
 ];
 
-// Lets a superadmin jump between the four moderation lists — this is the
-// only way they can reach "All Games"/"All Groups"/"All Events" at all,
-// since superadmin accounts never see MainTabNavigator (see RootNavigator).
-export default function SuperAdminSectionSwitcher({ active }: { active: "venues" | "games" | "groups" | "events" }) {
+// Lets a superadmin jump between the five moderation lists — this is the
+// only way they can reach "All Games"/"All Groups"/"All Events"/"Reports" at
+// all, since superadmin accounts never see MainTabNavigator (see
+// RootNavigator).
+export default function SuperAdminSectionSwitcher({ active }: { active: "venues" | "games" | "groups" | "events" | "moderation" }) {
   const navigation = useNavigation<Nav>();
 
   return (
@@ -34,7 +36,7 @@ export default function SuperAdminSectionSwitcher({ active }: { active: "venues"
             style={isActive ? { backgroundColor: "white", ...cardShadow } : undefined}
           >
             <Ionicons name={tab.icon} size={14} color={isActive ? colors.primary : colors.muted} />
-            <Text className="ml-1 text-xs font-semibold" style={{ color: isActive ? colors.primary : colors.muted }}>
+            <Text className="ml-1 text-xs font-semibold" numberOfLines={1} style={{ color: isActive ? colors.primary : colors.muted }}>
               {tab.label}
             </Text>
           </Pressable>

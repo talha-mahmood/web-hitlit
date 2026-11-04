@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, Image, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../constants/theme";
 import GradientFill from "./GradientFill";
@@ -14,6 +14,7 @@ import {
   type MentionEntityType,
 } from "../lib/mentionParser";
 import type { MentionSuggestion } from "../lib/api/mentions";
+import { containsObjectionableContent } from "../lib/contentFilter";
 
 function Avatar({ name, avatar, size = 32 }: { name: string | null; avatar: string | null; size?: number }) {
   const initials = (name ?? "?").charAt(0).toUpperCase();
@@ -119,6 +120,10 @@ export default function MentionComposer({
   const handleSubmit = () => {
     const body = text.trim();
     if (!body) return;
+    if (containsObjectionableContent(body)) {
+      Alert.alert("Message not sent", "Your message contains language that violates our community guidelines.");
+      return;
+    }
     // Compute against the trimmed string specifically — trimming can shift
     // every index, so this must run after trimming, not before.
     const finalMentions = computeMentions(body, confirmedTokens);

@@ -6,7 +6,7 @@ import * as Notifications from "expo-notifications";
 import * as Linking from "expo-linking";
 import { registerForPushNotifications } from "../lib/pushNotifications";
 import { useAuthStore } from "../store/authStore";
-import { useProfileStore, isProfileComplete } from "../store/profileStore";
+import { useProfileStore, isProfileComplete, termsAccepted } from "../store/profileStore";
 import { initNetworkListener, useNetworkStore } from "../store/networkStore";
 import { flushTournamentSyncQueue } from "../hooks/useTournamentMatches";
 import SplashScreen from "../screens/SplashScreen";
@@ -15,6 +15,8 @@ import MainTabNavigator from "./MainTabNavigator";
 import AdminNavigator from "./AdminNavigator";
 import SuperAdminNavigator from "./SuperAdminNavigator";
 import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
+import AcceptTermsScreen from "../screens/onboarding/AcceptTermsScreen";
+import AccountSuspendedScreen from "../screens/onboarding/AccountSuspendedScreen";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
 
@@ -96,8 +98,14 @@ export default function RootNavigator() {
 
   // Push notifications only start once the person is fully signed in and
   // past onboarding, so the system permission prompt never interrupts
-  // profile setup.
-  const pushReady = !!session && !isProfileLoading && isProfileComplete(profile);
+  // profile setup. Also waits on terms acceptance and gates out a
+  // suspended account entirely.
+  const pushReady =
+    !!session &&
+    !isProfileLoading &&
+    isProfileComplete(profile) &&
+    termsAccepted(profile) &&
+    profile?.isactive !== false;
 
   useEffect(() => {
     if (pushReady) registerForPushNotifications();
@@ -173,6 +181,18 @@ export default function RootNavigator() {
     content = <AuthNavigator />;
   } else if (isProfileLoading || pendingNameCapture) {
     content = <SplashScreen />;
+  } else if (profile && profile.isactive === false) {
+    // A superadmin ejected this account via the Moderation screen — checked
+    // before anything else so a suspended user never sees onboarding or the
+    // rest of the app, only the sign-out screen. subscribeToProfile's
+    // realtime subscription means an already-open session is suspended live
+    // the moment the flag flips, not just on next login.
+    content = <AccountSuspendedScreen />;
+  } else if (!termsAccepted(profile)) {
+    // Required under App Store guideline 1.2 — covers both a brand-new
+    // sign-up and any pre-existing account/session that predates this
+    // requirement.
+    content = <AcceptTermsScreen />;
   } else if (!isProfileComplete(profile)) {
     // Google/Apple sign-in doesn't give us a phone number or gender — a
     // brand-new account stops here to fill those in; a returning account

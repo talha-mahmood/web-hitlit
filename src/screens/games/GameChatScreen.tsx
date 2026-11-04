@@ -19,6 +19,7 @@ import { useGameMessages, useSendGameMessage } from "../../hooks/useGameMessages
 import { useDeleteChatMessage } from "../../hooks/useChatThread";
 import { useSeenBy } from "../../hooks/useChatReads";
 import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
+import { showReportBlockActions } from "../../lib/moderationActions";
 import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import type { GamesStackParamList } from "../../navigation/GamesStackNavigator";
@@ -31,45 +32,7 @@ import GradientFill from "../../components/GradientFill";
 import PollCreateModal from "../../components/PollCreateModal";
 import PollMessageCard from "../../components/PollMessageCard";
 import { useCreatePoll } from "../../hooks/usePolls";
-
-const REPORT_REASONS = ["Spam", "Harassment or abuse", "Inappropriate content", "Other"];
-
-// Long-press on someone else's message to report it or block them going
-// forward — required by App Store guideline 1.2 for apps with user-to-user
-// chat. Reporting flags the message for admin review without removing it for
-// anyone; blocking only hides that sender's messages from your own view.
-function showMessageActions(opts: {
-  message: GameMessage;
-  gameId: string;
-  userId: string;
-  onReport: (reason: string) => void;
-  onBlock: () => void;
-}) {
-  const name = opts.message.profiles?.full_name ?? "this player";
-  Alert.alert("Message options", undefined, [
-    {
-      text: "Report message",
-      onPress: () => {
-        Alert.alert(
-          "Report message",
-          "Why are you reporting this?",
-          REPORT_REASONS.map((reason) => ({ text: reason, onPress: () => opts.onReport(reason) }))
-        );
-      },
-    },
-    {
-      text: `Block ${name}`,
-      style: "destructive",
-      onPress: () => {
-        Alert.alert(`Block ${name}?`, "You won't see their messages in chat anymore.", [
-          { text: "Cancel", style: "cancel" },
-          { text: "Block", style: "destructive", onPress: opts.onBlock },
-        ]);
-      },
-    },
-    { text: "Cancel", style: "cancel" },
-  ]);
-}
+import { containsObjectionableContent } from "../../lib/contentFilter";
 
 type ChatRoute = RouteProp<GamesStackParamList, "GameChat">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "GameChat">;
@@ -318,6 +281,10 @@ export default function GameChatScreen() {
   const handleSend = () => {
     const text = draft.trim();
     if (!text || !userId) return;
+    if (containsObjectionableContent(text)) {
+      Alert.alert("Message not sent", "Your message contains language that violates our community guidelines.");
+      return;
+    }
     setDraft("");
     const parentId = replyTarget?.id;
     setReplyTarget(null);
@@ -441,10 +408,8 @@ export default function GameChatScreen() {
                   setSeenByTarget(item);
                   return;
                 }
-                showMessageActions({
-                  message: item,
-                  gameId: params.gameId,
-                  userId,
+                showReportBlockActions({
+                  targetName: item.profiles?.full_name ?? "this player",
                   onReport: (reason) => {
                     reportMessage.mutate(
                       {

@@ -368,6 +368,7 @@ export type Database = {
       }
       content_reports: {
         Row: {
+          action_taken: string | null
           context_id: string
           created_at: string
           id: string
@@ -375,10 +376,13 @@ export type Database = {
           reason: string
           reported_user_id: string
           reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           source: string
           source_id: string
         }
         Insert: {
+          action_taken?: string | null
           context_id: string
           created_at?: string
           id?: string
@@ -386,10 +390,13 @@ export type Database = {
           reason: string
           reported_user_id: string
           reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source: string
           source_id: string
         }
         Update: {
+          action_taken?: string | null
           context_id?: string
           created_at?: string
           id?: string
@@ -397,6 +404,8 @@ export type Database = {
           reason?: string
           reported_user_id?: string
           reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source?: string
           source_id?: string
         }
@@ -411,6 +420,13 @@ export type Database = {
           {
             foreignKeyName: "content_reports_reporter_id_fkey"
             columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2282,6 +2298,7 @@ export type Database = {
           longitude: number | null
           phone: string | null
           skill_level: Database["public"]["Enums"]["skill_level_type"] | null
+          terms_accepted_at: string | null
           type: Database["public"]["Enums"]["profile_type"]
           updated_at: string
           user_code: string
@@ -2306,6 +2323,7 @@ export type Database = {
           longitude?: number | null
           phone?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          terms_accepted_at?: string | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
           user_code: string
@@ -2330,6 +2348,7 @@ export type Database = {
           longitude?: number | null
           phone?: string | null
           skill_level?: Database["public"]["Enums"]["skill_level_type"] | null
+          terms_accepted_at?: string | null
           type?: Database["public"]["Enums"]["profile_type"]
           updated_at?: string
           user_code?: string
@@ -3819,6 +3838,10 @@ export type Database = {
       is_superadmin: { Args: never; Returns: boolean }
       is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
+      moderate_remove_content: {
+        Args: { p_report_id: string }
+        Returns: undefined
+      }
       register_push_token: {
         Args: { p_platform: string; p_token: string }
         Returns: undefined

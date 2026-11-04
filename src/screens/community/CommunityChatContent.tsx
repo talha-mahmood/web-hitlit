@@ -13,6 +13,8 @@ import {
   useDeleteComment,
   useToggleCommentLike,
 } from "../../hooks/useCommunityChat";
+import { useBlockedUserIds, useBlockUser, useReportMessage } from "../../hooks/useModeration";
+import { showReportBlockActions } from "../../lib/moderationActions";
 import type { CommunityComment } from "../../lib/api/communityChat";
 import { formatCommunityTimeAgo } from "../../lib/communityTime";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
@@ -57,6 +59,8 @@ function CommentCard({
   onDelete,
   onToggleLike,
   onOpenProfile,
+  onReport,
+  onBlock,
 }: {
   comment: CommunityComment;
   isOwn: boolean;
@@ -66,16 +70,26 @@ function CommentCard({
   onDelete: () => void;
   onToggleLike: () => void;
   onOpenProfile: () => void;
+  onReport: (reason: string) => void;
+  onBlock: () => void;
 }) {
   const onShare = () => shareComment(comment.id);
   const isEdited = comment.updated_at && comment.updated_at !== comment.created_at;
 
   const handleOpenMenu = () => {
-    Alert.alert("Message Options", undefined, [
-      { text: "Edit", onPress: onEdit },
-      { text: "Delete", style: "destructive", onPress: onDelete },
-      { text: "Cancel", style: "cancel" },
-    ]);
+    if (isOwn) {
+      Alert.alert("Message Options", undefined, [
+        { text: "Edit", onPress: onEdit },
+        { text: "Delete", style: "destructive", onPress: onDelete },
+        { text: "Cancel", style: "cancel" },
+      ]);
+      return;
+    }
+    showReportBlockActions({
+      targetName: comment.profiles?.full_name ?? "this player",
+      onReport,
+      onBlock,
+    });
   };
 
   return (
@@ -91,11 +105,9 @@ function CommentCard({
                 {comment.profiles?.full_name ?? "Player"}
               </Text>
             </Pressable>
-            {isOwn && (
-              <Pressable onPress={handleOpenMenu} hitSlop={8} className="p-1">
-                <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
-              </Pressable>
-            )}
+            <Pressable onPress={handleOpenMenu} hitSlop={8} className="p-1">
+              <Ionicons name="ellipsis-vertical" size={16} color={colors.muted} />
+            </Pressable>
           </View>
           <Text className="text-muted text-xs mt-0.5">
             {formatCommunityTimeAgo(comment.created_at)}
@@ -154,12 +166,15 @@ export default function CommunityChatContent({
   const deleteComment = useDeleteComment();
   const toggleLike = useToggleCommentLike();
   const createPoll = useCreatePoll();
+  const { data: blockedIds } = useBlockedUserIds(userId);
+  const reportMessage = useReportMessage();
+  const blockUser = useBlockUser(userId);
 
   // Everything's already loaded in one shot (no pagination on this feed), so
   // search is a plain client-side filter — matches by the author's name or
   // any keyword in the comment body (e.g. "tournament", "games").
   const visibleComments = useMemo(() => {
-    let list = comments ?? [];
+    let list = (comments ?? []).filter((c) => !blockedIds?.has(c.user_id));
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter(
@@ -167,7 +182,7 @@ export default function CommunityChatContent({
       );
     }
     return list;
-  }, [comments, searchQuery]);
+  }, [comments, searchQuery, blockedIds]);
 
   const handleSend = (body: string, mentions: Mention[]) => {
     if (!userId) return;
@@ -227,6 +242,31 @@ export default function CommunityChatContent({
         onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not update like.")),
       }
     );
+  };
+
+  const handleReport = (comment: CommunityComment, reason: string) => {
+    if (!userId) return;
+    reportMessage.mutate(
+      {
+        reporterId: userId,
+        reportedUserId: comment.user_id,
+        source: "community_message",
+        sourceId: comment.id,
+        contextId: comment.root_id ?? comment.id,
+        messageSnapshot: comment.body,
+        reason,
+      },
+      {
+        onSuccess: () => Alert.alert("Reported", "Thanks — we'll review this message."),
+        onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not submit report.")),
+      }
+    );
+  };
+
+  const handleBlock = (comment: CommunityComment) => {
+    blockUser.mutate(comment.user_id, {
+      onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not block user.")),
+    });
   };
 
   return (
@@ -312,6 +352,8 @@ export default function CommunityChatContent({
               onDelete={() => handleDelete(item)}
               onToggleLike={() => handleToggleLike(item)}
               onOpenProfile={() => onOpenProfile(item.user_id)}
+              onReport={(reason) => handleReport(item, reason)}
+              onBlock={() => handleBlock(item)}
             />
           )}
         />

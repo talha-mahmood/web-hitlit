@@ -5,6 +5,7 @@ import AssignAdminScreen from "../screens/superadmin/AssignAdminScreen";
 import AllGamesListScreen from "../screens/superadmin/AllGamesListScreen";
 import AllGroupsListScreen from "../screens/superadmin/AllGroupsListScreen";
 import AllEventsListScreen from "../screens/superadmin/AllEventsListScreen";
+import AdminModerationScreen from "../screens/superadmin/AdminModerationScreen";
 import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
 import EditVenueDetailsScreen from "../screens/admin/EditVenueDetailsScreen";
 import ManageVenueImagesScreen from "../screens/admin/ManageVenueImagesScreen";
@@ -26,6 +27,7 @@ export type SuperAdminStackParamList = VenueEditingParamList & {
   AllGamesList: undefined;
   AllGroupsList: undefined;
   AllEventsList: undefined;
+  AdminModeration: undefined;
 };
 
 const Stack = createNativeStackNavigator<SuperAdminStackParamList>();
@@ -41,6 +43,7 @@ export default function SuperAdminNavigator() {
       <Stack.Screen name="AllGamesList" component={AllGamesListScreen} />
       <Stack.Screen name="AllGroupsList" component={AllGroupsListScreen} />
       <Stack.Screen name="AllEventsList" component={AllEventsListScreen} />
+      <Stack.Screen name="AdminModeration" component={AdminModerationScreen} />
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <Stack.Screen name="EditVenueDetails" component={EditVenueDetailsScreen} />
       <Stack.Screen name="ManageVenueImages" component={ManageVenueImagesScreen} />
