@@ -466,7 +466,7 @@ export default function CreateSquadScreen() {
                 </Text>
               </View>
               <Text className="text-muted" style={{ fontSize: 12 }}>
-                Locked — this group is for a tournament team
+                Locked
               </Text>
             </View>
           ) : (

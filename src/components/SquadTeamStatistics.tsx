@@ -118,7 +118,7 @@ function TeamSection({ matches, teamName }: { matches: NonNullable<ReturnType<ty
   const partnerships = useMemo(() => squadPartnerships(matches, teamName), [matches, teamName]);
 
   return (
-    <View>
+    <View className="mt-4">
       <PillBar value={sub} options={["Overview", "Chased", "Defended", "Partnerships"] as TeamSub[]} onChange={setSub} />
       {sub === "Overview" && (
         <View className="mt-4" style={{ gap: 10 }}>

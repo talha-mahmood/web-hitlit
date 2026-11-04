@@ -80,11 +80,14 @@ export default function AddMemberByIdField({
           />
         </View>
         <Pressable onPress={handleLookup} disabled={lookup.isPending || !code.trim()} style={primaryButtonShadow}>
-          <GradientFill className="rounded-xl px-4 items-center justify-center">
+          <GradientFill
+            className="rounded-2xl px-5 items-center justify-center"
+            style={{ paddingVertical: 12 }}
+          >
             {lookup.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-semibold text-sm">Find</Text>
+              <Text className="text-white font-bold text-sm">Find</Text>
             )}
           </GradientFill>
         </Pressable>
