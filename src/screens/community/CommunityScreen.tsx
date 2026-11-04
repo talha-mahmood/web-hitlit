@@ -32,9 +32,12 @@ const CARD_TEXT_HEIGHT = 58;
 // the Home screen's NearbySection title (e.g. "Games near you").
 function PairHeading({ icon, title }: { icon: keyof typeof Ionicons.glyphMap; title: string }) {
   return (
-    <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
-      <Ionicons name={icon} size={17} color={colors.primary} />
-      <Text className="text-lg font-semibold text-ink">{title}</Text>
+    <View className="flex-row items-center mb-3" style={{ gap: 9 }}>
+      <View className="items-center justify-center" style={{ width: 30, height: 30, borderRadius: 10, backgroundColor: colors.primaryLight }}>
+        <Ionicons name={icon} size={16} color={colors.primaryDark} />
+      </View>
+      <Text className="text-ink font-bold" style={{ fontSize: 16, letterSpacing: -0.2 }}>{title}</Text>
+      <View style={{ height: 1, flex: 1, backgroundColor: colors.border, marginLeft: 3 }} />
     </View>
   );
 }
@@ -89,7 +92,7 @@ function ImageCard({
               width,
               height,
             }}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         )}
 
@@ -204,21 +207,25 @@ function MyCommunityContent({
   onOpenPlayers: () => void;
   onOpenChat: () => void;
 }) {
-  const TOP_PAD = 12;
+  const TOP_PAD = 18;
   const BOTTOM_PAD = 12;
   // Tall enough to clear cardShadow's vertical reach (offset 6 + radius
   // 12 ≈ 18px) — otherwise the next row's card paints right over the
   // previous row's shadow instead of leaving it visible underneath.
-  const ROW_GAP = 24;
+  const ROW_GAP = 22;
   // Every source illustration is a square image — sizing the picture area to
   // exactly the card's own width (instead of a shorter, screen-fit height)
   // keeps it filling the card edge to edge instead of shrinking narrower
   // than the card and leaving empty space on either side.
-  const imageHeight = CARD_WIDTH;
+  const imageHeight = Math.round(CARD_WIDTH * 0.82);
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: BOTTOM_PAD }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: 30 }}>
+        <View style={{ marginBottom: 22 }}>
+          <Text className="text-ink font-extrabold" style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.5 }}>Find your people.</Text>
+          <Text className="text-muted" style={{ fontSize: 13, lineHeight: 19, marginTop: 3 }}>Play, connect, and make every game count.</Text>
+        </View>
         <View style={{ marginBottom: ROW_GAP }}>
           <PairHeading icon="chatbubbles-outline" title="Connect & Chat" />
           <View className="flex-row justify-between">
