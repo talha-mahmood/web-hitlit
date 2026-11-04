@@ -11,9 +11,9 @@ import { SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
-type TournamentEntry = { gameId: string; title: string; iconUrl: string | null; gameDate: string | null };
+export type TournamentEntry = { gameId: string; title: string; iconUrl: string | null; gameDate: string | null };
 
-async function fetchTournamentsForMatches(sport: GenericSport, matchIds: string[]): Promise<TournamentEntry[]> {
+export async function fetchTournamentsForMatches(sport: GenericSport, matchIds: string[]): Promise<TournamentEntry[]> {
   if (matchIds.length === 0) return [];
   const cfg = SPORT_CONFIGS[sport];
   const { data: tms, error: tmError } = await supabase

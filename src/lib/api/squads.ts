@@ -321,6 +321,49 @@ export async function leaveSquad(squadId: string, userId: string): Promise<void>
   if (error) throw new Error(error.message);
 }
 
+export type PlayerTeamSquad = {
+  id: string;
+  name: string;
+  icon_url: string | null;
+  member_count: number;
+  sports: { id: string; name: string } | null;
+};
+
+// A player's real `group_type = 'team'` squad memberships — the Player
+// Profile "Teams" tab's actual data source (replacing the old match-derived
+// pseudo-teams from scorecard team-name strings). sportId optionally scopes
+// to one sport, same as every other tab on that screen. Starts from
+// squad_members (not squads) and filters client-side, same two-step shape
+// fetchMySquads/fetchMyOwnedSquads above already use — PostgREST can't
+// filter a parent row by a nested embed's column without an !inner join
+// also truncating that same embed's array, which would break member_count.
+export async function fetchPlayerTeamSquads(userId: string, sportId?: string | null): Promise<PlayerTeamSquad[]> {
+  const { data, error } = await supabase
+    .from("squad_members")
+    .select("squads(id, name, icon_url, sport_id, group_type, deleted_at, sports(id, name), squad_members(status))")
+    .eq("user_id", userId)
+    .eq("status", "ACTIVE");
+  if (error) throw new Error(error.message);
+  type Row = {
+    squads:
+      | (Pick<SquadRow, "id" | "name" | "icon_url" | "sport_id" | "group_type" | "deleted_at"> & {
+          sports: { id: string; name: string } | null;
+          squad_members: { status: string }[];
+        })
+      | null;
+  };
+  return ((data ?? []) as unknown as Row[])
+    .map((r) => r.squads)
+    .filter((s): s is NonNullable<typeof s> => !!s && !s.deleted_at && s.group_type === "team" && (!sportId || s.sport_id === sportId))
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      icon_url: s.icon_url,
+      member_count: s.squad_members.filter((m) => m.status === "ACTIVE").length,
+      sports: s.sports,
+    }));
+}
+
 export type UserCodeLookupResult = { id: string; full_name: string | null; avatar: string | null; user_code: string };
 
 // Exact (case-insensitive) match on a player's short public ID — the

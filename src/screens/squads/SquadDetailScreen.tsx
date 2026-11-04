@@ -33,6 +33,14 @@ import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
 import AddMemberByIdModal from "../../components/AddMemberByIdModal";
+import SquadTeamTabBar, { type SquadTeamTab } from "../../components/SquadTeamTabBar";
+import SquadTeamOverview from "../../components/SquadTeamOverview";
+import SquadTeamPlayers from "../../components/SquadTeamPlayers";
+import SquadTeamMatches from "../../components/SquadTeamMatches";
+import SquadTeamTournaments from "../../components/SquadTeamTournaments";
+import SquadTeamStatistics from "../../components/SquadTeamStatistics";
+import SquadTeamCompare from "../../components/SquadTeamCompare";
+import { classifySportKind } from "../../lib/genericSportStats";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import WaveDivider from "../../components/WaveDivider";
@@ -288,6 +296,7 @@ export default function SquadDetailScreen() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddByIdModal, setShowAddByIdModal] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [teamTab, setTeamTab] = useState<SquadTeamTab>("detail");
 
   const { data: squad, isLoading, error, refetch, isRefetching } = useSquadDetail(params.squadId);
   const { data: chatUnreadCount } = useSquadChatUnreadCount(squad?.id, userId);
@@ -587,6 +596,12 @@ export default function SquadDetailScreen() {
 
   const sportIconInfo = squad.sports?.name ? getSportIcon(squad.sports.name) : null;
 
+  // A team-type group gains the tab suite below — every other group_type
+  // ('group'/'club'/'training_camp') renders exactly as it always has, no
+  // tab bar at all.
+  const isTeamGroup = squad.group_type === "team";
+  const teamSportKind = isTeamGroup ? classifySportKind(squad.sports?.name) : null;
+
   return (
     <View className="flex-1 bg-white">
       {/* Hero header — dark gradient with a decorative sport-icon watermark,
@@ -720,6 +735,12 @@ export default function SquadDetailScreen() {
         <WaveDivider color={colors.background} height={22} />
       </View>
 
+      {isTeamGroup && (
+        <SquadTeamTabBar value={teamTab} onChange={setTeamTab} showStatistics={teamSportKind === "cricket"} />
+      )}
+
+      {(!isTeamGroup || teamTab === "detail") && (
+      <>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: hasJoined ? 40 : 120 }}
@@ -1091,6 +1112,19 @@ export default function SquadDetailScreen() {
           </Pressable>
         )}
       </View>
+      )}
+      </>
+      )}
+
+      {isTeamGroup && teamTab !== "detail" && (
+        <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          {teamTab === "overview" && <SquadTeamOverview squad={squad} />}
+          {teamTab === "players" && <SquadTeamPlayers squad={squad} isCricket={teamSportKind === "cricket"} />}
+          {teamTab === "matches" && <SquadTeamMatches squad={squad} />}
+          {teamTab === "tournaments" && <SquadTeamTournaments squad={squad} />}
+          {teamTab === "statistics" && teamSportKind === "cricket" && <SquadTeamStatistics squad={squad} />}
+          {teamTab === "compare" && <SquadTeamCompare squad={squad} />}
+        </ScrollView>
       )}
 
       <JoinRequestModal

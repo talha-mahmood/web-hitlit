@@ -11,14 +11,14 @@ import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 
-type TournamentEntry = { gameId: string; title: string; iconUrl: string | null; gameDate: string | null };
+export type TournamentEntry = { gameId: string; title: string; iconUrl: string | null; gameDate: string | null };
 
 // A cricket match played as part of a tournament fixture carries the link
 // back via tournament_matches.cricket_match_id — that's the real,
 // non-guessed connection between a scorecard match and the tournament it
 // belongs to (most scorecard matches are standalone pickup games with no
 // such link, so this list is often empty, which is correct).
-async function fetchTournamentsForMatches(cricketMatchIds: string[]): Promise<TournamentEntry[]> {
+export async function fetchTournamentsForMatches(cricketMatchIds: string[]): Promise<TournamentEntry[]> {
   if (cricketMatchIds.length === 0) return [];
   const { data: tms, error: tmError } = await supabase
     .from("tournament_matches")

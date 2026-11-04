@@ -23,7 +23,7 @@ import { getSportIcon } from "../../lib/sportIcons";
 import PlayerCricketOverview, { usePlayerCricketFigures } from "../../components/PlayerCricketOverview";
 import PlayerCricketStatistics from "../../components/PlayerCricketStatistics";
 import PlayerCricketMatches from "../../components/PlayerCricketMatches";
-import PlayerCricketTeams from "../../components/PlayerCricketTeams";
+import PlayerTeamSquadsList from "../../components/PlayerTeamSquadsList";
 import PlayerCricketTournaments from "../../components/PlayerCricketTournaments";
 import PlayerCricketClubs from "../../components/PlayerCricketClubs";
 import PlayerCricketInsights from "../../components/PlayerCricketInsights";
@@ -31,7 +31,6 @@ import PlayerCricketCompare from "../../components/PlayerCricketCompare";
 import PlayerSportOverview, { usePlayerGenericFigures } from "../../components/PlayerSportOverview";
 import PlayerSportStatistics from "../../components/PlayerSportStatistics";
 import PlayerSportMatches from "../../components/PlayerSportMatches";
-import PlayerSportTeams from "../../components/PlayerSportTeams";
 import PlayerSportTournaments from "../../components/PlayerSportTournaments";
 import PlayerSportClubs from "../../components/PlayerSportClubs";
 import PlayerSportInsights from "../../components/PlayerSportInsights";
@@ -404,7 +403,7 @@ export default function ProfileScreen() {
             {activeTab === "overview" && <PlayerCricketOverview fullName={player.fullName} sportId={filterSportId} />}
             {activeTab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} sportId={filterSportId} />}
             {activeTab === "matches" && <PlayerCricketMatches fullName={player.fullName} sportId={filterSportId} />}
-            {activeTab === "teams" && <PlayerCricketTeams fullName={player.fullName} sportId={filterSportId} />}
+            {activeTab === "teams" && userId && <PlayerTeamSquadsList userId={userId} sportId={filterSportId} />}
             {activeTab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} sportId={filterSportId} />}
             {activeTab === "clubs" && userId && <PlayerCricketClubs userId={userId} />}
             {activeTab === "insights" && <PlayerCricketInsights fullName={player.fullName} sportId={filterSportId} />}
@@ -417,7 +416,7 @@ export default function ProfileScreen() {
             {activeTab === "overview" && <PlayerSportOverview sport={genericSport} fullName={player.fullName} />}
             {activeTab === "statistics" && <PlayerSportStatistics sport={genericSport} fullName={player.fullName} />}
             {activeTab === "matches" && <PlayerSportMatches sport={genericSport} fullName={player.fullName} />}
-            {activeTab === "teams" && <PlayerSportTeams sport={genericSport} fullName={player.fullName} />}
+            {activeTab === "teams" && userId && <PlayerTeamSquadsList userId={userId} sportId={filterSportId} />}
             {activeTab === "tournaments" && <PlayerSportTournaments sport={genericSport} fullName={player.fullName} />}
             {activeTab === "clubs" && userId && <PlayerSportClubs sport={genericSport} userId={userId} />}
             {activeTab === "insights" && <PlayerSportInsights sport={genericSport} fullName={player.fullName} />}

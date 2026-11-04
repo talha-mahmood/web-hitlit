@@ -15,6 +15,7 @@ import {
   setMemberHost,
   lookupProfileByUserCode,
   addSquadMemberDirect,
+  fetchPlayerTeamSquads,
 } from "../lib/api/squads";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -197,6 +198,15 @@ export function useRemoveMember(squadId: string) {
       qc.invalidateQueries({ queryKey: ["squad", squadId] });
       qc.invalidateQueries({ queryKey: ["squads"] });
     },
+  });
+}
+
+export function usePlayerTeamSquads(userId: string | undefined, sportId?: string | null) {
+  return useQuery({
+    queryKey: ["playerTeamSquads", userId, sportId ?? null],
+    queryFn: () => fetchPlayerTeamSquads(userId as string, sportId),
+    enabled: !!userId,
+    staleTime: 30_000,
   });
 }
 
