@@ -5,10 +5,11 @@ import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import SquadChatScreen from "../screens/squads/SquadChatScreen";
 import EditSquadScreen from "../screens/squads/EditSquadScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import type { CreateSquadRouteParams } from "./addTeamTypes";
 
 export type SquadsStackParamList = {
   SquadsList: undefined;
-  CreateSquad: undefined;
+  CreateSquad: CreateSquadRouteParams;
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };

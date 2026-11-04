@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import type * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCreateSquad } from "../../hooks/useSquads";
@@ -33,9 +33,23 @@ import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
 import type { SquadGroupType } from "../../lib/api/squads";
+import type { AddTeamParams } from "../../navigation/addTeamTypes";
 import GradientFill from "../../components/GradientFill";
 
-type Nav = NativeStackNavigationProp<SquadsStackParamList, "CreateSquad">;
+// This screen is registered identically in the Squads/Community/Home/Games
+// stacks (same pattern as PlayerProfile etc.) — typed against
+// SquadsStackParamList like the others, with "AddTeam" intersected in since
+// only the Games/Community/Home stacks actually have that route (reached
+// only via the returnTo branch below, never from the plain Squads tab).
+type Route = RouteProp<SquadsStackParamList, "CreateSquad">;
+type Nav = NativeStackNavigationProp<SquadsStackParamList & { AddTeam: AddTeamParams }, "CreateSquad">;
+
+const GROUP_TYPE_LABELS: Record<SquadGroupType, string> = {
+  group: "Group",
+  club: "Club",
+  training_camp: "Training Camp",
+  team: "Team",
+};
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 
@@ -140,6 +154,7 @@ function ChipRow<T extends string>({
 
 export default function CreateSquadScreen() {
   const navigation = useNavigation<Nav>();
+  const { params } = useRoute<Route>();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   // Same 4-across sport tiles as Create Game, sized to fit inside the Sport card
@@ -164,7 +179,8 @@ export default function CreateSquadScreen() {
 
   const [name, setName] = useState("");
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [groupType, setGroupType] = useState<SquadGroupType>("group");
+  const [groupType, setGroupType] = useState<SquadGroupType>(params?.presetType ?? "group");
+  const lockType = !!params?.lockType;
   const [sportId, setSportId] = useState<string | null>(null);
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
@@ -243,7 +259,11 @@ export default function CreateSquadScreen() {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "squad-icons", pathPrefix: squad.id });
         await supabase.from("squads").update({ icon_url: publicUrl }).eq("id", squad.id);
       }
-      navigation.replace("SquadDetail", { squadId: squad.id });
+      if (params?.returnTo) {
+        navigation.replace("AddTeam", { ...params.returnTo, squadId: squad.id });
+      } else {
+        navigation.replace("SquadDetail", { squadId: squad.id });
+      }
     } catch (err) {
       Alert.alert(
         "Error",
@@ -426,20 +446,43 @@ export default function CreateSquadScreen() {
           </View>
         </FormCard>
 
-        {/* Group Type */}
-        <FormCard icon="albums" title="Group Type" hint="What kind of group is this?">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <ChipRow<SquadGroupType>
-              options={[
-                { label: "Group", value: "group" },
-                { label: "Club", value: "club" },
-                { label: "Training Camp", value: "training_camp" },
-                { label: "Team", value: "team" },
-              ]}
-              value={groupType}
-              onChange={setGroupType}
-            />
-          </ScrollView>
+        {/* Group Type — locked to "Team" (non-editable) when creating a
+            tournament team via AddTeamScreen's "Create Team" button. */}
+        <FormCard icon="albums" title="Group Type" hint={lockType ? undefined : "What kind of group is this?"}>
+          {lockType ? (
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <View
+                className="rounded-full"
+                style={{
+                  paddingHorizontal: 11,
+                  paddingVertical: 6.5,
+                  borderWidth: 1.5,
+                  borderColor: colors.primary,
+                  backgroundColor: "#DCEFE4",
+                }}
+              >
+                <Text className="font-bold" style={{ fontSize: 12, color: colors.primaryDark }}>
+                  {GROUP_TYPE_LABELS[groupType]}
+                </Text>
+              </View>
+              <Text className="text-muted" style={{ fontSize: 12 }}>
+                Locked — this group is for a tournament team
+              </Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ChipRow<SquadGroupType>
+                options={[
+                  { label: "Group", value: "group" },
+                  { label: "Club", value: "club" },
+                  { label: "Training Camp", value: "training_camp" },
+                  { label: "Team", value: "team" },
+                ]}
+                value={groupType}
+                onChange={setGroupType}
+              />
+            </ScrollView>
+          )}
         </FormCard>
 
         {/* Sport */}

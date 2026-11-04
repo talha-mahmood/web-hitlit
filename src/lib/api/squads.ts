@@ -1,4 +1,5 @@
 import { supabase } from "../supabase";
+import { isUniqueViolation } from "../nameValidation";
 import type { Database } from "../../types/database.types";
 
 type SquadRow = Database["public"]["Tables"]["squads"]["Row"];
@@ -318,6 +319,41 @@ export async function leaveSquad(squadId: string, userId: string): Promise<void>
     .eq("user_id", userId)
     .in("status", ["ACTIVE", "PENDING"]);
   if (error) throw new Error(error.message);
+}
+
+export type UserCodeLookupResult = { id: string; full_name: string | null; avatar: string | null; user_code: string };
+
+// Exact (case-insensitive) match on a player's short public ID — the
+// instant "add by ID" counterpart to lookupProfileByEmail in superadmin.ts,
+// keyed on user_code instead of email since that's the identifier players
+// actually share with each other (see ProfileScreen's "ID: {user_code}").
+export async function lookupProfileByUserCode(userCode: string): Promise<UserCodeLookupResult | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar, user_code")
+    .ilike("user_code", userCode.trim())
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// Adds a member straight into a squad with no invite/accept step — only
+// works when squad_members_insert_self_or_owner's RLS allows it (today: the
+// squad's literal owner; hosts too once the host-equivalence branch is
+// added to that policy). squad_members_active_unique (squad_id, user_id)
+// is what turns a double-add into a friendly error instead of a duplicate row.
+export async function addSquadMemberDirect(squadId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from("squad_members").insert({
+    squad_id: squadId,
+    user_id: userId,
+    role: "member",
+    status: "ACTIVE",
+    joined_at: new Date().toISOString(),
+  });
+  if (error) {
+    if (isUniqueViolation(error)) throw new Error("This player is already a member of this group.");
+    throw new Error(error.message);
+  }
 }
 
 // Hard delete, not a status transition — mirrors how games are hard-deleted

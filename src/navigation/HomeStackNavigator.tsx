@@ -43,6 +43,8 @@ import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 import type { ManualScoreParams } from "../lib/manualScore";
+import AddTeamScreen from "../screens/games/AddTeamScreen";
+import type { CreateSquadRouteParams, AddTeamParams } from "./addTeamTypes";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
@@ -64,6 +66,7 @@ export type HomeStackParamList = {
   TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
+  AddTeam: AddTeamParams;
   PlayersDashboard: undefined;
   // sportId/sportName: set when opened from Top Players with a sport filter on.
   PlayerProfile: { userId: string; sportId?: string; sportName?: string };
@@ -87,7 +90,7 @@ export type HomeStackParamList = {
   // rows, hosted here for the same reason tournaments are above — so
   // browsing them never jumps the tab bar's highlight over to Community.
   SquadsList: undefined;
-  CreateSquad: undefined;
+  CreateSquad: CreateSquadRouteParams;
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
@@ -118,6 +121,7 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="TeamChat" component={TeamChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
+      <Stack.Screen name="AddTeam" component={AddTeamScreen} />
       <Stack.Screen name="PlayersDashboard" component={PlayersDashboardScreen} />
       <Stack.Screen name="PlayerProfile" component={PlayerProfileScreen} />
       <Stack.Screen name="ManualScore" component={ManualScoreScreen} />

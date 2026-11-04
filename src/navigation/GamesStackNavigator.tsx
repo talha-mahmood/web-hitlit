@@ -27,10 +27,14 @@ import TableTennisLiveScoringScreen from "../screens/scorecard/TableTennisLiveSc
 import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen";
 import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
+import AddTeamScreen from "../screens/games/AddTeamScreen";
+import CreateSquadScreen from "../screens/squads/CreateSquadScreen";
+import SquadDetailScreen from "../screens/squads/SquadDetailScreen";
 import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams } from "./bookingTypes";
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 import type { ManualScoreParams } from "../lib/manualScore";
+import type { CreateSquadRouteParams, AddTeamParams } from "./addTeamTypes";
 
 export type GamesStackParamList = {
   GamesList:
@@ -42,6 +46,9 @@ export type GamesStackParamList = {
   TeamChat: { teamId: string; teamName?: string; sportName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
+  AddTeam: AddTeamParams;
+  CreateSquad: CreateSquadRouteParams;
+  SquadDetail: { squadId: string };
   VenueDetail: { venueId: string; forGameId?: string };
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
@@ -77,6 +84,9 @@ export default function GamesStackNavigator() {
       <Stack.Screen name="TeamChat" component={TeamChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
+      <Stack.Screen name="AddTeam" component={AddTeamScreen} />
+      <Stack.Screen name="CreateSquad" component={CreateSquadScreen} />
+      <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />

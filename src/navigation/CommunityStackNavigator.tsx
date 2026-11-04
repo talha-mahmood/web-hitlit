@@ -42,6 +42,8 @@ import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 import type { ManualScoreParams } from "../lib/manualScore";
+import AddTeamScreen from "../screens/games/AddTeamScreen";
+import type { CreateSquadRouteParams, AddTeamParams } from "./addTeamTypes";
 
 // The Community tab hosts its own copies of the Games/Squads/Players screens
 // (same components GamesStackNavigator/SquadsStackNavigator/HomeStackNavigator
@@ -68,8 +70,9 @@ export type CommunityStackParamList = {
   TeamChat: { teamId: string; teamName?: string };
   EditGame: { gameId: string };
   TournamentMatches: { gameId: string };
+  AddTeam: AddTeamParams;
   SquadsList: undefined;
-  CreateSquad: undefined;
+  CreateSquad: CreateSquadRouteParams;
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
   EditSquad: { squadId: string };
@@ -119,6 +122,7 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="TeamChat" component={TeamChatScreen} />
       <Stack.Screen name="EditGame" component={EditGameScreen} />
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
+      <Stack.Screen name="AddTeam" component={AddTeamScreen} />
       <Stack.Screen name="SquadsList" component={SquadsListScreen} />
       <Stack.Screen name="CreateSquad" component={CreateSquadScreen} />
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />

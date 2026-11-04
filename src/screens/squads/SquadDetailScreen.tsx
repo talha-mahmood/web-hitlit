@@ -32,6 +32,7 @@ import GradientFill from "../../components/GradientFill";
 import type { SquadsStackParamList } from "../../navigation/SquadsStackNavigator";
 import JoinRequestModal from "../../components/JoinRequestModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
+import AddMemberByIdModal from "../../components/AddMemberByIdModal";
 import ChatIcon from "../../components/ChatIcon";
 import BlinkingEyeIcon from "../../components/BlinkingEyeIcon";
 import WaveDivider from "../../components/WaveDivider";
@@ -285,6 +286,7 @@ export default function SquadDetailScreen() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showAddByIdModal, setShowAddByIdModal] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   const { data: squad, isLoading, error, refetch, isRefetching } = useSquadDetail(params.squadId);
@@ -847,19 +849,31 @@ export default function SquadDetailScreen() {
             <Text className="text-ink font-semibold text-sm">
               Members ({activeMembers.length}{squad.max_players ? `/${squad.max_players}` : ""})
             </Text>
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              {!!squad.max_players && (
-                emptySlots > 0 ? (
-                  <View className="bg-green-50 px-2 py-0.5 rounded-full">
-                    <Text className="text-primary text-xs font-medium">
-                      {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
-                    </Text>
-                  </View>
-                ) : (
-                  <View className="bg-red-50 px-2 py-0.5 rounded-full">
-                    <Text className="text-red-600 text-xs font-medium">Full</Text>
-                  </View>
-                )
+            {!!squad.max_players && (
+              emptySlots > 0 ? (
+                <View className="bg-green-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-primary text-xs font-medium">
+                    {emptySlots} spot{emptySlots !== 1 ? "s" : ""} left
+                  </Text>
+                </View>
+              ) : (
+                <View className="bg-red-50 px-2 py-0.5 rounded-full">
+                  <Text className="text-red-600 text-xs font-medium">Full</Text>
+                </View>
+              )
+            )}
+          </View>
+          {(canManage || isOwner || hasJoined) && (
+            <View className="flex-row items-center justify-end mb-3" style={{ gap: 8 }}>
+              {canManage && (
+                <Pressable
+                  onPress={() => setShowAddByIdModal(true)}
+                  className="flex-row items-center rounded-full border border-primary"
+                  style={{ paddingHorizontal: 12, paddingVertical: 9, gap: 5 }}
+                >
+                  <Ionicons name="key-outline" size={14} color={colors.primary} />
+                  <Text className="text-primary text-xs font-bold">Add by ID</Text>
+                </Pressable>
               )}
               {(isOwner || hasJoined) && (
                 <Pressable onPress={() => setShowInviteModal(true)} style={primaryButtonShadow}>
@@ -882,7 +896,7 @@ export default function SquadDetailScreen() {
                 </Pressable>
               )}
             </View>
-          </View>
+          )}
           <View className="flex-row flex-wrap" style={{ gap: 12 }}>
             {activeMembers.map((m) => {
               const rowIsOwner = m.user_id === squad.squad_owner_id;
@@ -1097,6 +1111,14 @@ export default function SquadDetailScreen() {
           if (!userId) return;
           await createInvite.mutateAsync({ invitedUserId: user.id, invitedBy: userId });
         }}
+      />
+
+      <AddMemberByIdModal
+        visible={showAddByIdModal}
+        onClose={() => setShowAddByIdModal(false)}
+        squadId={squad.id}
+        excludeUserIds={[squad.squad_owner_id, ...squad.squad_members.map((m) => m.user_id)]}
+        disabledReason={isFull ? "This group is full." : undefined}
       />
     </View>
   );

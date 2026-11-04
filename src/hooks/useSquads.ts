@@ -13,6 +13,8 @@ import {
   rejectMember,
   removeMember,
   setMemberHost,
+  lookupProfileByUserCode,
+  addSquadMemberDirect,
 } from "../lib/api/squads";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -57,6 +59,7 @@ export function useSquadDetail(squadId: string) {
     queryFn: () => fetchSquadDetail(squadId),
     staleTime: 30_000,
     retry: 1,
+    enabled: !!squadId,
   });
 
   // A join request, approval, the squad itself being edited/disbanded, etc.
@@ -190,6 +193,23 @@ export function useRemoveMember(squadId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (squadMemberId: string) => removeMember(squadMemberId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["squad", squadId] });
+      qc.invalidateQueries({ queryKey: ["squads"] });
+    },
+  });
+}
+
+export function useLookupProfileByUserCode() {
+  return useMutation({
+    mutationFn: (userCode: string) => lookupProfileByUserCode(userCode),
+  });
+}
+
+export function useAddSquadMemberDirect(squadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => addSquadMemberDirect(squadId, userId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["squad", squadId] });
       qc.invalidateQueries({ queryKey: ["squads"] });

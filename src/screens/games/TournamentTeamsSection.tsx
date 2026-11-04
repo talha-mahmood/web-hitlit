@@ -16,7 +16,6 @@ import {
   useRemoveTeamMember,
   useUpdateTeamName,
 } from "../../hooks/useTournamentTeams";
-import { useSquadFillTournamentTeam, useSquadAddMembersToTeam } from "../../hooks/useSquadTeamFill";
 import { useCreateTeamInvite, usePendingTeamInviteCount } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
 import { manualSportForName } from "../../lib/manualScore";
@@ -28,11 +27,9 @@ import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
 import CreateTeamModal from "../../components/CreateTeamModal";
 import RenameTeamModal from "../../components/RenameTeamModal";
-import SelectTeamModal from "../../components/SelectTeamModal";
 import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
 import AddManualMemberModal from "../../components/AddManualMemberModal";
-import FillTeamWithSquadModal from "../../components/FillTeamWithSquadModal";
 import ChatIcon from "../../components/ChatIcon";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
@@ -140,12 +137,11 @@ function TeamCard({
   hasActiveTeamElsewhere,
   isVenueBooked,
   onLeave,
-  onFillWithSquad,
   onApprove,
   onReject,
   onOpenChat,
   onInvitePlayer,
-  onFillWithSquadMembers,
+  onAddTeam,
   onAddManually,
   onJoinTeam,
   onRemoveMember,
@@ -166,15 +162,17 @@ function TeamCard({
   // joined member can no longer leave (see enforce_team_roster_rules).
   isVenueBooked: boolean;
   onLeave: () => void;
-  onFillWithSquad?: () => void;
   onApprove: () => void;
   onReject: () => void;
   onOpenChat: () => void;
-  // "Invite a Player" (search one user) / "Fill with my Squad" (send several
-  // individual requests at once) — both available to the host or anyone
+  // "Invite a Player" — search one user, available to the host or anyone
   // already on this team, while it still has an open slot.
   onInvitePlayer?: () => void;
-  onFillWithSquadMembers?: () => void;
+  // "Add Team" — claim this still-empty slot with one of my own team-type
+  // groups, filled to the exact required headcount (AddTeamScreen). Only
+  // offered while the team has zero joined members — the RPC it ends in
+  // (squad_fill_tournament_team) only ever claims a genuinely empty team.
+  onAddTeam?: () => void;
   // Host-only: add a player with no app account — lands as JOINED
   // immediately, shown with the app's default avatar everywhere.
   onAddManually?: () => void;
@@ -420,9 +418,10 @@ function TeamCard({
       )}
 
       {/* Recruiting into this team's open slot — a single searched player
-          (instant invite, approved from their Notifications), or several
-          individual requests at once from one of my squads. */}
-      {canManageRecruiting && (onInvitePlayer || onFillWithSquadMembers) && (
+          (instant invite, approved from their Notifications), or (only
+          while the team is still completely empty) claiming the whole slot
+          at once with one of my own team-type groups. */}
+      {canManageRecruiting && (onInvitePlayer || (isEmpty && onAddTeam)) && (
         <View className="flex-row mt-3" style={{ gap: 8 }}>
           {onInvitePlayer && (
             <Pressable
@@ -435,11 +434,11 @@ function TeamCard({
               <Text className="text-primary font-bold text-xs">Invite a Player</Text>
             </Pressable>
           )}
-          {onFillWithSquadMembers && (
-            <Pressable onPress={onFillWithSquadMembers} disabled={disabled} className="flex-1">
+          {isEmpty && onAddTeam && (
+            <Pressable onPress={onAddTeam} disabled={disabled} className="flex-1">
               <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 6 }}>
                 <Ionicons name="people-outline" size={15} color="white" />
-                <Text className="text-white font-bold text-xs">Fill with my Group</Text>
+                <Text className="text-white font-bold text-xs">Add Team</Text>
               </GradientFill>
             </Pressable>
           )}
@@ -664,18 +663,14 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const isTournament = game.game_type === "TOURNAMENT";
   const noun: "tournament" | "game" = isTournament ? "tournament" : "game";
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [fillTeamId, setFillTeamId] = useState<string | null>(null);
   const [showJoinTeamModal, setShowJoinTeamModal] = useState(false);
   const [invitePlayerTeamId, setInvitePlayerTeamId] = useState<string | null>(null);
-  const [fillSquadTeamId, setFillSquadTeamId] = useState<string | null>(null);
   const [addManuallyTeamId, setAddManuallyTeamId] = useState<string | null>(null);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
   const requestToJoinTeam = useRequestToJoinTeam(game.id);
   const leaveTeam = useLeaveTeam(game.id);
-  const squadFillTeam = useSquadFillTournamentTeam(game.id);
-  const squadAddMembers = useSquadAddMembersToTeam(game.id);
   const approveTeam = useApproveTeam(game.id);
   const rejectPendingTeam = useRejectPendingTeam(game.id);
   const removeTeamMember = useRemoveTeamMember(game.id);
@@ -721,13 +716,11 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
     rejectPendingTeam.isPending ||
     removeTeamMember.isPending;
 
-  const fillTeam = fillTeamId ? teams.find((t) => t.id === fillTeamId) : undefined;
   const invitePlayerTeam = invitePlayerTeamId ? teams.find((t) => t.id === invitePlayerTeamId) : undefined;
-  const fillSquadTeam = fillSquadTeamId ? teams.find((t) => t.id === fillSquadTeamId) : undefined;
   // A squad can fill more than one team here (its owner just repeats
   // "Create Team" on another card with a different subset of members), but
   // never with the same player on two teams — this is every player already
-  // JOINED anywhere else, so SelectTeamModal can hide them from the picker.
+  // JOINED anywhere else, so AddTeamScreen can hide them from the picker.
   const joinedElsewhereUserIds = activeTeams.flatMap((t) =>
     t.tournament_team_members
       .filter((m) => m.status === "JOINED" && m.user_id)
@@ -920,12 +913,22 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
               hasActiveTeamElsewhere={!!myTeam && myTeam.id !== team.id}
               isVenueBooked={isVenueBooked}
               onLeave={() => handleLeave(team.id)}
-              onFillWithSquad={userId ? () => setFillTeamId(team.id) : undefined}
               onApprove={() => handleApprove(team.id)}
               onReject={() => handleReject(team.id)}
               onOpenChat={() => navigation.navigate("TeamChat", { teamId: team.id, teamName: team.name, sportName: game.sports?.name })}
               onInvitePlayer={userId ? () => setInvitePlayerTeamId(team.id) : undefined}
-              onFillWithSquadMembers={userId ? () => setFillSquadTeamId(team.id) : undefined}
+              onAddTeam={
+                userId
+                  ? () =>
+                      navigation.navigate("AddTeam", {
+                        gameId: game.id,
+                        teamId: team.id,
+                        requiredSize,
+                        excludeUserIds: joinedElsewhereUserIds,
+                        gameGender: game.gender,
+                      })
+                  : undefined
+              }
               onAddManually={userId ? () => setAddManuallyTeamId(team.id) : undefined}
               onJoinTeam={userId ? () => handleJoinTeam(team.id) : undefined}
               onRemoveMember={handleRemoveMember}
@@ -953,28 +956,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         }}
       />
 
-      <SelectTeamModal
-        visible={!!fillTeamId}
-        onClose={() => setFillTeamId(null)}
-        userId={userId}
-        requiredCount={requiredSize}
-        defaultTeamName={fillTeam?.name ?? ""}
-        submitting={squadFillTeam.isPending}
-        isHost={isHost}
-        excludeUserIds={joinedElsewhereUserIds}
-        gameGender={game.gender}
-        onSubmit={(squadId, memberUserIds, teamName) => {
-          if (!fillTeamId) return;
-          squadFillTeam.mutate(
-            { teamId: fillTeamId, squadId, memberUserIds, teamName },
-            {
-              onSuccess: () => setFillTeamId(null),
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not register team.")),
-            }
-          );
-        }}
-      />
-
       {isHost && (
         <SelectJoinTeamModal
           visible={showJoinTeamModal}
@@ -993,40 +974,6 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         onInvite={async (user) => {
           if (!userId || !invitePlayerTeamId) return;
           await createTeamInvite.mutateAsync({ teamId: invitePlayerTeamId, invitedUserId: user.id, invitedBy: userId });
-        }}
-      />
-
-      <FillTeamWithSquadModal
-        visible={!!fillSquadTeamId}
-        onClose={() => setFillSquadTeamId(null)}
-        userId={userId}
-        remainingSlots={Math.max(
-          requiredSize - (fillSquadTeam?.tournament_team_members.filter((m) => m.status === "JOINED").length ?? 0),
-          0
-        )}
-        submitting={createTeamInvite.isPending || squadAddMembers.isPending}
-        excludeUserIds={joinedElsewhereUserIds}
-        gameGender={game.gender}
-        onSubmit={async (squadId, memberUserIds, isHostSquad) => {
-          if (!userId || !fillSquadTeamId) return;
-          try {
-            if (isHostSquad) {
-              // The acting user owns/hosts this group — add them straight
-              // to the team, no approval needed (squad_add_members_to_team
-              // already enforces the same host check server-side).
-              await squadAddMembers.mutateAsync({ teamId: fillSquadTeamId, squadId, memberUserIds });
-              setFillSquadTeamId(null);
-              Alert.alert("Members Added", `Added ${memberUserIds.length} member${memberUserIds.length === 1 ? "" : "s"} to the team.`);
-            } else {
-              for (const memberUserId of memberUserIds) {
-                await createTeamInvite.mutateAsync({ teamId: fillSquadTeamId, invitedUserId: memberUserId, invitedBy: userId });
-              }
-              setFillSquadTeamId(null);
-              Alert.alert("Requests Sent", `Sent ${memberUserIds.length} request${memberUserIds.length === 1 ? "" : "s"}.`);
-            }
-          } catch (err) {
-            Alert.alert("Error", getFriendlyErrorMessage(err, isHostSquad ? "Could not add all members." : "Could not send all requests."));
-          }
         }}
       />
 
