@@ -5,10 +5,13 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAllVenues, useDeleteVenue } from "../../hooks/useSuperadmin";
+import { useUnreadNotificationCount } from "../../hooks/useNotifications";
+import { useAuthStore } from "../../store/authStore";
 import { colors, primaryButtonShadow } from "../../constants/theme";
 import type { SuperAdminStackParamList } from "../../navigation/SuperAdminNavigator";
 import SearchField from "../../components/SearchField";
 import SuperAdminSectionSwitcher from "../../components/SuperAdminSectionSwitcher";
+import NotificationBell from "../../components/NotificationBell";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
@@ -17,6 +20,8 @@ type Nav = NativeStackNavigationProp<SuperAdminStackParamList, "AllVenuesList">;
 export default function AllVenuesListScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((s) => s.session?.user.id);
+  const { data: unreadCount } = useUnreadNotificationCount(userId);
   const [search, setSearch] = useState("");
   const { data: venues, isLoading, refetch, isRefetching } = useAllVenues(search || undefined);
   const deleteVenue = useDeleteVenue();
@@ -43,18 +48,26 @@ export default function AllVenuesListScreen() {
     <View className="flex-1 bg-gray-100">
       <View className="px-3.5" style={{ paddingTop: insets.top + 16, paddingBottom: 12 }}>
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-ink">All Venues</Text>
-          <Pressable
-            onPress={() => navigation.navigate("CreateVenue")}
-            style={primaryButtonShadow}
-          >
-            <GradientFill className="flex-row items-center rounded-lg px-3 py-2" style={{ gap: 4 }}>
-              <Ionicons name="add" size={16} color="white" />
-              <Text className="text-white text-xs font-semibold">New Venue</Text>
-            </GradientFill>
-          </Pressable>
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <SuperAdminSectionSwitcher active="venues" />
+            <Text className="text-2xl font-bold text-ink">All Venues</Text>
+          </View>
+          <View className="flex-row items-center" style={{ gap: 14 }}>
+            <NotificationBell
+              unreadCount={unreadCount}
+              onPress={() => navigation.navigate("AdminNotifications")}
+            />
+            <Pressable
+              onPress={() => navigation.navigate("CreateVenue")}
+              style={primaryButtonShadow}
+            >
+              <GradientFill className="flex-row items-center rounded-lg px-3 py-2" style={{ gap: 4 }}>
+                <Ionicons name="add" size={16} color="white" />
+                <Text className="text-white text-xs font-semibold">New Venue</Text>
+              </GradientFill>
+            </Pressable>
+          </View>
         </View>
-        <SuperAdminSectionSwitcher active="venues" />
         <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["venue name"]} />
       </View>
 

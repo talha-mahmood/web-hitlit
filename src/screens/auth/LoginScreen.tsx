@@ -12,15 +12,16 @@ import TermsContent from "../../components/TermsContent";
 import { colors, heroShadow } from "../../constants/theme";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
+// The terms/EULA are reachable here (for App Store guideline 1.2's "EULA
+// available during the registration process") but NOT gated on a checkbox —
+// the app has no signed-in identity yet at this point, so it can't tell
+// whether the person about to sign in has already accepted before. The
+// actual required, recorded acceptance happens immediately after sign-in on
+// AcceptTermsScreen, which — unlike here — knows the profile and only shows
+// itself to someone who hasn't accepted yet.
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  // Required under App Store guideline 1.2 — terms (including the
-  // zero-tolerance UGC policy) must be presented and agreed to before a
-  // user can register/log in, not just after. The post-sign-in
-  // AcceptTermsScreen is the durable, DB-backed record of this; this
-  // checkbox is the literal "before logging in" gate.
-  const [agreed, setAgreed] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
 
   const handleSignIn = async (signIn: () => Promise<Session | null>) => {
@@ -28,8 +29,9 @@ export default function LoginScreen() {
     try {
       await signIn();
       // On success, RootNavigator's session listener takes it from here —
-      // a brand-new account lands on CompleteDetailsScreen (no phone/gender
-      // yet), a returning account goes straight into the app.
+      // a brand-new account lands on AcceptTermsScreen then
+      // CompleteDetailsScreen (no phone/gender yet), a returning account
+      // that already accepted goes straight into the app.
     } catch (err) {
       Alert.alert(
         "Sign-in failed",
@@ -72,9 +74,9 @@ export default function LoginScreen() {
 
           <Pressable
             onPress={() => handleSignIn(signInWithGoogle)}
-            disabled={isSigningIn || !agreed}
+            disabled={isSigningIn}
             className="w-full active:opacity-90"
-            style={{ opacity: isSigningIn || !agreed ? 0.5 : 1 }}
+            style={{ opacity: isSigningIn ? 0.5 : 1 }}
           >
             <GradientFill className="flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-8">
               {isSigningIn ? (
@@ -92,8 +94,8 @@ export default function LoginScreen() {
 
           {Platform.OS === "ios" && (
             <View
-              pointerEvents={isSigningIn || !agreed ? "none" : "auto"}
-              style={{ width: "100%", opacity: isSigningIn || !agreed ? 0.5 : 1 }}
+              pointerEvents={isSigningIn ? "none" : "auto"}
+              style={{ width: "100%", opacity: isSigningIn ? 0.5 : 1 }}
             >
               <AppleAuthentication.AppleAuthenticationButton
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
@@ -105,34 +107,9 @@ export default function LoginScreen() {
             </View>
           )}
 
-          <Pressable
-            onPress={() => setAgreed((v) => !v)}
-            className="flex-row items-start w-full mt-6"
-            style={{ gap: 10 }}
-          >
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 20,
-                height: 20,
-                marginTop: 1,
-                borderRadius: 5,
-                borderWidth: 1.5,
-                borderColor: agreed ? colors.primary : colors.border,
-                backgroundColor: agreed ? colors.primary : "white",
-              }}
-            >
-              {agreed && <Ionicons name="checkmark" size={13} color="white" />}
-            </View>
-            <Text className="flex-1 text-muted text-xs">
-              I have read and agree to the{" "}
-              <Text
-                style={{ color: colors.primary, fontWeight: "700" }}
-                onPress={() => setTermsOpen(true)}
-              >
-                Terms of Service and Privacy Policy
-              </Text>
-              .
+          <Pressable onPress={() => setTermsOpen(true)} hitSlop={8} className="mt-6">
+            <Text className="text-xs text-center" style={{ color: colors.primary, fontWeight: "700" }}>
+              View Terms of Service and Privacy Policy
             </Text>
           </Pressable>
         </View>

@@ -9,7 +9,9 @@ import {
   useMarkNotificationRead,
   useNotifications,
   useDeleteNotification,
+  useDeleteAllNotifications,
 } from "../../hooks/useNotifications";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
@@ -96,6 +98,7 @@ export default function AdminNotificationsScreen() {
   const markRead = useMarkNotificationRead(userId);
   const markAllRead = useMarkAllNotificationsRead(userId);
   const deleteNotif = useDeleteNotification(userId);
+  const deleteAll = useDeleteAllNotifications(userId);
 
   const hasUnread = (notifications ?? []).some((n) => !n.is_read);
 
@@ -114,6 +117,20 @@ export default function AdminNotificationsScreen() {
     ]);
   };
 
+  const handleDeleteAll = () => {
+    Alert.alert("Delete All Notifications", "Remove all your notifications? This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete All",
+        style: "destructive",
+        onPress: () =>
+          deleteAll.mutate(undefined, {
+            onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete notifications.")),
+          }),
+      },
+    ]);
+  };
+
   return (
     <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center justify-between px-3.5 mb-4">
@@ -123,11 +140,18 @@ export default function AdminNotificationsScreen() {
           </Pressable>
           <Text className="text-2xl font-bold text-ink">Notifications</Text>
         </View>
-        {hasUnread && (
-          <Pressable onPress={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
-            <Text className="text-primary font-semibold text-sm">Mark all read</Text>
-          </Pressable>
-        )}
+        <View className="flex-row items-center" style={{ gap: 16 }}>
+          {hasUnread && (
+            <Pressable onPress={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
+              <Text className="text-primary font-semibold text-sm">Mark all read</Text>
+            </Pressable>
+          )}
+          {(notifications?.length ?? 0) > 0 && (
+            <Pressable onPress={handleDeleteAll} disabled={deleteAll.isPending} hitSlop={8}>
+              <Text className="text-danger font-semibold text-sm">Delete all</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {isLoading ? (

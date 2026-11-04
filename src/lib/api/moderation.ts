@@ -81,12 +81,18 @@ export type ContentReport = {
   reported: { full_name: string | null; email: string | null } | null;
 };
 
+// Only unreviewed reports — once a report is resolved (content removed,
+// user ejected, or dismissed) it drops off this list entirely rather than
+// sticking around with a "reviewed" badge. Ejecting a user from here is
+// reversible later via the Users directory (setUserActive), which doesn't
+// depend on the now-gone report row.
 export async function fetchContentReports(): Promise<ContentReport[]> {
   const { data, error } = await supabase
     .from("content_reports")
     .select(
       "id, reporter_id, reported_user_id, source, source_id, context_id, message_snapshot, reason, created_at, reviewed_at, reviewed_by, action_taken, reporter:profiles!content_reports_reporter_id_fkey(full_name, email), reported:profiles!content_reports_reported_user_id_fkey(full_name, email)"
     )
+    .is("reviewed_at", null)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data as unknown as ContentReport[]) ?? [];

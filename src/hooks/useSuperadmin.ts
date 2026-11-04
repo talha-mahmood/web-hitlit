@@ -8,6 +8,8 @@ import {
   fetchVenueAdmins,
   grantVenueAdmin,
   revokeVenueAdminAccess,
+  fetchAllUsers,
+  setUserActive,
 } from "../lib/api/superadmin";
 import { createVenue, type CreateVenueInput } from "../lib/api/venuesAdmin";
 import { fetchAllGames, deleteGame } from "../lib/api/games";
@@ -175,5 +177,20 @@ export function useDismissReport(reviewerId: string | undefined) {
   return useMutation({
     mutationFn: (reportId: string) => dismissReport(reportId, reviewerId as string),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["contentReports"] }),
+  });
+}
+
+export function useAllUsers(search?: string) {
+  return useQuery({
+    queryKey: ["allUsers", search],
+    queryFn: () => fetchAllUsers(search),
+  });
+}
+
+export function useSetUserActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) => setUserActive(userId, isActive),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allUsers"] }),
   });
 }

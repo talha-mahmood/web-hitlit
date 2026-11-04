@@ -28,6 +28,54 @@ export async function fetchAllVenues(search?: string): Promise<AllVenuesListItem
   return (data as unknown as AllVenuesListItem[]) ?? [];
 }
 
+export type AllUsersListItem = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar: string | null;
+  user_code: string;
+  type: "user" | "owner" | "superadmin";
+  isactive: boolean;
+};
+
+// PostgREST's .or() filter string treats `,`, `(`, `)` as syntax, so a
+// search term containing them would otherwise malform the request — strip
+// them (same helper duplicated in events.ts/games.ts for the same reason).
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, " ").trim();
+}
+
+// The full user directory — lets a superadmin find anyone by name/email/
+// user code, most importantly to reactivate someone ejected from the
+// Reports screen (that report is gone by the time they'd want to undo it,
+// so this is the only other way to find that person again).
+export async function fetchAllUsers(search?: string): Promise<AllUsersListItem[]> {
+  let query = supabase
+    .from("profiles")
+    .select("id, full_name, email, phone, avatar, user_code, type, isactive")
+    .is("deleted_at", null)
+    .order("full_name", { ascending: true });
+
+  const term = search ? sanitizeSearchTerm(search) : "";
+  if (term) {
+    query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,user_code.ilike.%${term}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data as AllUsersListItem[]) ?? [];
+}
+
+// The reverse of ejectReportedUser (src/lib/api/moderation.ts), without a
+// report attached — plain profiles.isactive toggle, usable to reactivate
+// (or re-eject) any user found via the directory above. No new RLS needed:
+// profiles_update_self already lets a superadmin UPDATE any profile row.
+export async function setUserActive(userId: string, isActive: boolean): Promise<void> {
+  const { error } = await supabase.from("profiles").update({ isactive: isActive }).eq("id", userId);
+  if (error) throw new Error(error.message);
+}
+
 export async function lookupProfileByEmail(email: string): Promise<AdminLookupResult | null> {
   const { data, error } = await supabase
     .from("profiles")

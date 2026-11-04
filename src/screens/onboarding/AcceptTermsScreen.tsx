@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator, Alert, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
@@ -15,13 +16,33 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 // that predates this requirement. Rendered directly by RootNavigator (same
 // pattern as CompleteDetailsScreen), not pushed onto a stack — there is no
 // way to use the app without accepting. See profileStore's termsAccepted().
+//
+// This is the one and only place terms acceptance is actually recorded —
+// LoginScreen only links to the terms for reading, it doesn't gate sign-in
+// on them, since the app has no way to know (pre-auth) whether the person
+// signing in has already accepted before. This screen is the only point
+// that actually knows that, via the signed-in profile.
 export default function AcceptTermsScreen() {
+  const insets = useSafeAreaInsets();
   const session = useAuthStore((s) => s.session);
   const updateProfile = useProfileStore((s) => s.updateProfile);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isGoingBack, setIsGoingBack] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  // The checkbox stays hidden until the terms have actually been scrolled
+  // through to the end — once unlocked it stays unlocked.
+  const [canAgree, setCanAgree] = useState(false);
+  const viewportHeightRef = useRef(0);
+  const contentHeightRef = useRef(0);
+
+  const unlockAgreeIfAtEnd = () => {
+    if (canAgree) return;
+    if (contentHeightRef.current > 0 && contentHeightRef.current <= viewportHeightRef.current + 4) {
+      // Content is short enough to need no scrolling at all.
+      setCanAgree(true);
+    }
+  };
 
   // Same reasoning as CompleteDetailsScreen.handleBack — there's no
   // previous screen to pop to, so declining means signing back out.
@@ -54,13 +75,9 @@ export default function AcceptTermsScreen() {
 
   return (
     <GradientFill className="flex-1">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 40, paddingBottom: 40 }}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={{ flex: 1, paddingTop: insets.top + 24, paddingHorizontal: 24, paddingBottom: insets.bottom + 24 }}>
         <View
-          className="w-full rounded-3xl px-6 py-8"
+          className="flex-1 rounded-3xl px-6 py-6"
           style={{
             backgroundColor: "white",
             shadowColor: "#000",
@@ -89,33 +106,67 @@ export default function AcceptTermsScreen() {
             Please read and accept our terms to continue.
           </Text>
 
-          <View className="w-full mt-6">
-            <TermsContent />
-          </View>
-
-          <Pressable
-            onPress={() => setAgreed((v) => !v)}
-            className="flex-row items-center mt-6"
-            style={{ gap: 10 }}
+          <ScrollView
+            style={{ flex: 1, marginTop: 16 }}
+            contentContainerStyle={{ paddingBottom: 8 }}
+            onLayout={(e) => {
+              viewportHeightRef.current = e.nativeEvent.layout.height;
+              unlockAgreeIfAtEnd();
+            }}
+            onContentSizeChange={(_w, h) => {
+              contentHeightRef.current = h;
+              unlockAgreeIfAtEnd();
+            }}
+            onScroll={(e) => {
+              if (canAgree) return;
+              const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+              if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 24) {
+                setCanAgree(true);
+              }
+            }}
+            scrollEventThrottle={32}
           >
-            <View
-              className="items-center justify-center"
+            <TermsContent />
+          </ScrollView>
+
+          {canAgree ? (
+            <Pressable
+              onPress={() => setAgreed((v) => !v)}
+              className="flex-row items-center w-full mt-4"
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
+                gap: 12,
+                padding: 14,
+                borderRadius: 16,
+                backgroundColor: agreed ? colors.primaryLight : "#F9FAFB",
                 borderWidth: 1.5,
                 borderColor: agreed ? colors.primary : colors.border,
-                backgroundColor: agreed ? colors.primary : "white",
               }}
             >
-              {agreed && <Ionicons name="checkmark" size={15} color="white" />}
+              <View
+                className="items-center justify-center"
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 7,
+                  borderWidth: 1.5,
+                  borderColor: agreed ? colors.primary : colors.border,
+                  backgroundColor: agreed ? colors.primary : "white",
+                }}
+              >
+                {agreed && <Ionicons name="checkmark" size={15} color="white" />}
+              </View>
+              <Text className="flex-1 text-ink" style={{ fontSize: 13.5, lineHeight: 19 }}>
+                I've read and agree to the <Text style={{ fontWeight: "700" }}>Terms of Service</Text> and{" "}
+                <Text style={{ fontWeight: "700" }}>Privacy Policy</Text> above, including the zero-tolerance
+                policy for objectionable content and abusive users.
+              </Text>
+            </Pressable>
+          ) : (
+            <View className="flex-row items-center justify-center mt-4" style={{ gap: 6 }}>
+              <Ionicons name="arrow-down-circle-outline" size={15} color={colors.muted} />
+              <Text className="text-muted text-xs">Scroll to the end to continue</Text>
             </View>
-            <Text className="flex-1 text-ink text-sm">
-              I have read and agree to the Terms of Service and Privacy Policy, including the
-              zero-tolerance policy for objectionable content and abusive users.
-            </Text>
-          </Pressable>
+          )}
 
           <Pressable
             onPress={handleAgree}
@@ -123,7 +174,7 @@ export default function AcceptTermsScreen() {
             className="w-full active:opacity-90"
             style={{ opacity: agreed ? 1 : 0.4 }}
           >
-            <GradientFill className="flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-6">
+            <GradientFill className="flex-row items-center justify-center gap-3 rounded-2xl py-3.5 mt-4">
               {isSaving ? (
                 <ActivityIndicator color="white" />
               ) : (
@@ -132,7 +183,7 @@ export default function AcceptTermsScreen() {
             </GradientFill>
           </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </GradientFill>
   );
 }
