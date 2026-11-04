@@ -9,6 +9,7 @@ import {
   computeSquadFigures,
   squadTeamOverviewStats,
   squadChasedDefended,
+  squadPartnerships,
   squadRosterAggregates,
   squadMvpPoints,
   type RosterAggregateRow,
@@ -81,17 +82,44 @@ function RankedTable({
   );
 }
 
-type TeamSub = "Overview" | "Chased" | "Defended";
+type TeamSub = "Overview" | "Chased" | "Defended" | "Partnerships";
+
+function PartnershipCard({ row }: { row: ReturnType<typeof squadPartnerships>[number] }) {
+  const total = row.totalRuns || 1;
+  const widthA = Math.min(100, (row.runsA / total) * 100);
+  const widthB = Math.min(100, (row.runsB / total) * 100);
+  return (
+    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1 pr-3">
+          <Text className="text-ink text-sm">
+            <Text className="font-bold">{row.runsA}</Text> ({row.ballsA}) <Text className="font-semibold">{row.batterA}</Text>
+          </Text>
+          <View className="mt-1.5 rounded-full" style={{ height: 6, backgroundColor: "#D1D5DB", width: `${widthA}%` }} />
+          <View className="mt-1 rounded-full" style={{ height: 6, backgroundColor: "#F9A8D4", width: `${widthB}%` }} />
+          <Text className="text-ink text-sm mt-1.5">
+            <Text className="font-bold">{row.runsB}</Text> ({row.ballsB}) <Text className="font-semibold">{row.batterB}</Text>
+          </Text>
+        </View>
+        <View className="items-end">
+          <Text className="font-extrabold text-xl" style={{ color: colors.primaryDark }}>{row.totalRuns}</Text>
+          <Text className="text-muted text-xs">{row.totalBalls} Balls</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function TeamSection({ matches, teamName }: { matches: NonNullable<ReturnType<typeof useSquadCricketMatches>["data"]>; teamName: string }) {
   const [sub, setSub] = useState<TeamSub>("Overview");
   const figures = useMemo(() => computeSquadFigures(matches, teamName), [matches, teamName]);
   const overview = useMemo(() => squadTeamOverviewStats(figures), [figures]);
   const chasedDefended = useMemo(() => squadChasedDefended(figures), [figures]);
+  const partnerships = useMemo(() => squadPartnerships(matches, teamName), [matches, teamName]);
 
   return (
     <View>
-      <PillBar value={sub} options={["Overview", "Chased", "Defended"] as TeamSub[]} onChange={setSub} />
+      <PillBar value={sub} options={["Overview", "Chased", "Defended", "Partnerships"] as TeamSub[]} onChange={setSub} />
       {sub === "Overview" && (
         <View className="mt-4" style={{ gap: 10 }}>
           <View className="flex-row" style={{ gap: 10 }}>
@@ -149,6 +177,15 @@ function TeamSection({ matches, teamName }: { matches: NonNullable<ReturnType<ty
           columns={["Format", "Score"]}
           rows={chasedDefended.defended.map((r, i) => ({ rank: i + 1, name: r.opponentTeamName.toUpperCase(), values: [r.format, String(r.value)] }))}
         />
+      )}
+      {sub === "Partnerships" && (
+        <View className="mt-3">
+          {partnerships.length === 0 ? (
+            <Text className="text-muted text-sm text-center py-6">No data to show.</Text>
+          ) : (
+            partnerships.map((row, i) => <PartnershipCard key={`${row.matchId}-${i}`} row={row} />)
+          )}
+        </View>
       )}
     </View>
   );

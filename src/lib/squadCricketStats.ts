@@ -277,6 +277,113 @@ export type MvpRow = { name: string; batPoints: number; bowlPoints: number; fiel
 // six +2); a wicket is worth as much as 20 runs, with hauls bonused the same
 // way (3-wicket +8, 5-wicket +16) and a maiden over worth 8; a catch is 8,
 // a run-out 6, a stumping (the hardest fielding dismissal to pull off) 12.
+export type PartnershipRow = {
+  matchId: string;
+  batterA: string;
+  runsA: number;
+  ballsA: number;
+  batterB: string;
+  runsB: number;
+  ballsB: number;
+  totalRuns: number;
+  totalBalls: number;
+};
+
+// No partnership tracking exists anywhere else in this codebase — this
+// reads the raw ball log directly rather than re-simulating strike
+// rotation, since every cricket_balls row already records the exact
+// striker/non-striker pair for that delivery: a partnership "stand" is just
+// a run of consecutive balls sharing the same unordered pair, so a stand
+// boundary is detected the moment that pair changes (a wicket, since
+// rotation alone never changes which two names are at the crease). The
+// run/ball-credit rules mirror applyBall in cricketScoring.ts exactly
+// (wide: no personal runs, no ball faced; bye/legbye: no personal runs but
+// ball faced; no-ball: personal runs credited) rather than reinventing them,
+// so these numbers can't silently disagree with the live scorer.
+export function squadPartnerships(matches: CricketMatchDetail[], teamName: string, limit = 6): PartnershipRow[] {
+  const norm = (s: string) => s.trim().toLowerCase();
+  const rows: PartnershipRow[] = [];
+
+  for (const match of matches) {
+    const onA = norm(match.team_a_name) === norm(teamName);
+    const onB = norm(match.team_b_name) === norm(teamName);
+    if (!onA && !onB) continue;
+    const mySide: "A" | "B" = onA ? "A" : "B";
+
+    for (const innings of match.cricket_innings) {
+      if (innings.batting_team !== mySide) continue;
+      const balls = [...innings.cricket_balls].sort((a, b) => a.seq - b.seq);
+
+      const entryOrder = new Map<string, number>();
+      let order = 0;
+      const noteEntry = (name: string | null) => {
+        if (name && !entryOrder.has(name)) entryOrder.set(name, order++);
+      };
+
+      let currentPairKey: string | null = null;
+      let currentPair: [string, string] | null = null;
+      let runsTotal = 0;
+      let ballsTotal = 0;
+      let perRuns: Record<string, number> = {};
+      let perBalls: Record<string, number> = {};
+
+      const finalize = () => {
+        if (!currentPair) return;
+        const [p1, p2] = currentPair;
+        const first = (entryOrder.get(p1) ?? 0) <= (entryOrder.get(p2) ?? 0) ? p1 : p2;
+        const second = first === p1 ? p2 : p1;
+        rows.push({
+          matchId: match.id,
+          batterA: first,
+          runsA: perRuns[first] ?? 0,
+          ballsA: perBalls[first] ?? 0,
+          batterB: second,
+          runsB: perRuns[second] ?? 0,
+          ballsB: perBalls[second] ?? 0,
+          totalRuns: runsTotal,
+          totalBalls: ballsTotal,
+        });
+      };
+
+      for (const ball of balls) {
+        if (ball.extra_type === "PENALTY") continue;
+        noteEntry(ball.striker_name);
+        noteEntry(ball.non_striker_name);
+        if (!ball.non_striker_name) {
+          // Last Man Stand — no partner at the other end, nothing to track.
+          if (currentPair) finalize();
+          currentPair = null;
+          currentPairKey = null;
+          continue;
+        }
+        const pairKey = [ball.striker_name, ball.non_striker_name].sort().join("|");
+        if (pairKey !== currentPairKey) {
+          if (currentPair) finalize();
+          currentPairKey = pairKey;
+          currentPair = [ball.striker_name, ball.non_striker_name];
+          runsTotal = 0;
+          ballsTotal = 0;
+          perRuns = {};
+          perBalls = {};
+        }
+        runsTotal += ball.runs_batted + ball.extra_runs;
+        const personalCredit = ball.extra_type === "WIDE" || ball.extra_type === "BYE" || ball.extra_type === "LEGBYE" ? 0 : ball.runs_batted;
+        perRuns[ball.striker_name] = (perRuns[ball.striker_name] ?? 0) + personalCredit;
+        if (ball.extra_type !== "WIDE") {
+          perBalls[ball.striker_name] = (perBalls[ball.striker_name] ?? 0) + 1;
+        }
+        if (ball.extra_type !== "WIDE" && ball.extra_type !== "NOBALL") ballsTotal += 1;
+      }
+      if (currentPair) finalize();
+    }
+  }
+
+  return rows
+    .filter((r) => r.totalRuns > 0)
+    .sort((a, b) => b.totalRuns - a.totalRuns)
+    .slice(0, limit);
+}
+
 export function squadMvpPoints(rows: RosterAggregateRow[]): MvpRow[] {
   const scored = rows.map((r) => {
     const batPoints = r.batting.runs + r.batting.fours + r.batting.sixes * 2 + r.batting.hundreds * 16 + r.batting.fifties * 8 + r.batting.thirties * 4;
