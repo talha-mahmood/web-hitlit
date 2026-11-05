@@ -14,7 +14,7 @@ function CompareBar({ label, leftValue, rightValue, leftLabel, rightDisplay, lef
   return (
     <View className="flex-row items-center py-2" style={{ gap: 8 }}>
       <View className="flex-row items-center flex-1" style={{ gap: 6 }}>
-        <View className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6", flexDirection: "row-reverse" }}>
+        <View className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "#142533", flexDirection: "row-reverse" }}>
           <View style={{ width: `${leftFraction * 100}%`, height: "100%", backgroundColor: "#3B82F6", borderRadius: 999 }} />
         </View>
         <View className="rounded-lg border px-2 py-1" style={{ borderColor: colors.border, minWidth: 36 }}>
@@ -28,7 +28,7 @@ function CompareBar({ label, leftValue, rightValue, leftLabel, rightDisplay, lef
         <View className="rounded-lg border px-2 py-1" style={{ borderColor: colors.border, minWidth: 36 }}>
           <Text className="text-ink text-xs font-bold text-center">{rightDisplay}</Text>
         </View>
-        <View className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+        <View className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "#142533" }}>
           <View style={{ width: `${rightFraction * 100}%`, height: "100%", backgroundColor: "#3B82F6", borderRadius: 999 }} />
         </View>
       </View>
@@ -58,7 +58,7 @@ function PlayerSearch({ onSelect }: { onSelect: (u: UserSearchResult) => void })
 
   return (
     <View>
-      <View className="flex-row items-center rounded-full px-4 py-2.5" style={{ backgroundColor: "#F3F4F6", gap: 8 }}>
+      <View className="flex-row items-center rounded-full px-4 py-2.5" style={{ backgroundColor: "#142533", gap: 8 }}>
         <Ionicons name="search" size={16} color={colors.muted} />
         <TextInput
           value={term}
@@ -70,7 +70,7 @@ function PlayerSearch({ onSelect }: { onSelect: (u: UserSearchResult) => void })
         {loading ? <ActivityIndicator size="small" color={colors.primary} /> : null}
       </View>
       {results.length > 0 ? (
-        <View className="bg-white rounded-2xl mt-2" style={cardShadow}>
+        <View className="bg-surface rounded-2xl mt-2" style={cardShadow}>
           {results.map((u) => (
             <Pressable
               key={u.id}
@@ -86,7 +86,7 @@ function PlayerSearch({ onSelect }: { onSelect: (u: UserSearchResult) => void })
                 <Image source={{ uri: u.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
               ) : (
                 <GradientFill className="items-center justify-center rounded-full" style={{ width: 32, height: 32 }}>
-                  <Text className="text-white text-xs font-bold">{(u.full_name ?? "?").charAt(0).toUpperCase()}</Text>
+                  <Text className="text-jazba-white text-xs font-bold">{(u.full_name ?? "?").charAt(0).toUpperCase()}</Text>
                 </GradientFill>
               )}
               <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>{u.full_name ?? "Player"}</Text>
@@ -124,7 +124,7 @@ function ComparePanel({
   const fieldB = aggregateFielding(figuresB ?? []);
 
   return (
-    <View className="bg-white rounded-2xl p-4 mt-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mt-4" style={cardShadow}>
       <View className="flex-row justify-between mb-3">
         <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{nameA}</Text>
         <Text className="text-ink font-bold text-base flex-1 text-right" numberOfLines={1}>{nameB}</Text>

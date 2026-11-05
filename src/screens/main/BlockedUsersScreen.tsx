@@ -34,8 +34,8 @@ export default function BlockedUsersScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-4 pb-4 border-b border-border bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app">
+      <View className="flex-row items-center px-4 pb-4 border-b border-border bg-surface" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
@@ -54,7 +54,7 @@ export default function BlockedUsersScreen() {
           renderItem={({ item }) => {
             const name = item.profiles?.full_name ?? "Player";
             return (
-              <View className="flex-row items-center bg-white rounded-xl px-4 py-3 mb-2 border border-border">
+              <View className="flex-row items-center bg-surface rounded-xl px-4 py-3 mb-2 border border-border">
                 <Pressable onPress={() => navigation.navigate("PlayerProfile", { userId: item.blocked_id })}>
                   {item.profiles?.avatar ? (
                     <Image source={{ uri: item.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light mr-3" />

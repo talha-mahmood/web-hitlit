@@ -37,8 +37,8 @@ function StatusBadge({ status }: { status: BookingWithCourt["status"] }) {
   const bg =
     status === "CONFIRMED" ? colors.primaryLight :
     status === "PENDING"   ? "#FEF9C3" :
-    status === "CANCELLED" ? "#FEE2E2" :
-    status === "COMPLETED" ? "#DBEAFE" : "#F3F4F6";
+    status === "CANCELLED" ? "#351419" :
+    status === "COMPLETED" ? "#DBEAFE" : "#142533";
   const fg =
     status === "CONFIRMED" ? colors.primaryDark :
     status === "PENDING"   ? "#A16207" :
@@ -69,7 +69,7 @@ function BookingCard({ booking }: { booking: BookingWithCourt }) {
   const { icon: watermarkIcon } = getSportIcon(sportName);
 
   return (
-    <View className="rounded-2xl bg-white mb-3 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+    <View className="rounded-2xl bg-surface mb-3 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
       <MaterialCommunityIcons
         name={watermarkIcon}
         size={90}
@@ -131,7 +131,7 @@ function BookingCard({ booking }: { booking: BookingWithCourt }) {
               (booking.status === "CONFIRMED" || booking.status === "PENDING") && (
                 <View
                   className="flex-row items-center rounded-full px-2.5 py-1"
-                  style={{ backgroundColor: "#FEF3C7", gap: 4 }}
+                  style={{ backgroundColor: "#352A13", gap: 4 }}
                 >
                   <Ionicons name="card-outline" size={12} color="#B45309" />
                   <Text className="text-xs font-bold" style={{ color: "#B45309" }}>
@@ -163,7 +163,7 @@ export default function MyBookingsScreen() {
   const list = tab === "upcoming" ? upcoming : past;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero header */}
       <View
         style={{ backgroundColor: colors.primaryLight, paddingTop: insets.top + 16, paddingBottom: 20, overflow: "hidden", position: "relative" }}
@@ -177,7 +177,7 @@ export default function MyBookingsScreen() {
         <View className="px-4 flex-row items-center">
           <Pressable
             onPress={() => navigation.goBack()}
-            className="items-center justify-center rounded-full bg-white mr-3"
+            className="items-center justify-center rounded-full bg-surface mr-3"
             style={{ width: 40, height: 40, ...cardShadow }}
           >
             <Ionicons name="arrow-back" size={20} color={colors.ink} />
@@ -202,7 +202,7 @@ export default function MyBookingsScreen() {
               className="flex-1 flex-row items-center justify-center rounded-full py-3"
               style={{
                 gap: 6,
-                backgroundColor: active ? colors.primary : "white",
+                backgroundColor: active ? colors.primary : "#0A1723",
                 borderWidth: active ? 0 : 1,
                 borderColor: colors.border,
                 ...(active ? cardShadow : null),
@@ -213,7 +213,7 @@ export default function MyBookingsScreen() {
                 size={16}
                 color={active ? "white" : colors.muted}
               />
-              <Text className={`font-bold text-sm ${active ? "text-white" : "text-muted"}`}>
+              <Text className={`font-bold text-sm ${active ? "text-jazba-white" : "text-muted"}`}>
                 {t === "upcoming" ? `Upcoming (${upcoming.length})` : `Past (${past.length})`}
               </Text>
             </Pressable>

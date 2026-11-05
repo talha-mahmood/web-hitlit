@@ -113,7 +113,7 @@ export default function BookingCheckoutScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero header — same tinted-panel + watermark language as the slot
           picker screen this flow comes from. */}
       <View
@@ -128,7 +128,7 @@ export default function BookingCheckoutScreen() {
         <View className="px-4 flex-row items-center">
           <Pressable
             onPress={() => navigation.goBack()}
-            className="items-center justify-center rounded-full bg-white mr-3"
+            className="items-center justify-center rounded-full bg-surface mr-3"
             style={{ width: 40, height: 40, ...cardShadow }}
           >
             <Ionicons name="arrow-back" size={20} color={colors.ink} />
@@ -146,11 +146,11 @@ export default function BookingCheckoutScreen() {
         {/* Booking Summary — shadow lives on this outer, non-clipping
             wrapper since a shadow doesn't render on a view with
             overflow:hidden (needed to clip the header band's corners). */}
-        <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: "white" }}>
+        <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: "#0A1723" }}>
           <View className="rounded-2xl overflow-hidden">
             <View className="flex-row items-center" style={{ backgroundColor: colors.primaryLight, gap: 12, padding: 16 }}>
               <View
-                className="items-center justify-center rounded-full bg-white"
+                className="items-center justify-center rounded-full bg-surface"
                 style={{ width: 44, height: 44 }}
               >
                 <Ionicons name="checkmark-done" size={20} color={colors.primaryDark} />
@@ -177,7 +177,7 @@ export default function BookingCheckoutScreen() {
                   <Text className="text-muted text-xs mb-2">
                     Time Slots ({sortedSlots.length})
                   </Text>
-                  <View className="rounded-xl overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+                  <View className="rounded-xl overflow-hidden" style={{ backgroundColor: "#142533" }}>
                     {sortedSlots.map((s, i) => (
                       <View
                         key={s.startTime}
@@ -202,7 +202,7 @@ export default function BookingCheckoutScreen() {
               style={{ backgroundColor: colors.primaryLight, gap: 12 }}
             >
               <View className="flex-row items-center" style={{ gap: 12 }}>
-                <View className="items-center justify-center rounded-full bg-white" style={{ width: 36, height: 36 }}>
+                <View className="items-center justify-center rounded-full bg-surface" style={{ width: 36, height: 36 }}>
                   <Ionicons name="wallet-outline" size={17} color={colors.primaryDark} />
                 </View>
                 <Text className="text-ink font-medium">Total Amount</Text>
@@ -216,7 +216,7 @@ export default function BookingCheckoutScreen() {
 
         {/* Payment Method */}
         <View
-          className="border border-border rounded-2xl bg-white px-4 py-4 flex-row items-center"
+          className="border border-border rounded-2xl bg-surface px-4 py-4 flex-row items-center"
           style={{ gap: 12, ...cardShadow }}
         >
           <View className="w-11 h-11 rounded-full bg-primary-light items-center justify-center">
@@ -237,14 +237,14 @@ export default function BookingCheckoutScreen() {
         </View>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-4 pb-8 pt-3">
+      <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border px-4 pb-8 pt-3">
         <Pressable onPress={handleConfirm} disabled={createBooking.isPending} style={primaryButtonShadow}>
           <GradientFill className="rounded-2xl py-4 flex-row items-center justify-center" style={{ gap: 8 }}>
             {createBooking.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
               <>
-                <Text className="text-white font-bold text-base">
+                <Text className="text-jazba-white font-bold text-base">
                   Confirm Booking · Rs {totalAmount.toLocaleString()}
                 </Text>
                 <Ionicons name="arrow-forward" size={18} color="white" />

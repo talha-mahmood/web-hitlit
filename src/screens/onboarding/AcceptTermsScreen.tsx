@@ -79,7 +79,7 @@ export default function AcceptTermsScreen() {
         <View
           className="flex-1 rounded-3xl px-6 py-6"
           style={{
-            backgroundColor: "white",
+            backgroundColor: "#0A1723",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 10 },
             shadowOpacity: 0.18,
@@ -137,7 +137,7 @@ export default function AcceptTermsScreen() {
                 gap: 12,
                 padding: 14,
                 borderRadius: 16,
-                backgroundColor: agreed ? colors.primaryLight : "#F9FAFB",
+                backgroundColor: agreed ? colors.primaryLight : "#0D1C29",
                 borderWidth: 1.5,
                 borderColor: agreed ? colors.primary : colors.border,
               }}
@@ -150,7 +150,7 @@ export default function AcceptTermsScreen() {
                   borderRadius: 7,
                   borderWidth: 1.5,
                   borderColor: agreed ? colors.primary : colors.border,
-                  backgroundColor: agreed ? colors.primary : "white",
+                  backgroundColor: agreed ? colors.primary : "#0A1723",
                 }}
               >
                 {agreed && <Ionicons name="checkmark" size={15} color="white" />}
@@ -178,7 +178,7 @@ export default function AcceptTermsScreen() {
               {isSaving ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-semibold text-base">Agree &amp; Continue</Text>
+                <Text className="text-jazba-white font-semibold text-base">Agree &amp; Continue</Text>
               )}
             </GradientFill>
           </Pressable>

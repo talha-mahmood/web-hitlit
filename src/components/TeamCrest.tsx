@@ -23,7 +23,7 @@ export default function TeamCrest({
 }) {
   return (
     <View
-      className="items-center justify-center rounded-full bg-white"
+      className="items-center justify-center rounded-full bg-surface"
       style={{ width: size, height: size, ...cardShadow }}
     >
       <Svg width={size * 0.66} height={size * 0.74} viewBox="0 0 40 46">

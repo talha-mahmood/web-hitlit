@@ -42,9 +42,9 @@ export default function GradientActionButton({
         </View>
         <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
         <View style={{ flex: 1 }}>
-          <Text className="text-white font-bold text-base" numberOfLines={1}>{label}</Text>
+          <Text className="text-jazba-white font-bold text-base" numberOfLines={1}>{label}</Text>
           {sublabel && (
-            <Text className="text-white text-xs mt-0.5" style={{ opacity: 0.85 }} numberOfLines={1}>
+            <Text className="text-jazba-white text-xs mt-0.5" style={{ opacity: 0.85 }} numberOfLines={1}>
               {sublabel}
             </Text>
           )}

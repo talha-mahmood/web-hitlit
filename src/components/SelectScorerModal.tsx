@@ -33,7 +33,7 @@ export default function SelectScorerModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl"
+          className="bg-surface rounded-t-3xl"
           style={{ paddingBottom: 20 + insets.bottom, maxHeight: "75%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
@@ -52,7 +52,7 @@ export default function SelectScorerModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -79,7 +79,7 @@ export default function SelectScorerModal({
                       gap: 10,
                       borderWidth: 1.5,
                       borderColor: isCurrent ? colors.primary : colors.border,
-                      backgroundColor: isCurrent ? colors.primaryLight : "white",
+                      backgroundColor: isCurrent ? colors.primaryLight : "#0A1723",
                     }}
                   >
                     {isCurrent ? (
@@ -91,7 +91,7 @@ export default function SelectScorerModal({
                     ) : (
                       <View
                         className="items-center justify-center rounded-full"
-                        style={{ width: 36, height: 36, backgroundColor: "#F3F4F6" }}
+                        style={{ width: 36, height: 36, backgroundColor: "#142533" }}
                       >
                         <Text className="font-bold text-sm" style={{ color: colors.muted }}>
                           {member.name.charAt(0).toUpperCase()}

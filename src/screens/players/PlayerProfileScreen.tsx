@@ -137,11 +137,11 @@ export default function PlayerProfileScreen() {
   const tier = getRatingTierInfo(rating);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero */}
       <View
         style={{
-          backgroundColor: "#E3F6EA",
+          backgroundColor: "#103A2A",
           paddingTop: insets.top + 10,
           paddingHorizontal: 14,
           paddingBottom: 16,
@@ -166,13 +166,13 @@ export default function PlayerProfileScreen() {
                 className="items-center justify-center"
                 style={{ width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: "white" }}
               >
-                <Text className="text-2xl font-bold text-white">
+                <Text className="text-2xl font-bold text-jazba-white">
                   {(player?.fullName ?? "?").charAt(0).toUpperCase()}
                 </Text>
               </GradientFill>
             )}
             <View
-              className="absolute items-center justify-center bg-white rounded-full"
+              className="absolute items-center justify-center bg-surface rounded-full"
               style={{ width: 24, height: 24, bottom: -2, right: -2, borderWidth: 2, borderColor: "white", ...cardShadow }}
             >
               <MaterialCommunityIcons name="crown" size={13} color={tier.color} />
@@ -198,7 +198,7 @@ export default function PlayerProfileScreen() {
               <View className="flex-row items-center" style={{ gap: 8 }}>
                 <Pressable
                   onPress={handleOpenProfileMenu}
-                  className="items-center justify-center rounded-full bg-white"
+                  className="items-center justify-center rounded-full bg-surface"
                   style={{ width: 32, height: 32, ...cardShadow }}
                   hitSlop={8}
                 >
@@ -211,7 +211,7 @@ export default function PlayerProfileScreen() {
                   {followState?.isFollowing ? (
                     <View
                       className="flex-row items-center rounded-full px-4 py-2"
-                      style={{ gap: 6, backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                      style={{ gap: 6, backgroundColor: "#0A1723", borderWidth: 1, borderColor: colors.border }}
                     >
                       {toggleFollow.isPending ? (
                         <ActivityIndicator size="small" color={colors.primary} />
@@ -226,7 +226,7 @@ export default function PlayerProfileScreen() {
                     </View>
                   ) : (
                     <View
-                      className="flex-row items-center rounded-full px-4 py-2 bg-white"
+                      className="flex-row items-center rounded-full px-4 py-2 bg-surface"
                       style={{ gap: 6 }}
                     >
                       {toggleFollow.isPending ? (
@@ -249,7 +249,7 @@ export default function PlayerProfileScreen() {
                 Players list's filter icon opens. */}
             <Pressable onPress={() => setSportSheetOpen(true)}>
               <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
-                <Text className="text-xs font-bold text-white" numberOfLines={1}>
+                <Text className="text-xs font-bold text-jazba-white" numberOfLines={1}>
                   {filterSportName ?? "All Sports"}
                 </Text>
                 <Ionicons name="chevron-down" size={13} color="white" />
@@ -299,7 +299,7 @@ export default function PlayerProfileScreen() {
                 activeTab === key ? (
                   <Pressable key={key} onPress={() => setActiveTab(key)}>
                     <GradientFill className="rounded-full px-4 py-2">
-                      <Text className="text-xs font-bold text-white">{label}</Text>
+                      <Text className="text-xs font-bold text-jazba-white">{label}</Text>
                     </GradientFill>
                   </Pressable>
                 ) : (
@@ -307,9 +307,9 @@ export default function PlayerProfileScreen() {
                     key={key}
                     onPress={() => setActiveTab(key)}
                     className="rounded-full px-4 py-2"
-                    style={{ backgroundColor: "#E5E7EB" }}
+                    style={{ backgroundColor: "#1C2D3A" }}
                   >
-                    <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+                    <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
                       {label}
                     </Text>
                   </Pressable>

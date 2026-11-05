@@ -38,7 +38,7 @@ function StatCard({
   iconColor: string;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4" style={{ width: "48%", ...CARD_BORDER }}>
+    <View className="bg-surface rounded-2xl p-4" style={{ width: "48%", ...CARD_BORDER }}>
       <View
         className="items-center justify-center rounded-full mb-3"
         style={{ width: 36, height: 36, backgroundColor: iconBg }}
@@ -173,10 +173,10 @@ export default function AdminAnalyticsScreen() {
               style={{
                 borderWidth: 1.5,
                 borderColor: !selectedSport ? colors.primary : colors.border,
-                backgroundColor: !selectedSport ? colors.primary : "white",
+                backgroundColor: !selectedSport ? colors.primary : "#0A1723",
               }}
             >
-              <Text className={`text-sm font-medium ${!selectedSport ? "text-white" : "text-ink"}`}>
+              <Text className={`text-sm font-medium ${!selectedSport ? "text-jazba-white" : "text-ink"}`}>
                 All Sports
               </Text>
             </Pressable>
@@ -190,10 +190,10 @@ export default function AdminAnalyticsScreen() {
                   style={{
                     borderWidth: 1.5,
                     borderColor: selected ? colors.primary : colors.border,
-                    backgroundColor: selected ? colors.primary : "white",
+                    backgroundColor: selected ? colors.primary : "#0A1723",
                   }}
                 >
-                  <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{sport}</Text>
+                  <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>{sport}</Text>
                 </Pressable>
               );
             })}
@@ -205,7 +205,7 @@ export default function AdminAnalyticsScreen() {
             <Pressable
               onPress={() => setSelectedCourtId(null)}
               className="px-2.5 py-1.5 rounded-lg"
-              style={{ backgroundColor: !selectedCourtId ? colors.primaryLight : "#F3F4F6" }}
+              style={{ backgroundColor: !selectedCourtId ? colors.primaryLight : "#142533" }}
             >
               <Text className="text-xs font-medium" style={{ color: !selectedCourtId ? colors.primaryDark : colors.muted }}>
                 All {selectedSport} Courts
@@ -218,7 +218,7 @@ export default function AdminAnalyticsScreen() {
                   key={court.id}
                   onPress={() => setSelectedCourtId(court.id)}
                   className="px-2.5 py-1.5 rounded-lg"
-                  style={{ backgroundColor: selected ? colors.primaryLight : "#F3F4F6" }}
+                  style={{ backgroundColor: selected ? colors.primaryLight : "#142533" }}
                 >
                   <Text className="text-xs font-medium" style={{ color: selected ? colors.primaryDark : colors.muted }}>
                     {court.name}
@@ -265,7 +265,7 @@ export default function AdminAnalyticsScreen() {
             />
             <StatCard
               icon="close-circle"
-              iconBg="#FEE2E2"
+              iconBg="#351419"
               iconColor="#DC2626"
               label="Cancellation Rate"
               value={isFiltered ? "—" : `${analytics.cancellationRate}%`}
@@ -281,7 +281,7 @@ export default function AdminAnalyticsScreen() {
                 />
                 <StatCard
                   icon="grid"
-                  iconBg="#DCEFE4"
+                  iconBg="#103A2A"
                   iconColor={colors.primaryDark}
                   label="Most Popular Court"
                   value={analytics.mostPopularCourt ?? "—"}
@@ -290,7 +290,7 @@ export default function AdminAnalyticsScreen() {
             )}
             <StatCard
               icon="time"
-              iconBg="#FEF3C7"
+              iconBg="#352A13"
               iconColor="#D97706"
               label="Peak Hours"
               value={analytics.peakHourLabel ?? "—"}
@@ -306,7 +306,7 @@ export default function AdminAnalyticsScreen() {
         )}
 
         {sportBreakdown.length > 0 && (
-          <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-5 mb-4" style={cardShadow}>
             <Text className="text-ink font-bold text-base mb-1">Court Performance by Sport</Text>
             <Text className="text-muted text-xs mb-3">How each sport contributes to this venue's business.</Text>
             {sportBreakdown.map((s) => (
@@ -326,7 +326,7 @@ export default function AdminAnalyticsScreen() {
         )}
 
         {revenueTrend.total > 0 && (
-          <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-5 mb-4" style={cardShadow}>
             <Text className="text-ink font-bold text-base mb-1">
               Revenue Trend
               {selectedCourtName ? ` · ${selectedCourtName}` : selectedSport ? ` · ${selectedSport}` : ""}
@@ -339,7 +339,7 @@ export default function AdminAnalyticsScreen() {
                   key={scale}
                   onPress={() => setRevenueScale(scale)}
                   className="flex-1 items-center py-1.5 rounded-lg"
-                  style={{ backgroundColor: revenueScale === scale ? "white" : "transparent" }}
+                  style={{ backgroundColor: revenueScale === scale ? "#0A1723" : "transparent" }}
                 >
                   <Text
                     className="text-xs font-semibold capitalize"

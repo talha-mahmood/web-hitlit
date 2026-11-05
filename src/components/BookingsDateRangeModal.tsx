@@ -123,20 +123,20 @@ export default function BookingsDateRangeModal({
             <View className="flex-row items-center" style={{ gap: 18 }}>
               {onClear && start && (
                 <Pressable onPress={onClear} hitSlop={10}>
-                  <Text className="text-white font-semibold text-sm" style={{ opacity: 0.85 }}>
+                  <Text className="text-jazba-white font-semibold text-sm" style={{ opacity: 0.85 }}>
                     Clear
                   </Text>
                 </Pressable>
               )}
               <Pressable onPress={handleSave} hitSlop={10}>
-                <Text className="text-white font-bold text-sm">SAVE</Text>
+                <Text className="text-jazba-white font-bold text-sm">SAVE</Text>
               </Pressable>
             </View>
           </View>
-          <Text className="text-white/80 text-xs font-semibold" style={{ letterSpacing: 1 }}>
+          <Text className="text-jazba-white/80 text-xs font-semibold" style={{ letterSpacing: 1 }}>
             SELECTED {start && start !== (end ?? start) ? "RANGE" : "DAY"}
           </Text>
-          <Text className="text-white font-bold text-3xl mt-1">{rangeLabel}</Text>
+          <Text className="text-jazba-white font-bold text-3xl mt-1">{rangeLabel}</Text>
         </GradientFill>
 
         <Calendar

@@ -28,7 +28,7 @@ export default function OutlineActionButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className="flex-row items-center rounded-2xl py-3.5 px-4 bg-white"
+      className="flex-row items-center rounded-2xl py-3.5 px-4 bg-surface"
       style={[{ borderWidth: 1.5, borderColor: tint }, style]}
     >
       <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: tintLight }}>

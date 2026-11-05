@@ -110,7 +110,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
@@ -122,7 +122,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
             {updateSquad.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-semibold text-sm">Save</Text>
+              <Text className="text-jazba-white font-semibold text-sm">Save</Text>
             )}
           </GradientFill>
         </Pressable>
@@ -211,7 +211,7 @@ export default function EditSquadScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
+      <View className="flex-1 bg-app items-center justify-center">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -219,7 +219,7 @@ export default function EditSquadScreen() {
 
   if (error || !squad) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
+      <View className="flex-1 bg-app items-center justify-center px-6">
         <Text className="text-ink font-semibold text-base mb-2">Group not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
@@ -234,7 +234,7 @@ export default function EditSquadScreen() {
 
   if (squad.squad_owner_id !== userId && !isHost) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
           <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />

@@ -205,7 +205,7 @@ function PlayerAvatar({
       </Pressable>
       {isCreator && (
         <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
-          <Text className="text-white text-xs font-medium">Host</Text>
+          <Text className="text-jazba-white text-xs font-medium">Host</Text>
         </GradientFill>
       )}
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
@@ -258,7 +258,7 @@ function PendingRequestRow({ name, avatar, skill, location, onApprove, onReject,
         </Pressable>
         <Pressable onPress={onApprove} disabled={disabled || approveDisabled}>
           <GradientFill className="rounded-lg px-3 py-1.5">
-            <Text className="text-white text-xs font-semibold">Approve</Text>
+            <Text className="text-jazba-white text-xs font-semibold">Approve</Text>
           </GradientFill>
         </Pressable>
       </View>
@@ -315,7 +315,7 @@ export default function GameDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white px-4 pt-4">
+      <View className="flex-1 bg-app px-4 pt-4">
         <SkeletonDetailHeader />
       </View>
     );
@@ -323,7 +323,7 @@ export default function GameDetailScreen() {
 
   if (error || !game) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
+      <View className="flex-1 bg-app items-center justify-center px-6">
         <Text className="text-ink font-semibold text-base mb-2">Game not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
@@ -553,12 +553,12 @@ export default function GameDetailScreen() {
   const sportIconInfo = game.sports?.name ? getSportIcon(game.sports.name) : null;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero header — dark gradient with a decorative ball + sport-icon
           watermark, and a wave divider fading into the page background. */}
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#07301D", "#0E5C34", "#1D9254"]}
+          colors={["#07301D", "#0F9F58", "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
@@ -581,7 +581,7 @@ export default function GameDetailScreen() {
             >
               <Ionicons name="arrow-back" size={20} color="white" />
             </Pressable>
-            <Text className="text-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
+            <Text className="text-jazba-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
               {game.title}
             </Text>
             {(isCreator || hasJoined || isApprovedTournamentParticipant) && (
@@ -598,7 +598,7 @@ export default function GameDetailScreen() {
                 style={{
                   width: 42,
                   height: 42,
-                  backgroundColor: "white",
+                  backgroundColor: "#0A1723",
                   shadowColor: "#0F172A",
                   shadowOffset: { width: 0, height: 3 },
                   shadowOpacity: 0.12,
@@ -614,7 +614,7 @@ export default function GameDetailScreen() {
           <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
             {sportIconInfo && game.sports?.name && (
               <View
-                className="flex-row items-center bg-white"
+                className="flex-row items-center bg-surface"
                 style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
               >
                 <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
@@ -627,7 +627,7 @@ export default function GameDetailScreen() {
                 style={{ backgroundColor: "rgba(0,0,0,0.22)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
               >
                 <Ionicons name="trophy" size={12} color="white" />
-                <Text className="text-white font-semibold" style={{ fontSize: 12 }}>Tournament</Text>
+                <Text className="text-jazba-white font-semibold" style={{ fontSize: 12 }}>Tournament</Text>
               </View>
             )}
             {isCreator && !isTeamBased && !isCancelled && !hasEnded && (
@@ -649,17 +649,17 @@ export default function GameDetailScreen() {
               </Pressable>
             )}
             {isCancelled && (
-              <View className="bg-white px-2 py-1 rounded-lg">
+              <View className="bg-surface px-2 py-1 rounded-lg">
                 <Text className="text-red-600 text-xs font-semibold">Cancelled</Text>
               </View>
             )}
             {!isCancelled && hasEnded && (
-              <View className="bg-white px-2 py-1 rounded-lg">
+              <View className="bg-surface px-2 py-1 rounded-lg">
                 <Text className="text-muted text-xs font-semibold">Ended</Text>
               </View>
             )}
             {!isCancelled && !hasEnded && isFull && (
-              <View className="bg-white px-2 py-1 rounded-lg">
+              <View className="bg-surface px-2 py-1 rounded-lg">
                 <Text className="text-orange-600 text-xs font-semibold">Full</Text>
               </View>
             )}
@@ -693,7 +693,7 @@ export default function GameDetailScreen() {
               </Pressable>
               <Pressable onPress={handleAcceptInvite} disabled={declineInvite.isPending || acceptInvite.isPending} className="flex-1">
                 <GradientFill className="rounded-lg py-2.5 items-center">
-                  {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+                  {acceptInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-jazba-white font-semibold text-sm">Accept</Text>}
                 </GradientFill>
               </Pressable>
             </View>
@@ -720,7 +720,7 @@ export default function GameDetailScreen() {
               </Pressable>
               <Pressable onPress={handleAcceptTeamInvite} disabled={declineTeamInvite.isPending || acceptTeamInvite.isPending} className="flex-1">
                 <GradientFill className="rounded-lg py-2.5 items-center">
-                  {acceptTeamInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Accept</Text>}
+                  {acceptTeamInvite.isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-jazba-white font-semibold text-sm">Accept</Text>}
                 </GradientFill>
               </Pressable>
             </View>
@@ -730,7 +730,7 @@ export default function GameDetailScreen() {
         {/* Game info — card, collapsed behind a dropdown by default;
             tapping the header reveals it. */}
         <View className="px-3.5 mt-5">
-          <View className="bg-white rounded-2xl px-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl px-4" style={cardShadow}>
           <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
             <View
               className="items-center justify-center rounded-full"
@@ -763,7 +763,7 @@ export default function GameDetailScreen() {
                     <Pressable
                       onPress={handleCopyGameCode}
                       hitSlop={8}
-                      className="flex-row items-center px-3 py-1.5 rounded-lg bg-white"
+                      className="flex-row items-center px-3 py-1.5 rounded-lg bg-surface"
                       style={{ gap: 4, borderWidth: 1, borderColor: colors.border }}
                     >
                       <Ionicons name={codeCopied ? "checkmark" : "copy-outline"} size={14} color={codeCopied ? colors.primary : colors.muted} />
@@ -818,7 +818,7 @@ export default function GameDetailScreen() {
         {/* Description */}
         {!!game.description && (
           <View className="px-3.5 mt-6">
-            <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
+            <View className="flex-row items-center bg-surface rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
                 style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
@@ -944,7 +944,7 @@ export default function GameDetailScreen() {
                       </View>
                     ) : (
                       <GradientFill className="rounded-xl py-4 items-center">
-                        <Text className="font-semibold text-base text-white">Book Venue</Text>
+                        <Text className="font-semibold text-base text-jazba-white">Book Venue</Text>
                       </GradientFill>
                     )}
                   </Pressable>
@@ -965,7 +965,7 @@ export default function GameDetailScreen() {
           games created with the team flow), non-host actions (create/join a
           team) live inline in TournamentTeamsSection instead of here. */}
       {showsFixedBottomBar && (
-        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
+        <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border px-3.5 pt-3 pb-3">
           {isBusy ? (
             <ActivityIndicator color={colors.primary} />
           ) : hasJoined ? (
@@ -988,7 +988,7 @@ export default function GameDetailScreen() {
           ) : (
             <Pressable onPress={handleJoin} style={primaryButtonShadow}>
               <GradientFill className="rounded-xl py-4 items-center">
-                <Text className="text-white font-semibold text-base">{game.entry_fee > 0 ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}` : "Request to Join"}</Text>
+                <Text className="text-jazba-white font-semibold text-base">{game.entry_fee > 0 ? `Request to Join · Rs ${game.entry_fee.toLocaleString()}` : "Request to Join"}</Text>
               </GradientFill>
             </Pressable>
           )}

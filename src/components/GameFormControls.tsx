@@ -34,7 +34,7 @@ export function SectionLabel({
           style={{ marginRight: 6 }}
         />
       )}
-      <Text className={`font-semibold text-sm ${variant === "onGreen" ? "text-white" : "text-ink"}`}>
+      <Text className={`font-semibold text-sm ${variant === "onGreen" ? "text-jazba-white" : "text-ink"}`}>
         {title}
       </Text>
       {required && (
@@ -82,7 +82,7 @@ function Pill<T extends string>({
   const label = (
     <Text
       className={`text-sm font-medium ${
-        onGreen ? (selected ? "text-primary" : "text-white") : selected ? "text-white" : "text-ink"
+        onGreen ? (selected ? "text-primary" : "text-jazba-white") : selected ? "text-jazba-white" : "text-ink"
       }`}
     >
       {option.label}
@@ -101,7 +101,7 @@ function Pill<T extends string>({
         ) : (
           <View
             className="px-4 py-2.5 rounded-2xl"
-            style={{ backgroundColor: onGreen ? (selected ? "white" : "rgba(255,255,255,0.14)") : "white" }}
+            style={{ backgroundColor: onGreen ? (selected ? "#0A1723" : "rgba(255,255,255,0.14)") : "white" }}
           >
             {label}
           </View>

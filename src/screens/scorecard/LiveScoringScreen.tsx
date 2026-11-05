@@ -212,7 +212,7 @@ function InningsCard({
   const partnerships = computePartnerships(balls);
 
   return (
-    <View className="rounded-2xl border border-border overflow-hidden mb-4 bg-white" style={cardShadow}>
+    <View className="rounded-2xl border border-border overflow-hidden mb-4 bg-surface" style={cardShadow}>
       <View className="flex-row items-center justify-between p-4">
         <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
           <TeamCrest color={color} size={36} icon="cricket" />
@@ -441,7 +441,7 @@ function SummaryTab({
               .slice(0, 3)
           : [];
         return (
-          <View key={si.inn.id} className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+          <View key={si.inn.id} className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
             <View className="flex-row items-center justify-between mb-3">
               <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
                 <TeamCrest color={color} size={32} icon="cricket" />
@@ -470,7 +470,7 @@ function SummaryTab({
       })}
 
       {winnerName && (
-        <View className="bg-white rounded-2xl p-4 mb-3 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+        <View className="bg-surface rounded-2xl p-4 mb-3 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
           <TeamCrest color={winnerColor} size={44} icon="cricket" />
           <View className="flex-1">
             <Text className="text-muted text-xs">Winner</Text>
@@ -482,7 +482,7 @@ function SummaryTab({
       )}
 
       {potm && (
-        <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+        <View className="bg-surface rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
           <View
             className="items-center justify-center rounded-full"
             style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
@@ -652,7 +652,7 @@ function BallsTab({
                   style={{
                     width: ball.isWicket ? 30 : 26,
                     height: ball.isWicket ? 30 : 26,
-                    backgroundColor: ball.isWicket ? colors.danger : "#E5E7EB",
+                    backgroundColor: ball.isWicket ? colors.danger : "#1C2D3A",
                   }}
                 >
                   <Text className="font-bold text-center" style={{ color: ball.isWicket ? "white" : colors.ink, fontSize: 11 }}>
@@ -691,7 +691,7 @@ function InfoTab({ match }: { match: CricketMatchDetail }) {
   ];
   return (
     <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <View className="bg-white rounded-2xl p-4" style={cardShadow}>
+      <View className="bg-surface rounded-2xl p-4" style={cardShadow}>
         {rows.map((r, i) => (
           <View
             key={r.label}
@@ -776,7 +776,7 @@ function ConfirmDialog({
   return (
     <Modal transparent visible animationType="fade" onRequestClose={onCancel}>
       <View className="flex-1 bg-black/40 items-center justify-center px-10">
-        <View className="bg-white rounded-2xl w-full overflow-hidden" style={{ maxWidth: 340 }}>
+        <View className="bg-surface rounded-2xl w-full overflow-hidden" style={{ maxWidth: 340 }}>
           <View className="px-5 pt-5 pb-5">
             <Text className="text-ink font-bold text-lg mb-2">{title}</Text>
             <Text className="text-ink text-sm" style={{ lineHeight: 20 }}>{message}</Text>
@@ -856,7 +856,7 @@ function SelectPlayerPanel({
 
   return (
     <Modal visible animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         <GradientFill
           className="flex-row items-center px-4 pb-3"
           style={{ paddingTop: 54, gap: 12 }}
@@ -864,7 +864,7 @@ function SelectPlayerPanel({
           <Pressable onPress={onClose} hitSlop={8}>
             <Ionicons name="close" size={24} color="white" />
           </Pressable>
-          <Text className="text-white font-bold text-lg flex-1">{title}</Text>
+          <Text className="text-jazba-white font-bold text-lg flex-1">{title}</Text>
         </GradientFill>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
@@ -882,7 +882,7 @@ function SelectPlayerPanel({
                 disabled={disabled}
                 className="flex-row items-center rounded-2xl mb-2.5 px-3 py-2.5"
                 style={{
-                  backgroundColor: isSelected ? colors.primaryLight : "white",
+                  backgroundColor: isSelected ? colors.primaryLight : "#0A1723",
                   borderWidth: 1,
                   borderColor: isSelected ? colors.primary : colors.border,
                   opacity: disabled ? 0.5 : 1,
@@ -890,7 +890,7 @@ function SelectPlayerPanel({
               >
                 <View
                   className="items-center justify-center rounded-full mr-3"
-                  style={{ width: 26, height: 26, backgroundColor: "#F3F4F6" }}
+                  style={{ width: 26, height: 26, backgroundColor: "#142533" }}
                 >
                   <Text className="text-ink font-bold" style={{ fontSize: 12 }}>{i + 1}</Text>
                 </View>
@@ -908,7 +908,7 @@ function SelectPlayerPanel({
                         if (isBenched) onToggleBench(name);
                       }}
                       className="rounded-lg px-2.5 py-1.5"
-                      style={{ backgroundColor: !isBenched ? colors.primaryLight : "#F3F4F6" }}
+                      style={{ backgroundColor: !isBenched ? colors.primaryLight : "#142533" }}
                     >
                       <Text className="text-xs font-bold" style={{ color: !isBenched ? colors.primaryDark : colors.muted }}>
                         Playing
@@ -920,7 +920,7 @@ function SelectPlayerPanel({
                         if (!isBenched) onToggleBench(name);
                       }}
                       className="rounded-lg px-2.5 py-1.5"
-                      style={{ backgroundColor: isBenched ? "#FEE2E2" : "#F3F4F6" }}
+                      style={{ backgroundColor: isBenched ? "#351419" : "#142533" }}
                     >
                       <Text className="text-xs font-bold" style={{ color: isBenched ? "#DC2626" : colors.muted }}>
                         Bench
@@ -968,7 +968,7 @@ function SelectPlayerPanel({
           style={{ paddingBottom: 28 }}
         >
           <GradientFill style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-          <Text className="text-white font-bold tracking-wide">ADD / CREATE PLAYER</Text>
+          <Text className="text-jazba-white font-bold tracking-wide">ADD / CREATE PLAYER</Text>
         </Pressable>
       </View>
     </Modal>
@@ -988,7 +988,7 @@ function ToggleOption({ label, selected, onPress }: { label: string; selected: b
       style={{
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? colors.primary : "white",
+        backgroundColor: selected ? colors.primary : "#0A1723",
       }}
     >
       <Text className="font-bold text-sm" style={{ color: selected ? "white" : colors.ink }}>
@@ -1050,12 +1050,12 @@ function RunOutPanel({
 
   return (
     <Modal visible animationType="slide" onRequestClose={onCancel}>
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-app">
         <GradientFill className="flex-row items-center px-4 pb-3" style={{ paddingTop: 54, gap: 12 }}>
           <Pressable onPress={onCancel} hitSlop={8}>
             <Ionicons name="close" size={24} color="white" />
           </Pressable>
-          <Text className="text-white font-bold text-lg flex-1">Run Out</Text>
+          <Text className="text-jazba-white font-bold text-lg flex-1">Run Out</Text>
         </GradientFill>
 
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
@@ -1074,7 +1074,7 @@ function RunOutPanel({
                 style={{
                   borderWidth: 1.5,
                   borderColor: dismissedEnd === end ? colors.primary : colors.border,
-                  backgroundColor: dismissedEnd === end ? colors.primaryLight : "white",
+                  backgroundColor: dismissedEnd === end ? colors.primaryLight : "#0A1723",
                 }}
               >
                 <PlayerAvatar name={name} />
@@ -1099,7 +1099,7 @@ function RunOutPanel({
                 ) : (
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 38, height: 38, backgroundColor: "#F3F4F6" }}
+                    style={{ width: 38, height: 38, backgroundColor: "#142533" }}
                   >
                     <Ionicons name="add" size={20} color={colors.muted} />
                   </View>
@@ -1123,7 +1123,7 @@ function RunOutPanel({
                   height: 48,
                   borderWidth: 1.5,
                   borderColor: runs === n ? colors.primary : colors.border,
-                  backgroundColor: runs === n ? colors.primary : "white",
+                  backgroundColor: runs === n ? colors.primary : "#0A1723",
                 }}
               >
                 <Text className="font-bold" style={{ color: runs === n ? "white" : colors.ink }}>
@@ -1170,7 +1170,7 @@ function RunOutPanel({
             style={{ opacity: canSubmit && !submitting ? 1 : 0.5 }}
           >
             <GradientFill className="rounded-xl py-3.5 items-center">
-              {submitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold tracking-wide">DONE</Text>}
+              {submitting ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold tracking-wide">DONE</Text>}
             </GradientFill>
           </Pressable>
         </View>
@@ -1562,7 +1562,7 @@ export default function LiveScoringScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -2086,12 +2086,12 @@ export default function LiveScoringScreen() {
 
   const cancelRow = (
     <Pressable onPress={closePanel} className="items-center py-2 mt-1">
-      <Text className="text-white text-center text-sm" style={{ opacity: 0.85 }}>Cancel</Text>
+      <Text className="text-jazba-white text-center text-sm" style={{ opacity: 0.85 }}>Cancel</Text>
     </Pressable>
   );
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       <GradientFill
         className="overflow-hidden"
         style={{ paddingTop: insets.top + 12, paddingBottom: 4 }}
@@ -2100,19 +2100,19 @@ export default function LiveScoringScreen() {
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
-          <Text className="text-white font-bold text-lg flex-1" numberOfLines={1}>
+          <Text className="text-jazba-white font-bold text-lg flex-1" numberOfLines={1}>
             Match Centre
           </Text>
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <ScoringCodeBadge code={match.scoring_code} variant="dark" />
             {match.status === "IN_PROGRESS" ? (
               <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
-                <Text className="text-white text-[10px] font-bold">LIVE</Text>
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F5F7FA" }} />
+                <Text className="text-jazba-white text-[10px] font-bold">LIVE</Text>
               </View>
             ) : isMatchCompleted ? (
-              <View className="flex-row items-center bg-white/20 rounded-full px-2 py-0.5">
-                <Text className="text-white text-[10px] font-bold">COMPLETED</Text>
+              <View className="flex-row items-center bg-surface/20 rounded-full px-2 py-0.5">
+                <Text className="text-jazba-white text-[10px] font-bold">COMPLETED</Text>
               </View>
             ) : null}
           </View>
@@ -2129,7 +2129,7 @@ export default function LiveScoringScreen() {
                 {t.label}
               </Text>
               {matchCentreTab === t.key && (
-                <View style={{ height: 2.5, width: "100%", backgroundColor: "white", borderRadius: 2, marginTop: 6 }} />
+                <View style={{ height: 2.5, width: "100%", backgroundColor: "#F5F7FA", borderRadius: 2, marginTop: 6 }} />
               )}
             </Pressable>
           ))}
@@ -2142,7 +2142,7 @@ export default function LiveScoringScreen() {
             {(!isOnline || pendingBallCount > 0) && (
               <View
                 className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
-                style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+                style={{ backgroundColor: isOnline ? colors.primaryLight : "#352A13", gap: 8 }}
               >
                 <Ionicons
                   name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
@@ -2221,7 +2221,7 @@ export default function LiveScoringScreen() {
                       style={primaryButtonShadow}
                     >
                       <GradientFill className="rounded-xl px-5 py-3 mt-4">
-                        <Text className="text-white font-semibold">Start 2nd Innings</Text>
+                        <Text className="text-jazba-white font-semibold">Start 2nd Innings</Text>
                       </GradientFill>
                     </Pressable>
                   )
@@ -2233,7 +2233,7 @@ export default function LiveScoringScreen() {
                       style={primaryButtonShadow}
                     >
                       <GradientFill className="rounded-xl px-5 py-3 mt-4">
-                        <Text className="text-white font-semibold">Finish Match</Text>
+                        <Text className="text-jazba-white font-semibold">Finish Match</Text>
                       </GradientFill>
                     </Pressable>
                   )
@@ -2288,7 +2288,7 @@ export default function LiveScoringScreen() {
                         >
                           {row.isStriker ? (
                             <GradientFill className="rounded-lg px-2.5 py-1">
-                              <Text className="text-white text-sm font-bold" numberOfLines={1}>
+                              <Text className="text-jazba-white text-sm font-bold" numberOfLines={1}>
                                 {name} *
                               </Text>
                             </GradientFill>
@@ -2388,7 +2388,7 @@ export default function LiveScoringScreen() {
                                 style={{
                                   width: size,
                                   height: size,
-                                  backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : "#E5E7EB",
+                                  backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : "#1C2D3A",
                                 }}
                               >
                                 <Text
@@ -2434,7 +2434,7 @@ export default function LiveScoringScreen() {
               {!readyToScore ? (
                 <>
                   <View className="flex-row items-center justify-between mb-4">
-                    <Text className="text-white font-bold text-lg">Select Players</Text>
+                    <Text className="text-jazba-white font-bold text-lg">Select Players</Text>
                   </View>
                   <View className="flex-row justify-center" style={{ gap: 14 }}>
                     {needsAnyBatsman && (
@@ -2443,7 +2443,7 @@ export default function LiveScoringScreen() {
                         className="rounded-2xl px-6 py-3.5"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
-                        <Text className="text-white font-bold">Select Batsman</Text>
+                        <Text className="text-jazba-white font-bold">Select Batsman</Text>
                       </Pressable>
                     )}
                     {needsAnyBowler && (
@@ -2452,7 +2452,7 @@ export default function LiveScoringScreen() {
                         className="rounded-2xl px-6 py-3.5"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
-                        <Text className="text-white font-bold">Select Bowler</Text>
+                        <Text className="text-jazba-white font-bold">Select Bowler</Text>
                       </Pressable>
                     )}
                   </View>
@@ -2462,52 +2462,52 @@ export default function LiveScoringScreen() {
                   <KeypadRow bottomBorder>
                     {RUN_OPTIONS.map((n) => (
                       <KeypadCell key={n} onPress={() => handleRuns(n)}>
-                        <Text className="text-white font-bold text-lg">{n}</Text>
+                        <Text className="text-jazba-white font-bold text-lg">{n}</Text>
                       </KeypadCell>
                     ))}
                   </KeypadRow>
                   <KeypadRow bottomBorder>
                     <KeypadCell onPress={() => setPanel("LEGBYE")}>
-                      <Text className="text-white font-bold text-sm">LB</Text>
+                      <Text className="text-jazba-white font-bold text-sm">LB</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("BYE")}>
-                      <Text className="text-white font-bold text-sm">Bye</Text>
+                      <Text className="text-jazba-white font-bold text-sm">Bye</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("WIDE")}>
-                      <Text className="text-white font-bold text-sm">Wide</Text>
+                      <Text className="text-jazba-white font-bold text-sm">Wide</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("NOBALL")}>
-                      <Text className="text-white font-bold text-sm">NB</Text>
+                      <Text className="text-jazba-white font-bold text-sm">NB</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => handleRuns(DOT_BALL)}>
-                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "white" }} />
+                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#F5F7FA" }} />
                     </KeypadCell>
                   </KeypadRow>
                   <KeypadRow>
                     <KeypadCell onPress={() => setPanel("MORE_MENU")}>
-                      <Text className="text-white font-bold text-sm">More</Text>
+                      <Text className="text-jazba-white font-bold text-sm">More</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("BONUS_RUNS")}>
                       <MaterialCommunityIcons name="cricket" size={18} color="white" />
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("MORE_RUNS")}>
-                      <Text className="text-white font-bold" style={{ fontSize: 12 }}>4 5 6 7</Text>
+                      <Text className="text-jazba-white font-bold" style={{ fontSize: 12 }}>4 5 6 7</Text>
                     </KeypadCell>
                     <KeypadCell onPress={handleUndo} disabled={ballEvents.length === 0 || deleteLastBall.isPending}>
-                      <Text className="text-white font-bold text-sm">Undo</Text>
+                      <Text className="text-jazba-white font-bold text-sm">Undo</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => setPanel("WICKET")}>
-                      <Text className="text-white font-bold text-sm">Out</Text>
+                      <Text className="text-jazba-white font-bold text-sm">Out</Text>
                     </KeypadCell>
                   </KeypadRow>
                 </View>
               ) : panel === "WIDE" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Wide</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Wide</Text>
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {WIDE_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleWide(n)} className="rounded-xl px-4 py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold text-sm">{n === 0 ? "Wd" : `${n} + Wd`}</Text>
+                        <Text className="text-jazba-white font-bold text-sm">{n === 0 ? "Wd" : `${n} + Wd`}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2515,11 +2515,11 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "NOBALL" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">No Ball</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">No Ball</Text>
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {NOBALL_BAT_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleNoBall(n)} className="rounded-xl px-4 py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold text-sm">{n === 0 ? "NB" : `${n} NB`}</Text>
+                        <Text className="text-jazba-white font-bold text-sm">{n === 0 ? "NB" : `${n} NB`}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2527,11 +2527,11 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "LEGBYE" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Leg Byes</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Leg Byes</Text>
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {LEGBYE_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleByeLegBye("LEGBYE", n)} className="rounded-xl px-4 py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold text-sm">{n} LB</Text>
+                        <Text className="text-jazba-white font-bold text-sm">{n} LB</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2539,11 +2539,11 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "BYE" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Byes</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Byes</Text>
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {BYE_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleByeLegBye("BYE", n)} className="rounded-xl px-4 py-3" style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold text-sm">{n} B</Text>
+                        <Text className="text-jazba-white font-bold text-sm">{n} B</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2552,13 +2552,13 @@ export default function LiveScoringScreen() {
               ) : panel === "MORE_RUNS" ? (
                 <>
                   <View className="flex-row items-center mb-4" style={{ gap: 6 }}>
-                    <Text className="text-white font-bold text-lg">More Runs</Text>
+                    <Text className="text-jazba-white font-bold text-lg">More Runs</Text>
                     <Ionicons name="information-circle-outline" size={16} color="rgba(255,255,255,0.7)" />
                   </View>
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {MORE_RUNS_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleMoreRuns(n)} className="rounded-xl items-center justify-center" style={{ width: 56, height: 48, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold">{n}</Text>
+                        <Text className="text-jazba-white font-bold">{n}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2568,7 +2568,7 @@ export default function LiveScoringScreen() {
                 <>
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center" style={{ gap: 6 }}>
-                      <Text className="text-white font-bold text-lg">Bonus Runs</Text>
+                      <Text className="text-jazba-white font-bold text-lg">Bonus Runs</Text>
                       <Ionicons name="information-circle-outline" size={16} color="rgba(255,255,255,0.7)" />
                     </View>
                     <View className="flex-row" style={{ gap: 8 }}>
@@ -2591,7 +2591,7 @@ export default function LiveScoringScreen() {
                   <View className="flex-row flex-wrap justify-center" style={{ gap: 10 }}>
                     {BONUS_RUNS_OPTIONS.map((n) => (
                       <Pressable key={n} onPress={() => handleBonusRuns(n)} className="rounded-xl items-center justify-center" style={{ width: 56, height: 48, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
-                        <Text className="text-white font-bold">{n}</Text>
+                        <Text className="text-jazba-white font-bold">{n}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2599,7 +2599,7 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "MORE_MENU" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">More</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">More</Text>
                   <View className="flex-row flex-wrap" style={{ gap: 10 }}>
                     {([
                       { label: "Abandon", onPress: () => setDialog("ABANDON") },
@@ -2621,7 +2621,7 @@ export default function LiveScoringScreen() {
                         className="rounded-xl px-4 py-3"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)", opacity: item.disabled ? 0.4 : 1 }}
                       >
-                        <Text className="text-white font-semibold text-sm">{item.label}</Text>
+                        <Text className="text-jazba-white font-semibold text-sm">{item.label}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2629,18 +2629,18 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "RETIRED_HURT" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Retired Hurt</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Retired Hurt</Text>
                   <View className="flex-row justify-center" style={{ gap: 28 }}>
                     {effectiveStriker && (
                       <Pressable onPress={() => handleRetiredHurt("striker")} className="items-center" style={{ gap: 6 }}>
                         <PlayerAvatar name={effectiveStriker} />
-                        <Text className="text-white font-semibold text-sm">{effectiveStriker}</Text>
+                        <Text className="text-jazba-white font-semibold text-sm">{effectiveStriker}</Text>
                       </Pressable>
                     )}
                     {effectiveNonStriker && (
                       <Pressable onPress={() => handleRetiredHurt("nonStriker")} className="items-center" style={{ gap: 6 }}>
                         <PlayerAvatar name={effectiveNonStriker} />
-                        <Text className="text-white font-semibold text-sm">{effectiveNonStriker}</Text>
+                        <Text className="text-jazba-white font-semibold text-sm">{effectiveNonStriker}</Text>
                       </Pressable>
                     )}
                   </View>
@@ -2648,7 +2648,7 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "PENALTY_TEAM" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Award +{PENALTY_RUNS} Penalty runs to?</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Award +{PENALTY_RUNS} Penalty runs to?</Text>
                   <View className="flex-row justify-center" style={{ gap: 28 }}>
                     {(["A", "B"] as const).map((team) => {
                       const name = team === "A" ? match.team_a_name : match.team_b_name;
@@ -2660,7 +2660,7 @@ export default function LiveScoringScreen() {
                           >
                             <MaterialCommunityIcons name="shield-account" size={24} color="white" />
                           </View>
-                          <Text className="text-white font-semibold text-sm" numberOfLines={1}>{name}</Text>
+                          <Text className="text-jazba-white font-semibold text-sm" numberOfLines={1}>{name}</Text>
                         </Pressable>
                       );
                     })}
@@ -2669,8 +2669,8 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "CHANGE_TARGET" ? (
                 <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
-                  <Text className="text-white font-bold text-lg mb-1">Change Target</Text>
-                  <Text className="text-white text-xs mb-4" style={{ opacity: 0.8 }}>
+                  <Text className="text-jazba-white font-bold text-lg mb-1">Change Target</Text>
+                  <Text className="text-jazba-white text-xs mb-4" style={{ opacity: 0.8 }}>
                     Enter a revised overs count to compute a Duckworth-Lewis
                     estimate, or type a target directly — this app's D/L curve
                     is fitted to published reference points, not the
@@ -2678,7 +2678,7 @@ export default function LiveScoringScreen() {
                     it as an estimate.
                   </Text>
 
-                  <Text className="text-white text-xs font-semibold mb-1.5" style={{ opacity: 0.85 }}>
+                  <Text className="text-jazba-white text-xs font-semibold mb-1.5" style={{ opacity: 0.85 }}>
                     Revised overs for this innings
                   </Text>
                   <TextInput
@@ -2687,24 +2687,24 @@ export default function LiveScoringScreen() {
                     placeholder={String(match.overs_limit)}
                     placeholderTextColor="rgba(255,255,255,0.5)"
                     keyboardType="decimal-pad"
-                    className="rounded-xl px-4 py-2.5 text-white font-semibold"
+                    className="rounded-xl px-4 py-2.5 text-jazba-white font-semibold"
                     style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                   />
 
                   {dlPreview ? (
                     <View className="rounded-xl mt-3 p-3" style={{ backgroundColor: "rgba(255,255,255,0.12)" }}>
-                      <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+                      <Text className="text-jazba-white text-xs" style={{ opacity: 0.85 }}>
                         Team 1 used {dlPreview.team1ResourcesUsed.toFixed(1)}% of resources · Team 2 has{" "}
                         {dlPreview.team2ResourcesAvailable.toFixed(1)}% available
                       </Text>
-                      <Text className="text-white font-extrabold text-xl mt-1">D/L Target: {dlPreview.target}</Text>
-                      <Pressable onPress={handleApplyDLTarget} className="bg-white rounded-lg py-2 items-center mt-2">
+                      <Text className="text-jazba-white font-extrabold text-xl mt-1">D/L Target: {dlPreview.target}</Text>
+                      <Pressable onPress={handleApplyDLTarget} className="bg-surface rounded-lg py-2 items-center mt-2">
                         <Text className="font-bold text-sm" style={{ color: colors.primaryDark }}>Use This Target</Text>
                       </Pressable>
                     </View>
                   ) : null}
 
-                  <Text className="text-white text-xs font-semibold mt-4 mb-1.5" style={{ opacity: 0.85 }}>
+                  <Text className="text-jazba-white text-xs font-semibold mt-4 mb-1.5" style={{ opacity: 0.85 }}>
                     Or set the target directly
                   </Text>
                   <TextInput
@@ -2713,13 +2713,13 @@ export default function LiveScoringScreen() {
                     placeholder={target ? String(target) : "New target"}
                     placeholderTextColor="rgba(255,255,255,0.5)"
                     keyboardType="number-pad"
-                    className="rounded-xl px-4 py-3 text-white font-bold text-lg text-center"
+                    className="rounded-xl px-4 py-3 text-jazba-white font-bold text-lg text-center"
                     style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                   />
                   <Pressable
                     onPress={handleChangeTarget}
                     disabled={!changeTargetDraft || updateSettings.isPending}
-                    className="bg-white rounded-xl py-3 items-center mt-4"
+                    className="bg-surface rounded-xl py-3 items-center mt-4"
                   >
                     <Text className="font-bold" style={{ color: colors.primaryDark }}>Save Target</Text>
                   </Pressable>
@@ -2727,7 +2727,7 @@ export default function LiveScoringScreen() {
                 </ScrollView>
               ) : panel === "WICKET" && !wicketType ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">Wicket</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">Wicket</Text>
                   <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                     {WICKET_TYPES.map((w) => (
                       <Pressable
@@ -2736,7 +2736,7 @@ export default function LiveScoringScreen() {
                         className="rounded-xl px-3.5 py-2.5"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
-                        <Text className="text-white font-semibold text-sm">{w.label}</Text>
+                        <Text className="text-jazba-white font-semibold text-sm">{w.label}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -2744,37 +2744,37 @@ export default function LiveScoringScreen() {
                 </>
               ) : panel === "WICKET" && wicketType && wicketType !== "RUN_OUT" && wicketType !== "STUMPED" ? (
                 <>
-                  <Text className="text-white font-bold text-lg mb-4">{WICKET_TYPES.find((w) => w.value === wicketType)?.label}</Text>
+                  <Text className="text-jazba-white font-bold text-lg mb-4">{WICKET_TYPES.find((w) => w.value === wicketType)?.label}</Text>
                   {wicketType === "MANKAD" && (
                     <>
-                      <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Who was run out?</Text>
+                      <Text className="text-jazba-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Who was run out?</Text>
                       <View className="flex-row mb-3" style={{ gap: 8 }}>
                         <Pressable
                           onPress={() => setWicketEnd("striker")}
                           className="flex-1 items-center rounded-xl py-3"
                           style={{ backgroundColor: wicketEnd === "striker" ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                         >
-                          <Text className="text-white text-sm font-medium">{effectiveStriker}</Text>
+                          <Text className="text-jazba-white text-sm font-medium">{effectiveStriker}</Text>
                         </Pressable>
                         <Pressable
                           onPress={() => setWicketEnd("nonStriker")}
                           className="flex-1 items-center rounded-xl py-3"
                           style={{ backgroundColor: wicketEnd === "nonStriker" ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                         >
-                          <Text className="text-white text-sm font-medium">{effectiveNonStriker}</Text>
+                          <Text className="text-jazba-white text-sm font-medium">{effectiveNonStriker}</Text>
                         </Pressable>
                       </View>
                     </>
                   )}
                   {(wicketType === "CAUGHT" || wicketType === "ONE_HAND_ONE_BOUNCE") && (
                     <View className="mb-3">
-                      <Text className="text-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Fielder (optional)</Text>
+                      <Text className="text-jazba-white text-xs font-semibold mb-2" style={{ opacity: 0.85 }}>Fielder (optional)</Text>
                       <Pressable
                         onPress={() => setSelectFielderOpen(true)}
                         className="flex-row items-center justify-between rounded-xl px-4 py-2.5"
                         style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
-                        <Text className="text-white" style={{ opacity: fielderName ? 1 : 0.5 }} numberOfLines={1}>
+                        <Text className="text-jazba-white" style={{ opacity: fielderName ? 1 : 0.5 }} numberOfLines={1}>
                           {fielderName || "Select fielder"}
                         </Text>
                         <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -2790,12 +2790,12 @@ export default function LiveScoringScreen() {
                   )}
                   {wicketType === "MANKAD" ? (
                     wicketEnd && (
-                      <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
+                      <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-surface rounded-xl py-3 items-center">
                         <Text className="font-bold" style={{ color: colors.primaryDark }}>Confirm Wicket</Text>
                       </Pressable>
                     )
                   ) : (
-                    <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-white rounded-xl py-3 items-center">
+                    <Pressable onPress={handleWicket} disabled={addBall.isPending} className="bg-surface rounded-xl py-3 items-center">
                       <Text className="font-bold" style={{ color: colors.primaryDark }}>Confirm Wicket</Text>
                     </Pressable>
                   )}
@@ -2809,7 +2809,7 @@ export default function LiveScoringScreen() {
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           {/* Team crests + result, with a winner ribbon — same layout the
               old standalone FullScorecardScreen used. */}
-          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          <View className="bg-surface rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
               style={{
                 position: "absolute", top: 0, left: 0, width: 0, height: 0,
@@ -2849,7 +2849,7 @@ export default function LiveScoringScreen() {
                   </View>
                 </View>
                 <View
-                  className="items-center justify-center rounded-full bg-white"
+                  className="items-center justify-center rounded-full bg-surface"
                   style={{ position: "absolute", width: 40, height: 40, left: "50%", top: 8, marginLeft: -20, ...cardShadow }}
                 >
                   <Text className="text-ink font-extrabold" style={{ fontSize: 12 }}>VS</Text>
@@ -2871,7 +2871,7 @@ export default function LiveScoringScreen() {
                 ) : (
                   <>
                     <Ionicons name="document-text-outline" size={18} color="white" />
-                    <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                    <Text className="text-jazba-white font-bold text-sm">Generate Match Report</Text>
                   </>
                 )}
               </GradientFill>
@@ -2930,7 +2930,7 @@ export default function LiveScoringScreen() {
         <InfoTab match={match} />
       ) : matchCentreTab === "stats" ? (
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-          <View className="bg-white rounded-2xl border border-border p-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl border border-border p-4" style={cardShadow}>
             <Text className="text-ink font-bold text-base mb-3">This Innings</Text>
             {[
               { label: "Run rate", value: runRate.toFixed(2) },
@@ -2954,7 +2954,7 @@ export default function LiveScoringScreen() {
             return (
               <View style={{ gap: 12 }}>
                 {topBatter && topBatter.runs > 0 && (
-                  <View className="bg-white rounded-2xl border border-border p-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+                  <View className="bg-surface rounded-2xl border border-border p-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
                     <PlayerAvatar name={topBatter.name} />
                     <View className="flex-1">
                       <Text className="text-muted text-xs font-bold">TOP SCORER</Text>
@@ -2964,7 +2964,7 @@ export default function LiveScoringScreen() {
                   </View>
                 )}
                 {topBowler && topBowler.wickets > 0 && (
-                  <View className="bg-white rounded-2xl border border-border p-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+                  <View className="bg-surface rounded-2xl border border-border p-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
                     <PlayerAvatar name={topBowler.name} />
                     <View className="flex-1">
                       <Text className="text-muted text-xs font-bold">TOP WICKET-TAKER</Text>
@@ -3085,7 +3085,7 @@ export default function LiveScoringScreen() {
                 style={{
                   borderWidth: 1.5,
                   borderColor: stumpedWide ? colors.primary : colors.border,
-                  backgroundColor: stumpedWide ? colors.primary : "white",
+                  backgroundColor: stumpedWide ? colors.primary : "#0A1723",
                 }}
               >
                 <Text className="font-bold text-sm" style={{ color: stumpedWide ? "white" : colors.ink }}>

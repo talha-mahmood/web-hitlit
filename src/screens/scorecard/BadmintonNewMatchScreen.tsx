@@ -23,7 +23,7 @@ import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "BadmintonNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "BadmintonNewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
+const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
 
 const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
   { label: "Singles", value: "SINGLES" },
@@ -60,7 +60,7 @@ function CardSection({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
         <IconBadge icon={icon} />
         <Text className="text-ink font-bold text-base">{title}</Text>
@@ -128,13 +128,13 @@ function TeamCard({
   };
 
   return (
-    <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl overflow-hidden mb-4" style={cardShadow}>
       <View className="flex-row items-center px-4 py-3" style={{ gap: 10, backgroundColor: colors.primaryLight }}>
         <GradientFill
           className="items-center justify-center rounded-full"
           style={{ width: 30, height: 30 }}
         >
-          <Text className="text-white font-extrabold text-sm">{letter}</Text>
+          <Text className="text-jazba-white font-extrabold text-sm">{letter}</Text>
         </GradientFill>
         <Text className="text-ink font-bold text-sm flex-1">{playMode === "DOUBLES" ? `Team ${letter}` : `Player ${letter}`}</Text>
       </View>
@@ -338,7 +338,7 @@ export default function BadmintonNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="badminton"
         title="Badminton Match"
@@ -472,7 +472,7 @@ export default function BadmintonNewMatchScreen() {
               ) : (
                 <>
                   <Ionicons name="play" size={16} color="white" />
-                  <Text className="font-bold text-base text-white">Start Match</Text>
+                  <Text className="font-bold text-base text-jazba-white">Start Match</Text>
                 </>
               )}
             </GradientFill>

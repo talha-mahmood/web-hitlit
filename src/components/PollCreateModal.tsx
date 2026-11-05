@@ -64,7 +64,7 @@ export default function PollCreateModal({
             keyboard instead of leaving fields hidden behind it. */}
         <KeyboardAvoidingView behavior="padding">
           <View
-            className="bg-white rounded-t-3xl"
+            className="bg-surface rounded-t-3xl"
             style={{ paddingBottom: 20 + insets.bottom, maxHeight: MODAL_MAX_HEIGHT, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="items-center pt-2.5 pb-1">
@@ -83,7 +83,7 @@ export default function PollCreateModal({
               <Pressable
                 onPress={onClose}
                 className="items-center justify-center rounded-full"
-                style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+                style={{ width: 34, height: 34, backgroundColor: "#142533" }}
                 hitSlop={6}
               >
                 <Ionicons name="close" size={18} color={colors.ink} />
@@ -143,7 +143,7 @@ export default function PollCreateModal({
               <Pressable onPress={handleCreate} disabled={!canCreate} style={canCreate ? primaryButtonShadow : undefined}>
                 {canCreate ? (
                   <GradientFill className="items-center rounded-2xl py-4">
-                    <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                    <Text className="text-jazba-white font-bold" style={{ fontSize: 16 }}>
                       {creating ? "Creating…" : "Create Poll"}
                     </Text>
                   </GradientFill>

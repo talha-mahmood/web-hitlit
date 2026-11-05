@@ -59,9 +59,9 @@ function MatchCard({
       onPress={onPress}
       onLongPress={onDelete}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 20 }}
     >
-      <View className="rounded-[20px] bg-white overflow-hidden" style={{ position: "relative" }}>
+      <View className="rounded-[20px] bg-surface overflow-hidden" style={{ position: "relative" }}>
         {/* Corner accent triangles, team-colored — same as the football screens */}
         <View
           style={{
@@ -80,8 +80,8 @@ function MatchCard({
 
         <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
           <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
-            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} /> : null}
-            <Text className={`text-xs font-bold ${isLive ? "text-white" : "text-green-700"}`}>
+            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F5F7FA" }} /> : null}
+            <Text className={`text-xs font-bold ${isLive ? "text-jazba-white" : "text-green-700"}`}>
               {isLive ? "LIVE" : "COMPLETED"}
             </Text>
           </View>
@@ -182,7 +182,7 @@ export default function TableTennisHomeScreen() {
   });
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-3.5 mb-4" style={{ gap: 8 }}>
         <Pressable onPress={() => navigation.navigate("ScorecardHome")} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -194,13 +194,13 @@ export default function TableTennisHomeScreen() {
         <Pressable onPress={() => navigation.navigate("TableTennisNewMatch")} style={primaryButtonShadow}>
           <GradientFill className="flex-row items-center rounded-full px-4 py-2.5" style={{ gap: 6 }}>
             <Ionicons name="add" size={18} color="white" />
-            <Text className="text-white font-bold text-sm">New Match</Text>
+            <Text className="text-jazba-white font-bold text-sm">New Match</Text>
           </GradientFill>
         </Pressable>
       </View>
 
       <View className="px-3.5 mb-4">
-        <View className="flex-row items-center bg-white rounded-2xl p-1.5" style={cardShadow}>
+        <View className="flex-row items-center bg-surface rounded-2xl p-1.5" style={cardShadow}>
           {TABS.map((tab) => {
             const selected = activeTab === tab.key;
             return (
@@ -225,7 +225,7 @@ export default function TableTennisHomeScreen() {
                     className="items-center justify-center rounded-full"
                     style={{ minWidth: 16, height: 16, paddingHorizontal: 3 }}
                   >
-                    <Text className="text-white font-bold" style={{ fontSize: 10 }}>
+                    <Text className="text-jazba-white font-bold" style={{ fontSize: 10 }}>
                       {allMatches.length}
                     </Text>
                   </GradientFill>
@@ -282,7 +282,7 @@ export default function TableTennisHomeScreen() {
               <Pressable onPress={() => navigation.navigate("TableTennisNewMatch")} style={primaryButtonShadow}>
                 <GradientFill className="flex-row items-center rounded-full px-6 py-3.5 mt-3" style={{ gap: 8 }}>
                   <Ionicons name="add" size={18} color="white" />
-                  <Text className="text-white font-bold text-sm">New Match</Text>
+                  <Text className="text-jazba-white font-bold text-sm">New Match</Text>
                 </GradientFill>
               </Pressable>
             </View>

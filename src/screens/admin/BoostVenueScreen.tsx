@@ -59,7 +59,7 @@ export default function BoostVenueScreen() {
           >
             <View className="flex-row items-center mb-2" style={{ gap: 8 }}>
               <Ionicons name="rocket" size={20} color="#F59E0B" />
-              <Text className="text-white font-extrabold text-lg">Boost Your Venue</Text>
+              <Text className="text-jazba-white font-extrabold text-lg">Boost Your Venue</Text>
             </View>
             <Text className="text-gray-300 text-sm leading-5">
               A boosted venue is pinned to the top of search &amp; "near you" results in its
@@ -69,7 +69,7 @@ export default function BoostVenueScreen() {
 
           {venue && boosted && venue.boosted_until ? (
             <View
-              className="flex-row items-center rounded-2xl p-4 mb-5 bg-white"
+              className="flex-row items-center rounded-2xl p-4 mb-5 bg-surface"
               style={{ ...cardShadow, gap: 10 }}
             >
               <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
@@ -82,7 +82,7 @@ export default function BoostVenueScreen() {
             </View>
           ) : (
             <View
-              className="flex-row items-center rounded-2xl p-4 mb-5 bg-white"
+              className="flex-row items-center rounded-2xl p-4 mb-5 bg-surface"
               style={{ ...cardShadow, gap: 10 }}
             >
               <Ionicons name="information-circle-outline" size={22} color={colors.muted} />
@@ -95,7 +95,7 @@ export default function BoostVenueScreen() {
           {TIERS.map((tier) => (
             <View
               key={tier.days}
-              className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between"
+              className="bg-surface rounded-2xl p-4 mb-3 flex-row items-center justify-between"
               style={{
                 ...cardShadow,
                 borderWidth: tier.best ? 1.5 : 0,

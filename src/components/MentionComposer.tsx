@@ -23,7 +23,7 @@ function Avatar({ name, avatar, size = 32 }: { name: string | null; avatar: stri
   }
   return (
     <GradientFill className="items-center justify-center" style={{ width: size, height: size, borderRadius: size / 2 }}>
-      <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>{initials}</Text>
+      <Text className="text-jazba-white font-bold" style={{ fontSize: size * 0.4 }}>{initials}</Text>
     </GradientFill>
   );
 }
@@ -140,7 +140,7 @@ export default function MentionComposer({
 
   return (
     <View
-      className={`bg-white ${dropdownPosition === "above" ? "border-t" : "border-b"} border-border`}
+      className={`bg-surface ${dropdownPosition === "above" ? "border-t" : "border-b"} border-border`}
       // The suggestions dropdown below (position="below") overflows past this
       // view's own box into the space of *later* siblings (the day-filter
       // row, the feed list) — without a higher stacking order here, those

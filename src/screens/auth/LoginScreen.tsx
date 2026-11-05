@@ -43,12 +43,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#FFFFFF" }}>
+    <View className="flex-1" style={{ backgroundColor: "#0A1723" }}>
       <View className="flex-1 items-center justify-center px-6">
         <View
           className="w-full items-center rounded-3xl px-6 py-8"
           style={{
-            backgroundColor: "white",
+            backgroundColor: "#0A1723",
             // A denser border + a deeper, tighter shadow than the app's usual
             // cardShadow — gives the sign-in card a raised, 3D look against
             // the now-white page instead of just floating on green.
@@ -83,10 +83,10 @@ export default function LoginScreen() {
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <View className="bg-white rounded-full items-center justify-center" style={{ width: 26, height: 26 }}>
+                  <View className="bg-surface rounded-full items-center justify-center" style={{ width: 26, height: 26 }}>
                     <GoogleIcon size={16} />
                   </View>
-                  <Text className="text-white font-semibold text-base">Sign In with Google</Text>
+                  <Text className="text-jazba-white font-semibold text-base">Sign In with Google</Text>
                 </>
               )}
             </GradientFill>
@@ -118,7 +118,7 @@ export default function LoginScreen() {
       <Modal visible={termsOpen} animationType="slide" transparent onRequestClose={() => setTermsOpen(false)}>
         <View className="flex-1 bg-black/40 justify-end">
           <View
-            className="bg-white rounded-t-3xl px-5 pt-5"
+            className="bg-surface rounded-t-3xl px-5 pt-5"
             style={{ paddingBottom: 24 + insets.bottom, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-3">

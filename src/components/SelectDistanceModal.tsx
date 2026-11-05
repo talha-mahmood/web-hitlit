@@ -36,7 +36,7 @@ export default function SelectDistanceModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl"
+          className="bg-surface rounded-t-3xl"
           style={{ paddingBottom: 20 + insets.bottom, maxHeight: "70%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
@@ -55,7 +55,7 @@ export default function SelectDistanceModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -82,7 +82,7 @@ export default function SelectDistanceModal({
                     borderRadius: 16,
                     borderWidth: 1.5,
                     borderColor: selected ? colors.primary : colors.border,
-                    backgroundColor: selected ? colors.primaryLight : "white",
+                    backgroundColor: selected ? colors.primaryLight : "#0A1723",
                   }}
                 >
                   <View className="flex-row items-center" style={{ gap: 12 }}>
@@ -93,7 +93,7 @@ export default function SelectDistanceModal({
                     ) : (
                       <View
                         className="items-center justify-center rounded-full"
-                        style={{ width: 36, height: 36, backgroundColor: "#F3F4F6" }}
+                        style={{ width: 36, height: 36, backgroundColor: "#142533" }}
                       >
                         <Ionicons name="location" size={18} color={colors.muted} />
                       </View>
@@ -122,7 +122,7 @@ export default function SelectDistanceModal({
             <Pressable
               onPress={() => onApply(null)}
               className="flex-1 items-center justify-center rounded-2xl"
-              style={{ height: 52, backgroundColor: "white", borderWidth: 1.5, borderColor: colors.border }}
+              style={{ height: 52, backgroundColor: "#0A1723", borderWidth: 1.5, borderColor: colors.border }}
             >
               <Text className="text-ink font-bold" style={{ fontSize: 16 }}>
                 Clear
@@ -130,7 +130,7 @@ export default function SelectDistanceModal({
             </Pressable>
             <Pressable onPress={() => onApply(draft)} style={[{ flex: 1 }, primaryButtonShadow]}>
               <GradientFill className="items-center justify-center rounded-2xl" style={{ height: 52 }}>
-                <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                <Text className="text-jazba-white font-bold" style={{ fontSize: 16 }}>
                   Apply Filter
                 </Text>
               </GradientFill>

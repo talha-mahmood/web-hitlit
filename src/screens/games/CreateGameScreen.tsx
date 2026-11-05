@@ -164,7 +164,7 @@ function ChipFill({
     return <GradientFill className={className}>{children}</GradientFill>;
   }
   return (
-    <View className={className} style={{ backgroundColor: "white" }}>
+    <View className={className} style={{ backgroundColor: "#0A1723" }}>
       {children}
     </View>
   );
@@ -190,8 +190,8 @@ function DateChipItem({
     <Animated.View style={pulseStyle}>
       <Pressable onPress={onPress} style={chipStyle(selected)}>
         <ChipFill selected={selected} className="items-center px-3 py-2.5 rounded-2xl">
-          <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>{day}</Text>
-          <Text className={`text-base font-bold mt-0.5 ${selected ? "text-white" : "text-ink"}`}>
+          <Text className={`text-xs ${selected ? "text-jazba-white" : "text-muted"}`}>{day}</Text>
+          <Text className={`text-base font-bold mt-0.5 ${selected ? "text-jazba-white" : "text-ink"}`}>
             {label}
           </Text>
         </ChipFill>
@@ -214,7 +214,7 @@ function TimeChipItem({
     <Animated.View style={pulseStyle}>
       <Pressable onPress={onPress} style={chipStyle(selected)}>
         <ChipFill selected={selected} className="px-3 py-2.5 rounded-2xl">
-          <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+          <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>
             {label}
           </Text>
         </ChipFill>
@@ -239,7 +239,7 @@ function CountChipItem({
     <Animated.View style={pulseStyle}>
       <Pressable onPress={onPress} style={chipStyle(selected)}>
         <ChipFill selected={selected} className="w-12 py-2.5 rounded-2xl items-center">
-          <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{n}</Text>
+          <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>{n}</Text>
         </ChipFill>
       </Pressable>
     </Animated.View>
@@ -307,12 +307,12 @@ function FormatCard({
         gap: 12,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? colors.primaryLight : "white",
+        backgroundColor: selected ? colors.primaryLight : "#0A1723",
       }}
     >
       <View
         className="items-center justify-center rounded-full"
-        style={{ width: 40, height: 40, backgroundColor: selected ? "white" : "#F3F4F6" }}
+        style={{ width: 40, height: 40, backgroundColor: selected ? "#0A1723" : "#142533" }}
       >
         <Ionicons name={icon} size={19} color={selected ? colors.primaryDark : colors.muted} />
       </View>
@@ -365,13 +365,13 @@ function StepTracker({
                   {done ? (
                     <Ionicons name="checkmark" size={12} color="white" />
                   ) : (
-                    <Text className="text-[11px] font-bold text-white">{s.n}</Text>
+                    <Text className="text-[11px] font-bold text-jazba-white">{s.n}</Text>
                   )}
                 </GradientFill>
               ) : (
                 <View
                   className="items-center justify-center rounded-full"
-                  style={{ width: 20, height: 20, backgroundColor: "#E5E7EB" }}
+                  style={{ width: 20, height: 20, backgroundColor: "#1C2D3A" }}
                 >
                   <Text className="text-[11px] font-bold text-muted">{s.n}</Text>
                 </View>
@@ -793,7 +793,7 @@ export default function CreateGameScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-app"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
@@ -825,7 +825,7 @@ export default function CreateGameScreen() {
               {createGame.isPending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text className="text-white font-semibold text-sm">Post</Text>
+                <Text className="text-jazba-white font-semibold text-sm">Post</Text>
               )}
             </GradientFill>
           </Pressable>
@@ -894,7 +894,7 @@ export default function CreateGameScreen() {
                     resizeMode="cover"
                   />
                 ) : (
-                  <View className="items-center justify-center rounded-xl bg-white" style={{ width: 34, height: 34 }}>
+                  <View className="items-center justify-center rounded-xl bg-surface" style={{ width: 34, height: 34 }}>
                     <Ionicons name="camera" size={17} color="#07301D" />
                   </View>
                 )}
@@ -908,14 +908,14 @@ export default function CreateGameScreen() {
             </View>
             <View style={{ maxWidth: "62%" }}>
               <View className="flex-row items-center flex-wrap" style={{ gap: 4 }}>
-                <Text className="font-bold text-base text-white">
+                <Text className="font-bold text-base text-jazba-white">
                   {iconAsset ? "Change icon" : "Add a custom icon"}
                 </Text>
-                <Text className="text-xs text-white" style={{ opacity: 0.65 }}>
+                <Text className="text-xs text-jazba-white" style={{ opacity: 0.65 }}>
                   (optional)
                 </Text>
               </View>
-              <Text className="text-xs mt-1 text-white" style={{ opacity: 0.65 }}>
+              <Text className="text-xs mt-1 text-jazba-white" style={{ opacity: 0.65 }}>
                 Make your {isTournament ? "tournament" : "game"} stand out with a custom icon.
               </Text>
             </View>
@@ -1078,7 +1078,7 @@ export default function CreateGameScreen() {
                     style={chipStyle(selected)}
                   >
                     <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
-                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>
                         {d} day
                       </Text>
                     </ChipFill>
@@ -1126,7 +1126,7 @@ export default function CreateGameScreen() {
                     style={chipStyle(selected)}
                   >
                     <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
-                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>
                         {h === 1 ? "1 hr" : `${h} hrs`}
                       </Text>
                     </ChipFill>
@@ -1149,7 +1149,7 @@ export default function CreateGameScreen() {
                     style={chipStyle(selected)}
                   >
                     <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
-                      <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>
+                      <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>
                         {d === 1 ? "1 hr" : `${d} hrs`}
                       </Text>
                     </ChipFill>
@@ -1446,7 +1446,7 @@ export default function CreateGameScreen() {
             ) : (
               <>
                 <Ionicons name="trophy" size={18} color="white" />
-                <Text className="text-white font-bold text-base">
+                <Text className="text-jazba-white font-bold text-base">
                   {isTournament ? "Post Tournament" : "Post Game"}
                 </Text>
               </>

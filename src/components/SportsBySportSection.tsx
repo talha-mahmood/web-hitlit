@@ -124,7 +124,7 @@ export default function SportsBySportSection({
   if (sports.length === 0) return null;
 
   return (
-    <View className="bg-white rounded-2xl p-5 mb-6" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-5 mb-6" style={cardShadow}>
       <View onLayout={handleLayout}>
         <ScrollView
           horizontal

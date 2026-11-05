@@ -43,7 +43,7 @@ export default function SelectGroupTypeModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl"
+          className="bg-surface rounded-t-3xl"
           style={{ paddingBottom: 20 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
@@ -62,7 +62,7 @@ export default function SelectGroupTypeModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -86,7 +86,7 @@ export default function SelectGroupTypeModal({
                       </Text>
                     </GradientFill>
                   ) : (
-                    <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6, backgroundColor: "white" }}>
+                    <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6, backgroundColor: "#0A1723" }}>
                       <Text className="font-medium" style={{ fontSize: 13.5, color: colors.ink }}>
                         {opt.label}
                       </Text>
@@ -101,7 +101,7 @@ export default function SelectGroupTypeModal({
             <Pressable
               onPress={() => onApply([])}
               className="flex-1 items-center justify-center rounded-2xl"
-              style={{ height: 52, backgroundColor: "white", borderWidth: 1.5, borderColor: colors.border }}
+              style={{ height: 52, backgroundColor: "#0A1723", borderWidth: 1.5, borderColor: colors.border }}
             >
               <Text className="text-ink font-bold" style={{ fontSize: 16 }}>
                 Clear
@@ -109,7 +109,7 @@ export default function SelectGroupTypeModal({
             </Pressable>
             <Pressable onPress={() => onApply(draft)} style={[{ flex: 1 }, primaryButtonShadow]}>
               <GradientFill className="items-center justify-center rounded-2xl" style={{ height: 52 }}>
-                <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                <Text className="text-jazba-white font-bold" style={{ fontSize: 16 }}>
                   Apply Filter
                 </Text>
               </GradientFill>

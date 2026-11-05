@@ -112,7 +112,7 @@ function FixturesPanel({
   const statusByName = new Map(teams.map((t) => [t.name, t.status]));
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader
         icon="calendar-outline"
         title="Fixtures"
@@ -233,7 +233,7 @@ function formatMatchSchedule(iso: string): string {
 function StatusPill({ completed, live }: { completed: boolean; live?: boolean }) {
   const label = completed ? "Completed" : live ? "Live" : "Upcoming";
   const color = completed ? colors.primaryDark : live ? "#DC2626" : "#2563EB";
-  const bg = completed ? colors.primaryLight : live ? "#FEE2E2" : "#EFF6FF";
+  const bg = completed ? colors.primaryLight : live ? "#351419" : "#102638";
   return (
     <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: bg }}>
       <Text className="text-xs font-bold" style={{ color }}>{label}</Text>
@@ -252,7 +252,7 @@ function TbdMatchRow({ matchNumber }: { matchNumber: number }) {
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "white", ...cardShadow, opacity: 0.65 }}
+      style={{ backgroundColor: "#0A1723", ...cardShadow, opacity: 0.65 }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text className="text-muted text-xs font-bold">Match {matchNumber}</Text>
@@ -385,7 +385,7 @@ function MatchRow({
     return (
       <View
         className="rounded-2xl px-3 py-2.5"
-        style={{ backgroundColor: "white", ...cardShadow }}
+        style={{ backgroundColor: "#0A1723", ...cardShadow }}
       >
         <View className="flex-row items-center justify-between mb-1.5">
           <Text className="text-muted text-xs font-bold">
@@ -434,7 +434,7 @@ function MatchRow({
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "white", ...cardShadow }}
+      style={{ backgroundColor: "#0A1723", ...cardShadow }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text
@@ -477,14 +477,14 @@ function MatchRow({
                 <GradientFill className="flex-row items-center justify-between rounded-2xl px-4" style={{ paddingVertical: 14 }}>
                   <View className="flex-row items-center" style={{ gap: 8 }}>
                     <Ionicons name="clipboard-outline" size={17} color="white" />
-                    <Text className="text-white font-bold text-sm">Go To Scorecard</Text>
+                    <Text className="text-jazba-white font-bold text-sm">Go To Scorecard</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="white" />
                 </GradientFill>
               </Pressable>
               <Pressable
                 onPress={onEnterScoreManually}
-                className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
+                className="flex-row items-center justify-between bg-surface border border-primary rounded-2xl px-4"
                 style={{ paddingVertical: 14 }}
               >
                 <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -498,7 +498,7 @@ function MatchRow({
           {showSelectScorer && (
             <Pressable
               onPress={onSelectScorer}
-              className="flex-row items-center justify-between bg-white border border-primary rounded-2xl px-4"
+              className="flex-row items-center justify-between bg-surface border border-primary rounded-2xl px-4"
               style={{ paddingVertical: 14 }}
             >
               <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -639,7 +639,7 @@ function MatchesPanel({
   if (!hasMatches) {
     if (!isHost) return null;
     return (
-      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
         <CardHeader
           icon="git-network-outline"
           title="Matches"
@@ -665,7 +665,7 @@ function MatchesPanel({
               ) : (
                 <>
                   <Ionicons name="git-network-outline" size={16} color="white" />
-                  <Text className="text-white text-sm font-bold">Generate Matches</Text>
+                  <Text className="text-jazba-white text-sm font-bold">Generate Matches</Text>
                 </>
               )}
             </GradientFill>
@@ -709,7 +709,7 @@ function MatchesPanel({
       : [];
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader icon="git-network-outline" title="Matches" badge={TOURNAMENT_FORMAT_LABEL[format]} />
 
       {rounds.map((round, idx) => {
@@ -767,7 +767,7 @@ function MatchesPanel({
             ) : (
               <>
                 <Ionicons name="git-network-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">
+                <Text className="text-jazba-white text-sm font-bold">
                   Generate {knockoutRoundLabel(bracketWinners.length)} Matches
                 </Text>
               </>
@@ -793,7 +793,7 @@ function MatchesPanel({
             ) : (
               <>
                 <Ionicons name="trophy-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">
+                <Text className="text-jazba-white text-sm font-bold">
                   Generate {knockoutRoundLabel(playoffTeams.length)} Playoffs (Top {playoffTeams.length})
                 </Text>
               </>
@@ -830,7 +830,7 @@ function StandingsPanel({
   if (standings.length === 0 || standings.every((s) => s.played === 0)) return null;
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader icon="stats-chart-outline" title={label} />
       <View className="flex-row items-center pb-2 border-b border-border">
         <Text className="text-muted text-xs font-semibold flex-1">Team</Text>
@@ -902,7 +902,7 @@ function GroupsPanel({
   };
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader icon="people-outline" title="Groups" />
       {pools.map((pool) => {
         const teamsInPool = approvedTeams.filter((t) => t.pool_id === pool.id);
@@ -1035,7 +1035,7 @@ function PoolMatchesPanel({
   if (!hasMatches) {
     if (!isHost) return null;
     return (
-      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
         <CardHeader
           icon="git-network-outline"
           title="Matches"
@@ -1062,7 +1062,7 @@ function PoolMatchesPanel({
               ) : (
                 <>
                   <Ionicons name="git-network-outline" size={16} color="white" />
-                  <Text className="text-white text-sm font-bold">Generate Group Matches</Text>
+                  <Text className="text-jazba-white text-sm font-bold">Generate Group Matches</Text>
                 </>
               )}
             </GradientFill>
@@ -1082,7 +1082,7 @@ function PoolMatchesPanel({
 
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader icon="git-network-outline" title="Matches" badge="Pool" />
       {pools.map((pool, idx) => {
         if (stageFilter !== null && stageFilter !== pool.name) return null;
@@ -1230,7 +1230,7 @@ function PoolPlayoffPanel({
     if (qualifiers.length < 2) return null;
 
     return (
-      <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+      <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
         <CardHeader
           icon="trophy-outline"
           title="Playoffs"
@@ -1252,7 +1252,7 @@ function PoolPlayoffPanel({
               ) : (
                 <>
                   <Ionicons name="trophy-outline" size={16} color="white" />
-                  <Text className="text-white text-sm font-bold">
+                  <Text className="text-jazba-white text-sm font-bold">
                     Generate {knockoutRoundLabel(qualifiers.length)}{qualifiers.length > 2 ? "s" : ""}
                   </Text>
                 </>
@@ -1276,7 +1276,7 @@ function PoolPlayoffPanel({
   const previewRounds = statusFilter !== "COMPLETED" ? computeBracketPreviewRounds(latestRoundMatches.length) : [];
 
   return (
-    <View className="mx-4 mt-4 rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 rounded-2xl bg-surface p-4" style={cardShadow}>
       <CardHeader icon="trophy-outline" title="Playoffs" />
       {rounds.map((round, idx) => {
         const roundMatches = playoffMatches.filter((m) => m.round === round);
@@ -1333,7 +1333,7 @@ function PoolPlayoffPanel({
             ) : (
               <>
                 <Ionicons name="git-network-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">
+                <Text className="text-jazba-white text-sm font-bold">
                   Generate {knockoutRoundLabel(bracketWinners.length)} Matches
                 </Text>
               </>
@@ -1403,7 +1403,7 @@ export default function TournamentMatchesScreen() {
 
   if (gameLoading || teamsLoading || !game) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -1658,16 +1658,13 @@ export default function TournamentMatchesScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background, position: "relative" }}>
-      {/* Fixed dark-green banner — same treatment as GamesListScreen/the
-          Community tab's header (CLAUDE.md's "tab-root screens" recipe). */}
-      <GradientFill
+      {/* Compact tournament header with the existing back action and summary. */}
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
+          paddingTop: insets.top + 8,
+          paddingBottom: 12,
           paddingHorizontal: 16,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.background,
         }}
       >
         <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -1678,22 +1675,22 @@ export default function TournamentMatchesScreen() {
             <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: "700", letterSpacing: 0.5 }}>
               TOURNAMENT DASHBOARD
             </Text>
-            <Text className="text-white font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
+            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
               {game.title}
             </Text>
             <View className="flex-row items-center mt-1.5 flex-wrap" style={{ gap: 8 }}>
               <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-                <Text className="text-white text-xs font-semibold">
+                <Text className="text-jazba-white text-xs font-semibold">
                   {game.tournament_format ? TOURNAMENT_FORMAT_LABEL[game.tournament_format] : "—"}
                 </Text>
               </View>
-              <Text className="text-white text-xs" style={{ opacity: 0.85 }}>
+              <Text className="text-jazba-white text-xs" style={{ opacity: 0.85 }}>
                 {approvedTeamsFull.length} teams · {totalMatchesCount} matches
               </Text>
             </View>
           </View>
         </View>
-      </GradientFill>
+      </View>
 
       {/* Stat row */}
       <View className="flex-row items-center px-4 py-4" style={{ gap: 12 }}>
@@ -1741,11 +1738,11 @@ export default function TournamentMatchesScreen() {
               realtime subscription (no refresh needed the instant one
               starts or finishes). */}
           {!!liveCricketMatches && liveCricketMatches.length > 0 && (
-            <View className="mx-4 mt-3 rounded-2xl p-4" style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FCA5A5" }}>
+            <View className="mx-4 mt-3 rounded-2xl p-4" style={{ backgroundColor: "#351419", borderWidth: 1, borderColor: "#FCA5A5" }}>
               <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
                 <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "white" }} />
-                  <Text className="text-white text-[10px] font-bold">LIVE</Text>
+                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F5F7FA" }} />
+                  <Text className="text-jazba-white text-[10px] font-bold">LIVE</Text>
                 </View>
                 <Text className="font-bold text-sm" style={{ color: "#991B1B" }}>Live Now</Text>
               </View>
@@ -1754,7 +1751,7 @@ export default function TournamentMatchesScreen() {
                   <Pressable
                     key={lm.id}
                     onPress={() => navigation.navigate("LiveScoring", { matchId: lm.id })}
-                    className="flex-row items-center justify-between bg-white rounded-xl px-3.5 py-3"
+                    className="flex-row items-center justify-between bg-surface rounded-xl px-3.5 py-3"
                     style={cardShadow}
                   >
                     <Text className="text-ink text-sm font-semibold flex-1" numberOfLines={1}>
@@ -1786,10 +1783,10 @@ export default function TournamentMatchesScreen() {
                 >
                   {selected ? (
                     <GradientFill className="rounded-full px-4 py-2">
-                      <Text className="text-white text-xs font-bold">{f.label}</Text>
+                      <Text className="text-jazba-white text-xs font-bold">{f.label}</Text>
                     </GradientFill>
                   ) : (
-                    <View className="rounded-full px-4 py-2" style={{ backgroundColor: "#F3F4F6" }}>
+                    <View className="rounded-full px-4 py-2" style={{ backgroundColor: "#142533" }}>
                       <Text className="text-muted text-xs font-bold">{f.label}</Text>
                     </View>
                   )}
@@ -1814,7 +1811,7 @@ export default function TournamentMatchesScreen() {
                       <View
                         className="rounded-full px-4 py-2"
                         style={{
-                          backgroundColor: selected ? colors.primaryLight : "#F3F4F6",
+                          backgroundColor: selected ? colors.primaryLight : "#142533",
                           borderWidth: selected ? 1.5 : 0,
                           borderColor: colors.primary,
                         }}

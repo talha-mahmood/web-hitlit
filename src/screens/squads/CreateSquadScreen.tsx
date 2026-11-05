@@ -74,7 +74,7 @@ function FormCard({
 }) {
   return (
     <View
-      className="flex-row bg-white"
+      className="flex-row bg-surface"
       style={{ borderRadius: 16, padding: 13, gap: 11, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
     >
       <Ionicons name={icon} size={19} color={colors.primary} style={{ marginTop: 1 }} />
@@ -121,7 +121,7 @@ function Chip({
         gap: 6,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? "#DCEFE4" : "white",
+        backgroundColor: selected ? "#103A2A" : "#0A1723",
       }}
     >
       <Text
@@ -274,7 +274,7 @@ export default function CreateSquadScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-app"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
@@ -303,7 +303,7 @@ export default function CreateSquadScreen() {
             {createSquad.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-bold" style={{ fontSize: 14.5 }}>
+              <Text className="text-jazba-white font-bold" style={{ fontSize: 14.5 }}>
                 Post
               </Text>
             )}
@@ -329,10 +329,10 @@ export default function CreateSquadScreen() {
         >
           <View className="flex-row items-center">
             <View className="flex-1" style={{ paddingRight: 8 }}>
-              <Text className="text-white font-extrabold" style={{ fontSize: 18 }}>
+              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 18 }}>
                 Play Together
               </Text>
-              <Text className="text-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
+              <Text className="text-jazba-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
                 Create a group and bring people together!
               </Text>
             </View>
@@ -392,7 +392,7 @@ export default function CreateSquadScreen() {
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "#8FD9AE",
-                  backgroundColor: "#F0FDF4",
+                  backgroundColor: "#103A2A",
                 }}
               >
                 {iconAsset ? (
@@ -417,7 +417,7 @@ export default function CreateSquadScreen() {
                 <Ionicons name="add" size={11} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#DCEFE4", paddingHorizontal: 16, paddingVertical: 10 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: "#103A2A", paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>
@@ -430,7 +430,7 @@ export default function CreateSquadScreen() {
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View
               className="items-center justify-center"
-              style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#F3F4F6" }}
+              style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#142533" }}
             >
               <Ionicons name="people" size={20} color="#4B5563" />
             </View>
@@ -458,7 +458,7 @@ export default function CreateSquadScreen() {
                   paddingVertical: 6.5,
                   borderWidth: 1.5,
                   borderColor: colors.primary,
-                  backgroundColor: "#DCEFE4",
+                  backgroundColor: "#103A2A",
                 }}
               >
                 <Text className="font-bold" style={{ fontSize: 12, color: colors.primaryDark }}>

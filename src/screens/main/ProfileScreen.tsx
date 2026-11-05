@@ -82,7 +82,7 @@ function EnrolledRow({
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center justify-between bg-white border border-border rounded-xl px-4 py-3 mb-2"
+      className="flex-row items-center justify-between bg-surface border border-border rounded-xl px-4 py-3 mb-2"
     >
       <View className="flex-1 mr-2">
         <Text className="text-ink font-semibold" numberOfLines={1}>
@@ -102,7 +102,7 @@ function SquadChip({ name, onPress }: { name: string; onPress: () => void }) {
     <Pressable
       onPress={onPress}
       className="flex-row items-center rounded-xl px-3 py-2.5 mr-2"
-      style={{ backgroundColor: "white", ...CARD_SHADOW, gap: 8, width: 160 }}
+      style={{ backgroundColor: "#0A1723", ...CARD_SHADOW, gap: 8, width: 160 }}
     >
       <View
         className="items-center justify-center rounded-full"
@@ -250,17 +250,15 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {isFocused ? <StatusBar style="light" /> : null}
-      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <GradientFill
+      {/* Profile identity remains interactive in the compact dark top bar. */}
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
+          paddingTop: insets.top + 8,
+          paddingBottom: 14,
           paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.background,
         }}
       >
         <View className="flex-row items-center">
@@ -309,7 +307,7 @@ export default function ProfileScreen() {
                   little room is left, pushing the checkmark (and this whole
                   row) out past the header into the settings button. */}
               <Text
-                className="text-white font-bold flex-shrink"
+                className="text-jazba-white font-bold flex-shrink"
                 style={{ flexShrink: 1, fontSize: 19 }}
                 numberOfLines={1}
               >
@@ -341,13 +339,13 @@ export default function ProfileScreen() {
           </View>
           <Pressable
             onPress={() => navigation.navigate("AccountSettings")}
-            className="items-center justify-center bg-white rounded-full"
+            className="items-center justify-center bg-surface rounded-full"
             style={{ width: 40, height: 40, ...CARD_SHADOW }}
           >
             <Ionicons name="settings-outline" size={20} color={colors.primaryDark} />
           </Pressable>
         </View>
-      </GradientFill>
+      </View>
 
       <ScrollView
         className="flex-1"
@@ -378,7 +376,7 @@ export default function ProfileScreen() {
             activeTab === key ? (
               <Pressable key={key} onPress={() => setActiveTab(key)}>
                 <GradientFill className="rounded-full px-4 py-2">
-                  <Text className="text-xs font-bold text-white">{label}</Text>
+                  <Text className="text-xs font-bold text-jazba-white">{label}</Text>
                 </GradientFill>
               </Pressable>
             ) : (
@@ -386,9 +384,9 @@ export default function ProfileScreen() {
                 key={key}
                 onPress={() => setActiveTab(key)}
                 className="rounded-full px-4 py-2"
-                style={{ backgroundColor: "#E5E7EB" }}
+                style={{ backgroundColor: "#1C2D3A" }}
               >
-                <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+                <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
                   {label}
                 </Text>
               </Pressable>
@@ -475,7 +473,7 @@ export default function ProfileScreen() {
           style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
           onPress={() => setSkillPickerOpen(false)}
         >
-          <Pressable className="bg-white rounded-2xl p-5 w-full" onPress={(e) => e.stopPropagation()}>
+          <Pressable className="bg-surface rounded-2xl p-5 w-full" onPress={(e) => e.stopPropagation()}>
             <Text className="text-ink font-bold text-lg mb-1">Your Skill Level</Text>
             <Text className="text-muted text-sm mb-4">Helps hosts match you to the right games.</Text>
             {SKILL_LEVELS.map((level) => {
@@ -486,7 +484,7 @@ export default function ProfileScreen() {
                   disabled={savingSkill}
                   onPress={() => handlePickSkillLevel(level.value)}
                   className={`flex-row items-center justify-between rounded-xl px-4 py-3 mb-2 border ${
-                    selected ? "bg-primary-light border-primary" : "bg-white border-border"
+                    selected ? "bg-primary-light border-primary" : "bg-surface border-border"
                   }`}
                 >
                   <Text className={`font-medium ${selected ? "text-primary-dark" : "text-ink"}`}>{level.label}</Text>

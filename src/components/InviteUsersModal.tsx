@@ -73,7 +73,7 @@ export default function InviteUsersModal({
       <View className="flex-1 bg-black/40 justify-end">
         <KeyboardAvoidingView behavior="padding">
         <View
-          className="bg-white rounded-t-3xl px-5 pt-5"
+          className="bg-surface rounded-t-3xl px-5 pt-5"
           style={{ maxHeight: MODAL_MAX_HEIGHT, paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-center justify-between mb-4">
@@ -147,7 +147,7 @@ export default function InviteUsersModal({
                           {isInviting ? (
                             <ActivityIndicator size="small" color="white" />
                           ) : (
-                            <Text className="text-white text-xs font-semibold">Invite</Text>
+                            <Text className="text-jazba-white text-xs font-semibold">Invite</Text>
                           )}
                         </GradientFill>
                       )}

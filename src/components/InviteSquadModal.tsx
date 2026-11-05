@@ -38,7 +38,7 @@ export default function InviteSquadModal({
           {/* Shadow points up (negative height) since this sheet rises
               from the bottom of the screen, same as CreateTeamModal. */}
           <View
-            className="bg-white rounded-t-3xl px-5 pt-5"
+            className="bg-surface rounded-t-3xl px-5 pt-5"
             style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
@@ -95,7 +95,7 @@ export default function InviteSquadModal({
                           </View>
                         ) : (
                           <GradientFill className="rounded-lg px-3 py-2">
-                            <Text className="text-xs font-semibold text-white">Invite</Text>
+                            <Text className="text-xs font-semibold text-jazba-white">Invite</Text>
                           </GradientFill>
                         )}
                       </Pressable>

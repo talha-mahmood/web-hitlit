@@ -40,14 +40,14 @@ function ResultBadge({ letter }: { letter: "W" | "L" | "D" }) {
       className="items-center justify-center rounded-full"
       style={{ width: 36, height: 36, backgroundColor: RESULT_COLOR[letter] }}
     >
-      <Text className="text-white font-bold text-sm">{letter}</Text>
+      <Text className="text-jazba-white font-bold text-sm">{letter}</Text>
     </View>
   );
 }
 
 function StatPanel({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <View className="flex-1 items-center rounded-2xl py-4" style={{ ...cardShadow, backgroundColor: "white" }}>
+    <View className="flex-1 items-center rounded-2xl py-4" style={{ ...cardShadow, backgroundColor: "#0A1723" }}>
       <Text className="font-extrabold" style={{ fontSize: 22, color }}>
         {value}
       </Text>
@@ -58,7 +58,7 @@ function StatPanel({ value, label, color }: { value: string; label: string; colo
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mt-5" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mt-5" style={cardShadow}>
       <Text className="text-ink font-bold text-base mb-3">{title}</Text>
       {children}
     </View>

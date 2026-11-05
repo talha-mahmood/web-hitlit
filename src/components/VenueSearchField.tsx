@@ -88,8 +88,8 @@ export default function VenueSearchField({
         style={{
           gap: 8,
           borderWidth: 1.5,
-          borderColor: focused ? colors.primary : "#CBD5E1",
-          backgroundColor: focused ? colors.primaryLight : "white",
+          borderColor: focused ? colors.primary : "#1C2D3A",
+          backgroundColor: focused ? colors.primaryLight : "#0A1723",
           shadowColor: "#0F172A",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.06,
@@ -141,7 +141,7 @@ export default function VenueSearchField({
 
       {showDropdown && (
         <View
-          className="bg-white rounded-2xl mt-1.5 overflow-hidden"
+          className="bg-surface rounded-2xl mt-1.5 overflow-hidden"
           style={{ maxHeight: 260, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
         >
           <ScrollView bounces={false} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
@@ -160,7 +160,7 @@ export default function VenueSearchField({
                   setQuery(v.name);
                   setFocused(false);
                 }}
-                className={`px-4 py-3 border-b border-border ${v.id === selectedVenueId ? "bg-primary-light" : "bg-white"}`}
+                className={`px-4 py-3 border-b border-border ${v.id === selectedVenueId ? "bg-primary-light" : "bg-surface"}`}
               >
                 <Text className="text-ink text-sm font-medium" numberOfLines={1}>
                   {v.name}

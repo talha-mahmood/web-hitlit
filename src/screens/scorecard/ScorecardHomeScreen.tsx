@@ -84,7 +84,7 @@ function SportCard({
       ) : (
         <View
           className="items-center justify-center rounded-full"
-          style={{ width: 27, height: 27, backgroundColor: "#F1F3F5" }}
+          style={{ width: 27, height: 27, backgroundColor: "#142533" }}
         >
           <Ionicons name="chevron-forward" size={15} color={colors.muted} />
         </View>
@@ -101,7 +101,7 @@ function SportCard({
     // Profile section's cards do.
     <View
       style={{
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         ...cardShadow,
         borderRadius: 24,
         borderWidth: 1.5,
@@ -116,7 +116,7 @@ function SportCard({
       >
         {active ? (
           <LinearGradient
-            colors={["#D1F5DD", "#F0FDF4"]}
+            colors={["#D1F5DD", "#103A2A"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ borderRadius: 22.5 }}
@@ -124,7 +124,7 @@ function SportCard({
             {body}
           </LinearGradient>
         ) : (
-          <View className="rounded-3xl bg-white">{body}</View>
+          <View className="rounded-3xl bg-surface">{body}</View>
         )}
       </Bouncy>
     </View>
@@ -139,18 +139,18 @@ function HeaderArt() {
       <Svg width={52} height={72} viewBox="0 0 52 72">
         {/* Scoreboard */}
         <Rect x={6} y={2} width={40} height={28} rx={6} fill="#6FC694" />
-        <Rect x={10} y={6} width={32} height={20} rx={4} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
-        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#0E5C34" textAnchor="middle">
+        <Rect x={10} y={6} width={32} height={20} rx={4} fill="#CBEEDA" stroke="#18C66A" strokeWidth={1} />
+        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#0F9F58" textAnchor="middle">
           0-0
         </SvgText>
         <Rect x={13} y={30} width={4} height={10} rx={2} fill="#6FC694" />
         <Rect x={35} y={30} width={4} height={10} rx={2} fill="#6FC694" />
         {/* Trophy */}
-        <Path d="M14 42h24v6c0 8-5 12-12 12s-12-4-12-12z" fill="#9FDBB8" stroke="#1D9254" strokeWidth={1} />
-        <Path d="M14 44c-6 0-8 3-6 7 1 2 4 3 7 3M38 44c6 0 8 3 6 7-1 2-4 3-7 3" fill="none" stroke="#1D9254" strokeWidth={1.5} />
+        <Path d="M14 42h24v6c0 8-5 12-12 12s-12-4-12-12z" fill="#9FDBB8" stroke="#18C66A" strokeWidth={1} />
+        <Path d="M14 44c-6 0-8 3-6 7 1 2 4 3 7 3M38 44c6 0 8 3 6 7-1 2-4 3-7 3" fill="none" stroke="#18C66A" strokeWidth={1.5} />
         <Rect x={23} y={60} width={6} height={5} fill="#6FC694" />
         <Rect x={16} y={65} width={20} height={5} rx={2} fill="#6FC694" />
-        <Circle cx={8} cy={66} r={4.5} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
+        <Circle cx={8} cy={66} r={4.5} fill="#CBEEDA" stroke="#18C66A" strokeWidth={1} />
       </Svg>
       <View>
         <Text
@@ -186,17 +186,15 @@ export default function ScorecardHomeScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {isFocused ? <StatusBar style="light" /> : null}
-      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <GradientFill
+      {/* Compact dark header matching the Jazba screen chrome. */}
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
+          paddingTop: insets.top + 8,
+          paddingBottom: 12,
           paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.background,
           position: "relative",
         }}
       >
@@ -212,13 +210,13 @@ export default function ScorecardHomeScreen() {
             <Ionicons name="arrow-back" size={22} color="white" />
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
-            <Text className="text-white font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
+            <Text className="text-jazba-white font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
             <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
               Live score your game
             </Text>
           </View>
         </View>
-      </GradientFill>
+      </View>
 
       {/* gap stays just above cardShadow's own reach (offset 6 + radius 12
           ≈ 18px) — any tighter and a card's shadow gets painted over by the

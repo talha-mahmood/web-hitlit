@@ -37,7 +37,7 @@ export default function ScoringCodeBadge({
         paddingHorizontal: 10,
         paddingVertical: 6,
         gap: 5,
-        backgroundColor: isDark ? "rgba(255,255,255,0.16)" : "#F3F4F6",
+        backgroundColor: isDark ? "rgba(255,255,255,0.16)" : "#142533",
         borderWidth: 1,
         borderColor: isDark ? "rgba(255,255,255,0.3)" : colors.border,
       }}

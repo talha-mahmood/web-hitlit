@@ -60,7 +60,7 @@ function NotificationCard({
       className="flex-row items-start rounded-2xl mb-3 px-4 py-3.5"
       style={{
         gap: 12,
-        backgroundColor: unread ? colors.primaryLight : "white",
+        backgroundColor: unread ? colors.primaryLight : "#0A1723",
         borderWidth: 1,
         borderColor: unread ? colors.primary : colors.border,
       }}

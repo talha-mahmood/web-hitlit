@@ -15,12 +15,12 @@ const POINTS_PER_TOURNAMENT = 3;
 const POINTS_PER_HOSTED_GAME = 2;
 
 export const RATING_TIERS = [
-  { label: "Rookie", min: 0, color: "#6B7280", bg: "#F3F4F6" },
-  { label: "Bronze", min: 10, color: "#B45309", bg: "#FFFBEB" },
-  { label: "Silver", min: 25, color: "#64748B", bg: "#F1F5F9" },
-  { label: "Gold", min: 50, color: "#CA8A04", bg: "#FEFCE8" },
-  { label: "Platinum", min: 100, color: "#0891B2", bg: "#ECFEFF" },
-  { label: "Diamond", min: 200, color: "#7C3AED", bg: "#F5F3FF" },
+  { label: "Rookie", min: 0, color: "#9AA8B7", bg: "#142533" },
+  { label: "Bronze", min: 10, color: "#FBBF24", bg: "#352A13" },
+  { label: "Silver", min: 25, color: "#CBD4DD", bg: "#1C2D3A" },
+  { label: "Gold", min: 50, color: "#FBBF24", bg: "#352A13" },
+  { label: "Platinum", min: 100, color: "#38BDF8", bg: "#102638" },
+  { label: "Diamond", min: 200, color: "#C084FC", bg: "#271C3B" },
 ] as const;
 
 export type RatingInputs = {

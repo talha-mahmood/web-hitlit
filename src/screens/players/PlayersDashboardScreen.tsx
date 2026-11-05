@@ -15,9 +15,9 @@ export default function PlayersDashboardScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       <View
-        className="flex-row items-center px-4 pb-4 border-b border-border bg-white"
+        className="flex-row items-center px-4 pb-4 border-b border-border bg-surface"
         style={{ paddingTop: insets.top + 16 }}
       >
         <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">

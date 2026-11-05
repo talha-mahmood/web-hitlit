@@ -42,12 +42,12 @@ export default function SquadTeamTabBar({
         value === key ? (
           <Pressable key={key} onPress={() => onChange(key)}>
             <GradientFill className="rounded-full px-4 py-2">
-              <Text className="text-xs font-bold text-white">{label}</Text>
+              <Text className="text-xs font-bold text-jazba-white">{label}</Text>
             </GradientFill>
           </Pressable>
         ) : (
-          <Pressable key={key} onPress={() => onChange(key)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#E5E7EB" }}>
-            <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+          <Pressable key={key} onPress={() => onChange(key)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#1C2D3A" }}>
+            <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
               {label}
             </Text>
           </Pressable>

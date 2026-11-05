@@ -28,7 +28,7 @@ function IconBadge({ icon }: { icon: keyof typeof Ionicons.glyphMap }) {
 
 function CardSection({ icon, title, children }: { icon: keyof typeof Ionicons.glyphMap; title: string; children: React.ReactNode }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
         <IconBadge icon={icon} />
         <Text className="text-ink font-bold text-base">{title}</Text>
@@ -41,7 +41,7 @@ function CardSection({ icon, title, children }: { icon: keyof typeof Ionicons.gl
 function InfoBox({ text, tone = "info" }: { text: string; tone?: "info" | "error" }) {
   const isError = tone === "error";
   return (
-    <View className="flex-row rounded-xl px-3 py-2.5 mt-3" style={{ backgroundColor: isError ? "#FEE2E2" : colors.primaryLight, gap: 8 }}>
+    <View className="flex-row rounded-xl px-3 py-2.5 mt-3" style={{ backgroundColor: isError ? "#351419" : colors.primaryLight, gap: 8 }}>
       <Ionicons name="information-circle" size={16} color={isError ? colors.danger : colors.primaryDark} style={{ marginTop: 1 }} />
       <Text className="text-xs flex-1" style={{ color: isError ? colors.danger : colors.primaryDark }}>
         {text}
@@ -220,7 +220,7 @@ export default function ManualScoreScreen() {
   const noun = isRacquetSets ? "Set" : "Game";
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="px-4 flex-row items-center" style={{ paddingTop: insets.top + 16, paddingBottom: 16, gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -236,7 +236,7 @@ export default function ManualScoreScreen() {
             match and can't be changed here — shown as plain read-only
             context instead of locked, grayed-out form fields, since
             there's nothing left for the host to actually fill in for them. */}
-        <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+        <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
           <View className="flex-row items-center">
             <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{teamAName}</Text>
             <Text className="text-muted text-xs font-bold mx-2">VS</Text>
@@ -356,7 +356,7 @@ export default function ManualScoreScreen() {
               ) : (
                 <>
                   <Ionicons name="checkmark" size={16} color="white" />
-                  <Text className="font-bold text-base text-white">Save Score</Text>
+                  <Text className="font-bold text-base text-jazba-white">Save Score</Text>
                 </>
               )}
             </GradientFill>

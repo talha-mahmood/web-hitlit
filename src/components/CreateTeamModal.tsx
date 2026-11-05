@@ -41,7 +41,7 @@ export default function CreateTeamModal({
           {/* Shadow points up (negative height) since this sheet rises from
               the bottom of the screen. */}
           <View
-            className="bg-white rounded-t-3xl px-5 pt-5"
+            className="bg-surface rounded-t-3xl px-5 pt-5"
             style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
@@ -71,7 +71,7 @@ export default function CreateTeamModal({
             >
               {name.trim() ? (
                 <GradientFill className="rounded-xl py-4 items-center mt-6">
-                  {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-white">Create Team</Text>}
+                  {submitting ? <ActivityIndicator color="white" /> : <Text className="font-semibold text-base text-jazba-white">Create Team</Text>}
                 </GradientFill>
               ) : (
                 <View className="rounded-xl py-4 items-center mt-6 bg-gray-200">

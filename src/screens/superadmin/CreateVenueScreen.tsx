@@ -77,7 +77,7 @@ export default function CreateVenueScreen() {
             {createVenue.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-semibold text-sm">Create</Text>
+              <Text className="text-jazba-white font-semibold text-sm">Create</Text>
             )}
           </GradientFill>
         </Pressable>

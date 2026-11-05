@@ -199,7 +199,7 @@ export default function LocationMapPicker({
 
   const pickerBody = (
     <View style={fullscreen ? { flex: 1 } : undefined}>
-      <View className="flex-row items-center bg-white rounded-xl px-3.5 mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}>
+      <View className="flex-row items-center bg-surface rounded-xl px-3.5 mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}>
         <Ionicons name="search-outline" size={18} color={colors.muted} />
         <TextInput
           value={query}
@@ -227,7 +227,7 @@ export default function LocationMapPicker({
       </View>
 
       {results.length > 0 && (
-        <View className="bg-white rounded-xl mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}>
+        <View className="bg-surface rounded-xl mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}>
           {results.map((r, i) => (
             <Pressable
               key={`${r.lat}-${r.lng}-${i}`}
@@ -250,7 +250,7 @@ export default function LocationMapPicker({
       >
         <WebView ref={webviewRef} source={{ html }} onMessage={handleMessage} onLoadEnd={() => setMapReady(true)} style={{ flex: 1 }} />
         {!mapReady && (
-          <View className="absolute inset-0 items-center justify-center bg-white">
+          <View className="absolute inset-0 items-center justify-center bg-surface">
             <ActivityIndicator color={colors.primary} />
           </View>
         )}
@@ -261,7 +261,7 @@ export default function LocationMapPicker({
             onPress={toggleFullscreen}
             hitSlop={6}
             className="absolute top-3 right-3 items-center justify-center"
-            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "white", ...cardShadow }}
+            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "#0A1723", ...cardShadow }}
           >
             <Ionicons name="expand-outline" size={16} color={colors.ink} />
           </Pressable>
@@ -278,7 +278,7 @@ export default function LocationMapPicker({
             ) : (
               <>
                 <Ionicons name="checkmark" size={18} color="white" />
-                <Text className="text-white font-bold text-sm">Use This Location</Text>
+                <Text className="text-jazba-white font-bold text-sm">Use This Location</Text>
               </>
             )}
           </GradientFill>
@@ -299,7 +299,7 @@ export default function LocationMapPicker({
   if (fullscreen) {
     return (
       <Modal visible animationType="slide" onRequestClose={toggleFullscreen}>
-        <View style={{ flex: 1, backgroundColor: "white", paddingTop: insets.top }}>
+        <View style={{ flex: 1, backgroundColor: "#0A1723", paddingTop: insets.top }}>
           <View
             className="flex-row items-center justify-between px-4 py-3"
             style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}

@@ -84,7 +84,7 @@ function StatCard({
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      className="bg-white rounded-2xl p-4"
+      className="bg-surface rounded-2xl p-4"
       style={{ width: "48%", ...CARD_BORDER }}
     >
       <View
@@ -113,7 +113,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={CARD_BORDER}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={CARD_BORDER}>
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-ink font-bold text-base">{title}</Text>
         {action && (
@@ -325,7 +325,7 @@ export default function AdminDashboardScreen() {
                 <Image source={{ uri: profile.avatar }} className="w-10 h-10 rounded-full" />
               ) : (
                 <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
-                  <Text className="text-white font-bold">{firstName.charAt(0).toUpperCase()}</Text>
+                  <Text className="text-jazba-white font-bold">{firstName.charAt(0).toUpperCase()}</Text>
                 </View>
               )}
             </Pressable>
@@ -334,7 +334,7 @@ export default function AdminDashboardScreen() {
           <Text className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.65)", letterSpacing: 1 }}>
             {timeGreeting.toUpperCase()}
           </Text>
-          <Text className="text-white text-2xl font-bold mt-1">{firstName} 👋</Text>
+          <Text className="text-jazba-white text-2xl font-bold mt-1">{firstName} 👋</Text>
 
           {(myVenues?.length ?? 0) > 1 && (
             <Pressable
@@ -343,7 +343,7 @@ export default function AdminDashboardScreen() {
               style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
             >
               <Ionicons name="business" size={14} color="white" />
-              <Text className="text-white text-sm font-semibold mx-2" numberOfLines={1}>
+              <Text className="text-jazba-white text-sm font-semibold mx-2" numberOfLines={1}>
                 {venue.name}
               </Text>
               <Ionicons name="chevron-down" size={14} color="white" />
@@ -352,7 +352,7 @@ export default function AdminDashboardScreen() {
         </LinearGradient>
 
         <View className="px-3.5" style={{ marginTop: -30 }}>
-          <View className="bg-white rounded-2xl p-5 flex-row items-center justify-between mb-6" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-5 flex-row items-center justify-between mb-6" style={cardShadow}>
             <View className="flex-1 mr-3">
               <Text className="text-muted text-xs">Today's Revenue</Text>
               <Text className="text-ink font-extrabold text-2xl mt-1" numberOfLines={1}>
@@ -362,7 +362,7 @@ export default function AdminDashboardScreen() {
             <Pressable onPress={() => navigation.navigate("VenueBookings", { venueId: params.venueId })}>
               <GradientFill className="flex-row items-center rounded-xl px-4 py-2.5" style={{ gap: 6 }}>
                 <Ionicons name="calendar" size={14} color="white" />
-                <Text className="text-white font-semibold text-sm">Bookings</Text>
+                <Text className="text-jazba-white font-semibold text-sm">Bookings</Text>
               </GradientFill>
             </Pressable>
           </View>
@@ -374,7 +374,7 @@ export default function AdminDashboardScreen() {
           >
             <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
               <Ionicons name="rocket" size={18} color="#F59E0B" />
-              <Text className="text-white text-sm font-semibold flex-1" numberOfLines={2}>
+              <Text className="text-jazba-white text-sm font-semibold flex-1" numberOfLines={2}>
                 Boost Your Venue — get more bookings in your area
               </Text>
             </View>
@@ -383,7 +383,7 @@ export default function AdminDashboardScreen() {
 
           <Pressable
             onPress={() => navigation.navigate("ManageVenueImages", { venueId: params.venueId })}
-            className="flex-row items-center justify-between mb-6 bg-white"
+            className="flex-row items-center justify-between mb-6 bg-surface"
             style={{ borderRadius: 16, padding: 16, ...cardShadow }}
           >
             <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
@@ -526,7 +526,7 @@ export default function AdminDashboardScreen() {
                     key={scale}
                     onPress={() => setRevenueScale(scale)}
                     className="flex-1 items-center py-1.5 rounded-lg"
-                    style={{ backgroundColor: revenueScale === scale ? "white" : "transparent" }}
+                    style={{ backgroundColor: revenueScale === scale ? "#0A1723" : "transparent" }}
                   >
                     <Text
                       className="text-xs font-semibold capitalize"
@@ -612,7 +612,7 @@ export default function AdminDashboardScreen() {
 
       <Modal visible={switcherOpen} animationType="slide" transparent onRequestClose={() => setSwitcherOpen(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
+          <View className="bg-surface rounded-t-3xl px-5 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold text-ink">Switch Venue</Text>
               <Pressable onPress={() => setSwitcherOpen(false)} hitSlop={8}>
@@ -638,7 +638,7 @@ export default function AdminDashboardScreen() {
 
       <Modal visible={hourlyModalOpen} animationType="slide" transparent onRequestClose={() => setHourlyModalOpen(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ maxHeight: "85%", paddingBottom: insets.bottom + 16 }}>
+          <View className="bg-surface rounded-t-3xl px-5 pt-5" style={{ maxHeight: "85%", paddingBottom: insets.bottom + 16 }}>
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold text-ink">Today, Hour by Hour</Text>
               <Pressable onPress={() => setHourlyModalOpen(false)} hitSlop={8}>
@@ -654,12 +654,12 @@ export default function AdminDashboardScreen() {
                     <Pressable key={c.id} onPress={() => setHourlyCourtId(c.id)}>
                       {active ? (
                         <GradientFill className="rounded-full px-3 py-2">
-                          <Text className="text-sm font-medium text-white">{c.name}</Text>
+                          <Text className="text-sm font-medium text-jazba-white">{c.name}</Text>
                         </GradientFill>
                       ) : (
                         <View
                           className="rounded-full px-3 py-2"
-                          style={{ backgroundColor: "white", borderWidth: 1, borderColor: colors.border }}
+                          style={{ backgroundColor: "#0A1723", borderWidth: 1, borderColor: colors.border }}
                         >
                           <Text className="text-sm font-medium text-ink">{c.name}</Text>
                         </View>

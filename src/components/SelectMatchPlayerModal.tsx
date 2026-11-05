@@ -25,7 +25,7 @@ export default function SelectMatchPlayerModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl"
+          className="bg-surface rounded-t-3xl"
           style={{ paddingBottom: 20 + insets.bottom, maxHeight: "75%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
@@ -44,7 +44,7 @@ export default function SelectMatchPlayerModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#F3F4F6" }}
+              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -60,11 +60,11 @@ export default function SelectMatchPlayerModal({
                   key={`${name}-${i}`}
                   onPress={() => onSelect(name)}
                   className="flex-row items-center rounded-2xl px-4 py-3 mb-2"
-                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: "white" }}
+                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: "#0A1723" }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 36, height: 36, backgroundColor: "#F3F4F6" }}
+                    style={{ width: 36, height: 36, backgroundColor: "#142533" }}
                   >
                     <Text className="font-bold text-sm" style={{ color: colors.muted }}>
                       {name.charAt(0).toUpperCase()}

@@ -27,7 +27,7 @@ function StatCard({
 }) {
   return (
     <View
-      style={{ width: "31%", borderRadius: 16, padding: 12, backgroundColor: "white", ...cardShadow }}
+      style={{ width: "31%", borderRadius: 16, padding: 12, backgroundColor: "#0A1723", ...cardShadow }}
     >
       <View className="mb-2">
         <View
@@ -121,7 +121,7 @@ export default function PlayerStatCards({
     <>
         {/* Rating card */}
         <View
-          style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24, position: "relative" }}
+          style={{ backgroundColor: "#0A1723", ...cardShadow, borderRadius: 16, padding: 16, marginBottom: 24, position: "relative" }}
         >
           <View style={{ position: "absolute", right: 14, top: 16, alignItems: "flex-end" }}>
             <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: ratingTier.bg }}>
@@ -133,7 +133,7 @@ export default function PlayerStatCards({
           {onOpenSportFilter && (
             <Pressable onPress={onOpenSportFilter} className="self-start mb-3">
               <GradientFill className="flex-row items-center rounded-full px-3 py-1" style={{ gap: 5 }}>
-                <Text className="text-xs font-bold text-white" numberOfLines={1}>
+                <Text className="text-xs font-bold text-jazba-white" numberOfLines={1}>
                   {filterSportName ?? "All Sports"}
                 </Text>
                 <Ionicons name="chevron-down" size={13} color="white" />
@@ -166,7 +166,7 @@ export default function PlayerStatCards({
             </Text>
             <Ionicons name="information-circle-outline" size={13} color={colors.muted} />
           </View>
-          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
+          <View style={{ height: 8, borderRadius: 4, backgroundColor: "#142533" }}>
             <View
               style={{
                 height: 8,
@@ -188,19 +188,19 @@ export default function PlayerStatCards({
             {/* Games Win + Followers — two compact cards side by side, right under the rating card */}
             <View className="flex-row items-stretch mb-6" style={{ gap: 12 }}>
               <View
-                style={{ flex: 1, backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14 }}
+                style={{ flex: 1, backgroundColor: "#0A1723", ...cardShadow, borderRadius: 16, padding: 14 }}
               >
                 <View className="flex-row items-center justify-between mb-2">
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 34, height: 34, backgroundColor: "#DCEFE4" }}
+                    style={{ width: 34, height: 34, backgroundColor: "#103A2A" }}
                   >
-                    <Ionicons name="locate" size={17} color="#1D9254" />
+                    <Ionicons name="locate" size={17} color="#18C66A" />
                   </View>
                   <View className="items-end">
                     <Text className="text-ink font-extrabold text-base">{winPercentage}%</Text>
                     {winTag && (
-                      <View className="rounded-full px-2 py-0.5 mt-0.5" style={{ backgroundColor: "#F3F4F6" }}>
+                      <View className="rounded-full px-2 py-0.5 mt-0.5" style={{ backgroundColor: "#142533" }}>
                         <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
                       </View>
                     )}
@@ -212,18 +212,18 @@ export default function PlayerStatCards({
                 <Text className="text-xs mt-0.5 mb-2" style={{ color: colors.muted }} numberOfLines={1}>
                   {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                 </Text>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", marginTop: "auto" }}>
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: "#142533", marginTop: "auto" }}>
                   <GradientFill style={{ height: 6, borderRadius: 3, width: `${winPercentage}%` }} />
                 </View>
               </View>
 
               <View
-                style={{ flex: 1, backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14 }}
+                style={{ flex: 1, backgroundColor: "#0A1723", ...cardShadow, borderRadius: 16, padding: 14 }}
               >
                 <View className="mb-2">
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 34, height: 34, backgroundColor: "#EFF6FF" }}
+                    style={{ width: 34, height: 34, backgroundColor: "#102638" }}
                   >
                     <Ionicons name="people" size={17} color="#2563EB" />
                   </View>
@@ -237,11 +237,11 @@ export default function PlayerStatCards({
 
             {/* Stat grid */}
             <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
-              <StatCard icon="football-outline" bg="#EFF6FF" fg="#2563EB" value={gamesPlayed} label="Games Played" />
+              <StatCard icon="football-outline" bg="#102638" fg="#2563EB" value={gamesPlayed} label="Games Played" />
               <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" />
               <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" />
-              <StatCard icon="people-outline" bg="#DCEFE4" fg="#1D9254" value={activeSquads} label="Active Groups" />
-              <StatCard icon="time-outline" bg="#EFF6FF" fg="#2563EB" value={hoursPlayed} label="Hours Played" />
+              <StatCard icon="people-outline" bg="#103A2A" fg="#18C66A" value={activeSquads} label="Active Groups" />
+              <StatCard icon="time-outline" bg="#102638" fg="#2563EB" value={hoursPlayed} label="Hours Played" />
               <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
             </View>
 
@@ -249,7 +249,7 @@ export default function PlayerStatCards({
                 after removing the "Your Activity" card beside it. */}
             <View
               className="mb-6"
-              style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, position: "relative" }}
+              style={{ backgroundColor: "#0A1723", ...cardShadow, borderRadius: 16, padding: 14, position: "relative" }}
             >
               <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
                 <Ionicons name="pie-chart" size={15} color={colors.primary} />
@@ -274,7 +274,7 @@ export default function PlayerStatCards({
                     >
                       <View
                         className="items-center justify-center rounded-full"
-                        style={{ width: 60, height: 60, backgroundColor: "white" }}
+                        style={{ width: 60, height: 60, backgroundColor: "#0A1723" }}
                       >
                         <Text className="text-ink font-extrabold" style={{ fontSize: 20 }}>
                           {sportSegments.length}
@@ -305,13 +305,13 @@ export default function PlayerStatCards({
                 no redundant runs/wickets card here. */}
             {totals && filterSportName?.toLowerCase() === "football" && (
               <View
-                  style={{ backgroundColor: "white", ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
+                  style={{ backgroundColor: "#0A1723", ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 44, height: 44, backgroundColor: "#DCEFE4" }}
+                    style={{ width: 44, height: 44, backgroundColor: "#103A2A" }}
                   >
-                    <MaterialCommunityIcons name="soccer" size={22} color="#1D9254" />
+                    <MaterialCommunityIcons name="soccer" size={22} color="#18C66A" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-ink font-extrabold text-xl">{totals.goals}</Text>

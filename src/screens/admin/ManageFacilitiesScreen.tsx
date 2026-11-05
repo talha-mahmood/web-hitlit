@@ -83,7 +83,7 @@ export default function ManageFacilitiesScreen() {
         <Pressable onPress={() => setShowAdd(true)} style={primaryButtonShadow}>
           <GradientFill className="flex-row items-center rounded-lg px-3 py-1.5" style={{ gap: 4 }}>
             <Ionicons name="add" size={14} color="white" />
-            <Text className="text-white text-xs font-semibold">Add</Text>
+            <Text className="text-jazba-white text-xs font-semibold">Add</Text>
           </GradientFill>
         </Pressable>
       </View>
@@ -117,7 +117,7 @@ export default function ManageFacilitiesScreen() {
             {/* Shadow points up (negative height) since this sheet rises
                 from the bottom of the screen. */}
             <View
-              className="bg-white rounded-t-3xl px-5 pt-5"
+              className="bg-surface rounded-t-3xl px-5 pt-5"
               style={{ paddingBottom: 32, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
             >
               <View className="flex-row items-center justify-between mb-3">
@@ -157,7 +157,7 @@ export default function ManageFacilitiesScreen() {
                   {addFacility.isPending ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text className="text-white font-semibold text-base">Add Amenity</Text>
+                    <Text className="text-jazba-white font-semibold text-base">Add Amenity</Text>
                   )}
                 </GradientFill>
               </Pressable>

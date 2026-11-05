@@ -69,7 +69,7 @@ export default function SlotPickerScreen() {
   const sportIconInfo = getSportIcon(params.sportName ?? "");
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero header — a soft tinted panel with a decorative sport-icon
           watermark, matching the card-based look used elsewhere. */}
       <View
@@ -85,13 +85,13 @@ export default function SlotPickerScreen() {
           <View className="flex-row items-start justify-between">
             <Pressable
               onPress={() => navigation.goBack()}
-              className="items-center justify-center rounded-full bg-white"
+              className="items-center justify-center rounded-full bg-surface"
               style={{ width: 40, height: 40, ...cardShadow }}
             >
               <Ionicons name="arrow-back" size={20} color={colors.ink} />
             </Pressable>
             <View
-              className="rounded-full px-3 py-2 bg-white"
+              className="rounded-full px-3 py-2 bg-surface"
               style={{ ...cardShadow }}
             >
               <Text className="text-sm" style={{ color: colors.ink }}>
@@ -115,7 +115,7 @@ export default function SlotPickerScreen() {
       </View>
 
       {/* Date Strip */}
-      <View className="bg-white border-b border-border">
+      <View className="bg-surface border-b border-border">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -142,11 +142,11 @@ export default function SlotPickerScreen() {
               >
                 {isSelected ? (
                   <GradientFill className="items-center justify-center rounded-2xl flex-1">
-                    <Text className="text-xs font-semibold text-white">{dayLabel}</Text>
-                    <Text className="text-lg font-extrabold mt-0.5 text-white">{dateNum}</Text>
+                    <Text className="text-xs font-semibold text-jazba-white">{dayLabel}</Text>
+                    <Text className="text-lg font-extrabold mt-0.5 text-jazba-white">{dateNum}</Text>
                   </GradientFill>
                 ) : (
-                  <View className="items-center justify-center rounded-2xl flex-1 bg-white">
+                  <View className="items-center justify-center rounded-2xl flex-1 bg-app">
                     <Text className={`text-xs font-semibold ${isToday ? "text-primary" : "text-muted"}`}>
                       {dayLabel}
                     </Text>
@@ -187,7 +187,7 @@ export default function SlotPickerScreen() {
                 // with an amber tint so it stands out either way.
                 const isSpecialPrice = !booked && price !== params.pricePerHour;
 
-                const iconBg = booked ? "#F3F4F6" : isSelected ? "rgba(255,255,255,0.22)" : isSpecialPrice ? "#FEF3C7" : colors.primaryLight;
+                const iconBg = booked ? "#142533" : isSelected ? "rgba(255,255,255,0.22)" : isSpecialPrice ? "#352A13" : colors.primaryLight;
                 const iconColor = booked ? colors.muted : isSelected ? "white" : isSpecialPrice ? "#D97706" : colors.primaryDark;
 
                 const slotInner = (
@@ -200,7 +200,7 @@ export default function SlotPickerScreen() {
                     </View>
                     <View className="flex-1" style={{ minWidth: 0 }}>
                       <Text
-                        className={`font-bold ${booked ? "text-muted" : isSelected ? "text-white" : "text-ink"}`}
+                        className={`font-bold ${booked ? "text-muted" : isSelected ? "text-jazba-white" : "text-ink"}`}
                         style={{ fontSize: 12.5 }}
                         numberOfLines={1}
                         adjustsFontSizeToFit
@@ -243,7 +243,7 @@ export default function SlotPickerScreen() {
                     ) : (
                       <View
                         className="flex-row items-center rounded-2xl px-2.5 py-3"
-                        style={{ backgroundColor: booked ? "#FAFAFA" : isSpecialPrice ? "#FFFBEB" : "white" }}
+                        style={{ backgroundColor: booked ? "#FAFAFA" : isSpecialPrice ? "#FFFBEB" : "#0A1723" }}
                       >
                         {slotInner}
                       </View>
@@ -256,7 +256,7 @@ export default function SlotPickerScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-4 pb-8 pt-3">
+      <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border px-4 pb-8 pt-3">
         {selectedSlots.length > 0 && (
           <Text className="text-center text-sm text-muted mb-2" numberOfLines={2}>
             {sortedSelectedSlots.length} slot{sortedSelectedSlots.length !== 1 ? "s" : ""} ·{" "}
@@ -286,7 +286,7 @@ export default function SlotPickerScreen() {
         >
           {selectedSlots.length > 0 ? (
             <GradientFill className="rounded-2xl py-4 items-center">
-              <Text className="font-bold text-base text-white">Continue to Checkout</Text>
+              <Text className="font-bold text-base text-jazba-white">Continue to Checkout</Text>
             </GradientFill>
           ) : (
             <View className="rounded-2xl py-4 items-center bg-gray-200">

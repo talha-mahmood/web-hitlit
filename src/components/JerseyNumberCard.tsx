@@ -21,7 +21,7 @@ export default function JerseyNumberCard({ number }: { number: number }) {
       >
         {number}
       </Text>
-      <Text className="font-extrabold" style={{ fontSize: 28, color: "#0E5C34" }}>
+      <Text className="font-extrabold" style={{ fontSize: 28, color: "#18C66A" }}>
         Jersey No.
       </Text>
     </View>

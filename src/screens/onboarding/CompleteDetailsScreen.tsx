@@ -96,7 +96,7 @@ export default function CompleteDetailsScreen() {
           <View
             className="w-full items-center rounded-3xl px-6 py-8"
             style={{
-              backgroundColor: "white",
+              backgroundColor: "#0A1723",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.18,
@@ -157,7 +157,7 @@ export default function CompleteDetailsScreen() {
                       ) : (
                         <View
                           className="items-center rounded-xl py-3"
-                          style={{ borderWidth: 1.5, borderColor: colors.border, backgroundColor: "white" }}
+                          style={{ borderWidth: 1.5, borderColor: colors.border, backgroundColor: "#0A1723" }}
                         >
                           <Text className="text-sm" style={{ color: colors.ink, fontWeight: "500" }}>
                             {opt.label}
@@ -180,7 +180,7 @@ export default function CompleteDetailsScreen() {
                 {isSaving ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text className="text-white font-semibold text-base">Continue</Text>
+                  <Text className="text-jazba-white font-semibold text-base">Continue</Text>
                 )}
               </GradientFill>
             </Pressable>

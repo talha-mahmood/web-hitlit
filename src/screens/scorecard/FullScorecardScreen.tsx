@@ -55,7 +55,7 @@ function InningsCard({
   const runRate = computeRunRate(state.runs, state.legalBalls);
   return (
     <View
-      className="rounded-2xl border border-border overflow-hidden mb-4 bg-white"
+      className="rounded-2xl border border-border overflow-hidden mb-4 bg-surface"
       style={cardShadow}
     >
       <View className="flex-row items-center justify-between p-4">
@@ -225,7 +225,7 @@ export default function FullScorecardScreen() {
 
   if (isLoading || !match) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -235,7 +235,7 @@ export default function FullScorecardScreen() {
   const timeLabel = matchDate.toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit" });
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -257,7 +257,7 @@ export default function FullScorecardScreen() {
               ) : (
                 <>
                   <Ionicons name="document-text-outline" size={18} color="white" />
-                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                  <Text className="text-jazba-white font-bold text-sm">Generate Match Report</Text>
                 </>
               )}
             </GradientFill>
@@ -267,7 +267,7 @@ export default function FullScorecardScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {/* Team crests + result, with a winner ribbon */}
-        <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+        <View className="bg-surface rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
           <View
             style={{
               position: "absolute", top: 0, left: 0, width: 0, height: 0,
@@ -307,7 +307,7 @@ export default function FullScorecardScreen() {
                 </View>
               </View>
               <View
-                className="items-center justify-center rounded-full bg-white"
+                className="items-center justify-center rounded-full bg-surface"
                 style={{ position: "absolute", width: 40, height: 40, left: "50%", top: 8, marginLeft: -20, ...cardShadow }}
               >
                 <Text className="text-ink font-extrabold" style={{ fontSize: 12 }}>VS</Text>

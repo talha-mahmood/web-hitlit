@@ -75,7 +75,7 @@ export default function SquadFillModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl px-5 pt-5"
+          className="bg-surface rounded-t-3xl px-5 pt-5"
           style={{ paddingBottom: 32 + insets.bottom, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-center justify-between mb-1">
@@ -119,10 +119,10 @@ export default function SquadFillModal({
                       >
                         {selected ? (
                           <GradientFill className="rounded-xl px-3 py-2">
-                            <Text className="text-sm font-medium text-white">{s.name}</Text>
+                            <Text className="text-sm font-medium text-jazba-white">{s.name}</Text>
                           </GradientFill>
                         ) : (
-                          <View className="rounded-xl px-3 py-2" style={{ backgroundColor: "white" }}>
+                          <View className="rounded-xl px-3 py-2" style={{ backgroundColor: "#0A1723" }}>
                             <Text className="text-sm font-medium text-ink">{s.name}</Text>
                           </View>
                         )}
@@ -183,7 +183,7 @@ export default function SquadFillModal({
                         {submitting ? (
                           <ActivityIndicator color="white" />
                         ) : (
-                          <Text className="font-semibold text-base text-white">
+                          <Text className="font-semibold text-base text-jazba-white">
                             Register {requiredCount} Member{requiredCount === 1 ? "" : "s"}
                           </Text>
                         )}

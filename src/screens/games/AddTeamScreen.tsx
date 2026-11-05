@@ -130,13 +130,13 @@ export default function AddTeamScreen() {
   const count = activeMembers.length;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       <GradientFill className="px-4 pb-4" style={{ paddingTop: insets.top + 12 }}>
         <View className="flex-row items-center justify-center">
           <Pressable onPress={handleBack} hitSlop={10} style={{ position: "absolute", left: 0 }}>
             <Ionicons name={selectedSquadId && !params.squadId ? "arrow-back" : "close"} size={22} color="white" />
           </Pressable>
-          <Text className="text-white text-base font-bold">Add Team</Text>
+          <Text className="text-jazba-white text-base font-bold">Add Team</Text>
         </View>
       </GradientFill>
 
@@ -158,7 +158,7 @@ export default function AddTeamScreen() {
                 </Text>
                 <Pressable onPress={handleCreateTeam} style={primaryButtonShadow}>
                   <GradientFill className="rounded-xl px-5 py-3">
-                    <Text className="text-white font-bold text-sm">Create Team</Text>
+                    <Text className="text-jazba-white font-bold text-sm">Create Team</Text>
                   </GradientFill>
                 </Pressable>
               </View>
@@ -242,7 +242,7 @@ export default function AddTeamScreen() {
                     {squadFillTeam.isPending ? (
                       <ActivityIndicator color="white" />
                     ) : (
-                      <Text className="text-white font-bold text-base">Confirm Team</Text>
+                      <Text className="text-jazba-white font-bold text-base">Confirm Team</Text>
                     )}
                   </GradientFill>
                 </Pressable>
@@ -292,7 +292,7 @@ export default function AddTeamScreen() {
                       {squadFillTeam.isPending ? (
                         <ActivityIndicator color="white" />
                       ) : (
-                        <Text className="text-white font-bold text-base">Confirm Team</Text>
+                        <Text className="text-jazba-white font-bold text-base">Confirm Team</Text>
                       )}
                     </GradientFill>
                   ) : (

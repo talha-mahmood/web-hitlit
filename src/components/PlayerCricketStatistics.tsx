@@ -18,17 +18,17 @@ const LABEL_FLEX = 1.2;
 
 function SubTabBar({ value, onChange }: { value: SubTab; onChange: (v: SubTab) => void }) {
   return (
-    <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+    <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#142533" }}>
       {SUB_TABS.map((t) =>
         value === t ? (
           <Pressable key={t} onPress={() => onChange(t)} className="flex-1">
             <GradientFill className="items-center py-2">
-              <Text className="text-xs font-bold text-white">{t}</Text>
+              <Text className="text-xs font-bold text-jazba-white">{t}</Text>
             </GradientFill>
           </Pressable>
         ) : (
           <Pressable key={t} onPress={() => onChange(t)} className="flex-1 items-center py-2">
-            <Text className="text-xs font-bold" style={{ color: "#6B7280" }}>
+            <Text className="text-xs font-bold" style={{ color: "#9AA8B7" }}>
               {t}
             </Text>
           </Pressable>
@@ -68,7 +68,7 @@ function StatsTable({ rows }: { rows: { label: string; values: (string | number)
 function MatchWiseCard({ row }: { row: { matchId: string; date: string; format: CricketFormat; opponentTeamName: string; batting: MatchFigures["batting"]; bowling: MatchFigures["bowling"] } }) {
   const dateLabel = new Date(row.date).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" });
   return (
-    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#F3F4F6" }}>
+    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#142533" }}>
       <Text className="text-ink font-bold text-sm mb-3">
         {row.format} - {dateLabel} vs {row.opponentTeamName.toUpperCase()}
       </Text>

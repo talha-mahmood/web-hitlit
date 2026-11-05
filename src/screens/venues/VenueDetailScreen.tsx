@@ -74,7 +74,7 @@ export default function VenueDetailScreen() {
 
   if (isLoading || !venue) {
     return (
-      <View className="flex-1 bg-white px-4 pt-4">
+      <View className="flex-1 bg-app px-4 pt-4">
         <SkeletonDetailHeader />
       </View>
     );
@@ -93,7 +93,7 @@ export default function VenueDetailScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-app"
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
@@ -122,7 +122,7 @@ export default function VenueDetailScreen() {
 
         <Pressable
           onPress={() => navigation.goBack()}
-          className="absolute top-12 left-4 w-10 h-10 rounded-full bg-white/90 items-center justify-center"
+          className="absolute top-12 left-4 w-10 h-10 rounded-full bg-surface/90 items-center justify-center"
           style={cardShadow}
         >
           <Ionicons name="arrow-back" size={20} color={colors.ink} />
@@ -132,7 +132,7 @@ export default function VenueDetailScreen() {
             {images.map((img, i) => (
               <View
                 key={img.id}
-                className={`h-1.5 rounded-full ${i === activeImage ? "bg-white w-5" : "bg-white/50 w-1.5"}`}
+                className={`h-1.5 rounded-full ${i === activeImage ? "bg-surface w-5" : "bg-surface/50 w-1.5"}`}
               />
             ))}
           </View>
@@ -143,14 +143,14 @@ export default function VenueDetailScreen() {
           facilities, amenities and courts all live in it as plain sections
           (no separate card per section). */}
       <View
-        className="bg-white px-3.5 pt-5 pb-8"
+        className="bg-surface px-3.5 pt-5 pb-8"
         style={{ marginTop: -20, borderTopLeftRadius: 26, borderTopRightRadius: 26 }}
       >
         <View className="flex-row items-start justify-between">
           <Text className="text-xl font-extrabold text-ink flex-1 mr-3">{venue.name}</Text>
           <View
             className="flex-row items-center rounded-full px-2.5 py-1"
-            style={{ backgroundColor: "#FEF9E7", gap: 4 }}
+            style={{ backgroundColor: "#352A13", gap: 4 }}
           >
             <Ionicons name="star" size={14} color={colors.warning} />
             <Text className="text-ink font-bold text-sm">
@@ -200,7 +200,7 @@ export default function VenueDetailScreen() {
                   style={{ backgroundColor: colors.primaryLight, gap: 10 }}
                 >
                   <View
-                    className="items-center justify-center rounded-full bg-white"
+                    className="items-center justify-center rounded-full bg-surface"
                     style={{ width: 38, height: 38 }}
                   >
                     <Ionicons name="logo-whatsapp" size={20} color={colors.primaryDark} />
@@ -218,7 +218,7 @@ export default function VenueDetailScreen() {
                   style={{ backgroundColor: colors.primaryLight, gap: 10 }}
                 >
                   <View
-                    className="items-center justify-center rounded-full bg-white"
+                    className="items-center justify-center rounded-full bg-surface"
                     style={{ width: 38, height: 38 }}
                   >
                     <Ionicons name="call-outline" size={20} color={colors.primaryDark} />
@@ -304,7 +304,7 @@ export default function VenueDetailScreen() {
               // isn't integrated yet. Shown as plain info only for now.
               <View
                 key={court.id}
-                className="flex-row items-center bg-white rounded-2xl px-3 py-3 mb-2.5"
+                className="flex-row items-center bg-surface rounded-2xl px-3 py-3 mb-2.5"
                 style={{ borderWidth: 1, borderColor: colors.border }}
               >
                 {courtPhoto || fallbackImage ? (

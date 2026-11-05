@@ -83,7 +83,7 @@ export default function BookingConfirmationScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 32 }}
@@ -126,13 +126,13 @@ export default function BookingConfirmationScreen() {
         {/* Details Card — shadow lives on this outer, non-clipping wrapper
             since a shadow doesn't render on a view with overflow:hidden
             (needed to clip the header band's corners). */}
-        <View className="w-full rounded-2xl" style={{ ...heroShadow, backgroundColor: "white" }}>
+        <View className="w-full rounded-2xl" style={{ ...heroShadow, backgroundColor: "#0A1723" }}>
         <View className="w-full rounded-2xl overflow-hidden p-3">
           <View
             className="flex-row items-center rounded-2xl px-3 py-3 mb-1"
             style={{ backgroundColor: colors.primaryLight, gap: 10 }}
           >
-            <View className="items-center justify-center rounded-full bg-white" style={{ width: 34, height: 34 }}>
+            <View className="items-center justify-center rounded-full bg-surface" style={{ width: 34, height: 34 }}>
               <Ionicons name="document-text-outline" size={17} color={colors.primaryDark} />
             </View>
             <Text className="font-bold text-sm flex-1" style={{ color: colors.primaryDark }}>
@@ -171,7 +171,7 @@ export default function BookingConfirmationScreen() {
                     <View
                       key={s.startTime}
                       className="flex-row items-center rounded-lg px-3 py-2"
-                      style={{ backgroundColor: "#F3F4F6", gap: 8 }}
+                      style={{ backgroundColor: "#142533", gap: 8 }}
                     >
                       <Ionicons name="time-outline" size={13} color={colors.muted} />
                       <Text className="text-ink text-sm font-bold">
@@ -188,7 +188,7 @@ export default function BookingConfirmationScreen() {
               style={{ backgroundColor: colors.primaryLight, gap: 12 }}
             >
               <View className="flex-row items-center" style={{ gap: 10 }}>
-                <View className="items-center justify-center rounded-full bg-white" style={{ width: 34, height: 34 }}>
+                <View className="items-center justify-center rounded-full bg-surface" style={{ width: 34, height: 34 }}>
                   <Ionicons name="wallet-outline" size={16} color={colors.primaryDark} />
                 </View>
                 <Text className="text-ink font-medium">Total</Text>
@@ -202,13 +202,13 @@ export default function BookingConfirmationScreen() {
               <View className="flex-row items-center" style={{ gap: 12 }}>
                 <View
                   className="items-center justify-center rounded-full"
-                  style={{ width: 36, height: 36, backgroundColor: "#FEF3C7" }}
+                  style={{ width: 36, height: 36, backgroundColor: "#352A13" }}
                 >
                   <Ionicons name="card-outline" size={17} color="#D97706" />
                 </View>
                 <Text className="text-ink font-medium">Payment</Text>
               </View>
-              <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: "#FEF3C7" }}>
+              <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: "#352A13" }}>
                 <Text className="font-bold text-xs" style={{ color: "#B45309" }}>
                   Pay at venue
                 </Text>
@@ -223,7 +223,7 @@ export default function BookingConfirmationScreen() {
         <Pressable onPress={goToMyBookings} style={primaryButtonShadow}>
           <GradientFill className="rounded-2xl py-4 flex-row items-center justify-center" style={{ gap: 8 }}>
             <Ionicons name="calendar-outline" size={18} color="white" />
-            <Text className="text-white font-bold text-base">View My Bookings</Text>
+            <Text className="text-jazba-white font-bold text-base">View My Bookings</Text>
             <Ionicons name="chevron-forward" size={18} color="white" />
           </GradientFill>
         </Pressable>

@@ -109,7 +109,7 @@ export function NearbyEmptyRow({
 }) {
   return (
     <View
-      className="items-center justify-center rounded-2xl border border-dashed border-border bg-white"
+      className="items-center justify-center rounded-2xl border border-dashed border-border bg-surface"
       style={{ paddingVertical: 22 }}
     >
       <View className="w-11 h-11 rounded-full bg-gray-100 items-center justify-center mb-2">
@@ -141,7 +141,7 @@ export function NearbyGameCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,
@@ -149,7 +149,7 @@ export function NearbyGameCard({
       scaleTo={0.97}
     >
       <View
-        className="border border-border rounded-2xl bg-white items-center"
+        className="border border-border rounded-2xl bg-surface items-center"
         style={{
           width: NEARBY_CARD_WIDTH,
           height: NEARBY_CARD_HEIGHT,
@@ -219,7 +219,7 @@ export function NearbySquadCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,
@@ -227,7 +227,7 @@ export function NearbySquadCard({
       scaleTo={0.97}
     >
       <View
-        className="border border-border rounded-2xl bg-white items-center"
+        className="border border-border rounded-2xl bg-surface items-center"
         style={{
           width: NEARBY_CARD_WIDTH,
           height: NEARBY_CARD_HEIGHT,
@@ -298,7 +298,7 @@ export function NearbyVenueCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,
@@ -306,7 +306,7 @@ export function NearbyVenueCard({
       scaleTo={0.97}
     >
       <View
-        className="border border-border rounded-2xl bg-white"
+        className="border border-border rounded-2xl bg-surface"
         style={{ width: NEARBY_CARD_WIDTH, height: NEARBY_CARD_HEIGHT, overflow: "hidden" }}
       >
         <View style={{ width: NEARBY_CARD_WIDTH, height: VENUE_IMAGE_HEIGHT, position: "relative" }}>
@@ -328,7 +328,7 @@ export function NearbyVenueCard({
           <Pressable
             onPress={onToggleFavorite}
             hitSlop={6}
-            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 items-center justify-center"
+            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-surface/90 items-center justify-center"
           >
             <Ionicons
               name={isFavorite ? "heart" : "heart-outline"}
@@ -338,7 +338,7 @@ export function NearbyVenueCard({
           </Pressable>
           {distanceKm !== null && (
             <View className="absolute bottom-1 left-1 bg-black/60 rounded-full px-1.5 py-0.5">
-              <Text className="text-white text-[9px] font-semibold">{formatDistanceKm(distanceKm)}</Text>
+              <Text className="text-jazba-white text-[9px] font-semibold">{formatDistanceKm(distanceKm)}</Text>
             </View>
           )}
         </View>

@@ -81,7 +81,7 @@ function GoalHistoryCard({ goals, teamAName, teamBName }: { goals: GoalEvent[]; 
   if (goals.length === 0) return null;
   const scrollable = goals.length > GOAL_HISTORY_MAX_VISIBLE_ROWS;
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View
         className="flex-row items-center pb-3 mb-1"
         style={{ gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}
@@ -324,7 +324,7 @@ export default function FootballLiveScoringScreen() {
 
   if (isLoading || !match || !timestamps) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -502,7 +502,7 @@ export default function FootballLiveScoringScreen() {
       }
     };
     return (
-      <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -521,7 +521,7 @@ export default function FootballLiveScoringScreen() {
               ) : (
                 <>
                   <Ionicons name="document-text-outline" size={18} color="white" />
-                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                  <Text className="text-jazba-white font-bold text-sm">Generate Match Report</Text>
                 </>
               )}
             </GradientFill>
@@ -529,7 +529,7 @@ export default function FootballLiveScoringScreen() {
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
           {/* Team crests + final score, with a winner ribbon */}
-          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          <View className="bg-surface rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
               style={{
                 position: "absolute", top: 0, left: 0, width: 0, height: 0,
@@ -581,7 +581,7 @@ export default function FootballLiveScoringScreen() {
           </View>
 
           {/* Period-by-period breakdown */}
-          <View className="bg-white rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
+          <View className="bg-surface rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
             {periodRows.map((row) => (
               <View key={row.label} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
                 <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -603,7 +603,7 @@ export default function FootballLiveScoringScreen() {
               style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16 }}
             >
               <Ionicons name="arrow-back-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
-              <Text className="text-white font-bold text-base">Back to Matches</Text>
+              <Text className="text-jazba-white font-bold text-base">Back to Matches</Text>
             </LinearGradient>
           </Pressable>
         </ScrollView>
@@ -612,14 +612,14 @@ export default function FootballLiveScoringScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
         <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} />
-          <Text className="text-white text-xs font-bold">LIVE</Text>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F5F7FA" }} />
+          <Text className="text-jazba-white text-xs font-bold">LIVE</Text>
         </View>
         <View className="flex-1">
           <Text className="text-ink font-extrabold text-base" numberOfLines={1}>
@@ -634,7 +634,7 @@ export default function FootballLiveScoringScreen() {
         {(!isOnline || pendingCount > 0) && (
           <View
             className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
-            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#352A13", gap: 8 }}
           >
             <Ionicons
               name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
@@ -652,7 +652,7 @@ export default function FootballLiveScoringScreen() {
         )}
 
         {/* Team crests + score */}
-        <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+        <View className="bg-surface rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
           {/* Corner accent triangles, team-colored */}
           <View
             style={{
@@ -683,7 +683,7 @@ export default function FootballLiveScoringScreen() {
                   <Text className="text-ink font-extrabold" style={{ fontSize: 42 }}>{scoreSummary.current.b}</Text>
                 </View>
                 {isRunning && (
-                  <View className="bg-white rounded-full px-3 py-1.5 mt-2" style={cardShadow}>
+                  <View className="bg-surface rounded-full px-3 py-1.5 mt-2" style={cardShadow}>
                     <Text className="text-ink font-extrabold" style={{ fontSize: 15 }}>{clock}</Text>
                   </View>
                 )}
@@ -713,13 +713,13 @@ export default function FootballLiveScoringScreen() {
 
         {/* Half-time snapshot, once known */}
         {(phase === "SECOND_HALF" || phase === "FULL_TIME" || phase === "EXTRA_TIME_FIRST" || phase === "EXTRA_TIME_BREAK" || phase === "EXTRA_TIME_SECOND" || phase === "EXTRA_TIME_FULL_TIME" || phase === "PENALTIES") && (
-          <View className="flex-row items-center justify-between bg-white rounded-2xl px-4 py-3 mb-4" style={cardShadow}>
+          <View className="flex-row items-center justify-between bg-surface rounded-2xl px-4 py-3 mb-4" style={cardShadow}>
             <Text className="text-muted text-xs font-semibold">HALF-TIME</Text>
             <Text className="text-ink font-bold text-sm">{scoreSummary.halfTime.a} - {scoreSummary.halfTime.b}</Text>
           </View>
         )}
         {phase === "PENALTIES" && (
-          <View className="flex-row items-center justify-between bg-white rounded-2xl px-4 py-3 mb-4" style={cardShadow}>
+          <View className="flex-row items-center justify-between bg-surface rounded-2xl px-4 py-3 mb-4" style={cardShadow}>
             <Text className="text-muted text-xs font-semibold">PENALTY SHOOTOUT</Text>
             <Text className="text-ink font-bold text-sm">{shootout?.scoreA ?? 0} - {shootout?.scoreB ?? 0}</Text>
           </View>
@@ -732,7 +732,7 @@ export default function FootballLiveScoringScreen() {
 
         {/* Penalty kick history */}
         {phase === "PENALTIES" && penaltyKicks.length > 0 && (
-          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
             <Text className="text-muted text-xs font-semibold mb-2">KICKS</Text>
             {penaltyKicks.map((k) => (
               <View key={k.seq} className="flex-row items-center justify-between mt-1">
@@ -765,7 +765,7 @@ export default function FootballLiveScoringScreen() {
                     <Ionicons name="football" size={18} color="white" />
                   </View>
                   <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
-                  <Text className="text-white font-bold text-base flex-1" numberOfLines={1}>{match.team_a_name} Goal</Text>
+                  <Text className="text-jazba-white font-bold text-base flex-1" numberOfLines={1}>{match.team_a_name} Goal</Text>
                   <Ionicons name="football-outline" size={44} color="white" style={{ position: "absolute", right: 40, opacity: 0.15 }} />
                   <Ionicons name="chevron-forward" size={20} color="white" />
                 </LinearGradient>
@@ -781,7 +781,7 @@ export default function FootballLiveScoringScreen() {
                     <Ionicons name="football" size={18} color="white" />
                   </View>
                   <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
-                  <Text className="text-white font-bold text-base flex-1" numberOfLines={1}>{match.team_b_name} Goal</Text>
+                  <Text className="text-jazba-white font-bold text-base flex-1" numberOfLines={1}>{match.team_b_name} Goal</Text>
                   <Ionicons name="football-outline" size={44} color="white" style={{ position: "absolute", right: 40, opacity: 0.15 }} />
                   <Ionicons name="chevron-forward" size={20} color="white" />
                 </LinearGradient>
@@ -805,13 +805,13 @@ export default function FootballLiveScoringScreen() {
                   </View>
                   <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
                   <View style={{ flex: 1 }}>
-                    <Text className="text-white font-bold text-base" numberOfLines={1}>
+                    <Text className="text-jazba-white font-bold text-base" numberOfLines={1}>
                       {phase === "FIRST_HALF" && "End First Half"}
                       {phase === "SECOND_HALF" && "End Second Half"}
                       {phase === "EXTRA_TIME_FIRST" && "End Extra Time (1st Half)"}
                       {phase === "EXTRA_TIME_SECOND" && "End Extra Time (2nd Half)"}
                     </Text>
-                    <Text className="text-white text-xs mt-0.5" style={{ opacity: 0.85 }}>Tap to stop the alarm</Text>
+                    <Text className="text-jazba-white text-xs mt-0.5" style={{ opacity: 0.85 }}>Tap to stop the alarm</Text>
                   </View>
                   <Ionicons name="notifications" size={40} color="white" style={{ position: "absolute", right: 18, opacity: 0.2 }} />
                 </LinearGradient>
@@ -832,7 +832,7 @@ export default function FootballLiveScoringScreen() {
                     <Ionicons name={isPaused ? "play" : "pause"} size={16} color="white" />
                   </View>
                   <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.35)", marginHorizontal: 14 }} />
-                  <Text className="text-white font-bold text-base flex-1">{isPaused ? "Start Time" : "Stop Time"}</Text>
+                  <Text className="text-jazba-white font-bold text-base flex-1">{isPaused ? "Start Time" : "Stop Time"}</Text>
                   <Ionicons name="stopwatch-outline" size={40} color="white" style={{ position: "absolute", right: 18, opacity: 0.25 }} />
                 </LinearGradient>
               </Pressable>
@@ -841,7 +841,7 @@ export default function FootballLiveScoringScreen() {
             <Pressable
               onPress={handleUndo}
               disabled={goals.length === 0 || deleteLastGoal.isPending || isPaused || isRinging}
-              className="flex-row items-center rounded-2xl py-3.5 px-4 mt-2 bg-white"
+              className="flex-row items-center rounded-2xl py-3.5 px-4 mt-2 bg-surface"
               style={{ borderWidth: 1.5, borderColor: colors.primary, opacity: goals.length === 0 || isPaused || isRinging ? 0.5 : 1 }}
             >
               <View className="items-center justify-center rounded-full" style={{ width: 30, height: 30, backgroundColor: colors.primaryLight }}>
@@ -857,7 +857,7 @@ export default function FootballLiveScoringScreen() {
         {phase === "HALF_TIME" && (
           <Pressable onPress={handleStartSecondHalf} style={primaryButtonShadow}>
             <GradientFill className="rounded-2xl py-4 items-center">
-              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Second Half</Text>}
+              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Start Second Half</Text>}
             </GradientFill>
           </Pressable>
         )}
@@ -867,13 +867,13 @@ export default function FootballLiveScoringScreen() {
             {scoreSummary.current.a === scoreSummary.current.b && match.requires_winner ? (
               <Pressable onPress={handleStartExtraTime} style={primaryButtonShadow}>
                 <GradientFill className="rounded-2xl py-4 items-center">
-                  {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time</Text>}
+                  {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Start Extra Time</Text>}
                 </GradientFill>
               </Pressable>
             ) : (
               <Pressable onPress={handleFinishAsIs} style={primaryButtonShadow}>
                 <GradientFill className="rounded-2xl py-4 items-center">
-                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Finish Match</Text>}
                 </GradientFill>
               </Pressable>
             )}
@@ -883,7 +883,7 @@ export default function FootballLiveScoringScreen() {
         {phase === "EXTRA_TIME_BREAK" && (
           <Pressable onPress={handleStartExtraTimeSecond} style={primaryButtonShadow}>
             <GradientFill className="rounded-2xl py-4 items-center">
-              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Extra Time (2nd Half)</Text>}
+              {startRunningPeriod.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Start Extra Time (2nd Half)</Text>}
             </GradientFill>
           </Pressable>
         )}
@@ -893,13 +893,13 @@ export default function FootballLiveScoringScreen() {
             {scoreSummary.current.a === scoreSummary.current.b ? (
               <Pressable onPress={handleStartPenalties} style={primaryButtonShadow}>
                 <GradientFill className="rounded-2xl py-4 items-center">
-                  {startPenalties.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Start Penalty Shootout</Text>}
+                  {startPenalties.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Start Penalty Shootout</Text>}
                 </GradientFill>
               </Pressable>
             ) : (
               <Pressable onPress={handleFinishAsIs} style={primaryButtonShadow}>
                 <GradientFill className="rounded-2xl py-4 items-center">
-                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">Finish Match</Text>}
+                  {completeMatch.isPending ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">Finish Match</Text>}
                 </GradientFill>
               </Pressable>
             )}
@@ -920,7 +920,7 @@ export default function FootballLiveScoringScreen() {
                     className="flex-1"
                   >
                     <GradientFill className="rounded-2xl py-4 items-center">
-                      <Text className="text-white font-bold text-sm">Scored</Text>
+                      <Text className="text-jazba-white font-bold text-sm">Scored</Text>
                     </GradientFill>
                   </Pressable>
                   <Pressable
@@ -928,7 +928,7 @@ export default function FootballLiveScoringScreen() {
                     className="flex-1 rounded-2xl py-4 items-center"
                     style={{ backgroundColor: colors.danger, ...(addPenaltyKick.isPending ? undefined : primaryButtonShadow) }}
                   >
-                    <Text className="text-white font-bold text-sm">Missed</Text>
+                    <Text className="text-jazba-white font-bold text-sm">Missed</Text>
                   </Pressable>
                 </View>
               </View>

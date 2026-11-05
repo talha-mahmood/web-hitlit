@@ -41,7 +41,7 @@ export default function PollMessageCard({
   const totalVotes = poll?.totalVotes ?? 0;
 
   return (
-    <View className="bg-white rounded-2xl p-3" style={{ width: cardWidth, ...cardShadow }}>
+    <View className="bg-surface rounded-2xl p-3" style={{ width: cardWidth, ...cardShadow }}>
       <Pressable onPress={() => poll && setResultsOpen(true)} disabled={!poll}>
         <View className="flex-row items-center mb-2" style={{ gap: 6 }}>
           <Ionicons name="bar-chart" size={15} color={colors.primary} />

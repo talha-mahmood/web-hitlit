@@ -279,7 +279,7 @@ export default function EditCourtScreen() {
         <Text className="text-base font-bold text-ink flex-1">{isEditing ? "Edit Court" : "Add Court"}</Text>
         <Pressable onPress={handleSave} disabled={isPending} style={primaryButtonShadow}>
           <GradientFill className="rounded-xl px-4 py-2">
-            {isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Save</Text>}
+            {isPending ? <ActivityIndicator size="small" color="white" /> : <Text className="text-jazba-white font-semibold text-sm">Save</Text>}
           </GradientFill>
         </Pressable>
       </View>
@@ -422,7 +422,7 @@ export default function EditCourtScreen() {
                   gap: 8,
                   borderWidth: 1.5,
                   borderColor: selected ? colors.primary : colors.border,
-                  backgroundColor: selected ? colors.primaryLight : "white",
+                  backgroundColor: selected ? colors.primaryLight : "#0A1723",
                 }}
               >
                 <MaterialCommunityIcons name={icon} size={20} color={selected ? colors.primary : colors.muted} />

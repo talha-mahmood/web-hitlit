@@ -28,7 +28,7 @@ type PlayerEntry = NamedEntry;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "NewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
+const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
 
 const OVERS_PRESETS = ["2", "5", "10", "20", "50"];
 
@@ -54,7 +54,7 @@ function CardSection({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
         <IconBadge icon={icon} />
         <Text className="text-ink font-bold text-base">{title}</Text>
@@ -158,7 +158,7 @@ function TeamCard({
   const teamNameClash = namesClash(name, otherTeamName);
 
   return (
-    <View className="bg-white rounded-2xl overflow-hidden mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl overflow-hidden mb-4" style={cardShadow}>
       <View
         className="flex-row items-center px-4 py-3"
         style={{ gap: 10, backgroundColor: colors.primaryLight }}
@@ -167,7 +167,7 @@ function TeamCard({
           className="items-center justify-center rounded-full"
           style={{ width: 30, height: 30 }}
         >
-          <Text className="text-white font-extrabold text-sm">{letter}</Text>
+          <Text className="text-jazba-white font-extrabold text-sm">{letter}</Text>
         </GradientFill>
         <Ionicons name="shirt-outline" size={18} color={colors.primaryDark} />
         <View className="flex-1">
@@ -176,7 +176,7 @@ function TeamCard({
         </View>
         <View
           className="flex-row items-center rounded-full px-2.5 py-1"
-          style={{ gap: 4, backgroundColor: "white" }}
+          style={{ gap: 4, backgroundColor: "#0A1723" }}
         >
           <Ionicons name="people" size={12} color={colors.primaryDark} />
           <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
@@ -394,7 +394,7 @@ export default function NewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View className="overflow-hidden" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <View
           pointerEvents="none"
@@ -490,7 +490,7 @@ export default function NewMatchScreen() {
           // match and can't be changed here — shown as plain read-only
           // context instead of locked, grayed-out form fields, since
           // there's nothing left for the host to actually fill in for them.
-          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
             <View className="flex-row items-center">
               <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>{teamAName}</Text>
               <Text className="text-muted text-xs font-bold mx-2">VS</Text>
@@ -668,12 +668,12 @@ export default function NewMatchScreen() {
                     {tossCallSide ? (
                       <GradientFill className="flex-row items-center justify-center rounded-xl py-3" style={{ gap: 6 }}>
                         <Ionicons name="disc-outline" size={16} color="white" />
-                        <Text className="text-white font-bold text-sm">Flip Coin</Text>
+                        <Text className="text-jazba-white font-bold text-sm">Flip Coin</Text>
                       </GradientFill>
                     ) : (
                       <View
                         className="flex-row items-center justify-center rounded-xl py-3"
-                        style={{ gap: 6, backgroundColor: "#E5E7EB" }}
+                        style={{ gap: 6, backgroundColor: "#1C2D3A" }}
                       >
                         <Ionicons name="disc-outline" size={16} color={colors.muted} />
                         <Text className="text-muted font-bold text-sm">Flip Coin</Text>
@@ -719,7 +719,7 @@ export default function NewMatchScreen() {
               ) : (
                 <>
                   <Ionicons name="play" size={16} color="white" />
-                  <Text className="font-bold text-base text-white">Start Match</Text>
+                  <Text className="font-bold text-base text-jazba-white">Start Match</Text>
                 </>
               )}
             </GradientFill>

@@ -67,7 +67,7 @@ function FilterPillFill({
     );
   }
   return (
-    <View className={className} style={{ backgroundColor: "white", ...style }}>
+    <View className={className} style={{ backgroundColor: "#0A1723", ...style }}>
       {children}
     </View>
   );
@@ -189,7 +189,7 @@ function GameCard({
         // Bouncy's explicit style prop (needed for the press animation)
         // takes priority over a className-derived margin, so a margin set
         // here never actually showed up.
-        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
         scaleTo={0.98}
       >
         {/* Laid out as the same five rows (and the same min height / font
@@ -197,7 +197,7 @@ function GameCard({
             picture in the disc on the right edge, then title, location,
             people line, badge line, skill + price line. */}
         <View
-          className="border border-border overflow-hidden bg-white"
+          className="border border-border overflow-hidden bg-surface"
           style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}
         >
           {/* Join/Joined/Requested/Full/hosting CTA — pinned to the top-right
@@ -238,7 +238,7 @@ function GameCard({
                     className="items-center justify-center rounded-2xl px-2 py-1"
                     style={{ minWidth: 60, ...primaryButtonShadow }}
                   >
-                    <Text className="text-white font-bold" style={{ fontSize: 11.5 }}>Join</Text>
+                    <Text className="text-jazba-white font-bold" style={{ fontSize: 11.5 }}>Join</Text>
                   </GradientFill>
                 )}
               </Bouncy>
@@ -260,7 +260,7 @@ function GameCard({
               width: 82,
               height: 82,
               borderRadius: 41,
-              backgroundColor: "#DCEFE4",
+              backgroundColor: "#103A2A",
             }}
           >
             {sportPhoto ? (
@@ -332,7 +332,7 @@ function GameCard({
                   size={11}
                   color="white"
                 />
-                <Text className="text-white text-xs font-bold" numberOfLines={1} style={{ flexShrink: 1 }}>
+                <Text className="text-jazba-white text-xs font-bold" numberOfLines={1} style={{ flexShrink: 1 }}>
                   {badgeLabel}
                 </Text>
               </View>
@@ -531,17 +531,15 @@ export default function GamesListScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {isFocused ? <StatusBar style="light" /> : null}
-      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <GradientFill
+      {/* Compact dark header; filter, create, and back actions are unchanged. */}
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
+          paddingTop: insets.top + 8,
+          paddingBottom: 12,
           paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.background,
         }}
       >
         <View className="flex-row items-center justify-between">
@@ -552,7 +550,7 @@ export default function GamesListScreen() {
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
+              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
                 {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
               </Text>
               <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
@@ -562,7 +560,7 @@ export default function GamesListScreen() {
           </View>
           <Pressable
             onPress={() => navigation.navigate("CreateGame", gameType ? { gameType } : undefined)}
-            className="flex-row items-center bg-white rounded-full px-3.5 py-2"
+            className="flex-row items-center bg-surface rounded-full px-3.5 py-2"
             style={{ gap: 4, ...cardShadow }}
           >
             <Ionicons name="add" size={16} color={colors.primaryDark} />
@@ -571,7 +569,7 @@ export default function GamesListScreen() {
             </Text>
           </Pressable>
         </View>
-      </GradientFill>
+      </View>
 
       <View style={{ paddingTop: 16 }}>
       {/* Search — the sport filter used to sit as an icon button here; it's
@@ -888,7 +886,7 @@ export default function GamesListScreen() {
                   className="mt-2"
                 >
                   <GradientFill className="rounded-xl px-6 py-3">
-                    <Text className="text-white font-semibold">
+                    <Text className="text-jazba-white font-semibold">
                       Create a {isTournamentList ? "Tournament" : "Game"}
                     </Text>
                   </GradientFill>

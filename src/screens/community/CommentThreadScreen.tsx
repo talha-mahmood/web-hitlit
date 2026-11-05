@@ -56,7 +56,7 @@ function Avatar({ name, avatar, size = 36 }: { name: string | null; avatar: stri
       className="items-center justify-center"
       style={{ width: size, height: size, borderRadius: size / 2 }}
     >
-      <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>
+      <Text className="text-jazba-white font-bold" style={{ fontSize: size * 0.4 }}>
         {initials}
       </Text>
     </GradientFill>
@@ -114,7 +114,7 @@ function CommentBubble({
     <View
       className="rounded-2xl p-3.5 mb-3"
       style={{
-        backgroundColor: isHighlighted ? colors.primaryLight : isRoot ? "white" : colors.primaryLight,
+        backgroundColor: isHighlighted ? colors.primaryLight : isRoot ? "#0A1723" : colors.primaryLight,
         borderWidth: isHighlighted ? 2 : 1,
         borderColor: isHighlighted ? colors.primary : isRoot ? colors.border : colors.primaryLight,
       }}
@@ -309,7 +309,7 @@ export default function CommentThreadScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-app"
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
@@ -321,7 +321,7 @@ export default function CommentThreadScreen() {
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color="white" />
         </Pressable>
-        <Text className="text-white font-extrabold text-lg flex-1">Comment</Text>
+        <Text className="text-jazba-white font-extrabold text-lg flex-1">Comment</Text>
       </GradientFill>
 
       {isLoading ? (

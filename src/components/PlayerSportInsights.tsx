@@ -48,7 +48,7 @@ export default function PlayerSportInsights({ sport, fullName }: { sport: Generi
   });
 
   return (
-    <View className="bg-white rounded-2xl p-4 mt-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mt-4" style={cardShadow}>
       <Text className="text-ink font-bold text-base text-center mb-3">Match Result Distribution</Text>
       {t.matches > 0 ? (
         <View className="items-center">
@@ -61,7 +61,7 @@ export default function PlayerSportInsights({ sport, fullName }: { sport: Generi
             {slices.map((s) => (
               <View key={s.label} className="items-center" style={{ width: 70 }}>
                 <View className="items-center justify-center rounded-full" style={{ width: 32, height: 32, backgroundColor: RESULT_COLOR[s.label] }}>
-                  <Text className="text-white text-xs font-bold">{s.value}</Text>
+                  <Text className="text-jazba-white text-xs font-bold">{s.value}</Text>
                 </View>
                 <Text className="text-ink text-xs font-semibold mt-1">{s.label}</Text>
               </View>

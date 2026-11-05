@@ -1,13 +1,15 @@
 // Central design tokens for the app. Keep colors/spacing here so screens stay consistent.
 export const colors = {
-  primary: "#1D9254",
-  primaryDark: "#0E5C34",
-  primaryLight: "#DCEFE4",
-  ink: "#1A1A1A",
-  muted: "#6B7280",
-  border: "#E5E7EB",
-  background: "#FFFFFF", // page canvas (pure white, = bg-white)
-  danger: "#DC2626",
+  primary: "#18C66A",
+  primaryDark: "#0F9F58",
+  primaryLight: "#103A2A",
+  ink: "#F5F7FA",
+  muted: "#9AA8B7",
+  border: "#1C2D3A",
+  background: "#050B12",
+  surface: "#0A1723",
+  surfaceRaised: "#0D1C29",
+  danger: "#EF4444",
   warning: "#F59E0B",
 };
 
@@ -23,11 +25,11 @@ export const spacing = {
 // just gives flat bordered boxes some depth. Spread into a card's style prop
 // alongside its existing className.
 export const cardShadow = {
-  shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  elevation: 3,
+  shadowColor: "#000000",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.22,
+  shadowRadius: 10,
+  elevation: 4,
 };
 
 // The Squads and Games/Tournaments list cards share this one minimum height

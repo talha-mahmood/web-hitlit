@@ -23,8 +23,8 @@ const TYPE_FILTERS: { type: MentionEntityType | undefined; label: string; icon: 
 // a glance even before you reach the subtitle text (matches the "⚽ Player /
 // 🏆 Tournament" visual grouping from the spec).
 const TYPE_META: Record<MentionEntityType, { icon: keyof typeof MaterialCommunityIcons.glyphMap; bg: string; fg: string; label: string }> = {
-  player: { icon: "account", bg: "#EFF6FF", fg: "#2563EB", label: "Player" },
-  game: { icon: "calendar-star", bg: "#F0FDF4", fg: colors.primaryDark, label: "Game" },
+  player: { icon: "account", bg: "#102638", fg: "#2563EB", label: "Player" },
+  game: { icon: "calendar-star", bg: "#103A2A", fg: colors.primaryDark, label: "Game" },
   tournament: { icon: "trophy", bg: "#FFFBEB", fg: "#D97706", label: "Tournament" },
   squad: { icon: "account-group", bg: "#FDF2F8", fg: "#DB2777", label: "Group" },
 };
@@ -94,7 +94,7 @@ export default function MentionSuggestionsList({
 
   return (
     <View
-      className="bg-white"
+      className="bg-surface"
       style={{
         position: "absolute",
         left: 0,
@@ -127,7 +127,7 @@ export default function MentionSuggestionsList({
                 paddingHorizontal: 12,
                 paddingVertical: 7,
                 gap: 5,
-                backgroundColor: active ? colors.primary : "#F3F4F6",
+                backgroundColor: active ? colors.primary : "#142533",
               }}
             >
               <Ionicons name={f.icon} size={13} color={active ? "white" : colors.muted} />

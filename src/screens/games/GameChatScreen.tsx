@@ -55,10 +55,10 @@ function QuotedPreview({ parent, isOwn, onPress }: { parent: GameMessage; isOwn:
       className="rounded-lg px-2.5 py-1.5 mb-1"
       style={{ backgroundColor: isOwn ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.05)", borderLeftWidth: 3, borderLeftColor: isOwn ? "white" : colors.primary }}
     >
-      <Text className={`text-xs font-semibold ${isOwn ? "text-white" : "text-primary"}`} numberOfLines={1}>
+      <Text className={`text-xs font-semibold ${isOwn ? "text-jazba-white" : "text-primary"}`} numberOfLines={1}>
         {parent.profiles?.full_name ?? "Player"}
       </Text>
-      <Text className={`text-xs ${isOwn ? "text-white/80" : "text-muted"}`} numberOfLines={1} style={parent.deleted_at ? { fontStyle: "italic" } : undefined}>
+      <Text className={`text-xs ${isOwn ? "text-jazba-white/80" : "text-muted"}`} numberOfLines={1} style={parent.deleted_at ? { fontStyle: "italic" } : undefined}>
         {parent.deleted_at ? "This message was deleted" : parent.message}
       </Text>
     </Pressable>
@@ -160,7 +160,7 @@ function MessageBubble({
             <BubbleFill isOwn={isOwn} highlighted={isHighlighted}>
               {isDeleted ? (
                 <Text
-                  className={`text-sm ${isOwn ? "text-white/80" : "text-muted"}`}
+                  className={`text-sm ${isOwn ? "text-jazba-white/80" : "text-muted"}`}
                   style={{ fontStyle: "italic" }}
                 >
                   This message was deleted
@@ -168,7 +168,7 @@ function MessageBubble({
               ) : (
                 <>
                   {parent && <QuotedPreview parent={parent} isOwn={isOwn} onPress={onJumpToParent} />}
-                  <Text className={isOwn ? "text-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
+                  <Text className={isOwn ? "text-jazba-white text-sm" : "text-ink text-sm"}>{message.message}</Text>
                 </>
               )}
             </BubbleFill>
@@ -176,7 +176,7 @@ function MessageBubble({
           {isOwn && !isDeleted && (
             <View
               className="items-center justify-center rounded-full"
-              style={{ position: "absolute", right: -6, bottom: -6, width: 20, height: 20, backgroundColor: "white", ...cardShadow }}
+              style={{ position: "absolute", right: -6, bottom: -6, width: 20, height: 20, backgroundColor: "#0A1723", ...cardShadow }}
             >
               <Ionicons name="checkmark-done" size={12} color={colors.primary} />
             </View>
@@ -353,7 +353,7 @@ export default function GameChatScreen() {
       <View className="flex-row items-center px-4 pb-4" style={{ paddingTop: insets.top + 16 }}>
         <Pressable
           onPress={() => navigation.goBack()}
-          className="items-center justify-center bg-white rounded-full mr-3"
+          className="items-center justify-center bg-surface rounded-full mr-3"
           style={{ width: 44, height: 44, ...cardShadow }}
         >
           <Ionicons name="arrow-back" size={20} color={colors.ink} />
@@ -479,7 +479,7 @@ export default function GameChatScreen() {
         style={{
           paddingBottom: insets.bottom,
           gap: 8,
-          backgroundColor: "white",
+          backgroundColor: "#0A1723",
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
           ...cardShadow,

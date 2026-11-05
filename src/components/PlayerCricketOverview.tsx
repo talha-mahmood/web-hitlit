@@ -86,7 +86,7 @@ function StatPanel({
   return (
     <View className="flex-1 rounded-2xl overflow-hidden" style={cardShadow}>
       <View className="py-2 items-center" style={{ backgroundColor: color.header }}>
-        <Text className="text-white font-bold text-xs">{title}</Text>
+        <Text className="text-jazba-white font-bold text-xs">{title}</Text>
       </View>
       <View style={{ backgroundColor: color.body }}>
         {rows.map((r, i) => (
@@ -106,17 +106,17 @@ function StatPanel({
 
 function TogglePill({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#E5E7EB" }}>
+    <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#1C2D3A" }}>
       {options.map((o) =>
         value === o ? (
           <Pressable key={o} onPress={() => onChange(o)}>
             <GradientFill className="px-4 py-1.5">
-              <Text className="text-xs font-bold text-white">{o}</Text>
+              <Text className="text-xs font-bold text-jazba-white">{o}</Text>
             </GradientFill>
           </Pressable>
         ) : (
           <Pressable key={o} onPress={() => onChange(o)} className="px-4 py-1.5">
-            <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+            <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
               {o}
             </Text>
           </Pressable>
@@ -128,7 +128,7 @@ function TogglePill({ options, value, onChange }: { options: string[]; value: st
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mt-5" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mt-5" style={cardShadow}>
       <Text className="text-ink font-bold text-base mb-3">{title}</Text>
       {children}
     </View>
@@ -206,10 +206,10 @@ export default function PlayerCricketOverview({ fullName, sportId }: { fullName:
       <Text className="text-ink font-bold text-base mt-6 mb-3">Recent Form</Text>
       <View className="flex-row items-center" style={{ gap: 8 }}>
         <GradientFill className="items-center justify-center rounded-full" style={{ width: 44, height: 44 }}>
-          <Text className="text-white font-bold text-xs">Bat</Text>
+          <Text className="text-jazba-white font-bold text-xs">Bat</Text>
         </GradientFill>
         {formEntries.map((f) => (
-          <View key={`${f.matchId}-bat`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#E5E7EB" }}>
+          <View key={`${f.matchId}-bat`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#1C2D3A" }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
               {f.bat}
             </Text>
@@ -218,10 +218,10 @@ export default function PlayerCricketOverview({ fullName, sportId }: { fullName:
       </View>
       <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
         <GradientFill className="items-center justify-center rounded-full" style={{ width: 44, height: 44 }}>
-          <Text className="text-white font-bold text-xs">Bowl</Text>
+          <Text className="text-jazba-white font-bold text-xs">Bowl</Text>
         </GradientFill>
         {formEntries.map((f) => (
-          <View key={`${f.matchId}-bowl`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#E5E7EB" }}>
+          <View key={`${f.matchId}-bowl`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#1C2D3A" }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
               {f.bowl}
             </Text>

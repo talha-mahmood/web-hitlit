@@ -43,7 +43,7 @@ function Avatar({ name, avatar, size = 40 }: { name: string | null; avatar: stri
       className="items-center justify-center"
       style={{ width: size, height: size, borderRadius: size / 2 }}
     >
-      <Text className="text-white font-bold" style={{ fontSize: size * 0.4 }}>
+      <Text className="text-jazba-white font-bold" style={{ fontSize: size * 0.4 }}>
         {initials}
       </Text>
     </GradientFill>
@@ -93,7 +93,7 @@ function CommentCard({
   };
 
   return (
-    <View className="bg-white rounded-2xl border border-border p-2.5 mb-1.5" style={cardShadow}>
+    <View className="bg-surface rounded-2xl border border-border p-2.5 mb-1.5" style={cardShadow}>
       <View className="flex-row items-start" style={{ gap: 8 }}>
         <Pressable onPress={onOpenProfile} hitSlop={4}>
           <Avatar name={comment.profiles?.full_name ?? null} avatar={comment.profiles?.avatar ?? null} size={30} />
@@ -289,7 +289,7 @@ export default function CommunityChatContent({
         saving={updateComment.isPending}
       />
 
-      <View className="px-4 pt-2.5 bg-white">
+      <View className="px-4 pt-2.5 bg-surface">
         <FieldInput
           value={searchQuery}
           onChangeText={setSearchQuery}

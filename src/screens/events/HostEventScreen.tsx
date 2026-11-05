@@ -66,7 +66,7 @@ function FormCard({
 }) {
   return (
     <View
-      className="flex-row bg-white"
+      className="flex-row bg-surface"
       style={{ borderRadius: 16, padding: 13, gap: 11, borderWidth: 1, borderColor: "rgba(17,24,39,0.05)", ...cardShadow }}
     >
       <Ionicons name={icon} size={19} color={colors.primary} style={{ marginTop: 1 }} />
@@ -111,7 +111,7 @@ function DateChipFill({ selected, children }: { selected: boolean; children: Rea
   return (
     <View
       className="items-center px-3 py-2.5 rounded-2xl"
-      style={{ backgroundColor: selected ? "#DCEFE4" : "white" }}
+      style={{ backgroundColor: selected ? "#103A2A" : "#0A1723" }}
     >
       {children}
     </View>
@@ -160,7 +160,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
         gap: 6,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? "#DCEFE4" : "white",
+        backgroundColor: selected ? "#103A2A" : "#0A1723",
       }}
     >
       <Text className={selected ? "font-bold" : "font-medium"} style={{ fontSize: 12, color: selected ? colors.primaryDark : colors.ink }}>
@@ -322,7 +322,7 @@ export default function HostEventScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {/* Header */}
       <View className="flex-row items-center px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
         <Bouncy onPress={() => navigation.goBack()} scaleTo={0.85} className="mr-3 p-1">
@@ -343,7 +343,7 @@ export default function HostEventScreen() {
             {createEvent.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-bold" style={{ fontSize: 14.5 }}>
+              <Text className="text-jazba-white font-bold" style={{ fontSize: 14.5 }}>
                 Post
               </Text>
             )}
@@ -360,10 +360,10 @@ export default function HostEventScreen() {
         <GradientFill style={{ borderRadius: 16, paddingHorizontal: 14, paddingVertical: 11, overflow: "hidden", ...cardShadow }}>
           <View className="flex-row items-center">
             <View className="flex-1" style={{ paddingRight: 8 }}>
-              <Text className="text-white font-extrabold" style={{ fontSize: 18 }}>
+              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 18 }}>
                 Host an Event
               </Text>
-              <Text className="text-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
+              <Text className="text-jazba-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
                 Create an event and bring people together!
               </Text>
             </View>
@@ -393,7 +393,7 @@ export default function HostEventScreen() {
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "#8FD9AE",
-                  backgroundColor: "#F0FDF4",
+                  backgroundColor: "#103A2A",
                 }}
               >
                 {iconAsset ? (
@@ -409,7 +409,7 @@ export default function HostEventScreen() {
                 <Ionicons name="add" size={11} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#DCEFE4", paddingHorizontal: 16, paddingVertical: 10 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: "#103A2A", paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>
@@ -420,7 +420,7 @@ export default function HostEventScreen() {
         {/* Name */}
         <FormCard icon="calendar" title="Event Name" required>
           <View className="flex-row items-center" style={{ gap: 10 }}>
-            <View className="items-center justify-center" style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#F3F4F6" }}>
+            <View className="items-center justify-center" style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#142533" }}>
               <Ionicons name="calendar" size={20} color="#4B5563" />
             </View>
             <View className="flex-1">

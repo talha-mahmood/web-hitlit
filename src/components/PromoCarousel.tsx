@@ -111,10 +111,10 @@ function PromoCard({ slide, width }: { slide: PromoSlide; width: number }) {
         >
           HitLit
         </Text>
-        <Text className="text-white text-lg font-extrabold leading-5" numberOfLines={2}>
+        <Text className="text-jazba-white text-lg font-extrabold leading-5" numberOfLines={2}>
           {slide.title}
         </Text>
-        <Text className="text-white text-xs mt-1 opacity-80" numberOfLines={2}>
+        <Text className="text-jazba-white text-xs mt-1 opacity-80" numberOfLines={2}>
           {slide.subtitle}
         </Text>
       </View>

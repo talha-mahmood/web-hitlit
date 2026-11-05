@@ -151,14 +151,14 @@ export default function AdminModerationScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <View className="bg-white border border-border rounded-2xl p-4">
+            <View className="bg-surface border border-border rounded-2xl p-4">
               <View className="flex-row items-center justify-between mb-1.5">
                 <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: colors.primaryLight }}>
                   <Text className="text-xs font-semibold" style={{ color: colors.primaryDark }}>
                     {SOURCE_LABELS[item.source] ?? item.source}
                   </Text>
                 </View>
-                <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#FEE2E2" }}>
+                <View className="rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#351419" }}>
                   <Text className="text-xs font-semibold" style={{ color: colors.danger }}>
                     Unreviewed
                   </Text>

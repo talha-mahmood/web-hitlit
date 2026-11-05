@@ -70,10 +70,10 @@ export default function VenueCard({
     <Bouncy
       onPress={onPress}
       className={`rounded-2xl ${className}`}
-      style={{ ...cardShadow, backgroundColor: "white" }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723" }}
       scaleTo={0.98}
     >
-      <View className="bg-white rounded-2xl border border-border overflow-hidden">
+      <View className="bg-surface rounded-2xl border border-border overflow-hidden">
         <View className="relative">
           {/* Landscape, not square — this card's width (home screen: ~48% of
               the device width) made a flat h-36 read as near-square. */}
@@ -88,7 +88,7 @@ export default function VenueCard({
             <Bouncy
               onPress={onToggleFavorite}
               scaleTo={0.75}
-              className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full bg-white/90 items-center justify-center"
+              className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full bg-surface/90 items-center justify-center"
             >
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
@@ -104,7 +104,7 @@ export default function VenueCard({
               style={{ left: 6, bottom: 6, paddingHorizontal: 7, paddingVertical: 3, gap: 3 }}
             >
               <Ionicons name="star" size={11} color={colors.warning} />
-              <Text className="text-white text-xs font-bold">
+              <Text className="text-jazba-white text-xs font-bold">
                 {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
               </Text>
             </View>
@@ -114,12 +114,12 @@ export default function VenueCard({
               className="absolute bg-black/60 rounded-full"
               style={{ left: 6, top: 6, paddingHorizontal: 7, paddingVertical: 3 }}
             >
-              <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
+              <Text className="text-jazba-white text-xs font-semibold">{distanceLabel}</Text>
             </View>
           ) : null}
           {!minimal && distanceLabel ? (
             <View className="absolute top-2 left-2 bg-black/60 rounded-full px-2.5 py-1">
-              <Text className="text-white text-xs font-semibold">{distanceLabel}</Text>
+              <Text className="text-jazba-white text-xs font-semibold">{distanceLabel}</Text>
             </View>
           ) : null}
         </View>

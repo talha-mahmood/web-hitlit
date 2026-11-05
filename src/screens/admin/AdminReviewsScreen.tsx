@@ -28,7 +28,7 @@ function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
 function ReviewCard({ review, onRespond }: { review: VenueReview; onRespond: () => void }) {
   const date = new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   return (
-    <View className="bg-white rounded-2xl p-4 mb-3" style={{ borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" }}>
+    <View className="bg-surface rounded-2xl p-4 mb-3" style={{ borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" }}>
       <View className="flex-row items-center justify-between mb-1.5">
         <Text className="text-ink font-semibold text-sm" numberOfLines={1}>
           {review.profiles?.full_name ?? "Customer"}
@@ -100,7 +100,7 @@ export default function AdminReviewsScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListHeaderComponent={
             (reviews ?? []).length > 0 ? (
-              <View className="bg-white rounded-2xl p-5 mb-4 items-center" style={{ borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" }}>
+              <View className="bg-surface rounded-2xl p-5 mb-4 items-center" style={{ borderWidth: 1, borderColor: "rgba(17, 24, 39, 0.06)" }}>
                 <Text className="text-ink font-extrabold text-3xl">{avgRating.toFixed(1)}</Text>
                 <Stars rating={Math.round(avgRating)} size={18} />
                 <Text className="text-muted text-xs mt-1">
@@ -132,7 +132,7 @@ export default function AdminReviewsScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1 bg-black/40 justify-end"
         >
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
+          <View className="bg-surface rounded-t-3xl px-5 pt-5" style={{ paddingBottom: insets.bottom + 24 }}>
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold text-ink">Respond to Review</Text>
               <Pressable onPress={() => setRespondingTo(null)} hitSlop={8}>
@@ -164,7 +164,7 @@ export default function AdminReviewsScreen() {
                   {respond.isPending ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text className="font-semibold text-base text-white">Post Response</Text>
+                    <Text className="font-semibold text-base text-jazba-white">Post Response</Text>
                   )}
                 </GradientFill>
               ) : (

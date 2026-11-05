@@ -63,7 +63,7 @@ export default function AllVenuesListScreen() {
             >
               <GradientFill className="flex-row items-center rounded-lg px-3 py-2" style={{ gap: 4 }}>
                 <Ionicons name="add" size={16} color="white" />
-                <Text className="text-white text-xs font-semibold">New Venue</Text>
+                <Text className="text-jazba-white text-xs font-semibold">New Venue</Text>
               </GradientFill>
             </Pressable>
           </View>

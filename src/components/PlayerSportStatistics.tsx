@@ -24,7 +24,7 @@ export default function PlayerSportStatistics({ sport, fullName }: { sport: Gene
   ];
 
   return (
-    <View className="bg-white rounded-2xl p-4 mt-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mt-4" style={cardShadow}>
       {rows.map((row, i) => (
         <View
           key={row.label}

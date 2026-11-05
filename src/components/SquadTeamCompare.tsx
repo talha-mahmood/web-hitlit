@@ -41,7 +41,7 @@ function PickTeamModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
-        <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ maxHeight: "80%", paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}>
+        <View className="bg-surface rounded-t-3xl px-5 pt-5" style={{ maxHeight: "80%", paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}>
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-ink">Select a Team</Text>
             <Pressable onPress={onClose} hitSlop={8}>
@@ -182,15 +182,15 @@ function HeadToHeadView({ squad, other }: { squad: SquadDetail; other: { id: str
     return (
       <View className="mt-4" style={{ gap: 10 }}>
         <View className="flex-row" style={{ gap: 10 }}>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
             <Text className="font-bold text-base">{stats.matches}</Text>
             <Text className="text-muted text-xs mt-0.5">Matches</Text>
           </View>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
             <Text className="font-bold text-base">{stats.won}</Text>
             <Text className="text-muted text-xs mt-0.5">{squad.name} Won</Text>
           </View>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
             <Text className="font-bold text-base">{stats.lost}</Text>
             <Text className="text-muted text-xs mt-0.5">{other.name} Won</Text>
           </View>
@@ -206,15 +206,15 @@ function HeadToHeadView({ squad, other }: { squad: SquadDetail; other: { id: str
   const stats = aggregateGeneric(figures);
   return (
     <View className="mt-4 flex-row" style={{ gap: 10 }}>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
         <Text className="font-bold text-base">{stats.matches}</Text>
         <Text className="text-muted text-xs mt-0.5">Matches</Text>
       </View>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
         <Text className="font-bold text-base">{stats.wins}</Text>
         <Text className="text-muted text-xs mt-0.5">{squad.name} Won</Text>
       </View>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
         <Text className="font-bold text-base">{stats.losses}</Text>
         <Text className="text-muted text-xs mt-0.5">{other.name} Won</Text>
       </View>
@@ -236,17 +236,17 @@ export default function SquadTeamCompare({ squad }: { squad: SquadDetail }) {
         <Text className="text-muted font-semibold text-sm">{other ? `Comparing with ${other.name}` : "Select one of my teams"}</Text>
       </Pressable>
 
-      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: "#142533" }}>
         {(["COMPARE", "HEAD_TO_HEAD"] as Mode[]).map((m) =>
           mode === m ? (
             <Pressable key={m} onPress={() => setMode(m)} className="flex-1">
               <GradientFill className="items-center py-2.5">
-                <Text className="text-white font-bold text-xs">{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
+                <Text className="text-jazba-white font-bold text-xs">{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
               </GradientFill>
             </Pressable>
           ) : (
             <Pressable key={m} onPress={() => setMode(m)} className="flex-1 items-center py-2.5">
-              <Text className="font-bold text-xs" style={{ color: "#6B7280" }}>{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
+              <Text className="font-bold text-xs" style={{ color: "#9AA8B7" }}>{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
             </Pressable>
           )
         )}

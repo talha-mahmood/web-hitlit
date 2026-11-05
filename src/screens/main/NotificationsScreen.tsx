@@ -118,7 +118,7 @@ function NotificationCard({
       className="flex-row items-start rounded-2xl mb-3 px-4 py-3.5"
       style={{
         gap: 12,
-        backgroundColor: unread ? colors.primaryLight : "white",
+        backgroundColor: unread ? colors.primaryLight : "#0A1723",
         borderWidth: 1,
         borderColor: unread ? colors.primary : colors.border,
       }}
@@ -157,7 +157,7 @@ function NotificationCard({
                 {inviteActions.isResponding ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text className="text-white text-xs font-semibold">Approve</Text>
+                  <Text className="text-jazba-white text-xs font-semibold">Approve</Text>
                 )}
               </GradientFill>
             </Pressable>
@@ -285,7 +285,7 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center justify-between px-3.5 mb-4">
         <View className="flex-row items-center" style={{ gap: 10 }}>
           <Pressable onPress={() => navigation.goBack()} className="p-1 -ml-1">

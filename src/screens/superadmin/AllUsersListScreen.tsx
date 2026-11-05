@@ -27,7 +27,7 @@ function Avatar({ name, avatar }: { name: string | null; avatar: string | null }
   }
   return (
     <GradientFill className="w-11 h-11 rounded-full items-center justify-center">
-      <Text className="text-white font-bold text-sm">{initials}</Text>
+      <Text className="text-jazba-white font-bold text-sm">{initials}</Text>
     </GradientFill>
   );
 }
@@ -112,7 +112,7 @@ export default function AllUsersListScreen() {
           renderItem={({ item }) => {
             const isEjected = item.isactive === false;
             return (
-              <View className="flex-row items-center bg-white border border-border rounded-2xl p-4" style={{ gap: 12 }}>
+              <View className="flex-row items-center bg-surface border border-border rounded-2xl p-4" style={{ gap: 12 }}>
                 <Avatar name={item.full_name} avatar={item.avatar} />
                 <View className="flex-1 mr-2">
                   <View className="flex-row items-center" style={{ gap: 6 }}>
@@ -120,7 +120,7 @@ export default function AllUsersListScreen() {
                       {item.full_name ?? "Unnamed"}
                     </Text>
                     {isEjected && (
-                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: "#FEE2E2" }}>
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: "#351419" }}>
                         <Text className="text-xs font-semibold" style={{ color: colors.danger }}>
                           Ejected
                         </Text>

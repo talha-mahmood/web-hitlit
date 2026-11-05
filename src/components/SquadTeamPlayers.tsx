@@ -26,7 +26,7 @@ function PlayerRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} className="flex-row items-center bg-white rounded-2xl p-3 mb-2" style={{ gap: 12, ...cardShadow }}>
+    <Pressable onPress={onPress} className="flex-row items-center bg-surface rounded-2xl p-3 mb-2" style={{ gap: 12, ...cardShadow }}>
       {avatar ? (
         <Image source={{ uri: avatar }} className="w-11 h-11 rounded-full bg-primary-light" />
       ) : (
@@ -73,17 +73,17 @@ export default function SquadTeamPlayers({ squad, isCricket }: { squad: SquadDet
 
   return (
     <View>
-      <View className="flex-row self-start rounded-full overflow-hidden mb-4" style={{ backgroundColor: "#E5E7EB" }}>
+      <View className="flex-row self-start rounded-full overflow-hidden mb-4" style={{ backgroundColor: "#1C2D3A" }}>
         {(["az", ...(isCricket ? (["matches"] as SortMode[]) : [])] as SortMode[]).map((key) =>
           sort === key ? (
             <Pressable key={key} onPress={() => setSort(key)}>
               <GradientFill className="px-4 py-2">
-                <Text className="text-white font-bold text-xs">{key === "az" ? "A-Z" : "Most Matches"}</Text>
+                <Text className="text-jazba-white font-bold text-xs">{key === "az" ? "A-Z" : "Most Matches"}</Text>
               </GradientFill>
             </Pressable>
           ) : (
             <Pressable key={key} onPress={() => setSort(key)} className="px-4 py-2">
-              <Text className="font-bold text-xs" style={{ color: "#374151" }}>
+              <Text className="font-bold text-xs" style={{ color: "#CBD4DD" }}>
                 {key === "az" ? "A-Z" : "Most Matches"}
               </Text>
             </Pressable>

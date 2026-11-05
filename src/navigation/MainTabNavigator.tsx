@@ -76,35 +76,38 @@ export default function MainTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 1, marginBottom: 2 },
         // Rounded top corners only, flush with the bottom edge — the bar
         // reads as an arch ("upside-down U") instead of a flat rectangle.
         // A taller bar + a bigger radius makes that curve read clearly
         // instead of just softened corners.
         tabBarStyle: {
-          backgroundColor: "white",
-          height: 58 + insets.bottom,
-          paddingTop: 10,
+          backgroundColor: "#0A1723",
+          height: 76 + insets.bottom,
+          paddingTop: 8,
           paddingBottom: insets.bottom,
-          borderTopLeftRadius: 44,
-          borderTopRightRadius: 44,
-          borderTopWidth: 0,
+          borderTopLeftRadius: 26,
+          borderTopRightRadius: 26,
+          borderTopWidth: 1,
+          borderTopColor: "#1C2D3A",
           shadowColor: "#000000",
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.28,
           shadowRadius: 12,
-          elevation: 8,
+          elevation: 12,
         },
         tabBarIcon: ({ focused, color, size }) => (
-          <View style={{ alignItems: "center" }}>
-            <View
-              style={{
-                width: 20,
-                height: 3,
-                borderRadius: 2,
-                marginBottom: 5,
-                backgroundColor: focused ? colors.primary : "transparent",
-              }}
-            />
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: 46,
+              height: 44,
+              borderRadius: 15,
+              marginBottom: 2,
+              backgroundColor: focused ? "rgba(24,198,106,0.16)" : "transparent",
+            }}
+          >
             {route.name === "Community" ? (
               <MaterialCommunityIcons name={COMMUNITY_ICON} color={color} size={size} />
             ) : route.name === "Scorecard" ? (

@@ -57,7 +57,7 @@ export default function ManageCourtsScreen() {
         <Pressable onPress={() => navigation.navigate("EditCourt", { venueId: params.venueId })} style={primaryButtonShadow}>
           <GradientFill className="flex-row items-center rounded-lg px-3 py-1.5" style={{ gap: 4 }}>
             <Ionicons name="add" size={14} color="white" />
-            <Text className="text-white text-xs font-semibold">Add</Text>
+            <Text className="text-jazba-white text-xs font-semibold">Add</Text>
           </GradientFill>
         </Pressable>
       </View>

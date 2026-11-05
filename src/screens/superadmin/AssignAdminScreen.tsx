@@ -50,7 +50,7 @@ function EmailLookupRow({
         style={primaryButtonShadow}
       >
         <GradientFill className="rounded-xl px-4 items-center justify-center">
-          {isLoading ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white font-semibold text-sm">Look up</Text>}
+          {isLoading ? <ActivityIndicator size="small" color="white" /> : <Text className="text-jazba-white font-semibold text-sm">Look up</Text>}
         </GradientFill>
       </Pressable>
     </View>
@@ -73,7 +73,7 @@ function LookupResultCard({
       {result.avatar ? (
         <Image source={{ uri: result.avatar }} className="w-10 h-10 rounded-full mr-3" />
       ) : (
-        <View className="w-10 h-10 rounded-full bg-white items-center justify-center mr-3">
+        <View className="w-10 h-10 rounded-full bg-surface items-center justify-center mr-3">
           <Text className="text-primary font-bold">{(result.full_name ?? "?").charAt(0).toUpperCase()}</Text>
         </View>
       )}
@@ -83,7 +83,7 @@ function LookupResultCard({
       </View>
       <Pressable onPress={onConfirm} disabled={submitting}>
         <GradientFill className="rounded-lg px-3 py-2">
-          {submitting ? <ActivityIndicator size="small" color="white" /> : <Text className="text-white text-xs font-semibold">{confirmLabel}</Text>}
+          {submitting ? <ActivityIndicator size="small" color="white" /> : <Text className="text-jazba-white text-xs font-semibold">{confirmLabel}</Text>}
         </GradientFill>
       </Pressable>
     </View>

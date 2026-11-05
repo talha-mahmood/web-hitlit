@@ -45,7 +45,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View className="flex-row items-start mb-4" style={{ gap: 12 }}>
         <View
           className="items-center justify-center rounded-full"
@@ -152,7 +152,7 @@ export default function AccountSettingsScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View
         style={{ paddingTop: insets.top + 16, paddingHorizontal: 14, paddingBottom: 22 }}
       >
@@ -168,7 +168,7 @@ export default function AccountSettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <View className="bg-white rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
+        <View className="bg-surface rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
           <View
             className="items-center justify-center rounded-full"
             style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
@@ -187,7 +187,7 @@ export default function AccountSettingsScreen() {
             yet, so there's nothing real to show here. */}
         <Pressable
           onPress={() => navigation.navigate("BlockedUsers")}
-          className="bg-white rounded-2xl flex-row items-center p-4 mb-4"
+          className="bg-surface rounded-2xl flex-row items-center p-4 mb-4"
           style={{ ...cardShadow, gap: 12 }}
         >
             <View
@@ -214,7 +214,7 @@ export default function AccountSettingsScreen() {
                 {savingName ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text className="font-bold text-white">Save Name</Text>
+                  <Text className="font-bold text-jazba-white">Save Name</Text>
                 )}
               </GradientFill>
             ) : (
@@ -242,7 +242,7 @@ export default function AccountSettingsScreen() {
                 {savingJersey ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text className="font-bold text-white">Save Jersey Number</Text>
+                  <Text className="font-bold text-jazba-white">Save Jersey Number</Text>
                 )}
               </GradientFill>
             ) : (
@@ -282,7 +282,7 @@ export default function AccountSettingsScreen() {
                             size={15}
                             color="white"
                           />
-                          <Text className="text-sm font-bold text-white">
+                          <Text className="text-sm font-bold text-jazba-white">
                             {option === "public" ? "Public" : "Private"}
                           </Text>
                         </>
@@ -311,7 +311,7 @@ export default function AccountSettingsScreen() {
 
         <SectionCard
           icon="warning-outline"
-          iconBg="#FEF2F2"
+          iconBg="#351419"
           iconFg={colors.danger}
           title="Danger Zone"
           subtitle="Permanently delete your account and everything tied to it. This can't be undone."
@@ -319,7 +319,7 @@ export default function AccountSettingsScreen() {
           <Pressable
             onPress={() => setDeleteModalOpen(true)}
             className="flex-row items-center justify-center rounded-xl py-3"
-            style={{ backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", gap: 8 }}
+            style={{ backgroundColor: "#351419", borderWidth: 1, borderColor: "#7F2531", gap: 8 }}
           >
             <Ionicons name="trash-outline" size={16} color={colors.danger} />
             <Text className="font-semibold" style={{ color: colors.danger }}>
@@ -336,7 +336,7 @@ export default function AccountSettingsScreen() {
           className="mt-4"
         >
           <GradientFill className="rounded-xl py-4 items-center">
-            <Text className="text-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
+            <Text className="text-jazba-white font-semibold" style={{ fontSize: 17 }}>Sign out</Text>
           </GradientFill>
         </Pressable>
       </ScrollView>
@@ -358,10 +358,10 @@ export default function AccountSettingsScreen() {
             setDeleteConfirmText("");
           }}
         >
-          <Pressable className="bg-white rounded-2xl p-5 w-full items-center" onPress={(e) => e.stopPropagation()}>
+          <Pressable className="bg-surface rounded-2xl p-5 w-full items-center" onPress={(e) => e.stopPropagation()}>
             <View
               className="items-center justify-center rounded-full mb-3"
-              style={{ width: 52, height: 52, backgroundColor: "#FEF2F2" }}
+              style={{ width: 52, height: 52, backgroundColor: "#351419" }}
             >
               <Ionicons name="warning-outline" size={26} color={colors.danger} />
             </View>
@@ -388,7 +388,7 @@ export default function AccountSettingsScreen() {
               {isDeleting ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-semibold">Delete My Account</Text>
+                <Text className="text-jazba-white font-semibold">Delete My Account</Text>
               )}
             </Pressable>
             <Pressable

@@ -63,10 +63,10 @@ function EventCard({
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
       <Bouncy
         onPress={onPress}
-        style={{ ...cardShadow, backgroundColor: "white", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
         scaleTo={0.98}
       >
-        <View className="border border-border overflow-hidden bg-white" style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}>
+        <View className="border border-border overflow-hidden bg-surface" style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}>
           {/* Join/Joined/Requested CTA — pinned to the card's top-right corner. */}
           <View style={{ position: "absolute", top: 10, right: 10, zIndex: 5 }}>
             {isClosedToJoins && !hasJoined ? (
@@ -92,7 +92,7 @@ function EventCard({
                   </View>
                 ) : (
                   <GradientFill className="items-center justify-center rounded-2xl px-2 py-1" style={{ minWidth: 60, ...primaryButtonShadow }}>
-                    <Text className="text-white font-bold" style={{ fontSize: 11.5 }}>Join</Text>
+                    <Text className="text-jazba-white font-bold" style={{ fontSize: 11.5 }}>Join</Text>
                   </GradientFill>
                 )}
               </Bouncy>
@@ -104,7 +104,7 @@ function EventCard({
           <View
             pointerEvents="none"
             className="items-center justify-center overflow-hidden"
-            style={{ position: "absolute", right: -28, top: 44, width: 82, height: 82, borderRadius: 41, backgroundColor: "#DCEFE4" }}
+            style={{ position: "absolute", right: -28, top: 44, width: 82, height: 82, borderRadius: 41, backgroundColor: "#103A2A" }}
           >
             <Ionicons name="calendar" size={32} color={colors.primary} style={{ marginRight: 17, opacity: 0.8 }} />
           </View>
@@ -236,17 +236,15 @@ export default function ExploreEventsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {isFocused ? <StatusBar style="light" /> : null}
-      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <GradientFill
+      {/* Compact dark header; search, hosting, and filtering stay intact. */}
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
+          paddingTop: insets.top + 8,
+          paddingBottom: 12,
           paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          backgroundColor: colors.background,
         }}
       >
         <View className="flex-row items-center justify-between">
@@ -257,7 +255,7 @@ export default function ExploreEventsScreen() {
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
+              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
                 Events
               </Text>
               <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
@@ -267,7 +265,7 @@ export default function ExploreEventsScreen() {
           </View>
           <Pressable
             onPress={() => navigation.navigate("HostEvent")}
-            className="flex-row items-center bg-white rounded-full px-3.5 py-2"
+            className="flex-row items-center bg-surface rounded-full px-3.5 py-2"
             style={{ gap: 4, ...cardShadow }}
           >
             <Ionicons name="add" size={16} color={colors.primaryDark} />
@@ -276,7 +274,7 @@ export default function ExploreEventsScreen() {
             </Text>
           </Pressable>
         </View>
-      </GradientFill>
+      </View>
 
       <View style={{ paddingTop: 16 }}>
         <View className="px-3.5 mb-3">
@@ -325,7 +323,7 @@ export default function ExploreEventsScreen() {
                         </Text>
                       </GradientFill>
                     ) : (
-                      <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "white" }}>
+                      <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "#0A1723" }}>
                         <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
                           {p.label}
                         </Text>
@@ -347,7 +345,7 @@ export default function ExploreEventsScreen() {
                     </Text>
                   </GradientFill>
                 ) : (
-                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
                     <Ionicons name="location-outline" size={14} color={colors.muted} />
                     <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                       Location
@@ -371,7 +369,7 @@ export default function ExploreEventsScreen() {
                     </Text>
                   </GradientFill>
                 ) : (
-                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "white" }}>
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
                     <Ionicons name="navigate-outline" size={14} color={colors.muted} />
                     <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                       Distance
@@ -448,7 +446,7 @@ export default function ExploreEventsScreen() {
                 </Text>
                 <Pressable onPress={() => navigation.navigate("HostEvent")}>
                   <GradientFill className="rounded-xl px-6 py-3 mt-2">
-                    <Text className="text-white font-semibold">Host an Event</Text>
+                    <Text className="text-jazba-white font-semibold">Host an Event</Text>
                   </GradientFill>
                 </Pressable>
               </View>

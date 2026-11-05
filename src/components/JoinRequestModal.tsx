@@ -62,7 +62,7 @@ function SkillPill({
         gap: 6,
         paddingVertical: 14,
         borderRadius: 26,
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         borderWidth: 1.5,
         borderColor: colors.border,
       }}
@@ -110,7 +110,7 @@ export default function JoinRequestModal({
               the bottom of the screen — a downward shadow would just be
               hidden below the screen edge. */}
           <View
-            className="bg-white rounded-t-3xl px-5 pt-3"
+            className="bg-surface rounded-t-3xl px-5 pt-3"
             style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View
@@ -191,12 +191,12 @@ export default function JoinRequestModal({
                   ) : (
                     <>
                       <Ionicons name="send" size={17} color="white" style={{ marginRight: 8 }} />
-                      <Text className="font-bold text-base text-white">Send Request</Text>
+                      <Text className="font-bold text-base text-jazba-white">Send Request</Text>
                     </>
                   )}
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center justify-center py-4" style={{ borderRadius: 28, backgroundColor: "#E5E7EB" }}>
+                <View className="flex-row items-center justify-center py-4" style={{ borderRadius: 28, backgroundColor: "#1C2D3A" }}>
                   {submitting ? (
                     <ActivityIndicator color="white" />
                   ) : (

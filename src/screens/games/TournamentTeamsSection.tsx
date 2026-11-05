@@ -45,16 +45,16 @@ const TEAM_STATUS_META: Record<
   string,
   { bg: string; text: string; label: string; iconBg: string; iconColor: string }
 > = {
-  FORMING: { bg: "bg-amber-50", text: "text-amber-700", label: "Recruiting", iconBg: "#FEF3C7", iconColor: "#D97706" },
+  FORMING: { bg: "bg-amber-50", text: "text-amber-700", label: "Recruiting", iconBg: "#352A13", iconColor: "#D97706" },
   PENDING_HOST_APPROVAL: {
     bg: "bg-amber-50",
     text: "text-amber-700",
     label: "Awaiting Approval",
-    iconBg: "#FEF3C7",
+    iconBg: "#352A13",
     iconColor: "#D97706",
   },
   APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Full", iconBg: colors.primaryLight, iconColor: colors.primaryDark },
-  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed", iconBg: "#FEE2E2", iconColor: colors.danger },
+  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed", iconBg: "#351419", iconColor: colors.danger },
 };
 
 // A rotating palette so a team's member circles aren't all the same flat
@@ -94,7 +94,7 @@ function MemberAvatar({
               className="w-10 h-10 rounded-full items-center justify-center"
               style={{ backgroundColor: color }}
             >
-              <Text className="text-white font-bold text-sm">{initials}</Text>
+              <Text className="text-jazba-white font-bold text-sm">{initials}</Text>
             </View>
           )}
         </Pressable>
@@ -249,31 +249,31 @@ function TeamCard({
       onPress={onOpenChat}
       hitSlop={8}
       className="items-center justify-center rounded-full"
-      style={{ width: 32, height: 32, backgroundColor: "white", marginLeft: 8 }}
+      style={{ width: 32, height: 32, backgroundColor: "#0A1723", marginLeft: 8 }}
     >
       <ChatIcon size={16} unreadCount={teamChatUnread} />
     </Pressable>
   ) : null;
 
   return (
-    <View className="border border-border rounded-2xl bg-white" style={{ ...cardShadow, overflow: "hidden" }}>
+    <View className="border border-border rounded-2xl bg-surface" style={{ ...cardShadow, overflow: "hidden" }}>
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#0E5C34", "#1D9254"]}
+          colors={["#0F9F58", "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ padding: 16, paddingBottom: 28 }}
         >
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View
-              className="items-center justify-center rounded-xl bg-white"
+              className="items-center justify-center rounded-xl bg-surface"
               style={{ width: 40, height: 40 }}
             >
               <Ionicons name={statusIcon} size={19} color={badge?.iconColor ?? colors.primaryDark} />
             </View>
             <View className="flex-1">
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Text className="text-white font-bold text-base flex-shrink" numberOfLines={1}>{team.name}</Text>
+                <Text className="text-jazba-white font-bold text-base flex-shrink" numberOfLines={1}>{team.name}</Text>
                 {canEditTeamName && (
                   <Pressable onPress={() => setRenameOpen(true)} hitSlop={8}>
                     <Ionicons name="pencil" size={14} color="rgba(255,255,255,0.85)" />
@@ -287,7 +287,7 @@ function TeamCard({
             </View>
             {badge && (
               <View className="px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.22)" }}>
-                <Text className="text-xs font-bold text-white">{badge.label}</Text>
+                <Text className="text-xs font-bold text-jazba-white">{badge.label}</Text>
               </View>
             )}
             {chatButton}
@@ -334,7 +334,7 @@ function TeamCard({
             <>
               <View
                 className="flex-row items-center rounded-xl px-3 py-2.5"
-                style={{ backgroundColor: "#FEF3C7", gap: 8 }}
+                style={{ backgroundColor: "#352A13", gap: 8 }}
               >
                 <Ionicons name="information-circle" size={16} color="#D97706" />
                 <Text className="text-xs font-semibold flex-1" style={{ color: "#92400E" }}>
@@ -354,7 +354,7 @@ function TeamCard({
                 <Pressable onPress={onApprove} disabled={disabled} className="flex-1">
                   <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 6 }}>
                     <Ionicons name="checkmark" size={16} color="white" />
-                    <Text className="text-white font-bold text-sm">Approve</Text>
+                    <Text className="text-jazba-white font-bold text-sm">Approve</Text>
                   </GradientFill>
                 </Pressable>
               </View>
@@ -397,7 +397,7 @@ function TeamCard({
             <Pressable onPress={onJoinTeam} disabled={disabled} className="mt-3">
               <GradientFill className="flex-row items-center justify-center rounded-full py-3.5" style={{ gap: 8 }}>
                 <Ionicons name="add" size={17} color="white" />
-                <Text className="text-white font-bold text-sm">Join Team</Text>
+                <Text className="text-jazba-white font-bold text-sm">Join Team</Text>
               </GradientFill>
             </Pressable>
           )}
@@ -438,7 +438,7 @@ function TeamCard({
             <Pressable onPress={onAddTeam} disabled={disabled} className="flex-1">
               <GradientFill className="flex-row items-center justify-center rounded-full py-3" style={{ gap: 6 }}>
                 <Ionicons name="people-outline" size={15} color="white" />
-                <Text className="text-white font-bold text-xs">Add Team</Text>
+                <Text className="text-jazba-white font-bold text-xs">Add Team</Text>
               </GradientFill>
             </Pressable>
           )}
@@ -614,7 +614,7 @@ function HeadToHeadMatchCard({
   };
 
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-white p-4" style={cardShadow}>
+    <View className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4" style={cardShadow}>
       <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
       <View className="bg-gray-50 rounded-xl px-3 py-2.5">
         <View className="flex-row items-center justify-between">
@@ -631,7 +631,7 @@ function HeadToHeadMatchCard({
         {canGoToScorecard && (
           <Pressable onPress={handleGoToScorecard} className="mt-2">
             <GradientFill className="rounded-lg py-2 items-center">
-              <Text className="text-white text-xs font-semibold">Go To Scorecard</Text>
+              <Text className="text-jazba-white text-xs font-semibold">Go To Scorecard</Text>
             </GradientFill>
           </Pressable>
         )}
@@ -824,7 +824,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
         // links out to it rather than trying to fit all of that here.
         <Pressable
           onPress={() => navigation.navigate("TournamentMatches", { gameId: game.id })}
-          className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl bg-white p-4"
+          className="mx-4 mt-4 flex-row items-center border border-border rounded-2xl bg-surface p-4"
           style={{ ...cardShadow, gap: 12 }}
         >
           <View
@@ -859,7 +859,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           {isHost && !myTeam && (
             <Pressable onPress={() => setShowJoinTeamModal(true)} style={primaryButtonShadow}>
               <LinearGradient
-                colors={["#0E5C34", "#1D9254"]}
+                colors={["#0F9F58", "#18C66A"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -872,7 +872,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
                 }}
               >
                 <Ionicons name="person-add-outline" size={16} color="white" />
-                <Text className="text-white text-sm font-bold">Add Myself</Text>
+                <Text className="text-jazba-white text-sm font-bold">Add Myself</Text>
               </LinearGradient>
             </Pressable>
           )}
@@ -880,7 +880,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
             <Pressable onPress={() => setShowCreateModal(true)}>
               <GradientFill className="flex-row items-center rounded-full px-3 py-1.5" style={{ gap: 4 }}>
                 <Ionicons name="add" size={14} color="white" />
-                <Text className="text-white text-xs font-semibold">Create Team</Text>
+                <Text className="text-jazba-white text-xs font-semibold">Create Team</Text>
               </GradientFill>
             </Pressable>
           )}

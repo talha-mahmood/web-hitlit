@@ -214,10 +214,10 @@ export default function VenueBookingsScreen() {
                 style={{
                   borderWidth: 1.5,
                   borderColor: !selectedSport ? colors.primary : colors.border,
-                  backgroundColor: !selectedSport ? colors.primary : "white",
+                  backgroundColor: !selectedSport ? colors.primary : "#0A1723",
                 }}
               >
-                <Text className={`text-sm font-medium ${!selectedSport ? "text-white" : "text-ink"}`}>
+                <Text className={`text-sm font-medium ${!selectedSport ? "text-jazba-white" : "text-ink"}`}>
                   All Sports
                 </Text>
               </Pressable>
@@ -231,17 +231,17 @@ export default function VenueBookingsScreen() {
                     style={{
                       borderWidth: 1.5,
                       borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: selected ? colors.primary : "white",
+                      backgroundColor: selected ? colors.primary : "#0A1723",
                     }}
                   >
-                    <Text className={`text-sm font-medium ${selected ? "text-white" : "text-ink"}`}>{sport}</Text>
+                    <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>{sport}</Text>
                   </Pressable>
                 );
               })}
             </ScrollView>
           )}
 
-          <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-5 mb-4" style={cardShadow}>
             <Text className="text-muted text-xs">
               {selectedSport ? `Today's ${selectedSport} Revenue` : "Today's Revenue"}
             </Text>
@@ -250,7 +250,7 @@ export default function VenueBookingsScreen() {
           </View>
 
           {dateSelection && selectionResult && (
-            <View className="bg-white rounded-2xl p-5 mb-4" style={cardShadow}>
+            <View className="bg-surface rounded-2xl p-5 mb-4" style={cardShadow}>
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-ink font-bold text-base flex-1" numberOfLines={1}>
                   {selectionResult.isSingleDay

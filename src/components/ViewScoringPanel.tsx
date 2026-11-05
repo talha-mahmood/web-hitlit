@@ -49,7 +49,7 @@ export default function ViewScoringPanel({
           player.
         </Text>
       </View>
-      <View className="bg-white rounded-2xl border border-border px-4 py-2" style={cardShadow}>
+      <View className="bg-surface rounded-2xl border border-border px-4 py-2" style={cardShadow}>
         <TextInput
           value={code}
           onChangeText={(t) => {
@@ -73,7 +73,7 @@ export default function ViewScoringPanel({
         style={{ ...primaryButtonShadow, opacity: loading || !code.trim() ? 0.6 : 1 }}
       >
         <GradientFill className="rounded-xl py-4 items-center">
-          {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-base">View Scorecard</Text>}
+          {loading ? <ActivityIndicator color="white" /> : <Text className="text-jazba-white font-bold text-base">View Scorecard</Text>}
         </GradientFill>
       </Pressable>
     </View>

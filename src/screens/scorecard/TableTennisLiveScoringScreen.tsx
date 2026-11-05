@@ -181,7 +181,7 @@ export default function TableTennisLiveScoringScreen() {
 
   if (isLoading || !match || !state || !config) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-surface">
         <ActivityIndicator color={colors.primary} />
       </View>
     );
@@ -256,7 +256,7 @@ export default function TableTennisLiveScoringScreen() {
   if (state.isComplete && state.winner) {
     const winnerName = state.winner === "A" ? match.team_a_name : match.team_b_name;
     return (
-      <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
         <View className="flex-row items-center px-4 pb-3" style={{ gap: 6 }}>
           <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
@@ -272,7 +272,7 @@ export default function TableTennisLiveScoringScreen() {
               ) : (
                 <>
                   <Ionicons name="document-text-outline" size={18} color="white" />
-                  <Text className="text-white font-bold text-sm">Generate Match Report</Text>
+                  <Text className="text-jazba-white font-bold text-sm">Generate Match Report</Text>
                 </>
               )}
             </GradientFill>
@@ -280,7 +280,7 @@ export default function TableTennisLiveScoringScreen() {
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>
           {/* Team crests + final score, with a winner ribbon */}
-          <View className="bg-white rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
+          <View className="bg-surface rounded-2xl mb-4 overflow-hidden" style={{ ...cardShadow, position: "relative" }}>
             <View
               style={{
                 position: "absolute", top: 0, left: 0, width: 0, height: 0,
@@ -332,7 +332,7 @@ export default function TableTennisLiveScoringScreen() {
           </View>
 
           {/* Per-game breakdown */}
-          <View className="bg-white rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
+          <View className="bg-surface rounded-2xl p-4 mb-4" style={{ ...cardShadow, gap: 8 }}>
             {state.games.map((game, i) => (
               <View key={i} className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
                 <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -354,7 +354,7 @@ export default function TableTennisLiveScoringScreen() {
               style={{ borderRadius: 16, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16 }}
             >
               <Ionicons name="arrow-back-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
-              <Text className="text-white font-bold text-base">Back to Matches</Text>
+              <Text className="text-jazba-white font-bold text-base">Back to Matches</Text>
             </LinearGradient>
           </Pressable>
         </ScrollView>
@@ -363,14 +363,14 @@ export default function TableTennisLiveScoringScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4 pb-3" style={{ gap: 8 }}>
         <Pressable onPress={() => leaveScorecard()} hitSlop={8} className="p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "white" }} />
-          <Text className="text-white text-xs font-bold">LIVE</Text>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F5F7FA" }} />
+          <Text className="text-jazba-white text-xs font-bold">LIVE</Text>
         </View>
         <View className="flex-1">
           <Text className="text-ink font-extrabold text-base" numberOfLines={1}>
@@ -387,7 +387,7 @@ export default function TableTennisLiveScoringScreen() {
         {(!isOnline || pendingCount > 0) && (
           <View
             className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
-            style={{ backgroundColor: isOnline ? colors.primaryLight : "#FEF3C7", gap: 8 }}
+            style={{ backgroundColor: isOnline ? colors.primaryLight : "#352A13", gap: 8 }}
           >
             <Ionicons
               name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
@@ -408,7 +408,7 @@ export default function TableTennisLiveScoringScreen() {
         <View style={{ position: "relative", marginBottom: 16 }}>
           <View className="flex-row items-stretch" style={{ gap: 10 }}>
             <View
-              className="flex-1 bg-white rounded-2xl overflow-hidden"
+              className="flex-1 bg-app rounded-2xl overflow-hidden"
               style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.primary }}
             >
               <View className="p-3">
@@ -427,7 +427,7 @@ export default function TableTennisLiveScoringScreen() {
             </View>
 
             <View
-              className="flex-1 bg-white rounded-2xl overflow-hidden"
+              className="flex-1 bg-app rounded-2xl overflow-hidden"
               style={{ ...cardShadow, borderWidth: 1, borderColor: colors.border, borderRightWidth: 4, borderRightColor: "#1D4ED8" }}
             >
               <View className="p-3" style={{ alignItems: "flex-end" }}>
@@ -447,7 +447,7 @@ export default function TableTennisLiveScoringScreen() {
           </View>
 
           <View
-            className="items-center justify-center rounded-full bg-white"
+            className="items-center justify-center rounded-full bg-surface"
             style={{ position: "absolute", width: 40, height: 40, left: "50%", top: "50%", marginLeft: -20, marginTop: -20, ...cardShadow }}
           >
             <Text className="text-ink font-extrabold" style={{ fontSize: 12 }}>VS</Text>
@@ -455,7 +455,7 @@ export default function TableTennisLiveScoringScreen() {
         </View>
 
         {/* Games won */}
-        <View className="bg-white rounded-2xl p-4 mb-4 items-center" style={{ ...cardShadow, position: "relative", overflow: "hidden" }}>
+        <View className="bg-surface rounded-2xl p-4 mb-4 items-center" style={{ ...cardShadow, position: "relative", overflow: "hidden" }}>
           <DotGridCorner side="left" />
           <DotGridCorner side="right" />
           <View className="flex-row items-center mb-1" style={{ gap: 5 }}>
@@ -475,7 +475,7 @@ export default function TableTennisLiveScoringScreen() {
         </View>
 
         {/* Per-game score table */}
-        <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+        <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
           <View className="flex-row items-center mb-2 pb-2" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <Text className="text-ink font-bold text-sm" style={{ flex: 1.4 }}>GAME {state.games.length}</Text>
             {state.games.map((_, i) => (
@@ -530,7 +530,7 @@ export default function TableTennisLiveScoringScreen() {
         </View>
 
         {/* Server */}
-        <View className="flex-row items-center bg-white rounded-2xl px-4 py-3 mb-4" style={{ ...cardShadow, gap: 8 }}>
+        <View className="flex-row items-center bg-surface rounded-2xl px-4 py-3 mb-4" style={{ ...cardShadow, gap: 8 }}>
           <GradientFill style={{ width: 8, height: 8, borderRadius: 4 }} />
           <Text className="text-ink text-sm flex-1" numberOfLines={1}>
             <Text className="font-bold">SERVER: </Text>
@@ -541,7 +541,7 @@ export default function TableTennisLiveScoringScreen() {
 
         {/* Rally history */}
         {rallies.length > 0 && (
-          <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
             <Text className="text-muted text-xs font-bold mb-2" style={{ letterSpacing: 0.5 }}>RALLY HISTORY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View className="flex-row" style={{ gap: 8 }}>

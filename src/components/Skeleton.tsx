@@ -32,7 +32,7 @@ export function SkeletonBlock({
 
   return (
     <Animated.View
-      style={[{ width, height, borderRadius, backgroundColor: "#E5E7EB" }, animatedStyle, style]}
+      style={[{ width, height, borderRadius, backgroundColor: "#1C2D3A" }, animatedStyle, style]}
     />
   );
 }
@@ -43,7 +43,7 @@ export function SkeletonBlock({
 // matching how a real list looks while it's still loading.
 export function SkeletonCard() {
   return (
-    <View className="bg-white rounded-2xl p-3 flex-row" style={{ ...cardShadow, gap: 12 }}>
+    <View className="bg-surface rounded-2xl p-3 flex-row" style={{ ...cardShadow, gap: 12 }}>
       <SkeletonBlock width={72} height={72} borderRadius={12} />
       <View className="flex-1 justify-center" style={{ gap: 8 }}>
         <SkeletonBlock width="70%" height={14} />

@@ -124,11 +124,11 @@ export default function AdminSlotsScreen() {
               <Pressable key={day} onPress={() => setSelectedDate(day)}>
                 {isSelected ? (
                   <GradientFill className="items-center justify-center w-14 h-16 rounded-xl">
-                    <Text className="text-xs font-medium text-white">{dayLabel}</Text>
-                    <Text className="text-lg font-bold mt-0.5 text-white">{d.getDate()}</Text>
+                    <Text className="text-xs font-medium text-jazba-white">{dayLabel}</Text>
+                    <Text className="text-lg font-bold mt-0.5 text-jazba-white">{d.getDate()}</Text>
                   </GradientFill>
                 ) : (
-                  <View className="items-center justify-center w-14 h-16 rounded-xl bg-white border border-border">
+                  <View className="items-center justify-center w-14 h-16 rounded-xl bg-surface border border-border">
                     <Text className={`text-xs font-medium ${isToday ? "text-primary" : "text-muted"}`}>{dayLabel}</Text>
                     <Text className="text-lg font-bold mt-0.5 text-ink">{d.getDate()}</Text>
                   </View>
@@ -149,7 +149,7 @@ export default function AdminSlotsScreen() {
           <Text className="text-muted text-xs">Booked</Text>
         </View>
         <View className="flex-row items-center" style={{ gap: 6 }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#FEE2E2" }} />
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#351419" }} />
           <Text className="text-muted text-xs">Blocked</Text>
         </View>
       </View>
@@ -184,7 +184,7 @@ export default function AdminSlotsScreen() {
                         ? "bg-blue-50 border-blue-100"
                         : isBlocked
                           ? "bg-red-50 border-red-100"
-                          : "bg-white border-border"
+                          : "bg-surface border-border"
                     }`}
                   >
                     <Text className="text-sm font-medium text-center text-ink">{slot.label}</Text>

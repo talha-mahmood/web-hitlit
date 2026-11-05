@@ -28,7 +28,7 @@ export default function EmojiPickerSheet({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl"
+          className="bg-surface rounded-t-3xl"
           style={{ paddingBottom: 12 + insets.bottom, maxHeight: "60%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="items-center pt-2.5 pb-1">
@@ -42,7 +42,7 @@ export default function EmojiPickerSheet({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 30, height: 30, backgroundColor: "#F3F4F6" }}
+              style={{ width: 30, height: 30, backgroundColor: "#142533" }}
               hitSlop={6}
             >
               <Ionicons name="close" size={16} color={colors.ink} />
@@ -57,7 +57,7 @@ export default function EmojiPickerSheet({
                   key={cat.label}
                   onPress={() => setCategory(i)}
                   className="rounded-full px-3.5 py-1.5"
-                  style={{ backgroundColor: active ? colors.primary : "#F3F4F6" }}
+                  style={{ backgroundColor: active ? colors.primary : "#142533" }}
                 >
                   <Text className="font-semibold text-xs" style={{ color: active ? "white" : colors.muted }}>
                     {cat.label}

@@ -8,7 +8,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import Bouncy from "../../components/Bouncy";
-import GradientFill from "../../components/GradientFill";
 import type { CommunityStackParamList } from "../../navigation/CommunityStackNavigator";
 import PlayersDashboardContent from "../players/PlayersDashboardContent";
 import CommunityChatContent from "./CommunityChatContent";
@@ -17,7 +16,6 @@ type Nav = NativeStackNavigationProp<CommunityStackParamList, "CommunityHome">;
 type Segment = "community" | "players" | "chat";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SIDE_PADDING = 16;
 // The cards run almost edge to edge: a slim margin on each side and a slim
 // gap between the two columns, so each card is as wide as the screen allows.
 // Wide enough to clear cardShadow's own reach (offset 6 + radius 12) on
@@ -71,7 +69,7 @@ function ImageCard({
       onPress={onPress}
       scaleTo={0.97}
       style={{
-        backgroundColor: "white",
+        backgroundColor: "#0A1723",
         ...cardShadow,
         width,
         borderRadius: 22,
@@ -79,7 +77,7 @@ function ImageCard({
     >
       <View
         style={{
-          backgroundColor: "white",
+          backgroundColor: "#0A1723",
           borderRadius: 22,
           overflow: "hidden",
         }}
@@ -180,11 +178,11 @@ function HeroVisual({
     >
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: "white", opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
+        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: "#0A1723", opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
       />
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: "white", opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
+        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: "#0A1723", opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
       />
       <View
         className="items-center justify-center"
@@ -208,7 +206,6 @@ function MyCommunityContent({
   onOpenChat: () => void;
 }) {
   const TOP_PAD = 18;
-  const BOTTOM_PAD = 12;
   // Tall enough to clear cardShadow's vertical reach (offset 6 + radius
   // 12 ≈ 18px) — otherwise the next row's card paints right over the
   // previous row's shadow instead of leaving it visible underneath.
@@ -376,21 +373,18 @@ export default function CommunityScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Fixed header — stays on screen while only the content below switches. */}
-      {/* Dark-green header: icon tile + title/subtitle, rounded at the bottom; the tab bar overlaps its lower edge. */}
+    <View className="flex-1 bg-app">
+      {/* Fixed dark header — stays on screen while only the content below switches. */}
       {isFocused ? <StatusBar style="light" /> : null}
-      <GradientFill
+      <View
         style={{
-          paddingTop: insets.top + 12,
-          paddingBottom: 20,
-          paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          paddingTop: insets.top + 8,
+          paddingBottom: 12,
+          paddingHorizontal: 16,
+          backgroundColor: colors.background,
         }}
       >
-        <View className="flex-row items-center" style={{ gap: 14 }}>
+        <View className="flex-row items-center" style={{ gap: 14, minHeight: 44 }}>
           <Pressable
             onPress={() => {
               if (segment !== "community") {
@@ -404,24 +398,24 @@ export default function CommunityScreen() {
             }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color="#F5F7FA" />
           </Pressable>
-          <GradientFill
+          <View
             className="items-center justify-center"
-            style={{ width: 54, height: 54, borderRadius: 16 }}
+            style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: colors.surfaceRaised }}
           >
-            <MaterialCommunityIcons name="account-group" size={32} color="white" />
-          </GradientFill>
+            <MaterialCommunityIcons name="account-group" size={23} color={colors.primary} />
+          </View>
           <View className="flex-1">
-            <Text className="text-white font-extrabold" style={{ fontSize: 19 }}>
+            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 18 }}>
               {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
             </Text>
-            <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+            <Text style={{ fontSize: 11, marginTop: 1, color: colors.muted }} numberOfLines={1}>
               Play Together, Stay Active
             </Text>
           </View>
         </View>
-      </GradientFill>
+      </View>
 
       {segment === "community" && (
         <MyCommunityContent

@@ -27,7 +27,7 @@ export default function AddMemberByIdModal({
       <View className="flex-1 bg-black/40 justify-end">
         <KeyboardAvoidingView behavior="padding">
           <View
-            className="bg-white rounded-t-3xl px-5 pt-5"
+            className="bg-surface rounded-t-3xl px-5 pt-5"
             style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-2">

@@ -113,7 +113,7 @@ export default function ManageCourtImagesScreen() {
             ) : (
               <>
                 <Ionicons name="add" size={14} color="white" />
-                <Text className="text-white text-xs font-semibold">Add</Text>
+                <Text className="text-jazba-white text-xs font-semibold">Add</Text>
               </>
             )}
           </GradientFill>

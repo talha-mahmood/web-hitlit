@@ -11,7 +11,7 @@ cssInterop(LinearGradient, { className: "style" });
 // be (buttons, hero banners, badges, icon tints, …) — same three stops as
 // the Game Detail screen's hero header, so every green surface in the app
 // now reads as the same gradient instead of several flat shades of green.
-export const BRAND_GREEN_GRADIENT = ["#07301D", "#0E5C34", "#1D9254"] as const;
+export const BRAND_GREEN_GRADIENT = ["#0B6C3C", "#0F9F58", "#18C66A"] as const;
 
 type Props = Omit<ComponentProps<typeof LinearGradient>, "colors"> & { className?: string };
 

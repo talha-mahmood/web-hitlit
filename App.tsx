@@ -27,7 +27,7 @@ export default function App() {
   // the system font first. If loading somehow fails, fall through rather
   // than leave the app on a blank screen (text then uses the system font).
   if (!fontsLoaded && !fontError) {
-    return <View style={{ flex: 1, backgroundColor: "#FFFFFF" }} />;
+    return <View style={{ flex: 1, backgroundColor: "#050B12" }} />;
   }
 
   return (
@@ -36,7 +36,7 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <RootNavigator />
           <CustomAlertHost />
-          <StatusBar style="dark" />
+          <StatusBar style="light" />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

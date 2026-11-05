@@ -181,7 +181,7 @@ function MemberAvatar({
           <Pressable
             onPress={onOpenMenu}
             hitSlop={8}
-            className="absolute -top-1 -right-1 bg-white rounded-full w-5 h-5 items-center justify-center border border-border"
+            className="absolute -top-1 -right-1 bg-surface rounded-full w-5 h-5 items-center justify-center border border-border"
             style={{
               shadowColor: "#0F172A",
               shadowOffset: { width: 0, height: 2 },
@@ -196,11 +196,11 @@ function MemberAvatar({
       </Pressable>
       {isOwner ? (
         <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
-          <Text className="text-white text-xs font-medium">Captain</Text>
+          <Text className="text-jazba-white text-xs font-medium">Captain</Text>
         </GradientFill>
       ) : isHost ? (
         <GradientFill className="rounded-full px-1.5 py-0.5 mt-1">
-          <Text className="text-white text-xs font-medium">Host</Text>
+          <Text className="text-jazba-white text-xs font-medium">Host</Text>
         </GradientFill>
       ) : null}
       <Text className="text-muted text-xs mt-1 text-center" numberOfLines={1}>
@@ -275,7 +275,7 @@ function SquadPendingRequestRow({
         </Pressable>
         <Pressable onPress={onApprove} disabled={disabled}>
           <GradientFill className="rounded-lg px-3 py-1.5">
-            <Text className="text-white text-xs font-semibold">Approve</Text>
+            <Text className="text-jazba-white text-xs font-semibold">Approve</Text>
           </GradientFill>
         </Pressable>
       </View>
@@ -318,7 +318,7 @@ export default function SquadDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white px-4 pt-4">
+      <View className="flex-1 bg-app px-4 pt-4">
         <SkeletonDetailHeader />
       </View>
     );
@@ -326,7 +326,7 @@ export default function SquadDetailScreen() {
 
   if (error || !squad) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
+      <View className="flex-1 bg-app items-center justify-center px-6">
         <Text className="text-ink font-semibold text-base mb-2">Group not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
@@ -603,13 +603,13 @@ export default function SquadDetailScreen() {
   const teamSportKind = isTeamGroup ? classifySportKind(squad.sports?.name) : null;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {/* Hero header — dark gradient with a decorative sport-icon watermark,
           same treatment as GameDetailScreen, fading into the page via a
           wave divider. */}
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#07301D", "#0E5C34", "#1D9254"]}
+          colors={["#07301D", "#0F9F58", "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
@@ -631,7 +631,7 @@ export default function SquadDetailScreen() {
             >
               <Ionicons name="arrow-back" size={20} color="white" />
             </Pressable>
-            <Text className="text-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
+            <Text className="text-jazba-white font-extrabold flex-1" style={{ fontSize: 19 }} numberOfLines={1}>
               {squad.name}
             </Text>
             {(isOwner || hasJoined) && (
@@ -641,7 +641,7 @@ export default function SquadDetailScreen() {
                 style={{
                   width: 42,
                   height: 42,
-                  backgroundColor: "white",
+                  backgroundColor: "#0A1723",
                   shadowColor: "#0F172A",
                   shadowOffset: { width: 0, height: 3 },
                   shadowOpacity: 0.12,
@@ -657,7 +657,7 @@ export default function SquadDetailScreen() {
           <View className="flex-row items-center flex-wrap mt-2.5" style={{ gap: 8 }}>
             {sportIconInfo && squad.sports?.name && (
               <View
-                className="flex-row items-center bg-white"
+                className="flex-row items-center bg-surface"
                 style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5 }}
               >
                 <MaterialCommunityIcons name={sportIconInfo.icon} size={13} color={sportIconInfo.fg} />
@@ -674,7 +674,7 @@ export default function SquadDetailScreen() {
                   paddingVertical: 5,
                   borderRadius: 999,
                   gap: 5,
-                  backgroundColor: "white",
+                  backgroundColor: "#0A1723",
                 }}
               >
                 {setJoinBlocked.isPending ? (
@@ -726,7 +726,7 @@ export default function SquadDetailScreen() {
               </Pressable>
             )}
             {isClosedToJoins && (
-              <View className="bg-white px-2 py-1 rounded-lg">
+              <View className="bg-surface px-2 py-1 rounded-lg">
                 <Text className="text-orange-600 text-xs font-semibold">Full</Text>
               </View>
             )}
@@ -774,7 +774,7 @@ export default function SquadDetailScreen() {
                   {acceptInvite.isPending ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <Text className="text-white font-semibold text-sm">Accept</Text>
+                    <Text className="text-jazba-white font-semibold text-sm">Accept</Text>
                   )}
                 </GradientFill>
               </Pressable>
@@ -786,7 +786,7 @@ export default function SquadDetailScreen() {
             tapping the header reveals it. Same shell as GameDetailScreen's
             "Game Details" card. */}
         <View className="px-3.5 mt-5">
-          <View className="bg-white rounded-2xl px-4" style={cardShadow}>
+          <View className="bg-surface rounded-2xl px-4" style={cardShadow}>
             <Pressable onPress={() => setDetailsExpanded((v) => !v)} className="flex-row items-center py-4" style={{ gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
@@ -817,7 +817,7 @@ export default function SquadDetailScreen() {
                       <Pressable
                         onPress={handleCopySquadCode}
                         hitSlop={8}
-                        className="flex-row items-center px-3 py-1.5 rounded-lg bg-white"
+                        className="flex-row items-center px-3 py-1.5 rounded-lg bg-surface"
                         style={{ gap: 4, borderWidth: 1, borderColor: colors.border }}
                       >
                         <Ionicons
@@ -849,7 +849,7 @@ export default function SquadDetailScreen() {
         {/* Description */}
         {!!squad.description && (
           <View className="px-3.5 mt-6">
-            <View className="flex-row items-center bg-white rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
+            <View className="flex-row items-center bg-surface rounded-2xl p-4" style={{ ...cardShadow, gap: 12 }}>
               <View
                 className="items-center justify-center rounded-full"
                 style={{ width: 40, height: 40, backgroundColor: colors.primaryLight }}
@@ -899,7 +899,7 @@ export default function SquadDetailScreen() {
               {(isOwner || hasJoined) && (
                 <Pressable onPress={() => setShowInviteModal(true)} style={primaryButtonShadow}>
                   <LinearGradient
-                    colors={["#0E5C34", "#1D9254"]}
+                    colors={["#0F9F58", "#18C66A"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
@@ -912,7 +912,7 @@ export default function SquadDetailScreen() {
                     }}
                   >
                     <Ionicons name="person-add-outline" size={16} color="white" />
-                    <Text className="text-white text-sm font-bold">Invite Players</Text>
+                    <Text className="text-jazba-white text-sm font-bold">Invite Players</Text>
                   </LinearGradient>
                 </Pressable>
               )}
@@ -979,7 +979,7 @@ export default function SquadDetailScreen() {
                   style={primaryButtonShadow}
                 >
                   <GradientFill className="rounded-lg px-3 py-2">
-                    <Text className="text-white text-xs font-semibold">Accept</Text>
+                    <Text className="text-jazba-white text-xs font-semibold">Accept</Text>
                   </GradientFill>
                 </Pressable>
               </View>
@@ -1076,7 +1076,7 @@ export default function SquadDetailScreen() {
       {/* CTA — only for people who aren't members yet (Delete/Leave moved
           inline above, under "Captained by"). */}
       {!hasJoined && (
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-border px-3.5 pt-3 pb-3">
+      <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border px-3.5 pt-3 pb-3">
         {isBusy ? (
           <ActivityIndicator color={colors.primary} />
         ) : hasRequested ? (
@@ -1107,7 +1107,7 @@ export default function SquadDetailScreen() {
         ) : (
           <Pressable onPress={handleJoin} style={primaryButtonShadow}>
             <GradientFill className="rounded-xl py-4 items-center">
-              <Text className="text-white font-semibold text-base">Request to Join</Text>
+              <Text className="text-jazba-white font-semibold text-base">Request to Join</Text>
             </GradientFill>
           </Pressable>
         )}

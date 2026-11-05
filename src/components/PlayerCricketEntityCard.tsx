@@ -35,10 +35,10 @@ export default function PlayerCricketEntityCard({
     <Bouncy
       onPress={onPress}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 20, marginBottom: 10 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 20, marginBottom: 10 }}
     >
       <View
-        className="border border-border overflow-hidden bg-white"
+        className="border border-border overflow-hidden bg-surface"
         style={{ borderRadius: 20, position: "relative", minHeight: 108, paddingVertical: 12 }}
       >
         {/* Sport picture in a soft green disc, tucked into the right edge —
@@ -46,7 +46,7 @@ export default function PlayerCricketEntityCard({
         <View
           pointerEvents="none"
           className="items-center justify-center overflow-hidden"
-          style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: "#DCEFE4" }}
+          style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: "#103A2A" }}
         >
           {sportPhoto ? (
             <View style={{ width: 78, height: 44, marginRight: 16, mixBlendMode: "multiply" }}>

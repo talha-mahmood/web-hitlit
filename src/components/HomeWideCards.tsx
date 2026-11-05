@@ -33,7 +33,7 @@ export function HomeSportTile({
   return (
     <Pressable onPress={onPress} style={{ width, alignItems: "center" }}>
       <View
-        className="items-center justify-center overflow-hidden bg-white"
+        className="items-center justify-center overflow-hidden bg-surface"
         style={{
           width,
           height: width,
@@ -107,15 +107,15 @@ export function HomeSquadCard({
         ? "Joined"
         : "Join";
   const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : hasJoined ? colors.primary : colors.primary;
-  const statusBg = isClosedToJoins || isGenderRestricted ? "#F3F4F6" : hasJoined ? colors.primaryLight : colors.primaryLight;
+  const statusBg = isClosedToJoins || isGenderRestricted ? "#142533" : hasJoined ? colors.primaryLight : colors.primaryLight;
 
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, flex: 1 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16, flex: 1 }}
       scaleTo={0.98}
     >
-      <View className="border border-border rounded-2xl bg-white p-3">
+      <View className="border border-border rounded-2xl bg-surface p-3">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           {photo ? (
             <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
@@ -184,15 +184,15 @@ export function HomeEventCard({
         ? "Joined"
         : "Join";
   const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : colors.primary;
-  const statusBg = isClosedToJoins || isGenderRestricted ? "#F3F4F6" : colors.primaryLight;
+  const statusBg = isClosedToJoins || isGenderRestricted ? "#142533" : colors.primaryLight;
 
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16, flex: 1 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16, flex: 1 }}
       scaleTo={0.98}
     >
-      <View className="border border-border rounded-2xl bg-white p-3">
+      <View className="border border-border rounded-2xl bg-surface p-3">
         <View className="flex-row items-center" style={{ gap: 8 }}>
           {photo ? (
             <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
@@ -263,11 +263,11 @@ export function HomeGameRowCard({
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16 }}
       scaleTo={0.98}
       className="mb-3"
     >
-      <View className="flex-row items-center border border-border rounded-2xl bg-white p-3" style={{ gap: 12 }}>
+      <View className="flex-row items-center border border-border rounded-2xl bg-surface p-3" style={{ gap: 12 }}>
         {photo ? (
           <Image source={photo} style={{ width: 60, height: 60, borderRadius: 14 }} resizeMode="cover" />
         ) : (
@@ -284,7 +284,7 @@ export function HomeGameRowCard({
               {game.title}
             </Text>
             <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: badgeColor }}>
-              <Text className="text-white text-[10px] font-bold">{dayLabel(game.game_date)}</Text>
+              <Text className="text-jazba-white text-[10px] font-bold">{dayLabel(game.game_date)}</Text>
             </View>
           </View>
           <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
@@ -311,7 +311,7 @@ export function HomeGameRowCard({
             </View>
             <View
               className="rounded-full px-3 py-1"
-              style={{ backgroundColor: isFull ? "#F3F4F6" : colors.primaryLight }}
+              style={{ backgroundColor: isFull ? "#142533" : colors.primaryLight }}
             >
               <Text className="text-xs font-bold" style={{ color: isFull ? colors.muted : colors.primary }}>
                 {isTeamBased ? "View Details" : isFull ? "Full" : "Join"}

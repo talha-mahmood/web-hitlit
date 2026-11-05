@@ -22,7 +22,7 @@ type PlayerEntry = NamedEntry;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "FootballNewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#F3F4F6" };
+const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
 
 // Presets are TOTAL minutes (both halves / both extra-time periods
 // combined) — the familiar way a casual match gets described ("we're
@@ -54,7 +54,7 @@ function CardSection({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4" style={cardShadow}>
+    <View className="bg-surface rounded-2xl p-4 mb-4" style={cardShadow}>
       <View className="flex-row items-center mb-3" style={{ gap: 10 }}>
         <IconBadge icon={icon} />
         <Text className="text-ink font-bold text-base">{title}</Text>
@@ -270,7 +270,7 @@ export default function FootballNewMatchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="football"
         title="New Football Match"
@@ -406,7 +406,7 @@ export default function FootballNewMatchScreen() {
               ) : (
                 <>
                   <Ionicons name="play" size={16} color="white" />
-                  <Text className="font-bold text-base text-white">Kick Off</Text>
+                  <Text className="font-bold text-base text-jazba-white">Kick Off</Text>
                 </>
               )}
             </GradientFill>

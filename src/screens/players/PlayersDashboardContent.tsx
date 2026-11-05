@@ -29,10 +29,10 @@ function PlayerRow({
     <Bouncy
       onPress={onPress}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "white", borderRadius: 16 }}
+      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16 }}
       className="mb-3"
     >
-      <View className="flex-row items-center border border-border rounded-2xl bg-white px-4 py-3">
+      <View className="flex-row items-center border border-border rounded-2xl bg-surface px-4 py-3">
         {player.avatar ? (
           <Image source={{ uri: player.avatar }} className="w-12 h-12 rounded-full bg-primary-light mr-3" />
         ) : (
@@ -146,7 +146,7 @@ export default function PlayersDashboardContent({
           </View>
           <Pressable
             onPress={() => setSportSheetOpen(true)}
-            className="items-center justify-center bg-white"
+            className="items-center justify-center bg-surface"
             style={{ width: 48, height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
           >
             <Ionicons name="options-outline" size={20} color={colors.ink} />

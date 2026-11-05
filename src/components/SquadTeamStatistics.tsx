@@ -26,12 +26,12 @@ function PillBar<T extends string>({ value, options, onChange }: { value: T; opt
         value === o ? (
           <Pressable key={o} onPress={() => onChange(o)}>
             <GradientFill className="rounded-full px-4 py-2">
-              <Text className="text-white font-bold text-xs">{o}</Text>
+              <Text className="text-jazba-white font-bold text-xs">{o}</Text>
             </GradientFill>
           </Pressable>
         ) : (
-          <Pressable key={o} onPress={() => onChange(o)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#E5E7EB" }}>
-            <Text className="font-bold text-xs" style={{ color: "#374151" }}>{o}</Text>
+          <Pressable key={o} onPress={() => onChange(o)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#1C2D3A" }}>
+            <Text className="font-bold text-xs" style={{ color: "#CBD4DD" }}>{o}</Text>
           </Pressable>
         )
       )}
@@ -41,7 +41,7 @@ function PillBar<T extends string>({ value, options, onChange }: { value: T; opt
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#F3F4F6" }}>
+    <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
       <Text className="font-bold text-base" style={{ color: colors.ink }}>{value}</Text>
       <Text className="text-muted text-xs mt-0.5">{label}</Text>
     </View>
@@ -69,7 +69,7 @@ function RankedTable({
       </View>
       {rows.map((r) => (
         <View key={`${r.rank}-${r.name}`} className="flex-row items-center py-2.5" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <View className="items-center justify-center rounded-full" style={{ width: 20, height: 20, backgroundColor: "#E5E7EB" }}>
+          <View className="items-center justify-center rounded-full" style={{ width: 20, height: 20, backgroundColor: "#1C2D3A" }}>
             <Text className="text-xs font-bold" style={{ color: colors.ink }}>{r.rank}</Text>
           </View>
           <Text className="text-ink text-sm font-semibold flex-1 ml-2" numberOfLines={1}>{r.name}</Text>
@@ -89,13 +89,13 @@ function PartnershipCard({ row }: { row: ReturnType<typeof squadPartnerships>[nu
   const widthA = Math.min(100, (row.runsA / total) * 100);
   const widthB = Math.min(100, (row.runsB / total) * 100);
   return (
-    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#F3F4F6" }}>
+    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#142533" }}>
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">
           <Text className="text-ink text-sm">
             <Text className="font-bold">{row.runsA}</Text> ({row.ballsA}) <Text className="font-semibold">{row.batterA}</Text>
           </Text>
-          <View className="mt-1.5 rounded-full" style={{ height: 6, backgroundColor: "#D1D5DB", width: `${widthA}%` }} />
+          <View className="mt-1.5 rounded-full" style={{ height: 6, backgroundColor: "#516171", width: `${widthA}%` }} />
           <View className="mt-1 rounded-full" style={{ height: 6, backgroundColor: "#F9A8D4", width: `${widthB}%` }} />
           <Text className="text-ink text-sm mt-1.5">
             <Text className="font-bold">{row.runsB}</Text> ({row.ballsB}) <Text className="font-semibold">{row.batterB}</Text>
@@ -262,7 +262,7 @@ function MvpSection({ roster }: { roster: RosterAggregateRow[] }) {
         <View className="mt-3">
           {rows.map((r, i) => (
             <View key={r.name} className="flex-row items-center py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-              <View className="items-center justify-center rounded-full" style={{ width: 22, height: 22, backgroundColor: "#E5E7EB" }}>
+              <View className="items-center justify-center rounded-full" style={{ width: 22, height: 22, backgroundColor: "#1C2D3A" }}>
                 <Text className="text-xs font-bold">{i + 1}</Text>
               </View>
               <View className="flex-1 ml-2">
@@ -281,7 +281,7 @@ function MvpSection({ roster }: { roster: RosterAggregateRow[] }) {
 
       <Modal visible={rulesOpen} animationType="slide" transparent onRequestClose={() => setRulesOpen(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}>
+          <View className="bg-surface rounded-t-3xl px-5 pt-5" style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}>
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold text-ink">MVP Rules</Text>
               <Pressable onPress={() => setRulesOpen(false)} hitSlop={8}>
@@ -319,17 +319,17 @@ export default function SquadTeamStatistics({ squad }: { squad: SquadDetail }) {
 
   return (
     <View>
-      <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+      <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#142533" }}>
         {STAT_TABS.map((t) =>
           tab === t ? (
             <Pressable key={t} onPress={() => setTab(t)} className="flex-1">
               <GradientFill className="items-center py-2">
-                <Text className="text-xs font-bold text-white">{t}</Text>
+                <Text className="text-xs font-bold text-jazba-white">{t}</Text>
               </GradientFill>
             </Pressable>
           ) : (
             <Pressable key={t} onPress={() => setTab(t)} className="flex-1 items-center py-2">
-              <Text className="text-xs font-bold" style={{ color: "#6B7280" }}>{t}</Text>
+              <Text className="text-xs font-bold" style={{ color: "#9AA8B7" }}>{t}</Text>
             </Pressable>
           )
         )}

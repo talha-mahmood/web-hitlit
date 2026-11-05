@@ -26,8 +26,6 @@ import { HomeSportTile, HomeSquadCard, HomeEventCard, HomeGameRowCard } from "..
 import { NearbyEmptyRow } from "../../components/NearbyCards";
 import PromoCarousel, { type PromoSlide } from "../../components/PromoCarousel";
 import NotificationBell from "../../components/NotificationBell";
-import WavingHandIcon from "../../components/WavingHandIcon";
-import GradientFill from "../../components/GradientFill";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import { SkeletonBlock, SkeletonCardRows } from "../../components/Skeleton";
@@ -238,57 +236,44 @@ export default function HomeScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-app">
       {isFocused ? <StatusBar style="light" /> : null}
-      {/* Fixed dark-green banner — same treatment as the Community tab's header. */}
-      <GradientFill
+      {/* Compact Jazba-style top bar. Existing profile and notification actions stay in place. */}
+      <View
         style={{
           paddingTop: insets.top + 12,
-          paddingBottom: 20,
-          paddingHorizontal: 14,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          overflow: "hidden",
+          paddingBottom: 14,
+          paddingHorizontal: 20,
+          backgroundColor: colors.background,
         }}
       >
-        <View className="flex-row items-center" style={{ gap: 12 }}>
-          <Pressable
-            onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
-            className="flex-row items-center flex-1"
-            style={{ gap: 12 }}
-          >
-            {profile?.avatar ? (
-              <Image
-                source={{ uri: profile.avatar }}
-                className="w-16 h-16 rounded-full bg-primary-light"
-              />
-            ) : (
-              <View className="w-16 h-16 rounded-full bg-primary-light items-center justify-center">
-                <Text className="text-xl font-bold text-primary">
-                  {profile?.full_name?.charAt(0).toUpperCase() ?? "?"}
-                </Text>
-              </View>
-            )}
-            <View className="flex-1">
-              <View className="flex-row items-center" style={{ gap: 6 }}>
-                <Text className="text-white font-bold" style={{ fontSize: 19 }}>
-                  Hey {profile?.full_name?.split(" ")[0] ?? "there"}!
-                </Text>
-                <WavingHandIcon size={14} />
-              </View>
-              <Text style={{ fontSize: 12, color: "white", marginTop: 2 }}>What are you playing today?</Text>
-            </View>
-          </Pressable>
-          <View className="flex-row items-center" style={{ gap: 10, paddingRight: 6 }}>
+        <View className="flex-row items-center justify-between" style={{ minHeight: 46 }}>
+          <View style={{ width: 72 }} />
+          <View className="absolute left-0 right-0 items-center" pointerEvents="none">
+            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 22, letterSpacing: -0.4 }}>HitLit</Text>
+          </View>
+          <View className="flex-row items-center" style={{ gap: 16 }}>
             <NotificationBell
-              size={28}
-              color="white"
+              size={25}
+              color="#F5F7FA"
               unreadCount={unreadCount}
               onPress={() => navigation.navigate("Notifications")}
             />
+            <Pressable
+              onPress={() => navigation.navigate("Profile", { screen: "ProfileHome" })}
+              hitSlop={8}
+              className="items-center justify-center"
+              style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.surfaceRaised, overflow: "hidden" }}
+            >
+              {profile?.avatar ? (
+                <Image source={{ uri: profile.avatar }} style={{ width: 34, height: 34, borderRadius: 17 }} />
+              ) : (
+                <Ionicons name="person" size={18} color="#F5F7FA" />
+              )}
+            </Pressable>
           </View>
         </View>
-      </GradientFill>
+      </View>
 
       <ScrollView
         className="flex-1"
@@ -298,7 +283,7 @@ export default function HomeScreen() {
       <View className="px-3.5" style={{ paddingTop: 20 }}>
         <PromoCarousel slides={promoSlides} />
 
-        <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
+        <View className="flex-row items-center mb-3" style={{ gap: 8 }}>
           <Ionicons name="filter" size={16} color={colors.primary} />
           <Text className="text-lg font-semibold text-ink">Filter by Sport</Text>
         </View>

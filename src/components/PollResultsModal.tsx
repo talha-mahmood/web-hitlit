@@ -25,7 +25,7 @@ export default function PollResultsModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl px-5 pt-5"
+          className="bg-surface rounded-t-3xl px-5 pt-5"
           style={{ paddingBottom: 24 + insets.bottom, maxHeight: "80%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-start justify-between mb-1">

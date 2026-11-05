@@ -19,9 +19,9 @@ function MetricToggle<T extends string>({ options, value, onChange }: { options:
           key={o}
           onPress={() => onChange(o)}
           className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: value === o ? "#14B8A6" : "#E5E7EB" }}
+          style={{ width: 40, height: 40, backgroundColor: value === o ? "#14B8A6" : "#1C2D3A" }}
         >
-          <Text className="text-[10px] font-bold" style={{ color: value === o ? "white" : "#6B7280" }}>{o}</Text>
+          <Text className="text-[10px] font-bold" style={{ color: value === o ? "white" : "#9AA8B7" }}>{o}</Text>
         </Pressable>
       ))}
     </View>
@@ -54,7 +54,7 @@ function BatPositionChart({ rows, metric }: { rows: { position: number; innings:
         {rows.map((r, i) => (
           <View key={r.position} style={{ width: barWidth + gap, alignItems: "center" }}>
             <Text className="text-ink text-xs font-bold">{Math.round(values[i] * 10) / 10}</Text>
-            <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#E5E7EB" }}>
+            <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#1C2D3A" }}>
               <Text className="text-[10px] font-bold text-ink">{r.position}</Text>
             </View>
           </View>
@@ -111,7 +111,7 @@ function ConcededPieChart({ byValue, totalRuns }: { byValue: { value: string; ru
         {byValue.map((b) => (
           <View key={b.value} className="items-center" style={{ width: 48 }}>
             <View className="items-center justify-center rounded-full" style={{ width: 32, height: 32, backgroundColor: PIE_COLORS[b.value] ?? "#9CA3AF" }}>
-              <Text className="text-white text-xs font-bold">{b.value}</Text>
+              <Text className="text-jazba-white text-xs font-bold">{b.value}</Text>
             </View>
             <Text className="text-ink text-xs font-bold mt-1">{b.runs}</Text>
           </View>
@@ -136,17 +136,17 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
 
   return (
     <View>
-      <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#E5E7EB" }}>
+      <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#1C2D3A" }}>
         {(["Batting", "Bowling"] as const).map((s) =>
           section === s ? (
             <Pressable key={s} onPress={() => setSection(s)}>
               <GradientFill className="px-4 py-1.5">
-                <Text className="text-xs font-bold text-white">{s}</Text>
+                <Text className="text-xs font-bold text-jazba-white">{s}</Text>
               </GradientFill>
             </Pressable>
           ) : (
             <Pressable key={s} onPress={() => setSection(s)} className="px-4 py-1.5">
-              <Text className="text-xs font-bold" style={{ color: "#374151" }}>
+              <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
                 {s}
               </Text>
             </Pressable>
@@ -155,7 +155,7 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
       </View>
 
       {section === "Batting" ? (
-        <View className="bg-white rounded-2xl p-4 mt-4" style={cardShadow}>
+        <View className="bg-surface rounded-2xl p-4 mt-4" style={cardShadow}>
           <Text className="text-ink font-bold text-base text-center mb-3">Bat Position Stats</Text>
           <MetricToggle options={BAT_METRICS} value={batMetric} onChange={setBatMetric} />
           {positionRows.length > 0 ? (
@@ -165,7 +165,7 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
           )}
         </View>
       ) : (
-        <View className="bg-white rounded-2xl p-4 mt-4" style={cardShadow}>
+        <View className="bg-surface rounded-2xl p-4 mt-4" style={cardShadow}>
           <Text className="text-ink font-bold text-base text-center mb-1">Conceded Runs Distribution</Text>
           {distribution.totalRuns > 0 ? (
             <ConcededPieChart byValue={distribution.byValue} totalRuns={distribution.totalRuns} />

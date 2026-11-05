@@ -161,7 +161,7 @@ export default function EditVenueDetailsScreen() {
             {updateVenue.isPending || savingLocation ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-semibold text-sm">Save</Text>
+              <Text className="text-jazba-white font-semibold text-sm">Save</Text>
             )}
           </GradientFill>
         </Pressable>

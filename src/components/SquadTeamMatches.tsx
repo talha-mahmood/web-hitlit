@@ -41,7 +41,7 @@ function CricketMatchRow({ match }: { match: CricketMatchDetail }) {
   return (
     <View style={{ marginBottom: 12 }}>
       <Bouncy onPress={() => navigation.navigate("LiveScoring", { matchId: match.id })} scaleTo={0.98}>
-        <View className="rounded-2xl p-4" style={{ backgroundColor: "#F3F4F6" }}>
+        <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
           <View className="flex-row items-center justify-between mb-3" style={{ gap: 8 }}>
             <Text className="text-muted text-xs font-semibold flex-1" numberOfLines={1}>
               Open Match, {match.format}, {dateLabel}
@@ -87,7 +87,7 @@ function GenericMatchCard({ sport, match }: { sport: GenericSport; match: Generi
   return (
     <View style={{ marginBottom: 12 }}>
       <Bouncy onPress={() => (navigation.navigate as (name: string, params: object) => void)(routeName, { matchId: match.id })} scaleTo={0.98}>
-        <View className="rounded-2xl p-4" style={{ backgroundColor: "#F3F4F6" }}>
+        <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
           <View className="flex-row items-center justify-between mb-3" style={{ gap: 8 }}>
             <Text className="text-muted text-xs font-semibold flex-1" numberOfLines={1}>
               {dateLabel}

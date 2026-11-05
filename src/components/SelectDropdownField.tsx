@@ -36,7 +36,7 @@ export default function SelectDropdownField({
           exiting={FadeOutUp.duration(120)}
           style={{
             ...cardShadow,
-            backgroundColor: "white",
+            backgroundColor: "#0A1723",
             borderRadius: 12,
             borderWidth: 1,
             borderColor: colors.border,
@@ -55,7 +55,7 @@ export default function SelectDropdownField({
                 }}
                 className="flex-row items-center justify-between px-4 py-3"
                 style={{
-                  backgroundColor: selected ? colors.primaryLight : "white",
+                  backgroundColor: selected ? colors.primaryLight : "#0A1723",
                   borderBottomWidth: i === options.length - 1 ? 0 : 1,
                   borderBottomColor: colors.border,
                 }}

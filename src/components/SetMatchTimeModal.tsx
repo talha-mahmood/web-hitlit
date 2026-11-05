@@ -54,7 +54,7 @@ export default function SetMatchTimeModal({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <View
-          className="bg-white rounded-t-3xl px-5 pt-5"
+          className="bg-surface rounded-t-3xl px-5 pt-5"
           style={{ paddingBottom: 20 + insets.bottom, maxHeight: "75%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
         >
           <View className="flex-row items-start justify-between mb-1">
@@ -84,8 +84,8 @@ export default function SetMatchTimeModal({
                   >
                     {selected ? (
                       <GradientFill className="items-center px-3 py-2.5 rounded-2xl">
-                        <Text className="text-xs text-white">{d.day}</Text>
-                        <Text className="text-base font-bold mt-0.5 text-white">{d.label}</Text>
+                        <Text className="text-xs text-jazba-white">{d.day}</Text>
+                        <Text className="text-base font-bold mt-0.5 text-jazba-white">{d.label}</Text>
                       </GradientFill>
                     ) : (
                       <View className="items-center px-3 py-2.5 rounded-2xl" style={{ borderWidth: 1.5, borderColor: colors.border }}>
@@ -106,7 +106,7 @@ export default function SetMatchTimeModal({
                   <Pressable key={t.value} onPress={() => setTimeValue(t.value)}>
                     {selected ? (
                       <GradientFill className="px-3.5 py-2.5 rounded-2xl">
-                        <Text className="text-sm font-medium text-white">{t.label}</Text>
+                        <Text className="text-sm font-medium text-jazba-white">{t.label}</Text>
                       </GradientFill>
                     ) : (
                       <View className="px-3.5 py-2.5 rounded-2xl" style={{ borderWidth: 1.5, borderColor: colors.border }}>
@@ -123,7 +123,7 @@ export default function SetMatchTimeModal({
             <Pressable onPress={handleConfirm} disabled={!canConfirm || submitting} style={canConfirm ? primaryButtonShadow : undefined}>
               {canConfirm ? (
                 <GradientFill className="items-center rounded-2xl py-4">
-                  <Text className="text-white font-bold" style={{ fontSize: 16 }}>
+                  <Text className="text-jazba-white font-bold" style={{ fontSize: 16 }}>
                     {submitting ? "Saving…" : "Save Time"}
                   </Text>
                 </GradientFill>

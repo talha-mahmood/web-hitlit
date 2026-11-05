@@ -87,7 +87,7 @@ export default function AddMemberByIdField({
             {lookup.isPending ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text className="text-white font-bold text-sm">Find</Text>
+              <Text className="text-jazba-white font-bold text-sm">Find</Text>
             )}
           </GradientFill>
         </Pressable>
@@ -98,7 +98,7 @@ export default function AddMemberByIdField({
           {result.avatar ? (
             <Image source={{ uri: result.avatar }} className="w-10 h-10 rounded-full mr-3" />
           ) : (
-            <View className="w-10 h-10 rounded-full bg-white items-center justify-center mr-3">
+            <View className="w-10 h-10 rounded-full bg-surface items-center justify-center mr-3">
               <Text className="text-primary font-bold">{(result.full_name ?? "?").charAt(0).toUpperCase()}</Text>
             </View>
           )}
@@ -111,7 +111,7 @@ export default function AddMemberByIdField({
               {addDirect.isPending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text className="text-white text-xs font-semibold">Add</Text>
+                <Text className="text-jazba-white text-xs font-semibold">Add</Text>
               )}
             </GradientFill>
           </Pressable>

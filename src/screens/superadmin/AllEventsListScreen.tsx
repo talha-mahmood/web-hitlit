@@ -78,7 +78,7 @@ export default function AllEventsListScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <View className="flex-row items-center bg-white border border-border rounded-2xl p-4">
+            <View className="flex-row items-center bg-surface border border-border rounded-2xl p-4">
               <View className="flex-1 mr-3">
                 <Text className="text-ink font-semibold text-sm" numberOfLines={1}>
                   {item.name}

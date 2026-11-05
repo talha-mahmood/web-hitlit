@@ -15,10 +15,10 @@ export default function SportChip({ label, selected, onPress }: SportChipProps) 
     >
       {selected ? (
         <GradientFill className="px-4 py-2 rounded-full">
-          <Text className="text-white font-semibold">{label}</Text>
+          <Text className="text-jazba-white font-semibold">{label}</Text>
         </GradientFill>
       ) : (
-        <View className="px-4 py-2 rounded-full bg-white">
+        <View className="px-4 py-2 rounded-full bg-surface">
           <Text className="text-ink">{label}</Text>
         </View>
       )}
