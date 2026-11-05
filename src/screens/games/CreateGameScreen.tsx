@@ -48,7 +48,6 @@ import {
   TIME_SLOTS,
   DAYS,
   DURATIONS,
-  TOURNAMENT_DURATIONS_DAYS,
   NUMBER_OF_TEAMS_OPTIONS,
   PLAYERS_PER_TEAM_OPTIONS,
   NUMBER_OF_GROUPS_OPTIONS,
@@ -104,6 +103,20 @@ function recommendGroupCount(totalTeams: number): number {
 function knockoutByeCount(n: number): number {
   return computeKnockoutFixtures(Array.from({ length: n }, (_, i) => String(i))).filter((f) => f.teamB === null)
     .length;
+}
+
+// Tournament "Duration" cells: a flat day count up to 6, then week/month
+// markers instead of ever-larger day counts — still stores the exact same
+// plain day count underneath (durationDays), just a friendlier label past
+// 6 days (1 week = 7 days, 1 month = 30 days).
+const TOURNAMENT_DURATION_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 14, 21, 30] as const;
+
+function tournamentDurationLabel(days: number): string {
+  if (days === 7) return "1 week";
+  if (days === 14) return "2 weeks";
+  if (days === 21) return "3 weeks";
+  if (days === 30) return "1 month";
+  return `${days} day`;
 }
 
 // Parses a 'YYYY-MM-DD' string via local Y/M/D components, same as
@@ -448,7 +461,7 @@ export default function CreateGameScreen() {
   const [durationDays, setDurationDays] = useState<number>(1);
   // Tournament-only: how many hours play runs each day.
   const [hoursPerDay, setHoursPerDay] = useState<number>(1);
-  const HOURS_PER_DAY_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
+  const HOURS_PER_DAY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
   const [numberOfTeams, setNumberOfTeams] = useState<number | null>(null);
   const [playersPerTeam, setPlayersPerTeam] = useState<number | null>(null);
   const [tournamentFormat, setTournamentFormat] = useState<TournamentFormat | null>(null);
@@ -1076,7 +1089,7 @@ export default function CreateGameScreen() {
           <>
             <SectionLabel title="Duration" icon="timer-outline" compact />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {TOURNAMENT_DURATIONS_DAYS.map((d) => {
+              {TOURNAMENT_DURATION_OPTIONS.map((d) => {
                 const value = String(d);
                 const selected = durationDays === d;
                 return (
@@ -1087,7 +1100,7 @@ export default function CreateGameScreen() {
                   >
                     <ChipFill selected={selected} className="px-4 py-2.5 rounded-2xl">
                       <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>
-                        {d} day
+                        {tournamentDurationLabel(d)}
                       </Text>
                     </ChipFill>
                   </Pressable>

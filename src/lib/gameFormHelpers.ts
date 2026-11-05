@@ -94,7 +94,7 @@ export function isTimeSlotPast(dateIso: string, timeValue: string): boolean {
 export const TIME_SLOTS = buildTimeSlots();
 export const DAYS = getNext14Days();
 export const DURATIONS = [1, 2, 3, 4, 5, 6] as const;
-export const TOURNAMENT_DURATIONS_DAYS = [1, 2, 3, 4, 5] as const;
+export const TOURNAMENT_DURATIONS_DAYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export const MAX_PLAYERS_OPTIONS = Array.from({ length: 29 }, (_, i) => i + 2); // 2..30
 export const NUMBER_OF_TEAMS_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 2); // 2..32
 export const PLAYERS_PER_TEAM_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1); // 1..20
