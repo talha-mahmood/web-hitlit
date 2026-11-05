@@ -720,6 +720,7 @@ export default function CreateGameScreen() {
         : "23:59:59"
       : `${regularEnd!.time}:00`;
     const fee = parseInt(entryFee, 10) || 0;
+    let navigatedAway = false;
 
     try {
       const game = await createGame.mutateAsync({
@@ -752,6 +753,14 @@ export default function CreateGameScreen() {
         dailyHours: isTournament ? hoursPerDay : null,
         poolQualifiersPerGroup: isTournament && tournamentFormat === "POOL" ? qualifiersPerGroup : null,
       });
+      // Navigate the instant the core row exists — team placeholders, match
+      // generation, and the icon upload below all finish in the background
+      // while the detail screen is already open, showing its own skeleton
+      // and filling in via its existing realtime subscriptions (team slots,
+      // matches, icon) rather than keeping the host staring at this
+      // screen's button spinner for every one of those extra steps.
+      navigation.replace("GameDetail", { gameId: game.id });
+      navigatedAway = true;
       if (isTournament) {
         // Team slots (and, for Pool, their group assignment) are all decided
         // at creation time, so the fixtures can be generated immediately
@@ -800,11 +809,15 @@ export default function CreateGameScreen() {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "game-icons", pathPrefix: game.id });
         await supabase.from("games").update({ icon_url: publicUrl }).eq("id", game.id);
       }
-      navigation.replace("GameDetail", { gameId: game.id });
     } catch (err) {
       Alert.alert(
         "Error",
-        getFriendlyErrorMessage(err, `Could not create ${isTournament ? "tournament" : "game"}. Please try again.`)
+        navigatedAway
+          ? getFriendlyErrorMessage(
+              err,
+              `The ${isTournament ? "tournament" : "game"} was created, but finishing setup (teams/matches${iconAsset ? "/icon" : ""}) failed. You can keep going from its detail page.`
+            )
+          : getFriendlyErrorMessage(err, `Could not create ${isTournament ? "tournament" : "game"}. Please try again.`)
       );
     }
   };

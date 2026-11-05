@@ -241,6 +241,7 @@ export default function CreateSquadScreen() {
       Alert.alert("Missing Info", "Please enter a location.");
       return;
     }
+    let navigatedAway = false;
     try {
       const squad = await createSquad.mutateAsync({
         ownerId: userId,
@@ -252,6 +253,17 @@ export default function CreateSquadScreen() {
         gender,
         groupType,
       });
+      // Navigate the instant the group exists — the icon upload below (if
+      // any) finishes in the background while the detail screen is already
+      // open, showing its own skeleton and picking up the icon once it
+      // lands, rather than keeping the host staring at this screen's
+      // button spinner for that extra round trip.
+      if (params?.returnTo) {
+        navigation.replace("AddTeam", { ...params.returnTo, squadId: squad.id });
+      } else {
+        navigation.replace("SquadDetail", { squadId: squad.id });
+      }
+      navigatedAway = true;
       // The icon bucket's RLS requires the squad to already exist (it checks
       // squad_owner_id via the squad row), so the upload can only happen
       // after creation succeeds — a picked icon sits as a local asset until now.
@@ -259,15 +271,12 @@ export default function CreateSquadScreen() {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "squad-icons", pathPrefix: squad.id });
         await supabase.from("squads").update({ icon_url: publicUrl }).eq("id", squad.id);
       }
-      if (params?.returnTo) {
-        navigation.replace("AddTeam", { ...params.returnTo, squadId: squad.id });
-      } else {
-        navigation.replace("SquadDetail", { squadId: squad.id });
-      }
     } catch (err) {
       Alert.alert(
         "Error",
-        getFriendlyErrorMessage(err, "Could not create group. Please try again.")
+        navigatedAway
+          ? getFriendlyErrorMessage(err, "The group was created, but uploading its icon failed. You can set it from the group's page.")
+          : getFriendlyErrorMessage(err, "Could not create group. Please try again.")
       );
     }
   };

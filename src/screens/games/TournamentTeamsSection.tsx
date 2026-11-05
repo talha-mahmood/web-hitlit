@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Alert, ActivityIndicator, Image } from "react-native";
+import { View, Text, Pressable, Alert, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,6 +31,7 @@ import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJ
 import InviteUsersModal from "../../components/InviteUsersModal";
 import AddManualMemberModal from "../../components/AddManualMemberModal";
 import ChatIcon from "../../components/ChatIcon";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import type { GameDetail } from "../../lib/api/games";
 import type { TournamentTeam } from "../../lib/api/tournamentTeams";
 import { soloAwareTeamName, type ScorecardPrefill, type ScorecardPrefillPlayer } from "../../lib/api/tournamentMatches";
@@ -679,7 +680,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const addManualMember = useAddManualTeamMember(game.id);
 
   if (isLoading) {
-    return <ActivityIndicator color={colors.primary} className="mt-4" />;
+    return <View className="mt-4"><SkeletonCardRows count={2} /></View>;
   }
 
   const teams = teamsData ?? [];
