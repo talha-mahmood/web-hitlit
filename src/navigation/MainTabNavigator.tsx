@@ -76,7 +76,7 @@ export default function MainTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 1, marginBottom: 2 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "600", marginTop: 1, marginBottom: 2, letterSpacing: -0.25 },
         // Keep the bar flush with the screen edges so the underlying screen
         // cannot show through as white wedges at its top corners.
         tabBarStyle: {
