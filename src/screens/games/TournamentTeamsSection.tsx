@@ -294,7 +294,7 @@ function TeamCard({
             {chatButton}
           </View>
         </LinearGradient>
-        <WaveDivider color="white" height={22} />
+        <WaveDivider color={colors.surface} height={22} />
       </View>
 
       <View className="p-4" style={{ paddingTop: 4 }}>
