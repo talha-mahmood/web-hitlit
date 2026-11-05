@@ -77,17 +77,15 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 1, marginBottom: 2 },
-        // Rounded top corners only, flush with the bottom edge — the bar
-        // reads as an arch ("upside-down U") instead of a flat rectangle.
-        // A taller bar + a bigger radius makes that curve read clearly
-        // instead of just softened corners.
+        // Keep the bar flush with the screen edges so the underlying screen
+        // cannot show through as white wedges at its top corners.
         tabBarStyle: {
           backgroundColor: "#0A1723",
           height: 76 + insets.bottom,
           paddingTop: 8,
           paddingBottom: insets.bottom,
-          borderTopLeftRadius: 26,
-          borderTopRightRadius: 26,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
           borderTopWidth: 1,
           borderTopColor: "#1C2D3A",
           shadowColor: "#000000",
