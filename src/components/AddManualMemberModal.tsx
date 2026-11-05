@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView } from "react-native";
+import { Modal, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";
@@ -7,6 +7,15 @@ import GradientFill from "./GradientFill";
 import { SectionLabel } from "./GameFormControls";
 import FieldInput from "./FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../lib/nameValidation";
+
+// A percentage maxHeight ("85%") resolves against the KeyboardAvoidingView's
+// own auto-sized height (it isn't flex:1), which Yoga computes differently
+// depending on how much content is inside — with just one name row the
+// sheet's intrinsic height collapses almost to nothing instead of the
+// intended 85% of the screen, clipping the field and hiding the "Add
+// Another Player" button below the fold. An explicit pixel value sidesteps
+// that (same fix as InviteUsersModal/PollCreateModal).
+const MODAL_MAX_HEIGHT = Dimensions.get("window").height * 0.85;
 
 // Same bottom-sheet shape as RenameTeamModal/CreateTeamModal — host-only,
 // for players who don't have (or don't want to create) an app account.
@@ -68,7 +77,7 @@ export default function AddManualMemberModal({
         <KeyboardAvoidingView behavior="padding">
           <View
             className="bg-surface rounded-t-3xl px-5 pt-5"
-            style={{ paddingBottom: 32 + insets.bottom, maxHeight: "85%", ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
+            style={{ paddingBottom: 32 + insets.bottom, maxHeight: MODAL_MAX_HEIGHT, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
               <Text className="text-lg font-bold text-ink">Add Players Manually</Text>
