@@ -3082,6 +3082,7 @@ export type Database = {
           id: string
           is_draw: boolean
           manual_score: Json | null
+          manual_stage_name: string | null
           padel_match_id: string | null
           pickleball_match_id: string | null
           played_at: string | null
@@ -3107,6 +3108,7 @@ export type Database = {
           id?: string
           is_draw?: boolean
           manual_score?: Json | null
+          manual_stage_name?: string | null
           padel_match_id?: string | null
           pickleball_match_id?: string | null
           played_at?: string | null
@@ -3132,6 +3134,7 @@ export type Database = {
           id?: string
           is_draw?: boolean
           manual_score?: Json | null
+          manual_stage_name?: string | null
           padel_match_id?: string | null
           pickleball_match_id?: string | null
           played_at?: string | null
@@ -3394,6 +3397,7 @@ export type Database = {
           filled_by_squad_id: string | null
           game_id: string
           id: string
+          manual_status: Database["public"]["Enums"]["tournament_team_manual_status_type"]
           name: string
           pool_id: string | null
           sort_order: number | null
@@ -3408,6 +3412,7 @@ export type Database = {
           filled_by_squad_id?: string | null
           game_id: string
           id?: string
+          manual_status?: Database["public"]["Enums"]["tournament_team_manual_status_type"]
           name: string
           pool_id?: string | null
           sort_order?: number | null
@@ -3422,6 +3427,7 @@ export type Database = {
           filled_by_squad_id?: string | null
           game_id?: string
           id?: string
+          manual_status?: Database["public"]["Enums"]["tournament_team_manual_status_type"]
           name?: string
           pool_id?: string | null
           sort_order?: number | null
@@ -3928,8 +3934,13 @@ export type Database = {
         | "PENDING"
         | "DECLINED"
       squad_role_type: "captain" | "member" | "host"
-      tournament_format_type: "KNOCKOUT" | "LEAGUE" | "POOL"
+      tournament_format_type: "KNOCKOUT" | "LEAGUE" | "POOL" | "MANUAL"
       tournament_team_invite_status_type: "pending" | "accepted" | "declined"
+      tournament_team_manual_status_type:
+        | "PENDING"
+        | "QUALIFIED"
+        | "KNOCKED_OUT"
+        | "CHAMPION"
       tournament_team_status_type:
         | "FORMING"
         | "PENDING_HOST_APPROVAL"
@@ -4097,8 +4108,9 @@ export const Constants = {
         "DECLINED",
       ],
       squad_role_type: ["captain", "member", "host"],
-      tournament_format_type: ["KNOCKOUT", "LEAGUE", "POOL"],
+      tournament_format_type: ["KNOCKOUT", "LEAGUE", "POOL", "MANUAL"],
       tournament_team_invite_status_type: ["pending", "accepted", "declined"],
+      tournament_team_manual_status_type: ["PENDING", "QUALIFIED", "KNOCKED_OUT", "CHAMPION"],
       tournament_team_status_type: [
         "FORMING",
         "PENDING_HOST_APPROVAL",

@@ -1,4 +1,4 @@
-export type TournamentFormat = "KNOCKOUT" | "LEAGUE" | "POOL";
+export type TournamentFormat = "KNOCKOUT" | "LEAGUE" | "POOL" | "MANUAL";
 
 export type Fixture = { teamA: string; teamB: string | null };
 
@@ -62,7 +62,9 @@ export function computeKnockoutFixtures(teamNames: string[]): Fixture[] {
 
 // Pool format's group-stage fixtures are per-group (see generatePoolMatches
 // / the pool-aware panel), not a single flat list, so there's nothing
-// meaningful to preview here — this just returns empty for POOL.
+// meaningful to preview here — this just returns empty for POOL. Manual
+// format has no auto-computed pairing at all (the host adds every match by
+// hand — see addManualMatch), so it returns empty too.
 export function computeFixtures(
   format: TournamentFormat | null,
   teamNames: string[]
@@ -77,13 +79,16 @@ export const TOURNAMENT_FORMAT_LABEL: Record<TournamentFormat, string> = {
   KNOCKOUT: "Knockout",
   LEAGUE: "League",
   POOL: "Pool",
+  MANUAL: "Manual",
 };
 
 // POOL isn't paired at the whole-tournament level (see generatePoolMatches,
 // which calls this per-pool with "LEAGUE" directly) — passing "POOL" here
-// returns empty, same as an unset format.
+// returns empty, same as an unset format. MANUAL is never auto-paired
+// either — the host adds every match by hand — so it returns empty too,
+// rather than falling through to the round-robin default below.
 export function pairTeamsForFixtures<T>(format: TournamentFormat | null, teams: T[]): FixturePair<T>[] {
-  if (!format || format === "POOL" || teams.length < 2) return [];
+  if (!format || format === "POOL" || format === "MANUAL" || teams.length < 2) return [];
   if (format === "KNOCKOUT") return knockoutBracketPairs(teams);
   const pairs: FixturePair<T>[] = [];
   for (let i = 0; i < teams.length; i++) {

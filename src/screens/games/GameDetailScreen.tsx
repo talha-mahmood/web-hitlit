@@ -278,6 +278,7 @@ export default function GameDetailScreen() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSquadFillModal, setShowSquadFillModal] = useState(false);
   const [showAddManualPlayer, setShowAddManualPlayer] = useState(false);
+  const [addingManualPlayer, setAddingManualPlayer] = useState(false);
   const [showInviteSquadModal, setShowInviteSquadModal] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
@@ -1037,12 +1038,30 @@ export default function GameDetailScreen() {
         <AddManualMemberModal
           visible={showAddManualPlayer}
           onClose={() => setShowAddManualPlayer(false)}
-          submitting={addManualPlayer.isPending}
-          onSubmit={(name) => {
-            addManualPlayer.mutate(name, {
-              onSuccess: () => setShowAddManualPlayer(false),
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player.")),
-            });
+          submitting={addingManualPlayer}
+          maxPlayers={emptySlots}
+          onSubmit={async (names) => {
+            setAddingManualPlayer(true);
+            let addedCount = 0;
+            try {
+              for (const name of names) {
+                await addManualPlayer.mutateAsync(name);
+                addedCount++;
+              }
+              setShowAddManualPlayer(false);
+            } catch (err) {
+              if (addedCount > 0) {
+                Alert.alert(
+                  "Some Players Weren't Added",
+                  `Added ${addedCount} of ${names.length} player(s). ${getFriendlyErrorMessage(err, "Could not add the rest.")}`
+                );
+                setShowAddManualPlayer(false);
+              } else {
+                Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player(s)."));
+              }
+            } finally {
+              setAddingManualPlayer(false);
+            }
           }}
         />
       )}

@@ -271,6 +271,7 @@ const FORMAT_OPTIONS: { value: TournamentFormat; label: string; icon: keyof type
   { value: "KNOCKOUT", label: "Knockout", icon: "trophy" },
   { value: "LEAGUE", label: "League", icon: "grid-outline" },
   { value: "POOL", label: "Groups + Knockout", icon: "people" },
+  { value: "MANUAL", label: "Manual", icon: "construct-outline" },
 ];
 
 // One-line taglines shown directly on each format card.
@@ -278,12 +279,14 @@ const FORMAT_TAGLINE: Record<TournamentFormat, string> = {
   KNOCKOUT: "Lose once and you're out.",
   LEAGUE: "Everyone plays everyone.",
   POOL: "Play in groups, then reach the final.",
+  MANUAL: "You control every matchup and stage.",
 };
 
 const FORMAT_INFO: Record<TournamentFormat, string> = {
   KNOCKOUT: "In a knockout format, teams are eliminated after a single loss until only one champion remains.",
   LEAGUE: "In a league format, every team plays every other team, and the team with the best record wins.",
   POOL: "In a pool format, teams are divided into groups and play within their group. The top teams may advance to the next round (optional).",
+  MANUAL: "In a manual format, you add every match by hand across any stages you name (e.g. Quarter-Final, Semi-Final, Final), and decide which teams qualify, are knocked out, or become champion.",
 };
 
 function FormatCard({
@@ -641,7 +644,7 @@ export default function CreateGameScreen() {
       return;
     }
     if (isTournament && !tournamentFormat) {
-      Alert.alert("Missing Info", "Please select a tournament format (Knockout, League, or Pool).");
+      Alert.alert("Missing Info", "Please select a tournament format (Knockout, League, Pool, or Manual).");
       return;
     }
     if (isTournament && tournamentFormat === "POOL" && (!numberOfGroups || !qualifiersPerGroup)) {
@@ -758,6 +761,11 @@ export default function CreateGameScreen() {
               teams: createdTeams.filter((t) => t.pool_id === pool.id).map((t) => ({ id: t.id, name: t.name })),
             }))
           );
+        } else if (tournamentFormat === "MANUAL") {
+          // Manual format has no auto-computed pairing — the host adds
+          // every match by hand from the Matches panel, so only the team
+          // slots are created here.
+          await createTournamentTeamPlaceholders(game.id, teamNames);
         } else {
           const createdTeams = await createTournamentTeamPlaceholders(game.id, teamNames);
           await generateMatches(
@@ -1391,7 +1399,9 @@ export default function CreateGameScreen() {
                     ? `${numberOfTeams - 1} matches to crown a champion`
                     : tournamentFormat === "LEAGUE"
                       ? `${(numberOfTeams * (numberOfTeams - 1)) / 2} matches — every team plays every other team once`
-                      : numberOfGroups
+                      : tournamentFormat === "MANUAL"
+                        ? "Added by you, stage by stage, once teams are approved"
+                        : numberOfGroups
                         ? (() => {
                             const sizes = distributeTeamsIntoGroups(numberOfTeams, numberOfGroups);
                             const groupMatches = sizes.reduce((sum, size) => sum + (size * (size - 1)) / 2, 0);

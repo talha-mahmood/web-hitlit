@@ -12,6 +12,8 @@ import {
   approveTeam,
   rejectPendingTeam,
   updateTeamName,
+  setTeamManualStatus,
+  type ManualTeamStatus,
 } from "../lib/api/tournamentTeams";
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
@@ -160,6 +162,17 @@ export function useRejectPendingTeam(gameId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (teamId: string) => rejectPendingTeam(teamId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
+    },
+  });
+}
+
+export function useSetTeamManualStatus(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, manualStatus }: { teamId: string; manualStatus: ManualTeamStatus }) =>
+      setTeamManualStatus(teamId, manualStatus),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tournamentTeams", gameId] });
     },

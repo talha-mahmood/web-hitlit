@@ -126,6 +126,58 @@ export async function generatePoolMatches(
   }
 }
 
+// Host-only, Manual format: adds one hand-picked match directly to a round
+// (an existing one, or a brand-new round number one past the current
+// latest) — the host decides the pairing, which round/stage it belongs to,
+// and that stage's display name, so there's no auto-pairing algorithm
+// involved at all, unlike every other format's generateMatches/
+// generateNextRound. stageName is stamped onto every match in a round
+// (not just the first) so the stage's label survives any one match in it
+// later being deleted. sortOrder is passed by the caller (the match count
+// already in that round), same convention insertRound already uses for
+// every other format.
+export async function addManualMatch(
+  gameId: string,
+  round: number,
+  stageName: string,
+  sortOrder: number,
+  teamAId: string,
+  teamBId: string
+): Promise<void> {
+  const { error } = await supabase.from("tournament_matches").insert({
+    game_id: gameId,
+    round,
+    pool_id: null,
+    manual_stage_name: stageName,
+    team_a_id: teamAId,
+    team_b_id: teamBId,
+    sort_order: sortOrder,
+    status: "PENDING",
+    winner_team_id: null,
+    played_at: null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// Host-only, Manual format: re-picks which two teams an existing match is
+// between — only ever offered in the UI for a match that hasn't been
+// completed yet (see ManualMatchesPanel), so this never silently rewrites a
+// settled result.
+export async function updateManualMatchTeams(matchId: string, teamAId: string, teamBId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update({ team_a_id: teamAId, team_b_id: teamBId })
+    .eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
+// Host-only, Manual format: removes a match the host added by mistake or no
+// longer wants — same completed-match restriction as updateManualMatchTeams.
+export async function deleteManualMatch(matchId: string): Promise<void> {
+  const { error } = await supabase.from("tournament_matches").delete().eq("id", matchId);
+  if (error) throw new Error(error.message);
+}
+
 // Records a result the host typed in by hand (see ManualScoreScreen) — the
 // winner/draw plus the score detail the match card shows. The tournament
 // match's team ids are looked up here so the screen only has to say A or B.

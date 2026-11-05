@@ -5,6 +5,7 @@ import type { Database } from "../../types/database.types";
 type TeamRow = Database["public"]["Tables"]["tournament_teams"]["Row"];
 type TeamMemberRow = Database["public"]["Tables"]["tournament_team_members"]["Row"];
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
+export type ManualTeamStatus = Database["public"]["Enums"]["tournament_team_manual_status_type"];
 
 export type TournamentTeam = TeamRow & {
   tournament_team_members: (Pick<
@@ -223,5 +224,19 @@ export async function approveTeam(teamId: string): Promise<void> {
 // resets the slot back to FORMING so it's immediately re-fillable.
 export async function rejectPendingTeam(teamId: string): Promise<void> {
   const { error } = await supabase.rpc("reject_pending_team", { p_team_id: teamId });
+  if (error) throw new Error(error.message);
+}
+
+// Host-only, Manual tournament format: the team's current progression
+// status through the tournament — Pending/Qualified/Knocked Out/Champion.
+// Entirely separate from `status` (FORMING/PENDING_HOST_APPROVAL/APPROVED/
+// REJECTED, which is about roster formation, not tournament progression) —
+// enforced server-side by the same tournament_teams_update_captain_or_host
+// policy every other host-only team update already relies on. The host can
+// set this to anything at any time (including reversing a Knocked Out back
+// to Pending/Qualified), per the Manual format's "host can correct or
+// reverse decisions" requirement — there's no transition restriction here.
+export async function setTeamManualStatus(teamId: string, manualStatus: ManualTeamStatus): Promise<void> {
+  const { error } = await supabase.from("tournament_teams").update({ manual_status: manualStatus }).eq("id", teamId);
   if (error) throw new Error(error.message);
 }

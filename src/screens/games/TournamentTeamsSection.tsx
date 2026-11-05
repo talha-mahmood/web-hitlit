@@ -666,6 +666,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const [showJoinTeamModal, setShowJoinTeamModal] = useState(false);
   const [invitePlayerTeamId, setInvitePlayerTeamId] = useState<string | null>(null);
   const [addManuallyTeamId, setAddManuallyTeamId] = useState<string | null>(null);
+  const [addingManually, setAddingManually] = useState(false);
 
   const { data: teamsData, isLoading } = useTournamentTeams(game.id);
   const createTeam = useCreateTeam(game.id);
@@ -684,6 +685,15 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
   const teams = teamsData ?? [];
   const requiredSize = game.players_per_team ?? 0;
   const requiredTeams = game.number_of_teams ?? 0;
+
+  // How many more players the "Add Players Manually" sheet can queue up for
+  // whichever team it's currently open for — caps the modal's row count so
+  // the host can't stage more names than the team actually has open slots.
+  const addManuallyTeam = teams.find((t) => t.id === addManuallyTeamId) ?? null;
+  const addManuallyRemainingSlots =
+    addManuallyTeam && requiredSize > 0
+      ? Math.max(0, requiredSize - addManuallyTeam.tournament_team_members.filter((m) => m.status === "JOINED").length)
+      : null;
 
   // A rejected (host-removed) team doesn't count against the tournament's
   // team slots, and its members are free to form/join a different team —
@@ -980,16 +990,31 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
       <AddManualMemberModal
         visible={!!addManuallyTeamId}
         onClose={() => setAddManuallyTeamId(null)}
-        submitting={addManualMember.isPending}
-        onSubmit={(name) => {
+        submitting={addingManually}
+        maxPlayers={addManuallyRemainingSlots}
+        onSubmit={async (names) => {
           if (!addManuallyTeamId) return;
-          addManualMember.mutate(
-            { teamId: addManuallyTeamId, name },
-            {
-              onSuccess: () => setAddManuallyTeamId(null),
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player.")),
+          setAddingManually(true);
+          let addedCount = 0;
+          try {
+            for (const name of names) {
+              await addManualMember.mutateAsync({ teamId: addManuallyTeamId, name });
+              addedCount++;
             }
-          );
+            setAddManuallyTeamId(null);
+          } catch (err) {
+            if (addedCount > 0) {
+              Alert.alert(
+                "Some Players Weren't Added",
+                `Added ${addedCount} of ${names.length} player(s). ${getFriendlyErrorMessage(err, "Could not add the rest.")}`
+              );
+              setAddManuallyTeamId(null);
+            } else {
+              Alert.alert("Error", getFriendlyErrorMessage(err, "Could not add the player(s)."));
+            }
+          } finally {
+            setAddingManually(false);
+          }
         }}
       />
     </View>

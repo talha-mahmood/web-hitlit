@@ -5,6 +5,9 @@ import {
   generateMatches,
   generateNextRound,
   generatePoolMatches,
+  addManualMatch,
+  updateManualMatchTeams,
+  deleteManualMatch,
   enterManualScore,
   linkCricketMatch,
   syncCricketMatchResult,
@@ -207,6 +210,32 @@ export function useGeneratePoolMatches(gameId: string) {
   return useMutation({
     mutationFn: (pools: { poolId: string; teams: { id: string; name: string }[] }[]) =>
       generatePoolMatches(gameId, pools),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useAddManualMatch(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { round: number; stageName: string; sortOrder: number; teamAId: string; teamBId: string }) =>
+      addManualMatch(gameId, params.round, params.stageName, params.sortOrder, params.teamAId, params.teamBId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useUpdateManualMatchTeams(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { matchId: string; teamAId: string; teamBId: string }) =>
+      updateManualMatchTeams(params.matchId, params.teamAId, params.teamBId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
+  });
+}
+
+export function useDeleteManualMatch(gameId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (matchId: string) => deleteManualMatch(matchId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tournamentMatches", gameId] }),
   });
 }
