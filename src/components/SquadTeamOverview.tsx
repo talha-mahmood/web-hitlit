@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, Image } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,7 @@ import { squadWinLossRecord, squadRecentForm, squadRunsWicketsTrend, squadPlayer
 import { aggregateGeneric, genericRecentForm, classifySportKind, type GenericSport } from "../lib/genericSportStats";
 import type { SquadDetail } from "../lib/api/squads";
 import type { SquadsStackParamList } from "../navigation/SquadsStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList>;
 
@@ -133,7 +134,7 @@ function CricketOverview({ squad }: { squad: SquadDetail }) {
   const [filter, setFilter] = useState<"all" | "batFirst" | "bowlFirst">("all");
   const { data: figures, matches, isLoading } = useSquadCricketFigures(squad.name, squad.sport_id);
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   const allFigures = figures ?? [];
 
   const record = squadWinLossRecord(allFigures, filter, 20);
@@ -213,7 +214,7 @@ function GenericOverview({ squad, sport }: { squad: SquadDetail; sport: GenericS
   const { data: figures, isLoading } = usePlayerGenericFigures(sport, squad.name);
   const { data: matches } = usePlayerGenericMatches(sport, squad.name);
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   const totals = aggregateGeneric(figures ?? []);
   const form = genericRecentForm(figures ?? [], 5);
   const scheduled = (matches ?? []).find((m) => m.status === "SCHEDULED");

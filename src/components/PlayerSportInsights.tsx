@@ -1,8 +1,9 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { colors, cardShadow } from "../constants/theme";
+import { cardShadow } from "../constants/theme";
 import { aggregateGeneric, SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import { usePlayerGenericFigures } from "./PlayerSportOverview";
+import { SkeletonCardRows } from "./Skeleton";
 
 const RESULT_COLOR: Record<string, string> = { Wins: "#16A34A", Losses: "#DC2626", Draws: "#CA8A04" };
 
@@ -25,7 +26,7 @@ export default function PlayerSportInsights({ sport, fullName }: { sport: Generi
   const { data: figures, isLoading } = usePlayerGenericFigures(sport, fullName);
   const cfg = SPORT_CONFIGS[sport];
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={2} /></View>;
   if (!figures || figures.length === 0) return null;
 
   const t = aggregateGeneric(figures);

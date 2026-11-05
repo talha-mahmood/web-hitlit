@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, Image, Pressable, RefreshControl } from "react-native";
+import { View, Text, FlatList, Image, Pressable, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useTopPlayers } from "../../hooks/usePlayers";
@@ -10,6 +10,7 @@ import GradientFill from "../../components/GradientFill";
 import SelectSportModal from "../../components/SelectSportModal";
 import Bouncy from "../../components/Bouncy";
 import FieldInput from "../../components/FieldInput";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 function PlayerRow({
   player,
@@ -119,52 +120,61 @@ export default function PlayersDashboardContent({
     );
   }, [rankedPlayers, search]);
 
+  // The search bar/filter button render immediately regardless of load
+  // state — only the player list area below swaps between a skeleton and
+  // the real FlatList, same pattern as every other list screen in the app
+  // (SquadsListScreen, GamesListScreen, VenuesListScreen, …) rather than a
+  // bare spinner replacing the whole screen.
+  const searchAndFilterRow = (
+    <View className="mb-1 flex-row items-center px-3.5 pt-1" style={{ gap: 10 }}>
+      <View className="flex-1">
+        <FieldInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search players by name or ID"
+          autoCorrect={false}
+          returnKeyType="search"
+          left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
+          right={
+            search ? (
+              <Ionicons name="close-circle" size={18} color={colors.muted} onPress={() => setSearch("")} />
+            ) : undefined
+          }
+        />
+      </View>
+      <Pressable
+        onPress={() => setSportSheetOpen(true)}
+        className="items-center justify-center bg-surface"
+        style={{ width: 48, height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+      >
+        <Ionicons name="options-outline" size={20} color={colors.ink} />
+        {sportId && (
+          <GradientFill
+            style={{
+              position: "absolute", top: 6, right: 6,
+              width: 8, height: 8, borderRadius: 4,
+            }}
+          />
+        )}
+      </Pressable>
+    </View>
+  );
+
   return (
     <>
-    <FlatList
-      data={visiblePlayers}
-      keyboardShouldPersistTaps="handled"
-      keyExtractor={(item) => item.player.userId}
-      contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 40 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-      ListHeaderComponent={
-        <View className="mb-1 flex-row items-center" style={{ gap: 10 }}>
-          <View className="flex-1">
-            <FieldInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search players by name or ID"
-              autoCorrect={false}
-              returnKeyType="search"
-              left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
-              right={
-                search ? (
-                  <Ionicons name="close-circle" size={18} color={colors.muted} onPress={() => setSearch("")} />
-                ) : undefined
-              }
-            />
-          </View>
-          <Pressable
-            onPress={() => setSportSheetOpen(true)}
-            className="items-center justify-center bg-surface"
-            style={{ width: 48, height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
-          >
-            <Ionicons name="options-outline" size={20} color={colors.ink} />
-            {sportId && (
-              <GradientFill
-                style={{
-                  position: "absolute", top: 6, right: 6,
-                  width: 8, height: 8, borderRadius: 4,
-                }}
-              />
-            )}
-          </Pressable>
-        </View>
-      }
-      ListEmptyComponent={
-        isLoading ? (
-          <ActivityIndicator color={colors.primary} className="mt-10" />
-        ) : (
+    {searchAndFilterRow}
+    {isLoading ? (
+      <View className="px-3.5 pt-1">
+        <SkeletonCardRows />
+      </View>
+    ) : (
+      <FlatList
+        data={visiblePlayers}
+        keyboardShouldPersistTaps="handled"
+        keyExtractor={(item) => item.player.userId}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        ListEmptyComponent={
           <View className="items-center mt-16" style={{ gap: 12 }}>
             <Ionicons name="trophy-outline" size={48} color={colors.border} />
             <Text className="text-ink font-semibold text-base">
@@ -178,16 +188,16 @@ export default function PlayersDashboardContent({
                   : "Play a game to show up on the leaderboard."}
             </Text>
           </View>
-        )
-      }
-      renderItem={({ item }) => (
-        <PlayerRow
-          player={item.player}
-          rank={item.rank}
-          onPress={() => onPressPlayer(item.player.userId, selectedSport)}
-        />
-      )}
-    />
+        }
+        renderItem={({ item }) => (
+          <PlayerRow
+            player={item.player}
+            rank={item.rank}
+            onPress={() => onPressPlayer(item.player.userId, selectedSport)}
+          />
+        )}
+      />
+    )}
     <SelectSportModal
       visible={sportSheetOpen}
       onClose={() => setSportSheetOpen(false)}

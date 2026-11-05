@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +6,7 @@ import { colors } from "../constants/theme";
 import PlayerCricketEntityCard from "./PlayerCricketEntityCard";
 import { usePlayerTeamSquads } from "../hooks/useSquads";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 
@@ -18,7 +19,7 @@ export default function PlayerTeamSquadsList({ userId, sportId }: { userId: stri
   const navigation = useNavigation<Nav>();
   const { data: squads, isLoading } = usePlayerTeamSquads(userId, sportId);
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   if (!squads || squads.length === 0) {
     return (

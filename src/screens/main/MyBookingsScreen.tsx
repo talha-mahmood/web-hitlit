@@ -5,7 +5,6 @@ import {
   Image,
   FlatList,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +15,7 @@ import { getSportImage } from "../../lib/sportImages";
 import { getSportIcon } from "../../lib/sportIcons";
 import { colors, cardShadow } from "../../constants/theme";
 import type { BookingWithCourt } from "../../lib/api/bookings";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 function formatBookingDate(isoStr: string): string {
   return new Date(isoStr).toLocaleDateString("en-PK", {
@@ -222,8 +222,8 @@ export default function MyBookingsScreen() {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={colors.primary} />
+        <View className="px-4 pt-3">
+          <SkeletonCardRows />
         </View>
       ) : (
         <FlatList

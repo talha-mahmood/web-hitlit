@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -20,6 +20,7 @@ import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import GradientFill from "../../components/GradientFill";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { SkeletonBlock } from "../../components/Skeleton";
 
 type Route = RouteProp<VenueEditingParamList, "AdminSlots">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminSlots">;
@@ -160,8 +161,10 @@ export default function AdminSlotsScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
         {isLoading ? (
-          <View className="items-center mt-12">
-            <ActivityIndicator color={colors.primary} />
+          <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <SkeletonBlock key={i} width="47%" height={58} borderRadius={12} />
+            ))}
           </View>
         ) : (
           <View className="flex-row flex-wrap" style={{ gap: 10 }}>

@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, Text, FlatList, Pressable, RefreshControl, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,6 +16,7 @@ import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminNotifications">;
 
@@ -155,7 +156,7 @@ export default function AdminNotificationsScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-10" />
+        <View className="px-5"><SkeletonCardRows /></View>
       ) : (
         <FlatList
           data={notifications ?? []}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
@@ -16,6 +16,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
 import GradientFill from "./GradientFill";
+import { SkeletonCardRows } from "./Skeleton";
 
 // Every match (any status) this player appears in — shared cache key so the
 // Overview/Statistics/Matches tabs all reuse the same single fetch.
@@ -155,7 +156,7 @@ export default function PlayerCricketOverview({ fullName, sportId }: { fullName:
   const [formPage, setFormPage] = useState(0);
 
   if (isLoading) {
-    return <ActivityIndicator color={colors.primary} className="mt-10" />;
+    return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   }
   if (!figures || figures.length === 0) return null;
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,6 +9,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useMyFootballMatches, useDeleteFootballMatch } from "../../hooks/useFootball";
 import { findFootballMatchByCode, friendlyFootballError, goalRowToEvent, type FootballMatchDetail } from "../../lib/api/football";
 import ViewScoringPanel from "../../components/ViewScoringPanel";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { computeScoreSummary, type Phase } from "../../lib/footballScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
@@ -244,7 +245,9 @@ export default function FootballHomeScreen() {
       {activeTab === "view" ? (
         <ViewScoringPanel onLookup={handleLookupScoringCode} />
       ) : isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-5">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={filteredMatches}

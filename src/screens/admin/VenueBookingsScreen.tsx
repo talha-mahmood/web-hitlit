@@ -8,6 +8,7 @@ import { useAdminVenueDetail, useVenueBookings } from "../../hooks/useVenuesAdmi
 import { computeDashboardStats } from "../../lib/adminDashboard";
 import type { VenueBooking } from "../../lib/api/venuesAdmin";
 import { STATUS_BADGE, COUNTED_STATUSES, REVENUE_STATUSES } from "../../lib/bookingStatus";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { toLocalDateStr } from "../../lib/slots";
 import { exportCsv } from "../../lib/exportCsv";
 import { BOOKING_CSV_HEADER, formatBookingRowForCsv, toSafeFilenameSegment } from "../../lib/bookingCsv";
@@ -195,7 +196,7 @@ export default function VenueBookingsScreen() {
       </View>
 
       {isLoading || !stats ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-5"><SkeletonCardRows /></View>
       ) : (
         <ScrollView
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}

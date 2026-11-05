@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { matchTeamScores } from "../lib/playerCricketStats";
 import type { CricketMatchDetail } from "../lib/api/cricket";
 import { usePlayerCricketMatches } from "./PlayerCricketOverview";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 
@@ -77,7 +78,7 @@ function MatchRow({ match }: { match: CricketMatchDetail }) {
 export default function PlayerCricketMatches({ fullName, sportId }: { fullName: string; sportId?: string | null }) {
   const { data: matches, isLoading } = usePlayerCricketMatches(fullName, sportId);
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   if (!matches || matches.length === 0) {
     return (
       <View className="items-center py-10">

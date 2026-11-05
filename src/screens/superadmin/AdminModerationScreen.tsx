@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl } from "react-native";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -135,7 +136,7 @@ export default function AdminModerationScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-3.5"><SkeletonCardRows /></View>
       ) : (
         <FlatList
           data={visibleReports}

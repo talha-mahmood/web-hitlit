@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
@@ -15,6 +15,7 @@ import {
   type RosterAggregateRow,
 } from "../lib/squadCricketStats";
 import type { SquadDetail } from "../lib/api/squads";
+import { SkeletonCardRows } from "./Skeleton";
 
 type StatTab = "TEAM" | "BAT" | "BOWL" | "FIELD" | "MVP";
 const STAT_TABS: StatTab[] = ["TEAM", "BAT", "BOWL", "FIELD", "MVP"];
@@ -310,7 +311,7 @@ export default function SquadTeamStatistics({ squad }: { squad: SquadDetail }) {
   const memberNames = squad.squad_members.filter((m) => m.status === "ACTIVE").map((m) => m.profiles?.full_name).filter((n): n is string => !!n);
   const roster = useMemo(() => (matches ? squadRosterAggregates(matches, memberNames) : []), [matches, memberNames]);
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   if (!matches) return null;
 
   const bat = batRows(roster, batMetric);

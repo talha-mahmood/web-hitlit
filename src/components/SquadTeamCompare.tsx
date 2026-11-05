@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, Modal, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow } from "../constants/theme";
@@ -13,6 +13,7 @@ import { usePlayerGenericFigures } from "./PlayerSportOverview";
 import { computeSquadFigures, squadTeamOverviewStats, squadRosterAggregates } from "../lib/squadCricketStats";
 import { aggregateGeneric, classifySportKind } from "../lib/genericSportStats";
 import type { SquadDetail, SquadListItem } from "../lib/api/squads";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Mode = "COMPARE" | "HEAD_TO_HEAD";
 
@@ -56,7 +57,7 @@ function PickTeamModal({
           />
           {!search.trim() && <Text className="text-muted text-xs mt-3 mb-1">My Teams</Text>}
           {loading ? (
-            <ActivityIndicator color={colors.primary} className="mt-6" />
+            <View className="mt-3"><SkeletonCardRows count={2} /></View>
           ) : results.length === 0 ? (
             <Text className="text-muted text-sm text-center mt-6">No teams found.</Text>
           ) : (
@@ -107,7 +108,7 @@ function CricketCompareView({ squad, other }: { squad: SquadDetail; other: { id:
   const { data: matchesA, isLoading: loadingA } = useSquadCricketMatches(squad.name, squad.sport_id);
   const { data: matchesB, isLoading: loadingB } = useSquadCricketMatches(other.name, squad.sport_id);
 
-  if (loadingA || loadingB) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (loadingA || loadingB) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   const figuresA = computeSquadFigures(matchesA ?? [], squad.name);
   const figuresB = computeSquadFigures(matchesB ?? [], other.name);
@@ -143,7 +144,7 @@ function GenericCompareView({ squad, other, sport }: { squad: SquadDetail; other
   const kind = sport as Exclude<ReturnType<typeof classifySportKind>, "cricket" | null>;
   const { data: figuresA, isLoading: loadingA } = usePlayerGenericFigures(kind, squad.name);
   const { data: figuresB, isLoading: loadingB } = usePlayerGenericFigures(kind, other.name);
-  if (loadingA || loadingB) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (loadingA || loadingB) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   const statsA = aggregateGeneric(figuresA ?? []);
   const statsB = aggregateGeneric(figuresB ?? []);
   return (
@@ -169,7 +170,7 @@ function HeadToHeadView({ squad, other }: { squad: SquadDetail; other: { id: str
     sportKind && sportKind !== "cricket" ? squad.name : null
   );
 
-  if (isCricket ? cricketLoading : genericLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isCricket ? cricketLoading : genericLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   if (isCricket) {
     const figures = computeSquadFigures(matches ?? [], squad.name).filter(

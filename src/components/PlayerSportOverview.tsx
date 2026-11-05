@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
+import { SkeletonCardRows } from "./Skeleton";
 import {
   fetchGenericMatches,
   fetchPlayerGenericFigures,
@@ -70,7 +71,7 @@ export default function PlayerSportOverview({ sport, fullName }: { sport: Generi
   const [formPage, setFormPage] = useState(0);
   const cfg = SPORT_CONFIGS[sport];
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   if (!figures || figures.length === 0) return null;
 
   const totals = aggregateGeneric(figures);

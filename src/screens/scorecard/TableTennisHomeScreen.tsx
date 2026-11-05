@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,6 +9,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useMyTableTennisMatches, useDeleteTableTennisMatch } from "../../hooks/useTableTennis";
 import { findTableTennisMatchByCode, friendlyTableTennisError, rallyRowToEvent, type TableTennisMatchDetail } from "../../lib/api/tableTennis";
 import ViewScoringPanel from "../../components/ViewScoringPanel";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { replayTableTennisMatch, type TableTennisMatchConfig, type Team } from "../../lib/tableTennisScoring";
 import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
@@ -239,7 +240,9 @@ export default function TableTennisHomeScreen() {
       {activeTab === "view" ? (
         <ViewScoringPanel onLookup={handleLookupScoringCode} />
       ) : isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-5">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={filteredMatches}

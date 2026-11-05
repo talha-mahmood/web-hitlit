@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, Image, Alert } from "react-native";
+import { View, Text, FlatList, Pressable, Image, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,6 +9,7 @@ import { colors } from "../../constants/theme";
 import type { BlockedUser } from "../../lib/api/moderation";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "BlockedUsers">;
 
@@ -43,8 +44,8 @@ export default function BlockedUsersScreen() {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={colors.primary} />
+        <View className="p-4">
+          <SkeletonCardRows />
         </View>
       ) : (
         <FlatList

@@ -6,6 +6,7 @@ import GradientFill from "./GradientFill";
 import { searchUsers, type UserSearchResult } from "../lib/api/users";
 import { aggregateBatting, aggregateBowling, aggregateFielding } from "../lib/playerCricketStats";
 import { usePlayerCricketFigures } from "./PlayerCricketOverview";
+import { SkeletonCardRows } from "./Skeleton";
 
 function CompareBar({ label, leftValue, rightValue, leftLabel, rightDisplay, leftDisplay }: { label: string; leftValue: number; rightValue: number; leftLabel?: string; rightDisplay: string; leftDisplay: string }) {
   const max = Math.max(leftValue, rightValue, 1);
@@ -114,7 +115,7 @@ function ComparePanel({
   const { data: figuresA, isLoading: loadingA } = usePlayerCricketFigures(fullNameA, sportId);
   const { data: figuresB, isLoading: loadingB } = usePlayerCricketFigures(fullNameB, sportId);
 
-  if (loadingA || loadingB) return <ActivityIndicator color={colors.primary} className="mt-6" />;
+  if (loadingA || loadingB) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   const batA = aggregateBatting(figuresA ?? []);
   const batB = aggregateBatting(figuresB ?? []);

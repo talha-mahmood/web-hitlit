@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { fetchTournamentsForMatches as fetchGenericTournaments } from "./PlayerS
 import { classifySportKind, type GenericSport } from "../lib/genericSportStats";
 import type { SquadDetail } from "../lib/api/squads";
 import type { SquadsStackParamList } from "../navigation/SquadsStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList>;
 
@@ -42,7 +43,7 @@ export default function SquadTeamTournaments({ squad }: { squad: SquadDetail }) 
   }, [isCricket, cricketMatches, genericSport, genericMatches]);
 
   const loading = isCricket ? cricketLoading || tournaments === null : genericLoading || tournaments === null;
-  if (loading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (loading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   if (!tournaments || tournaments.length === 0) {
     return (

@@ -6,6 +6,7 @@ import GradientFill from "./GradientFill";
 import { searchUsers, type UserSearchResult } from "../lib/api/users";
 import { aggregateGeneric, SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import { usePlayerGenericFigures } from "./PlayerSportOverview";
+import { SkeletonCardRows } from "./Skeleton";
 
 function CompareBar({ label, leftValue, rightValue, leftDisplay, rightDisplay }: { label: string; leftValue: number; rightValue: number; leftDisplay: string; rightDisplay: string }) {
   const max = Math.max(leftValue, rightValue, 1);
@@ -98,7 +99,7 @@ function ComparePanel({ sport, fullNameA, nameA, fullNameB, nameB }: { sport: Ge
   const { data: figuresB, isLoading: loadingB } = usePlayerGenericFigures(sport, fullNameB);
   const cfg = SPORT_CONFIGS[sport];
 
-  if (loadingA || loadingB) return <ActivityIndicator color={colors.primary} className="mt-6" />;
+  if (loadingA || loadingB) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   const a = aggregateGeneric(figuresA ?? []);
   const b = aggregateGeneric(figuresB ?? []);

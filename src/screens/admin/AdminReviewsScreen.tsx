@@ -8,6 +8,7 @@ import { useAdminVenueDetail } from "../../hooks/useVenuesAdmin";
 import { useVenueReviews, useRespondToVenueReview } from "../../hooks/useVenueReviews";
 import type { VenueReview } from "../../lib/api/venueReviews";
 import { colors, primaryButtonShadow } from "../../constants/theme";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
@@ -91,7 +92,7 @@ export default function AdminReviewsScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-5"><SkeletonCardRows /></View>
       ) : (
         <FlatList
           data={reviews ?? []}

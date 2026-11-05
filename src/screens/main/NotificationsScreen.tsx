@@ -27,6 +27,7 @@ import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "Notifications">,
@@ -308,7 +309,7 @@ export default function NotificationsScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-10" />
+        <View className="px-5"><SkeletonCardRows /></View>
       ) : (
         <FlatList
           data={notifications ?? []}

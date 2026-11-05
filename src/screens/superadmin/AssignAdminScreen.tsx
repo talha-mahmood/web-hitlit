@@ -18,6 +18,7 @@ import FieldInput from "../../components/FieldInput";
 import GradientFill from "../../components/GradientFill";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Route = RouteProp<VenueEditingParamList, "AssignAdmin">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AssignAdmin">;
@@ -258,7 +259,7 @@ export default function AssignAdminScreen() {
           </Text>
 
           {extraAdminsLoading ? (
-            <ActivityIndicator color={colors.primary} className="mb-3" />
+            <View className="mb-3"><SkeletonCardRows count={2} /></View>
           ) : extraAdminsError ? (
             <View className="border border-red-200 bg-red-50 rounded-xl px-4 py-3 mb-4">
               <Text className="text-red-700 text-sm">

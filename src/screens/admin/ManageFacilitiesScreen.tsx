@@ -10,6 +10,7 @@ import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import FieldInput from "../../components/FieldInput";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Route = RouteProp<VenueEditingParamList, "ManageFacilities">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageFacilities">;
@@ -62,14 +63,6 @@ export default function ManageFacilitiesScreen() {
     ]);
   };
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-100">
       <View
@@ -89,7 +82,9 @@ export default function ManageFacilitiesScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 10, paddingBottom: 60 }}>
-        {facilities.length === 0 ? (
+        {isLoading ? (
+          <SkeletonCardRows />
+        ) : facilities.length === 0 ? (
           <View className="border border-dashed border-border rounded-2xl p-8 items-center">
             <Ionicons name="sparkles-outline" size={32} color={colors.border} />
             <Text className="text-muted text-sm text-center mt-2">

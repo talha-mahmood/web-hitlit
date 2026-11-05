@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors, cardShadow } from "../constants/theme";
@@ -8,6 +8,7 @@ import { useSquadCricketMatches } from "../hooks/useSquadCricketStats";
 import { computePlayerFigures } from "../lib/playerCricketStats";
 import type { SquadDetail } from "../lib/api/squads";
 import type { SquadsStackParamList } from "../navigation/SquadsStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList>;
 type SortMode = "az" | "matches";
@@ -69,7 +70,7 @@ export default function SquadTeamPlayers({ squad, isCricket }: { squad: SquadDet
     return copy;
   }, [rows, sort]);
 
-  if (isCricket && isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isCricket && isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   return (
     <View>

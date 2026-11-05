@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { usePlayerGenericMatches } from "./PlayerSportOverview";
 import { SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 export type TournamentEntry = { gameId: string; title: string; iconUrl: string | null; gameDate: string | null };
@@ -48,7 +49,7 @@ export default function PlayerSportTournaments({ sport, fullName }: { sport: Gen
     };
   }, [matches, sport]);
 
-  if (matchesLoading || tournaments === null) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (matchesLoading || tournaments === null) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   if (tournaments.length === 0) {
     return (

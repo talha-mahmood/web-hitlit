@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import PlayerCricketEntityCard from "./PlayerCricketEntityCard";
 import { fetchMySquads, type SquadListItem } from "../lib/api/squads";
 import { SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import type { HomeStackParamList } from "../navigation/HomeStackNavigator";
+import { SkeletonCardRows } from "./Skeleton";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "PlayerProfile">;
 
@@ -26,7 +27,7 @@ export default function PlayerSportClubs({ sport, userId }: { sport: GenericSpor
     };
   }, [userId]);
 
-  if (squads === null) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (squads === null) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
 
   const clubs = squads.filter(
     (s) => s.group_type === "club" && cfg.dbSportNames.includes((s.sports?.name ?? "").toLowerCase())

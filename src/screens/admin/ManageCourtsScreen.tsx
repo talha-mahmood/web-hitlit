@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -9,6 +9,7 @@ import SportIconBadge from "../../components/SportIconBadge";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Route = RouteProp<VenueEditingParamList, "ManageCourts">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageCourts">;
@@ -36,14 +37,6 @@ export default function ManageCourtsScreen() {
     ]);
   };
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-100">
       <View
@@ -63,7 +56,9 @@ export default function ManageCourtsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 60 }}>
-        {courts.length === 0 ? (
+        {isLoading ? (
+          <SkeletonCardRows />
+        ) : courts.length === 0 ? (
           <View className="border border-dashed border-border rounded-2xl p-8 items-center">
             <Ionicons name="grid-outline" size={32} color={colors.border} />
             <Text className="text-muted text-sm text-center mt-2">

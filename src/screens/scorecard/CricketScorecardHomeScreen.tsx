@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -13,6 +13,7 @@ import Bouncy from "../../components/Bouncy";
 import TeamCrest from "../../components/TeamCrest";
 import GradientFill from "../../components/GradientFill";
 import ViewScoringPanel from "../../components/ViewScoringPanel";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNavigator";
 
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "CricketHome">;
@@ -265,7 +266,9 @@ export default function CricketScorecardHomeScreen() {
       {activeTab === "view" ? (
         <ViewScoringPanel onLookup={handleLookupScoringCode} />
       ) : isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-5">
+          <SkeletonCardRows />
+        </View>
       ) : (
         <FlatList
           data={filteredMatches}

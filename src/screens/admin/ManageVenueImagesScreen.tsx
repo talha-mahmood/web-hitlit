@@ -16,6 +16,7 @@ import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { SkeletonBlock } from "../../components/Skeleton";
 
 type Route = RouteProp<VenueEditingParamList, "ManageVenueImages">;
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "ManageVenueImages">;
@@ -85,14 +86,6 @@ export default function ManageVenueImagesScreen() {
     reorderImage.mutate({ imageId: target.id, displayOrder: current.display_order });
   };
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-100">
       <View
@@ -118,7 +111,13 @@ export default function ManageVenueImagesScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        {images.length === 0 ? (
+        {isLoading ? (
+          <View className="flex-row flex-wrap" style={{ gap: 12 }}>
+            {Array.from({ length: 4 }, (_, i) => (
+              <SkeletonBlock key={i} width="47%" height={120} borderRadius={12} />
+            ))}
+          </View>
+        ) : images.length === 0 ? (
           <View className="border border-dashed border-border rounded-2xl p-8 items-center">
             <Ionicons name="images-outline" size={32} color={colors.border} />
             <Text className="text-muted text-sm text-center mt-2">

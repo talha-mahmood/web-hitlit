@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { classifySportKind, type GenericSport } from "../lib/genericSportStats";
 import type { CricketMatchDetail } from "../lib/api/cricket";
 import type { GenericMatchRow as GenericMatchRowData } from "../lib/genericSportStats";
 import type { SquadDetail } from "../lib/api/squads";
+import { SkeletonCardRows } from "./Skeleton";
 import type { SquadsStackParamList } from "../navigation/SquadsStackNavigator";
 
 type Nav = NativeStackNavigationProp<SquadsStackParamList>;
@@ -126,7 +127,7 @@ export default function SquadTeamMatches({ squad }: { squad: SquadDetail }) {
   const { data: genericMatches, isLoading: genericLoading } = usePlayerGenericMatches(genericSport, genericSport ? squad.name : null);
 
   if (isCricket) {
-    if (cricketLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+    if (cricketLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
     if (!cricketMatches || cricketMatches.length === 0) return <EmptyState />;
     return (
       <View className="mt-2">
@@ -138,7 +139,7 @@ export default function SquadTeamMatches({ squad }: { squad: SquadDetail }) {
   }
 
   if (genericSport) {
-    if (genericLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+    if (genericLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
     if (!genericMatches || genericMatches.length === 0) return <EmptyState />;
     return (
       <View className="mt-2">

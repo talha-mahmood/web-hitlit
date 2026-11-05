@@ -1,7 +1,8 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { colors, cardShadow } from "../constants/theme";
 import { aggregateGeneric, SPORT_CONFIGS, type GenericSport } from "../lib/genericSportStats";
 import { usePlayerGenericFigures } from "./PlayerSportOverview";
+import { SkeletonCardRows } from "./Skeleton";
 
 // Unlike cricket, none of these sports have a "format" concept (no T10/T20/
 // Club/ODI equivalent exists in their schema) — so this is a flat totals
@@ -10,7 +11,7 @@ export default function PlayerSportStatistics({ sport, fullName }: { sport: Gene
   const { data: figures, isLoading } = usePlayerGenericFigures(sport, fullName);
   const cfg = SPORT_CONFIGS[sport];
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   if (!figures || figures.length === 0) return null;
 
   const t = aggregateGeneric(figures);

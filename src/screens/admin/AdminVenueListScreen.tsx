@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, Image, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -10,6 +10,7 @@ import { signOutGoogle } from "../../lib/googleAuth";
 import { colors } from "../../constants/theme";
 import type { VenueEditingParamList } from "../../navigation/adminTypes";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
+import { SkeletonCardRows } from "../../components/Skeleton";
 
 type Nav = NativeStackNavigationProp<VenueEditingParamList & { AdminVenueList: undefined }>;
 
@@ -26,20 +27,17 @@ export default function AdminVenueListScreen() {
   // admins — worse, since AdminDashboard was reached via replace(), this
   // screen was regenerated as a *new* instance in the stack, so the
   // auto-skip fired every visit, not just the first. Always show the list.
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-100">
       <View className="px-6" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
         <Text className="text-2xl font-bold text-ink">Your Venues</Text>
       </View>
 
+      {isLoading ? (
+        <View className="px-3.5">
+          <SkeletonCardRows />
+        </View>
+      ) : (
       <FlatList
         data={venues ?? []}
         keyExtractor={(item) => item.id}
@@ -88,6 +86,7 @@ export default function AdminVenueListScreen() {
           </Pressable>
         }
       />
+      )}
     </View>
   );
 }

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import Svg, { Rect, Path, G } from "react-native-svg";
 import { colors, cardShadow } from "../constants/theme";
 import { battingPositionStats, bowlingConcededDistribution } from "../lib/playerCricketStats";
 import { usePlayerCricketFigures, usePlayerCricketMatches } from "./PlayerCricketOverview";
 import GradientFill from "./GradientFill";
+import { SkeletonCardRows } from "./Skeleton";
 
 type BatMetric = "Inn" | "Run" | "Avg" | "SR";
 const BAT_METRICS: BatMetric[] = ["Inn", "Run", "Avg", "SR"];
@@ -128,7 +129,7 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
   const [section, setSection] = useState<"Batting" | "Bowling">("Batting");
   const [batMetric, setBatMetric] = useState<BatMetric>("Run");
 
-  if (figuresLoading || matchesLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (figuresLoading || matchesLoading) return <View className="mt-4"><SkeletonCardRows count={2} /></View>;
   if (!figures || figures.length === 0 || !matches) return null;
 
   const positionRows = battingPositionStats(figures);

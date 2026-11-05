@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, ActivityIndicator, Alert, RefreshControl, Image } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl, Image } from "react-native";
+import { SkeletonCardRows } from "../../components/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -96,7 +97,7 @@ export default function AllUsersListScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.primary} className="mt-8" />
+        <View className="px-3.5"><SkeletonCardRows /></View>
       ) : (
         <FlatList
           data={users ?? []}

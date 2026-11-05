@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { colors } from "../constants/theme";
 import {
   statisticsByFormat,
@@ -10,6 +10,7 @@ import {
 } from "../lib/playerCricketStats";
 import { usePlayerCricketFigures } from "./PlayerCricketOverview";
 import GradientFill from "./GradientFill";
+import { SkeletonCardRows } from "./Skeleton";
 
 type SubTab = "BAT" | "BOWL" | "FIELD" | "MATCH-WISE";
 const SUB_TABS: SubTab[] = ["BAT", "BOWL", "FIELD", "MATCH-WISE"];
@@ -121,7 +122,7 @@ export default function PlayerCricketStatistics({ fullName, sportId }: { fullNam
   const { data: figures, isLoading } = usePlayerCricketFigures(fullName, sportId);
   const [subTab, setSubTab] = useState<SubTab>("BAT");
 
-  if (isLoading) return <ActivityIndicator color={colors.primary} className="mt-10" />;
+  if (isLoading) return <View className="mt-4"><SkeletonCardRows count={3} /></View>;
   if (!figures || figures.length === 0) return null;
 
   const stats = statisticsByFormat(figures);
