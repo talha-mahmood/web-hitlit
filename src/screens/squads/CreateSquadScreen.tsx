@@ -304,7 +304,7 @@ export default function CreateSquadScreen() {
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text className="text-jazba-white font-bold" style={{ fontSize: 14.5 }}>
-                Post
+                Create
               </Text>
             )}
           </GradientFill>
