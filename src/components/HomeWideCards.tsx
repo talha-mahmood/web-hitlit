@@ -11,11 +11,9 @@ import type { GameListItem } from "../lib/api/games";
 import type { SquadListItem } from "../lib/api/squads";
 import type { EventListItem } from "../lib/api/events";
 
-// Home-screen-only variant of the "Filter by Sport" tile — a taller, photo-
-// led rounded-square card instead of SportsBySportSection's circular badge,
-// to match the home screen's own visual language. SportsBySportSection
-// itself is left untouched since Create Game/Tournament and Players
-// Dashboard still use its circular style.
+// Shared square sport image tile used on Home and Create Group. A consistent
+// square canvas contains each full source image, including the landscape
+// photos, so sports stay aligned without cutting off equipment.
 export function HomeSportTile({
   name,
   selected,
@@ -46,11 +44,12 @@ export function HomeSportTile({
         }}
       >
         {photo ? (
-          <Image
-            source={photo}
-            style={{ width: "100%", height: "100%", borderRadius: 10 }}
-            resizeMode="contain"
-          />
+          <View
+            className="items-center justify-center overflow-hidden"
+            style={{ width: "100%", height: "100%", borderRadius: 10, backgroundColor: "#F5F7FA" }}
+          >
+            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+          </View>
         ) : (
           <View
             className="items-center justify-center rounded-full"
