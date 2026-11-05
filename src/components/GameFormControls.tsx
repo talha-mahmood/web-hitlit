@@ -89,10 +89,8 @@ function Pill<T extends string>({
     </Text>
   );
 
-  // The brand gradient only ever stands in for the solid `colors.primary`
-  // fill (the default, white-background screens) — the "onGreen" variant's
-  // white/translucent-white treatment (for screens already on a colored
-  // background) is untouched.
+  // Selected default pills use the brand green; unselected pills stay on a
+  // dark raised surface. The onGreen variant keeps its tinted treatment.
   return (
     <Animated.View style={pulseStyle}>
       <Pressable onPress={() => onChange(option.value)} style={pillStyle}>
@@ -101,7 +99,7 @@ function Pill<T extends string>({
         ) : (
           <View
             className="px-4 py-2.5 rounded-2xl"
-            style={{ backgroundColor: onGreen ? (selected ? "#0A1723" : "rgba(255,255,255,0.14)") : "white" }}
+            style={{ backgroundColor: onGreen ? (selected ? colors.surface : "rgba(255,255,255,0.14)") : colors.surface }}
           >
             {label}
           </View>
