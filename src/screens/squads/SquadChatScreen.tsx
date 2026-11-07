@@ -156,7 +156,7 @@ function MessageBubble({
           {isOwn && !isDeleted && (
             <View
               className="items-center justify-center rounded-full"
-              style={{ position: "absolute", right: -6, bottom: -6, width: 20, height: 20, backgroundColor: "#0A1723", ...cardShadow }}
+              style={{ position: "absolute", right: -6, bottom: -6, width: 20, height: 20, backgroundColor: colors.surface, ...cardShadow }}
             >
               <Ionicons name="checkmark-done" size={12} color={colors.primary} />
             </View>
@@ -453,7 +453,7 @@ export default function SquadChatScreen() {
         style={{
           paddingBottom: insets.bottom,
           gap: 8,
-          backgroundColor: "#0A1723",
+          backgroundColor: colors.surface,
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
           ...cardShadow,

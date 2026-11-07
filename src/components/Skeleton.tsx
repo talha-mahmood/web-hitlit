@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { View, type DimensionValue } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
-import { cardShadow } from "../constants/theme";
+import { cardShadow, colors} from "../constants/theme";
 
 // A single pulsing gray block — the building piece every shaped skeleton
 // below is made of. Shown in place of real content while a screen's first
@@ -32,7 +32,7 @@ export function SkeletonBlock({
 
   return (
     <Animated.View
-      style={[{ width, height, borderRadius, backgroundColor: "#1C2D3A" }, animatedStyle, style]}
+      style={[{ width, height, borderRadius, backgroundColor: colors.border }, animatedStyle, style]}
     />
   );
 }

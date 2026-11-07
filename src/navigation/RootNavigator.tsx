@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Alert } from "react-native";
+import { Alert, Appearance, Platform, View } from "react-native";
+import { vars } from "nativewind";
+import * as SystemUI from "expo-system-ui";
+import * as NavigationBar from "expo-navigation-bar";
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef, type ParamListBase } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
@@ -17,24 +20,63 @@ import SuperAdminNavigator from "./SuperAdminNavigator";
 import CompleteDetailsScreen from "../screens/onboarding/CompleteDetailsScreen";
 import AcceptTermsScreen from "../screens/onboarding/AcceptTermsScreen";
 import AccountSuspendedScreen from "../screens/onboarding/AccountSuspendedScreen";
+import { setActiveThemePalette, themePalettes } from "../constants/theme";
+import { getResolvedTheme, hydrateThemePreference, useThemeStore } from "../store/themeStore";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
 
+const utilityColorPalettes = {
+  dark: {
+    green: ["#103A2A", "#164A34", "#1C5E3D", "#21834D", "#18C66A", "#18C66A", "#18C66A", "#18C66A", "#0F9F58", "#0B6C3C"],
+    red: ["#351419", "#4B1D25", "#7F2531", "#B23B47", "#EF4444", "#EF4444", "#DC2626", "#C81E2B", "#A61B27", "#7F1D1D"],
+    blue: ["#102638", "#17384F", "#205472", "#26749A", "#38BDF8", "#0EA5E9", "#0284C7", "#38BDF8", "#0369A1", "#0C4A6E"],
+    orange: ["#382516", "#4A301B", "#704522", "#A75F24", "#FB923C", "#F97316", "#FB923C", "#F97316", "#C2410C", "#7C2D12"],
+    amber: ["#352A13", "#493715", "#6C5018", "#A87818", "#FBBF24", "#F59E0B", "#FBBF24", "#F59E0B", "#B45309", "#78350F"],
+    purple: ["#271C3B", "#35264E", "#4F3675", "#7450A8", "#C084FC", "#A855F7", "#C084FC", "#A855F7", "#7E22CE", "#581C87"],
+  },
+  light: {
+    green: ["#E8F7EE", "#D1F0DD", "#B4E6C7", "#83D5A4", "#35B96E", "#129B53", "#087A3D", "#066333", "#05512B", "#043F22"],
+    red: ["#FEF2F2", "#FEE2E2", "#FECACA", "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#B91C1C", "#991B1B", "#7F1D1D"],
+    blue: ["#EFF6FF", "#DBEAFE", "#BFDBFE", "#93C5FD", "#60A5FA", "#3B82F6", "#2563EB", "#1D4ED8", "#1E40AF", "#1E3A8A"],
+    orange: ["#FFF7ED", "#FFEDD5", "#FED7AA", "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#C2410C", "#9A3412", "#7C2D12"],
+    amber: ["#FFFBEB", "#FEF3C7", "#FDE68A", "#FCD34D", "#FBBF24", "#F59E0B", "#D97706", "#B45309", "#92400E", "#78350F"],
+    purple: ["#FAF5FF", "#F3E8FF", "#E9D5FF", "#D8B4FE", "#C084FC", "#A855F7", "#9333EA", "#7E22CE", "#6B21A8", "#581C87"],
+  },
+} as const;
+
+function getUtilityColorVariables(theme: "light" | "dark") {
+  return Object.fromEntries(
+    (Object.entries(utilityColorPalettes[theme]) as [string, readonly string[]][]).flatMap(([family, shades]) =>
+      shades.map((color, index) => [`--jazba-${family}-${index === 0 ? 50 : index * 100}`, color])
+    )
+  );
+}
+
 // Behind every screen (visible during transitions and at the edges): the same
 // page colour the Home screen uses.
-const AppTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: "#18C66A",
-    background: "#050B12",
-    card: "#0A1723",
-    text: "#F5F7FA",
-    border: "#1C2D3A",
-  },
-};
-
 export default function RootNavigator() {
+  const preference = useThemeStore((s) => s.preference);
+  const systemTheme = useThemeStore((s) => s.systemTheme);
+  const setSystemTheme = useThemeStore((s) => s.setSystemTheme);
+  const resolvedTheme = getResolvedTheme({ ...useThemeStore.getState(), preference, systemTheme });
+  const palette = themePalettes[resolvedTheme];
+
+  setActiveThemePalette(resolvedTheme);
+
+  useEffect(() => {
+    void hydrateThemePreference();
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      setSystemTheme(colorScheme === "light" ? "light" : "dark");
+    });
+    return () => subscription.remove();
+  }, [setSystemTheme]);
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(palette.app);
+    if (Platform.OS === "android") {
+      void NavigationBar.setStyle(resolvedTheme === "light" ? "dark" : "light");
+    }
+  }, [palette.app, resolvedTheme]);
   const session = useAuthStore((s) => s.session);
   const isInitializing = useAuthStore((s) => s.isInitializing);
   const init = useAuthStore((s) => s.init);
@@ -213,5 +255,48 @@ export default function RootNavigator() {
     content = <MainTabNavigator />;
   }
 
-  return <NavigationContainer ref={navigationRef} theme={AppTheme}>{content}</NavigationContainer>;
+  const navigationTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: palette.primary,
+      background: palette.app,
+      card: palette.surface,
+      text: palette.ink,
+      border: palette.border,
+    },
+  };
+
+  return (
+    <View
+      style={[
+        { flex: 1 },
+        vars({
+          "--jazba-app": palette.app,
+          "--jazba-surface": palette.surface,
+          "--jazba-surface-raised": palette.surfaceRaised,
+          "--jazba-border": palette.border,
+          "--jazba-ink": palette.ink,
+          "--jazba-muted": palette.muted,
+          "--jazba-primary": palette.primary,
+          "--jazba-primary-dark": palette.primaryDark,
+          "--jazba-primary-light": palette.primaryLight,
+          "--jazba-white": resolvedTheme === "light" ? "#FFFFFF" : "#0A1723",
+          "--jazba-gray-50": resolvedTheme === "light" ? "#F8FAFC" : "#0D1C29",
+          "--jazba-gray-100": resolvedTheme === "light" ? "#F1F5F9" : "#142533",
+          "--jazba-gray-200": resolvedTheme === "light" ? "#E2E8F0" : "#1C2D3A",
+          "--jazba-gray-300": resolvedTheme === "light" ? "#CBD5E1" : "#516171",
+          "--jazba-gray-400": resolvedTheme === "light" ? "#94A3B8" : "#718092",
+          "--jazba-gray-500": resolvedTheme === "light" ? "#64748B" : "#9AA8B7",
+          "--jazba-gray-600": resolvedTheme === "light" ? "#475569" : "#AEB9C5",
+          "--jazba-gray-700": resolvedTheme === "light" ? "#334155" : "#CBD4DD",
+          "--jazba-gray-800": resolvedTheme === "light" ? "#1E293B" : "#E1E7ED",
+          "--jazba-gray-900": resolvedTheme === "light" ? "#0F172A" : "#F5F7FA",
+          ...getUtilityColorVariables(resolvedTheme),
+        }),
+      ]}
+    >
+      <NavigationContainer ref={navigationRef} theme={navigationTheme}>{content}</NavigationContainer>
+    </View>
+  );
 }

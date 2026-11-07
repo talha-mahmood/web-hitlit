@@ -80,14 +80,14 @@ export default function MainTabNavigator() {
         // Keep the bar flush with the screen edges so the underlying screen
         // cannot show through as white wedges at its top corners.
         tabBarStyle: {
-          backgroundColor: "#0A1723",
+          backgroundColor: colors.surface,
           height: 76 + insets.bottom,
           paddingTop: 8,
           paddingBottom: insets.bottom,
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
           borderTopWidth: 1,
-          borderTopColor: "#1C2D3A",
+          borderTopColor: colors.border,
           shadowColor: "#000000",
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.28,

@@ -60,7 +60,7 @@ export default function SuperAdminSectionSwitcher({ active }: { active: SectionK
             style={{
               width: 250,
               height: "100%",
-              backgroundColor: "#0A1723",
+              backgroundColor: colors.surface,
               paddingTop: insets.top + 20,
               paddingBottom: insets.bottom + 16,
               paddingHorizontal: 10,

@@ -22,7 +22,7 @@ type Nav = NativeStackNavigationProp<SquadsStackParamList>;
 // components follow the reference images' layout and color treatment
 // instead of inventing a new one.
 
-const WON_COLOR = "#0F9F58";
+const getWonColor = () => colors.primaryDark;
 const LOST_COLOR = "#D1D5DB";
 
 function WinLossCard({
@@ -36,8 +36,8 @@ function WinLossCard({
 }) {
   const lostPercent = 100 - record.winPercent;
   return (
-    <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
-      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: "#1C2D3A" }}>
+    <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
+      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: colors.border }}>
         {([
           ["all", "Both"],
           ["batFirst", "Bat First"],
@@ -51,20 +51,20 @@ function WinLossCard({
             </Pressable>
           ) : (
             <Pressable key={key} onPress={() => onChangeFilter(key)} className="flex-1 items-center py-2.5">
-              <Text className="font-bold text-xs" style={{ color: "#CBD4DD" }}>{label}</Text>
+              <Text className="font-bold text-xs" style={{ color: colors.inkSecondary }}>{label}</Text>
             </Pressable>
           )
         )}
       </View>
 
       <View className="flex-row justify-between mb-2">
-        <Text className="font-bold text-sm" style={{ color: WON_COLOR }}>
+        <Text className="font-bold text-sm" style={{ color: getWonColor() }}>
           Won - {record.winPercent.toFixed(1)}%
         </Text>
         <Text className="font-bold text-sm text-muted">Lost - {lostPercent.toFixed(1)}%</Text>
       </View>
       <View className="flex-row rounded-full overflow-hidden" style={{ height: 10 }}>
-        <View style={{ width: `${record.winPercent}%`, backgroundColor: WON_COLOR }} />
+        <View style={{ width: `${record.winPercent}%`, backgroundColor: getWonColor() }} />
         <View style={{ width: `${lostPercent}%`, backgroundColor: LOST_COLOR }} />
       </View>
       <View className="flex-row justify-between mt-3">
@@ -111,7 +111,7 @@ function BarChart({ data, color }: { data: { matchId: string; value: number }[];
       {data.map((d, i) => (
         <View key={`${d.matchId}-${i}`} className="items-center" style={{ gap: 6 }}>
           <View style={{ width: 30, height: Math.max(4, (d.value / max) * 110), backgroundColor: color, borderRadius: 6 }} />
-          <View className="rounded px-1.5 py-1" style={{ backgroundColor: "#1C2D3A" }}>
+          <View className="rounded px-1.5 py-1" style={{ backgroundColor: colors.border }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>{d.value}</Text>
           </View>
         </View>
@@ -177,7 +177,7 @@ function CricketOverview({ squad }: { squad: SquadDetail }) {
           <Pressable
             onPress={() => navigation.navigate("LiveScoring", { matchId: scheduled.id })}
             className="flex-row items-center rounded-2xl p-4"
-            style={{ backgroundColor: "#142533", gap: 12 }}
+            style={{ backgroundColor: colors.surfaceOverlay, gap: 12 }}
           >
             <Ionicons name="calendar-outline" size={22} color={colors.primaryDark} />
             <View className="flex-1">
@@ -190,7 +190,7 @@ function CricketOverview({ squad }: { squad: SquadDetail }) {
       )}
 
       <SectionTitle title="Runs Scored In Recent Matches" />
-      <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
+      <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
         <BarChart data={trend.runsScored} color="#2563EB" />
         <View className="flex-row justify-between mt-2">
           <Text className="text-muted text-xs font-bold">NEW</Text>
@@ -199,7 +199,7 @@ function CricketOverview({ squad }: { squad: SquadDetail }) {
       </View>
 
       <SectionTitle title="Wickets Taken In Recent Matches" />
-      <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
+      <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
         <BarChart data={trend.wicketsTaken} color="#DC2626" />
         <View className="flex-row justify-between mt-2">
           <Text className="text-muted text-xs font-bold">NEW</Text>
@@ -222,10 +222,10 @@ function GenericOverview({ squad, sport }: { squad: SquadDetail; sport: GenericS
   return (
     <View>
       <SectionTitle title="Record" subtitle="All matches" />
-      <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
+      <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
         <View className="flex-row justify-around">
           <Text className="font-bold text-sm" style={{ color: colors.ink }}>Matches - {totals.matches}</Text>
-          <Text className="font-bold text-sm" style={{ color: WON_COLOR }}>Won - {totals.wins}</Text>
+          <Text className="font-bold text-sm" style={{ color: getWonColor() }}>Won - {totals.wins}</Text>
           <Text className="font-bold text-sm text-muted">Lost - {totals.losses}</Text>
         </View>
         <Text className="text-center text-muted text-xs mt-2">Win % {totals.winPercent.toFixed(1)}%</Text>
@@ -240,7 +240,7 @@ function GenericOverview({ squad, sport }: { squad: SquadDetail; sport: GenericS
             <View
               key={f.matchId}
               className="items-center justify-center rounded-full"
-              style={{ width: 36, height: 36, backgroundColor: f.letter === "W" ? "#DCFCE7" : f.letter === "L" ? "#351419" : "#352A13" }}
+              style={{ width: 36, height: 36, backgroundColor: f.letter === "W" ? "#DCFCE7" : f.letter === "L" ? colors.dangerLight : colors.warningLight }}
             >
               <Text className="font-bold text-xs" style={{ color: f.letter === "W" ? "#16A34A" : f.letter === "L" ? "#DC2626" : "#CA8A04" }}>
                 {f.letter}
@@ -253,7 +253,7 @@ function GenericOverview({ squad, sport }: { squad: SquadDetail; sport: GenericS
       {scheduled && (
         <>
           <SectionTitle title="Scheduled Matches" />
-          <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
+          <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
             <Text className="text-ink font-bold text-sm">{scheduled.sideAName}</Text>
             <Text className="text-ink font-bold text-sm">{scheduled.sideBName}</Text>
             {scheduled.venue ? <Text className="text-muted text-xs mt-1">{scheduled.venue}</Text> : null}

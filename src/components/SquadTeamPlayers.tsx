@@ -74,7 +74,7 @@ export default function SquadTeamPlayers({ squad, isCricket }: { squad: SquadDet
 
   return (
     <View>
-      <View className="flex-row self-start rounded-full overflow-hidden mb-4" style={{ backgroundColor: "#1C2D3A" }}>
+      <View className="flex-row self-start rounded-full overflow-hidden mb-4" style={{ backgroundColor: colors.border }}>
         {(["az", ...(isCricket ? (["matches"] as SortMode[]) : [])] as SortMode[]).map((key) =>
           sort === key ? (
             <Pressable key={key} onPress={() => setSort(key)}>
@@ -84,7 +84,7 @@ export default function SquadTeamPlayers({ squad, isCricket }: { squad: SquadDet
             </Pressable>
           ) : (
             <Pressable key={key} onPress={() => setSort(key)} className="px-4 py-2">
-              <Text className="font-bold text-xs" style={{ color: "#CBD4DD" }}>
+              <Text className="font-bold text-xs" style={{ color: colors.inkSecondary }}>
                 {key === "az" ? "A-Z" : "Most Matches"}
               </Text>
             </Pressable>

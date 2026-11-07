@@ -121,7 +121,7 @@ export default function AllUsersListScreen() {
                       {item.full_name ?? "Unnamed"}
                     </Text>
                     {isEjected && (
-                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: "#351419" }}>
+                      <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: colors.dangerLight }}>
                         <Text className="text-xs font-semibold" style={{ color: colors.danger }}>
                           Ejected
                         </Text>

@@ -22,7 +22,7 @@ type PlayerEntry = NamedEntry;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "FootballNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "FootballNewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
+const lockedFieldStyle = () => ({ backgroundColor: colors.surfaceOverlay });
 
 // Presets are TOTAL minutes (both halves / both extra-time periods
 // combined) — the familiar way a casual match gets described ("we're
@@ -290,7 +290,7 @@ export default function FootballNewMatchScreen() {
             placeholder="e.g. Strikers FC"
             maxLength={40}
             editable={!prefill}
-            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+            containerStyle={prefill ? lockedFieldStyle() : undefined}
           />
           {namesClash(teamAName, teamBName) && (
             <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
@@ -307,7 +307,7 @@ export default function FootballNewMatchScreen() {
             placeholder="e.g. United FC"
             maxLength={40}
             editable={!prefill}
-            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+            containerStyle={prefill ? lockedFieldStyle() : undefined}
           />
           {namesClash(teamAName, teamBName) && (
             <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
@@ -324,7 +324,7 @@ export default function FootballNewMatchScreen() {
             placeholder="e.g. City Stadium"
             maxLength={60}
             editable={!prefill}
-            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+            containerStyle={prefill ? lockedFieldStyle() : undefined}
           />
         </CardSection>
 

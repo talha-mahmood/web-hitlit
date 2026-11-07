@@ -79,7 +79,7 @@ export default function AcceptTermsScreen() {
         <View
           className="flex-1 rounded-3xl px-6 py-6"
           style={{
-            backgroundColor: "#0A1723",
+            backgroundColor: colors.surface,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 10 },
             shadowOpacity: 0.18,
@@ -137,7 +137,7 @@ export default function AcceptTermsScreen() {
                 gap: 12,
                 padding: 14,
                 borderRadius: 16,
-                backgroundColor: agreed ? colors.primaryLight : "#0D1C29",
+                backgroundColor: agreed ? colors.primaryLight : colors.surfaceRaised,
                 borderWidth: 1.5,
                 borderColor: agreed ? colors.primary : colors.border,
               }}
@@ -150,7 +150,7 @@ export default function AcceptTermsScreen() {
                   borderRadius: 7,
                   borderWidth: 1.5,
                   borderColor: agreed ? colors.primary : colors.border,
-                  backgroundColor: agreed ? colors.primary : "#0A1723",
+                  backgroundColor: agreed ? colors.primary : colors.surface,
                 }}
               >
                 {agreed && <Ionicons name="checkmark" size={15} color="white" />}

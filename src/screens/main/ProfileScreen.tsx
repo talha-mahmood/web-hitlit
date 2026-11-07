@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { View, Text, Pressable, Image, ScrollView, ActivityIndicator, Modal, Alert, BackHandler, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useFocusEffect, useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -102,7 +101,7 @@ function SquadChip({ name, onPress }: { name: string; onPress: () => void }) {
     <Pressable
       onPress={onPress}
       className="flex-row items-center rounded-xl px-3 py-2.5 mr-2"
-      style={{ backgroundColor: "#0A1723", ...CARD_SHADOW, gap: 8, width: 160 }}
+      style={{ backgroundColor: colors.surface, ...CARD_SHADOW, gap: 8, width: 160 }}
     >
       <View
         className="items-center justify-center rounded-full"
@@ -251,7 +250,6 @@ export default function ProfileScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Profile identity remains interactive in the compact dark top bar. */}
       <View
         style={{
@@ -272,7 +270,7 @@ export default function ProfileScreen() {
             hitSlop={8}
             className="mr-3"
           >
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <Pressable onPress={handleChangeAvatar} disabled={uploadingAvatar} className="relative mr-4">
             {profile?.avatar ? (
@@ -307,7 +305,7 @@ export default function ProfileScreen() {
                   little room is left, pushing the checkmark (and this whole
                   row) out past the header into the settings button. */}
               <Text
-                className="text-jazba-white font-bold flex-shrink"
+                className="text-ink font-bold flex-shrink"
                 style={{ flexShrink: 1, fontSize: 19 }}
                 numberOfLines={1}
               >
@@ -316,22 +314,22 @@ export default function ProfileScreen() {
               <Ionicons name="checkmark-circle" size={14} color="#4ADE80" style={{ flexShrink: 0 }} />
             </View>
             <Pressable onPress={handleCopyUserId} className="flex-row items-center mt-1" style={{ gap: 4 }} hitSlop={6}>
-              <Ionicons name="pricetag-outline" size={10} color="white" />
-              <Text style={{ color: "white", fontSize: 12 }} numberOfLines={1}>
+              <Ionicons name="pricetag-outline" size={10} color={colors.muted} />
+              <Text className="text-muted" style={{ fontSize: 12 }} numberOfLines={1}>
                 ID: {profile?.user_code ?? "—"}
               </Text>
-              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={10} color="white" />
+              <Ionicons name={userIdCopied ? "checkmark" : "copy-outline"} size={10} color={colors.muted} />
             </Pressable>
             {profile?.created_at ? (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="calendar-outline" size={10} color="white" />
-                <Text style={{ color: "white", fontSize: 10 }}>Member since {formatMonthYear(profile.created_at)}</Text>
+                <Ionicons name="calendar-outline" size={10} color={colors.muted} />
+                <Text className="text-muted" style={{ fontSize: 10 }}>Member since {formatMonthYear(profile.created_at)}</Text>
               </View>
             ) : null}
             {(followState?.followerCount ?? 0) > 0 && (
               <View className="flex-row items-center mt-1" style={{ gap: 4 }}>
-                <Ionicons name="people-outline" size={10} color="white" />
-                <Text style={{ color: "white", fontSize: 10 }}>
+                <Ionicons name="people-outline" size={10} color={colors.muted} />
+                <Text className="text-muted" style={{ fontSize: 10 }}>
                   {followState!.followerCount} follower{followState!.followerCount === 1 ? "" : "s"}
                 </Text>
               </View>
@@ -384,9 +382,9 @@ export default function ProfileScreen() {
                 key={key}
                 onPress={() => setActiveTab(key)}
                 className="rounded-full px-4 py-2"
-                style={{ backgroundColor: "#1C2D3A" }}
+                style={{ backgroundColor: colors.border }}
               >
-                <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
+                <Text className="text-xs font-bold" style={{ color: colors.inkSecondary }}>
                   {label}
                 </Text>
               </Pressable>

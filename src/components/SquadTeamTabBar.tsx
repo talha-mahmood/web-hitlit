@@ -1,3 +1,4 @@
+import { colors } from "../constants/theme";
 import { ScrollView, Pressable, Text } from "react-native";
 import GradientFill from "./GradientFill";
 
@@ -46,8 +47,8 @@ export default function SquadTeamTabBar({
             </GradientFill>
           </Pressable>
         ) : (
-          <Pressable key={key} onPress={() => onChange(key)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#1C2D3A" }}>
-            <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
+          <Pressable key={key} onPress={() => onChange(key)} className="rounded-full px-4 py-2" style={{ backgroundColor: colors.border }}>
+            <Text className="text-xs font-bold" style={{ color: colors.inkSecondary }}>
               {label}
             </Text>
           </Pressable>

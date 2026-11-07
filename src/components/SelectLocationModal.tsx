@@ -76,7 +76,7 @@ export default function SelectLocationModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -86,7 +86,7 @@ export default function SelectLocationModal({
           <View className="px-5 pb-3">
             <View
               className="flex-row items-center rounded-2xl px-4"
-              style={{ borderWidth: 1.5, borderColor: typed ? colors.primary : colors.border, backgroundColor: typed ? colors.primaryLight : "#0A1723" }}
+              style={{ borderWidth: 1.5, borderColor: typed ? colors.primary : colors.border, backgroundColor: typed ? colors.primaryLight : colors.surface }}
             >
               <Ionicons name="location-outline" size={18} color={colors.muted} />
               <TextInput
@@ -164,7 +164,7 @@ export default function SelectLocationModal({
                     ) : (
                       <View
                         className="flex-row items-center rounded-full"
-                        style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6, backgroundColor: "#0A1723" }}
+                        style={{ paddingHorizontal: 14, paddingVertical: 9, gap: 6, backgroundColor: colors.surface }}
                       >
                         <Text className="font-medium" style={{ fontSize: 13.5, color: colors.ink }}>
                           {city}
@@ -181,7 +181,7 @@ export default function SelectLocationModal({
             <Pressable
               onPress={() => onApply([])}
               className="flex-1 items-center justify-center rounded-2xl"
-              style={{ height: 52, backgroundColor: "#0A1723", borderWidth: 1.5, borderColor: colors.border }}
+              style={{ height: 52, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border }}
             >
               <Text className="text-ink font-bold" style={{ fontSize: 16 }}>
                 Clear

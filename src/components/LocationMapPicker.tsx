@@ -261,7 +261,7 @@ export default function LocationMapPicker({
             onPress={toggleFullscreen}
             hitSlop={6}
             className="absolute top-3 right-3 items-center justify-center"
-            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "#0A1723", ...cardShadow }}
+            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.surface, ...cardShadow }}
           >
             <Ionicons name="expand-outline" size={16} color={colors.ink} />
           </Pressable>
@@ -299,7 +299,7 @@ export default function LocationMapPicker({
   if (fullscreen) {
     return (
       <Modal visible animationType="slide" onRequestClose={toggleFullscreen}>
-        <View style={{ flex: 1, backgroundColor: "#0A1723", paddingTop: insets.top }}>
+        <View style={{ flex: 1, backgroundColor: colors.surface, paddingTop: insets.top }}>
           <View
             className="flex-row items-center justify-between px-4 py-3"
             style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}

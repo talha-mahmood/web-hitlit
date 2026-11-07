@@ -111,7 +111,7 @@ function DateChipFill({ selected, children }: { selected: boolean; children: Rea
   return (
     <View
       className="items-center px-3 py-2.5 rounded-2xl"
-      style={{ backgroundColor: selected ? "#103A2A" : "#0A1723" }}
+      style={{ backgroundColor: selected ? colors.primaryLight : colors.surface }}
     >
       {children}
     </View>
@@ -160,7 +160,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
         gap: 6,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? "#103A2A" : "#0A1723",
+        backgroundColor: selected ? colors.primaryLight : colors.surface,
       }}
     >
       <Text className={selected ? "font-bold" : "font-medium"} style={{ fontSize: 12, color: selected ? colors.primaryDark : colors.ink }}>
@@ -393,7 +393,7 @@ export default function HostEventScreen() {
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "#8FD9AE",
-                  backgroundColor: "#103A2A",
+                  backgroundColor: colors.primaryLight,
                 }}
               >
                 {iconAsset ? (
@@ -409,7 +409,7 @@ export default function HostEventScreen() {
                 <Ionicons name="add" size={11} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#103A2A", paddingHorizontal: 16, paddingVertical: 10 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>
@@ -420,7 +420,7 @@ export default function HostEventScreen() {
         {/* Name */}
         <FormCard icon="calendar" title="Event Name" required>
           <View className="flex-row items-center" style={{ gap: 10 }}>
-            <View className="items-center justify-center" style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#142533" }}>
+            <View className="items-center justify-center" style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: colors.surfaceOverlay }}>
               <Ionicons name="calendar" size={20} color="#4B5563" />
             </View>
             <View className="flex-1">

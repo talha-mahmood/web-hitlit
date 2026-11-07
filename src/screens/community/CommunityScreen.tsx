@@ -3,7 +3,6 @@ import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } fro
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
@@ -69,7 +68,7 @@ function ImageCard({
       onPress={onPress}
       scaleTo={0.97}
       style={{
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         ...cardShadow,
         width,
         borderRadius: 22,
@@ -77,7 +76,7 @@ function ImageCard({
     >
       <View
         style={{
-          backgroundColor: "#0A1723",
+          backgroundColor: colors.surface,
           borderRadius: 22,
           overflow: "hidden",
         }}
@@ -178,11 +177,11 @@ function HeroVisual({
     >
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: "#0A1723", opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
+        style={{ position: "absolute", width: size * 0.9, height: size * 0.9, borderRadius: size, backgroundColor: colors.surface, opacity: 0.1, top: -size * 0.3, right: -size * 0.3 }}
       />
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: "#0A1723", opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
+        style={{ position: "absolute", width: size * 0.6, height: size * 0.6, borderRadius: size, backgroundColor: colors.surface, opacity: 0.08, bottom: -size * 0.2, left: -size * 0.15 }}
       />
       <View
         className="items-center justify-center"
@@ -375,7 +374,6 @@ export default function CommunityScreen() {
   return (
     <View className="flex-1 bg-app">
       {/* Fixed dark header — stays on screen while only the content below switches. */}
-      {isFocused ? <StatusBar style="light" /> : null}
       <View
         style={{
           paddingTop: insets.top + 8,
@@ -398,7 +396,7 @@ export default function CommunityScreen() {
             }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="#F5F7FA" />
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <View
             className="items-center justify-center"
@@ -407,7 +405,7 @@ export default function CommunityScreen() {
             <MaterialCommunityIcons name="account-group" size={23} color={colors.primary} />
           </View>
           <View className="flex-1">
-            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 18 }}>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 18 }}>
               {segment === "players" ? "Top Players" : segment === "chat" ? "Community Chat" : "Community"}
             </Text>
             <Text style={{ fontSize: 11, marginTop: 1, color: colors.muted }} numberOfLines={1}>

@@ -28,7 +28,7 @@ type PlayerEntry = NamedEntry;
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "NewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "NewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
+const lockedFieldStyle = () => ({ backgroundColor: colors.surfaceOverlay });
 
 const OVERS_PRESETS = ["2", "5", "10", "20", "50"];
 
@@ -176,7 +176,7 @@ function TeamCard({
         </View>
         <View
           className="flex-row items-center rounded-full px-2.5 py-1"
-          style={{ gap: 4, backgroundColor: "#0A1723" }}
+          style={{ gap: 4, backgroundColor: colors.surface }}
         >
           <Ionicons name="people" size={12} color={colors.primaryDark} />
           <Text className="text-xs font-bold" style={{ color: colors.primaryDark }}>
@@ -195,7 +195,7 @@ function TeamCard({
           placeholder={letter === "A" ? "e.g. Strikers" : "e.g. Warriors"}
           maxLength={40}
           editable={!nameLocked}
-          containerStyle={nameLocked ? LOCKED_FIELD_STYLE : undefined}
+          containerStyle={nameLocked ? lockedFieldStyle() : undefined}
           right={
             name.length > 0 && !nameLocked ? (
               <Pressable onPress={() => onNameChange("")} hitSlop={8}>
@@ -673,7 +673,7 @@ export default function NewMatchScreen() {
                     ) : (
                       <View
                         className="flex-row items-center justify-center rounded-xl py-3"
-                        style={{ gap: 6, backgroundColor: "#1C2D3A" }}
+                        style={{ gap: 6, backgroundColor: colors.border }}
                       >
                         <Ionicons name="disc-outline" size={16} color={colors.muted} />
                         <Text className="text-muted font-bold text-sm">Flip Coin</Text>

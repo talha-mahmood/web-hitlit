@@ -146,7 +146,7 @@ export default function BookingCheckoutScreen() {
         {/* Booking Summary — shadow lives on this outer, non-clipping
             wrapper since a shadow doesn't render on a view with
             overflow:hidden (needed to clip the header band's corners). */}
-        <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: "#0A1723" }}>
+        <View className="rounded-2xl mb-5" style={{ ...cardShadow, backgroundColor: colors.surface }}>
           <View className="rounded-2xl overflow-hidden">
             <View className="flex-row items-center" style={{ backgroundColor: colors.primaryLight, gap: 12, padding: 16 }}>
               <View
@@ -177,7 +177,7 @@ export default function BookingCheckoutScreen() {
                   <Text className="text-muted text-xs mb-2">
                     Time Slots ({sortedSlots.length})
                   </Text>
-                  <View className="rounded-xl overflow-hidden" style={{ backgroundColor: "#142533" }}>
+                  <View className="rounded-xl overflow-hidden" style={{ backgroundColor: colors.surfaceOverlay }}>
                     {sortedSlots.map((s, i) => (
                       <View
                         key={s.startTime}

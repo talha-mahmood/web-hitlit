@@ -6,7 +6,7 @@
     "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.playoye.app",
@@ -47,6 +47,13 @@
     },
     "plugins": [
       "expo-secure-store",
+      "expo-system-ui",
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false
+        }
+      ],
       "expo-status-bar",
       "expo-font",
       "expo-web-browser",

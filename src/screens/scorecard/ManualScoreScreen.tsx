@@ -41,7 +41,7 @@ function CardSection({ icon, title, children }: { icon: keyof typeof Ionicons.gl
 function InfoBox({ text, tone = "info" }: { text: string; tone?: "info" | "error" }) {
   const isError = tone === "error";
   return (
-    <View className="flex-row rounded-xl px-3 py-2.5 mt-3" style={{ backgroundColor: isError ? "#351419" : colors.primaryLight, gap: 8 }}>
+    <View className="flex-row rounded-xl px-3 py-2.5 mt-3" style={{ backgroundColor: isError ? colors.dangerLight : colors.primaryLight, gap: 8 }}>
       <Ionicons name="information-circle" size={16} color={isError ? colors.danger : colors.primaryDark} style={{ marginTop: 1 }} />
       <Text className="text-xs flex-1" style={{ color: isError ? colors.danger : colors.primaryDark }}>
         {text}

@@ -1,7 +1,6 @@
 import { View, Text, Image, FlatList, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
@@ -90,7 +89,7 @@ function SquadCard({
         // Bouncy's explicit style prop (needed for the press animation)
         // takes priority over a className-derived margin, so a margin set
         // here never actually showed up.
-        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 24 }}
         scaleTo={0.98}
       >
         <View className="border border-border overflow-hidden bg-surface" style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}>
@@ -149,7 +148,7 @@ function SquadCard({
               width: 82,
               height: 82,
               borderRadius: 41,
-              backgroundColor: "#103A2A",
+              backgroundColor: colors.primaryLight,
             }}
           >
             {sportPhoto ? (
@@ -319,7 +318,6 @@ export default function SquadsListScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact dark header; filters and group actions are unchanged. */}
       <View
         style={{
@@ -333,14 +331,14 @@ export default function SquadsListScreen() {
           <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
             {navigation.canGoBack() && (
               <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-                <Ionicons name="arrow-back" size={22} color="white" />
+                <Ionicons name="arrow-back" size={22} color={colors.ink} />
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
+              <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
                 Groups
               </Text>
-              <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+              <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
                 Find and join groups nearby
               </Text>
             </View>
@@ -409,7 +407,7 @@ export default function SquadsListScreen() {
                       </Text>
                     </GradientFill>
                   ) : (
-                    <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "#0A1723" }}>
+                    <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: colors.surface }}>
                       <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
                         {p.label}
                       </Text>
@@ -439,7 +437,7 @@ export default function SquadsListScreen() {
                   <Ionicons name="chevron-down" size={14} color="white" />
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
                     Group Type
                   </Text>
@@ -463,7 +461,7 @@ export default function SquadsListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="location-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Location
@@ -489,7 +487,7 @@ export default function SquadsListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="options-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Sports
@@ -515,7 +513,7 @@ export default function SquadsListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="navigate-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Distance

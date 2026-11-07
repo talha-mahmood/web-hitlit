@@ -33,7 +33,7 @@ export default function AccountSuspendedScreen() {
       <View
         className="w-full items-center rounded-3xl px-6 py-8"
         style={{
-          backgroundColor: "#0A1723",
+          backgroundColor: colors.surface,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.18,
@@ -43,7 +43,7 @@ export default function AccountSuspendedScreen() {
       >
         <View
           className="items-center justify-center rounded-full"
-          style={{ width: 64, height: 64, backgroundColor: "#351419", marginBottom: 16 }}
+          style={{ width: 64, height: 64, backgroundColor: colors.dangerLight, marginBottom: 16 }}
         >
           <Ionicons name="ban-outline" size={30} color={colors.danger} />
         </View>

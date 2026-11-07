@@ -39,7 +39,7 @@ export default function FieldInput({
         {
           borderWidth: 1.5,
           borderColor: focused ? colors.primary : colors.border,
-          backgroundColor: focused ? colors.primaryLight : "#0A1723",
+          backgroundColor: focused ? colors.primaryLight : colors.surface,
         },
         containerStyle,
       ]}

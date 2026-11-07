@@ -20,9 +20,9 @@ function MetricToggle<T extends string>({ options, value, onChange }: { options:
           key={o}
           onPress={() => onChange(o)}
           className="items-center justify-center rounded-full"
-          style={{ width: 40, height: 40, backgroundColor: value === o ? "#14B8A6" : "#1C2D3A" }}
+          style={{ width: 40, height: 40, backgroundColor: value === o ? "#14B8A6" : colors.border }}
         >
-          <Text className="text-[10px] font-bold" style={{ color: value === o ? "white" : "#9AA8B7" }}>{o}</Text>
+          <Text className="text-[10px] font-bold" style={{ color: value === o ? "white" : colors.muted }}>{o}</Text>
         </Pressable>
       ))}
     </View>
@@ -55,7 +55,7 @@ function BatPositionChart({ rows, metric }: { rows: { position: number; innings:
         {rows.map((r, i) => (
           <View key={r.position} style={{ width: barWidth + gap, alignItems: "center" }}>
             <Text className="text-ink text-xs font-bold">{Math.round(values[i] * 10) / 10}</Text>
-            <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: "#1C2D3A" }}>
+            <View className="rounded-full px-2 py-0.5 mt-1" style={{ backgroundColor: colors.border }}>
               <Text className="text-[10px] font-bold text-ink">{r.position}</Text>
             </View>
           </View>
@@ -137,7 +137,7 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
 
   return (
     <View>
-      <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#1C2D3A" }}>
+      <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
         {(["Batting", "Bowling"] as const).map((s) =>
           section === s ? (
             <Pressable key={s} onPress={() => setSection(s)}>
@@ -147,7 +147,7 @@ export default function PlayerCricketInsights({ fullName, sportId }: { fullName:
             </Pressable>
           ) : (
             <Pressable key={s} onPress={() => setSection(s)} className="px-4 py-1.5">
-              <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
+              <Text className="text-xs font-bold" style={{ color: colors.inkSecondary }}>
                 {s}
               </Text>
             </Pressable>

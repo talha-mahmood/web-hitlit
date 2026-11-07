@@ -52,7 +52,7 @@ export default function SelectScorerModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -79,7 +79,7 @@ export default function SelectScorerModal({
                       gap: 10,
                       borderWidth: 1.5,
                       borderColor: isCurrent ? colors.primary : colors.border,
-                      backgroundColor: isCurrent ? colors.primaryLight : "#0A1723",
+                      backgroundColor: isCurrent ? colors.primaryLight : colors.surface,
                     }}
                   >
                     {isCurrent ? (
@@ -91,7 +91,7 @@ export default function SelectScorerModal({
                     ) : (
                       <View
                         className="items-center justify-center rounded-full"
-                        style={{ width: 36, height: 36, backgroundColor: "#142533" }}
+                        style={{ width: 36, height: 36, backgroundColor: colors.surfaceOverlay }}
                       >
                         <Text className="font-bold text-sm" style={{ color: colors.muted }}>
                           {member.name.charAt(0).toUpperCase()}

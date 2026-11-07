@@ -422,7 +422,7 @@ export default function EditCourtScreen() {
                   gap: 8,
                   borderWidth: 1.5,
                   borderColor: selected ? colors.primary : colors.border,
-                  backgroundColor: selected ? colors.primaryLight : "#0A1723",
+                  backgroundColor: selected ? colors.primaryLight : colors.surface,
                 }}
               >
                 <MaterialCommunityIcons name={icon} size={20} color={selected ? colors.primary : colors.muted} />

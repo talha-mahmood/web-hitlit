@@ -370,7 +370,7 @@ export default function AdminDashboardScreen() {
           <Pressable
             onPress={() => navigation.navigate("BoostVenue", { venueId: params.venueId, venueName: venue.name })}
             className="flex-row items-center justify-between mb-3"
-            style={{ backgroundColor: "#111827", borderRadius: 16, padding: 16 }}
+            style={{ backgroundColor: colors.surfaceSelection, borderRadius: 16, padding: 16 }}
           >
             <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
               <Ionicons name="rocket" size={18} color="#F59E0B" />
@@ -526,7 +526,7 @@ export default function AdminDashboardScreen() {
                     key={scale}
                     onPress={() => setRevenueScale(scale)}
                     className="flex-1 items-center py-1.5 rounded-lg"
-                    style={{ backgroundColor: revenueScale === scale ? "#0A1723" : "transparent" }}
+                    style={{ backgroundColor: revenueScale === scale ? colors.surface : "transparent" }}
                   >
                     <Text
                       className="text-xs font-semibold capitalize"
@@ -659,7 +659,7 @@ export default function AdminDashboardScreen() {
                       ) : (
                         <View
                           className="rounded-full px-3 py-2"
-                          style={{ backgroundColor: "#0A1723", borderWidth: 1, borderColor: colors.border }}
+                          style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
                         >
                           <Text className="text-sm font-medium text-ink">{c.name}</Text>
                         </View>

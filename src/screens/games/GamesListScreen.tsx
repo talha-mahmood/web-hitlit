@@ -1,7 +1,6 @@
 import { View, Text, Image, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert, ScrollView } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect, type ReactNode } from "react";
@@ -67,7 +66,7 @@ function FilterPillFill({
     );
   }
   return (
-    <View className={className} style={{ backgroundColor: "#0A1723", ...style }}>
+    <View className={className} style={{ backgroundColor: colors.surface, ...style }}>
       {children}
     </View>
   );
@@ -189,7 +188,7 @@ function GameCard({
         // Bouncy's explicit style prop (needed for the press animation)
         // takes priority over a className-derived margin, so a margin set
         // here never actually showed up.
-        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 24 }}
         scaleTo={0.98}
       >
         {/* Laid out as the same five rows (and the same min height / font
@@ -260,7 +259,7 @@ function GameCard({
               width: 82,
               height: 82,
               borderRadius: 41,
-              backgroundColor: "#103A2A",
+              backgroundColor: colors.primaryLight,
             }}
           >
             {sportPhoto ? (
@@ -532,7 +531,6 @@ export default function GamesListScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact dark header; filter, create, and back actions are unchanged. */}
       <View
         style={{
@@ -546,14 +544,14 @@ export default function GamesListScreen() {
           <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
             {navigation.canGoBack() && (
               <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-                <Ionicons name="arrow-back" size={22} color="white" />
+                <Ionicons name="arrow-back" size={22} color={colors.ink} />
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
+              <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
                 {gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
               </Text>
-              <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+              <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
                 {isTournamentList ? "Find and join tournaments nearby" : "Find and join games nearby"}
               </Text>
             </View>

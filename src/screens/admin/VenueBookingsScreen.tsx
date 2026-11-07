@@ -215,7 +215,7 @@ export default function VenueBookingsScreen() {
                 style={{
                   borderWidth: 1.5,
                   borderColor: !selectedSport ? colors.primary : colors.border,
-                  backgroundColor: !selectedSport ? colors.primary : "#0A1723",
+                  backgroundColor: !selectedSport ? colors.primary : colors.surface,
                 }}
               >
                 <Text className={`text-sm font-medium ${!selectedSport ? "text-jazba-white" : "text-ink"}`}>
@@ -232,7 +232,7 @@ export default function VenueBookingsScreen() {
                     style={{
                       borderWidth: 1.5,
                       borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: selected ? colors.primary : "#0A1723",
+                      backgroundColor: selected ? colors.primary : colors.surface,
                     }}
                   >
                     <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>{sport}</Text>

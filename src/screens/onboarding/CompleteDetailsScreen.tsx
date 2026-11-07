@@ -96,7 +96,7 @@ export default function CompleteDetailsScreen() {
           <View
             className="w-full items-center rounded-3xl px-6 py-8"
             style={{
-              backgroundColor: "#0A1723",
+              backgroundColor: colors.surface,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.18,
@@ -157,7 +157,7 @@ export default function CompleteDetailsScreen() {
                       ) : (
                         <View
                           className="items-center rounded-xl py-3"
-                          style={{ borderWidth: 1.5, borderColor: colors.border, backgroundColor: "#0A1723" }}
+                          style={{ borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface }}
                         >
                           <Text className="text-sm" style={{ color: colors.ink, fontWeight: "500" }}>
                             {opt.label}

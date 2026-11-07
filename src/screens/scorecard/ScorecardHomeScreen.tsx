@@ -3,7 +3,6 @@ import { View, Text, Image, ScrollView, Pressable, BackHandler } from "react-nat
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -84,7 +83,7 @@ function SportCard({
       ) : (
         <View
           className="items-center justify-center rounded-full"
-          style={{ width: 27, height: 27, backgroundColor: "#142533" }}
+          style={{ width: 27, height: 27, backgroundColor: colors.surfaceOverlay }}
         >
           <Ionicons name="chevron-forward" size={15} color={colors.muted} />
         </View>
@@ -101,7 +100,7 @@ function SportCard({
     // Profile section's cards do.
     <View
       style={{
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         ...cardShadow,
         borderRadius: 24,
         borderWidth: 1.5,
@@ -116,7 +115,7 @@ function SportCard({
       >
         {active ? (
           <LinearGradient
-            colors={["#D1F5DD", "#103A2A"]}
+            colors={["#D1F5DD", colors.primaryLight]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ borderRadius: 22.5 }}
@@ -140,7 +139,7 @@ function HeaderArt() {
         {/* Scoreboard */}
         <Rect x={6} y={2} width={40} height={28} rx={6} fill="#6FC694" />
         <Rect x={10} y={6} width={32} height={20} rx={4} fill="#CBEEDA" stroke="#18C66A" strokeWidth={1} />
-        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill="#0F9F58" textAnchor="middle">
+        <SvgText x={26} y={21} fontSize={12} fontWeight="bold" fill={colors.primaryDark} textAnchor="middle">
           0-0
         </SvgText>
         <Rect x={13} y={30} width={4} height={10} rx={2} fill="#6FC694" />
@@ -187,7 +186,6 @@ export default function ScorecardHomeScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact dark header matching the Jazba screen chrome. */}
       <View
         style={{
@@ -207,11 +205,11 @@ export default function ScorecardHomeScreen() {
             onPress={() => navigation.getParent<BottomTabNavigationProp<MainTabParamList>>()?.navigate("Home")}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <View className="flex-1" style={{ paddingRight: 130 }}>
-            <Text className="text-jazba-white font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
-            <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+            <Text className="text-ink font-bold" style={{ fontSize: 19 }} numberOfLines={1}>Scorecard</Text>
+            <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
               Live score your game
             </Text>
           </View>

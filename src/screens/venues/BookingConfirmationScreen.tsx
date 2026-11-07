@@ -126,7 +126,7 @@ export default function BookingConfirmationScreen() {
         {/* Details Card — shadow lives on this outer, non-clipping wrapper
             since a shadow doesn't render on a view with overflow:hidden
             (needed to clip the header band's corners). */}
-        <View className="w-full rounded-2xl" style={{ ...heroShadow, backgroundColor: "#0A1723" }}>
+        <View className="w-full rounded-2xl" style={{ ...heroShadow, backgroundColor: colors.surface }}>
         <View className="w-full rounded-2xl overflow-hidden p-3">
           <View
             className="flex-row items-center rounded-2xl px-3 py-3 mb-1"
@@ -171,7 +171,7 @@ export default function BookingConfirmationScreen() {
                     <View
                       key={s.startTime}
                       className="flex-row items-center rounded-lg px-3 py-2"
-                      style={{ backgroundColor: "#142533", gap: 8 }}
+                      style={{ backgroundColor: colors.surfaceOverlay, gap: 8 }}
                     >
                       <Ionicons name="time-outline" size={13} color={colors.muted} />
                       <Text className="text-ink text-sm font-bold">
@@ -202,13 +202,13 @@ export default function BookingConfirmationScreen() {
               <View className="flex-row items-center" style={{ gap: 12 }}>
                 <View
                   className="items-center justify-center rounded-full"
-                  style={{ width: 36, height: 36, backgroundColor: "#352A13" }}
+                  style={{ width: 36, height: 36, backgroundColor: colors.warningLight }}
                 >
                   <Ionicons name="card-outline" size={17} color="#D97706" />
                 </View>
                 <Text className="text-ink font-medium">Payment</Text>
               </View>
-              <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: "#352A13" }}>
+              <View className="rounded-full px-3 py-1.5" style={{ backgroundColor: colors.warningLight }}>
                 <Text className="font-bold text-xs" style={{ color: "#B45309" }}>
                   Pay at venue
                 </Text>

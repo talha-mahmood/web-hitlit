@@ -618,7 +618,7 @@ export default function FootballLiveScoringScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F5F7FA" }} />
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ink }} />
           <Text className="text-jazba-white text-xs font-bold">LIVE</Text>
         </View>
         <View className="flex-1">
@@ -634,7 +634,7 @@ export default function FootballLiveScoringScreen() {
         {(!isOnline || pendingCount > 0) && (
           <View
             className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
-            style={{ backgroundColor: isOnline ? colors.primaryLight : "#352A13", gap: 8 }}
+            style={{ backgroundColor: isOnline ? colors.primaryLight : colors.warningLight, gap: 8 }}
           >
             <Ionicons
               name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}

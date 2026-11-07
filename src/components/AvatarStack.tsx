@@ -54,7 +54,7 @@ export default function AvatarStack({
             borderRadius: size / 2,
             borderWidth: 1.5,
             borderColor: "white",
-            backgroundColor: "#142533",
+            backgroundColor: colors.surfaceOverlay,
             alignItems: "center",
             justifyContent: "center",
           }}

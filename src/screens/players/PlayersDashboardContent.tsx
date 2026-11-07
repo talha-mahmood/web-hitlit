@@ -30,7 +30,7 @@ function PlayerRow({
     <Bouncy
       onPress={onPress}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16 }}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 16 }}
       className="mb-3"
     >
       <View className="flex-row items-center border border-border rounded-2xl bg-surface px-4 py-3">

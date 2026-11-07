@@ -85,7 +85,7 @@ function ChipFill({
     return <GradientFill className={className}>{children}</GradientFill>;
   }
   return (
-    <View className={className} style={{ backgroundColor: disabled ? "#0D1C29" : "#0A1723" }}>
+    <View className={className} style={{ backgroundColor: disabled ? colors.surfaceRaised : colors.surface }}>
       {children}
     </View>
   );

@@ -83,7 +83,7 @@ export default function PollCreateModal({
               <Pressable
                 onPress={onClose}
                 className="items-center justify-center rounded-full"
-                style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+                style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
                 hitSlop={6}
               >
                 <Ionicons name="close" size={18} color={colors.ink} />

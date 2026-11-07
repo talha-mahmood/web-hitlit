@@ -46,7 +46,7 @@ export function HomeSportTile({
         {photo ? (
           <View
             className="items-center justify-center overflow-hidden"
-            style={{ width: "100%", height: "100%", borderRadius: 10, backgroundColor: "#F5F7FA" }}
+            style={{ width: "100%", height: "100%", borderRadius: 10, backgroundColor: colors.imageCanvas }}
           >
             <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
           </View>
@@ -106,12 +106,12 @@ export function HomeSquadCard({
         ? "Joined"
         : "Join";
   const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : hasJoined ? colors.primary : colors.primary;
-  const statusBg = isClosedToJoins || isGenderRestricted ? "#142533" : hasJoined ? colors.primaryLight : colors.primaryLight;
+  const statusBg = isClosedToJoins || isGenderRestricted ? colors.surfaceOverlay : hasJoined ? colors.primaryLight : colors.primaryLight;
 
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16, flex: 1 }}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 16, flex: 1 }}
       scaleTo={0.98}
     >
       <View className="border border-border rounded-2xl bg-surface p-3">
@@ -183,12 +183,12 @@ export function HomeEventCard({
         ? "Joined"
         : "Join";
   const statusColor = isClosedToJoins || isGenderRestricted ? colors.muted : colors.primary;
-  const statusBg = isClosedToJoins || isGenderRestricted ? "#142533" : colors.primaryLight;
+  const statusBg = isClosedToJoins || isGenderRestricted ? colors.surfaceOverlay : colors.primaryLight;
 
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16, flex: 1 }}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 16, flex: 1 }}
       scaleTo={0.98}
     >
       <View className="border border-border rounded-2xl bg-surface p-3">
@@ -262,7 +262,7 @@ export function HomeGameRowCard({
   return (
     <Bouncy
       onPress={onPress}
-      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 16 }}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 16 }}
       scaleTo={0.98}
       className="mb-3"
     >
@@ -310,7 +310,7 @@ export function HomeGameRowCard({
             </View>
             <View
               className="rounded-full px-3 py-1"
-              style={{ backgroundColor: isFull ? "#142533" : colors.primaryLight }}
+              style={{ backgroundColor: isFull ? colors.surfaceOverlay : colors.primaryLight }}
             >
               <Text className="text-xs font-bold" style={{ color: isFull ? colors.muted : colors.primary }}>
                 {isTeamBased ? "View Details" : isFull ? "Full" : "Join"}

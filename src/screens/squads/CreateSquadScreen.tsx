@@ -121,7 +121,7 @@ function Chip({
         gap: 6,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? "#103A2A" : "#0A1723",
+        backgroundColor: selected ? colors.primaryLight : colors.surface,
       }}
     >
       <Text
@@ -401,7 +401,7 @@ export default function CreateSquadScreen() {
                   borderWidth: 1.5,
                   borderStyle: "dashed",
                   borderColor: "#8FD9AE",
-                  backgroundColor: "#103A2A",
+                  backgroundColor: colors.primaryLight,
                 }}
               >
                 {iconAsset ? (
@@ -426,7 +426,7 @@ export default function CreateSquadScreen() {
                 <Ionicons name="add" size={11} color="white" />
               </GradientFill>
             </View>
-            <View className="rounded-2xl" style={{ backgroundColor: "#103A2A", paddingHorizontal: 16, paddingVertical: 10 }}>
+            <View className="rounded-2xl" style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
                 {iconAsset ? "Change icon" : "Add a custom icon"}
               </Text>
@@ -439,7 +439,7 @@ export default function CreateSquadScreen() {
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View
               className="items-center justify-center"
-              style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: "#142533" }}
+              style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: colors.surfaceOverlay }}
             >
               <Ionicons name="people" size={20} color="#4B5563" />
             </View>
@@ -467,7 +467,7 @@ export default function CreateSquadScreen() {
                   paddingVertical: 6.5,
                   borderWidth: 1.5,
                   borderColor: colors.primary,
-                  backgroundColor: "#103A2A",
+                  backgroundColor: colors.primaryLight,
                 }}
               >
                 <Text className="font-bold" style={{ fontSize: 12, color: colors.primaryDark }}>

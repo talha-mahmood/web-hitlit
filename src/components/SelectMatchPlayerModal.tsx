@@ -44,7 +44,7 @@ export default function SelectMatchPlayerModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -60,11 +60,11 @@ export default function SelectMatchPlayerModal({
                   key={`${name}-${i}`}
                   onPress={() => onSelect(name)}
                   className="flex-row items-center rounded-2xl px-4 py-3 mb-2"
-                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: "#0A1723" }}
+                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface }}
                 >
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 36, height: 36, backgroundColor: "#142533" }}
+                    style={{ width: 36, height: 36, backgroundColor: colors.surfaceOverlay }}
                   >
                     <Text className="font-bold text-sm" style={{ color: colors.muted }}>
                       {name.charAt(0).toUpperCase()}

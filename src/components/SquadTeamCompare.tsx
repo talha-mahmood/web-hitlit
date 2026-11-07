@@ -183,15 +183,15 @@ function HeadToHeadView({ squad, other }: { squad: SquadDetail; other: { id: str
     return (
       <View className="mt-4" style={{ gap: 10 }}>
         <View className="flex-row" style={{ gap: 10 }}>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
             <Text className="font-bold text-base">{stats.matches}</Text>
             <Text className="text-muted text-xs mt-0.5">Matches</Text>
           </View>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
             <Text className="font-bold text-base">{stats.won}</Text>
             <Text className="text-muted text-xs mt-0.5">{squad.name} Won</Text>
           </View>
-          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+          <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
             <Text className="font-bold text-base">{stats.lost}</Text>
             <Text className="text-muted text-xs mt-0.5">{other.name} Won</Text>
           </View>
@@ -207,15 +207,15 @@ function HeadToHeadView({ squad, other }: { squad: SquadDetail; other: { id: str
   const stats = aggregateGeneric(figures);
   return (
     <View className="mt-4 flex-row" style={{ gap: 10 }}>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
         <Text className="font-bold text-base">{stats.matches}</Text>
         <Text className="text-muted text-xs mt-0.5">Matches</Text>
       </View>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
         <Text className="font-bold text-base">{stats.wins}</Text>
         <Text className="text-muted text-xs mt-0.5">{squad.name} Won</Text>
       </View>
-      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+      <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
         <Text className="font-bold text-base">{stats.losses}</Text>
         <Text className="text-muted text-xs mt-0.5">{other.name} Won</Text>
       </View>
@@ -237,7 +237,7 @@ export default function SquadTeamCompare({ squad }: { squad: SquadDetail }) {
         <Text className="text-muted font-semibold text-sm">{other ? `Comparing with ${other.name}` : "Select one of my teams"}</Text>
       </Pressable>
 
-      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: "#142533" }}>
+      <View className="flex-row rounded-xl overflow-hidden mb-4" style={{ backgroundColor: colors.surfaceOverlay }}>
         {(["COMPARE", "HEAD_TO_HEAD"] as Mode[]).map((m) =>
           mode === m ? (
             <Pressable key={m} onPress={() => setMode(m)} className="flex-1">
@@ -247,7 +247,7 @@ export default function SquadTeamCompare({ squad }: { squad: SquadDetail }) {
             </Pressable>
           ) : (
             <Pressable key={m} onPress={() => setMode(m)} className="flex-1 items-center py-2.5">
-              <Text className="font-bold text-xs" style={{ color: "#9AA8B7" }}>{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
+              <Text className="font-bold text-xs" style={{ color: colors.muted }}>{m === "COMPARE" ? "COMPARE" : "HEAD TO HEAD"}</Text>
             </Pressable>
           )
         )}

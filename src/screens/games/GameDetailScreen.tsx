@@ -559,7 +559,7 @@ export default function GameDetailScreen() {
           watermark, and a wave divider fading into the page background. */}
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#07301D", "#0F9F58", "#18C66A"]}
+          colors={["#07301D", colors.primaryDark, "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
@@ -599,7 +599,7 @@ export default function GameDetailScreen() {
                 style={{
                   width: 42,
                   height: 42,
-                  backgroundColor: "#0A1723",
+                  backgroundColor: colors.surface,
                   shadowColor: "#0F172A",
                   shadowOffset: { width: 0, height: 3 },
                   shadowOpacity: 0.12,

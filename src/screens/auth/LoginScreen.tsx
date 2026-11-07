@@ -43,12 +43,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#0A1723" }}>
+    <View className="flex-1" style={{ backgroundColor: colors.surface }}>
       <View className="flex-1 items-center justify-center px-6">
         <View
           className="w-full items-center rounded-3xl px-6 py-8"
           style={{
-            backgroundColor: "#0A1723",
+            backgroundColor: colors.surface,
             // A denser border + a deeper, tighter shadow than the app's usual
             // cardShadow — gives the sign-in card a raised, 3D look against
             // the now-white page instead of just floating on green.

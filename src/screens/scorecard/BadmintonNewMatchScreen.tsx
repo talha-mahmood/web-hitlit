@@ -23,7 +23,7 @@ import SportNewMatchHeader from "../../components/SportNewMatchHeader";
 type Nav = NativeStackNavigationProp<ScorecardStackParamList, "BadmintonNewMatch">;
 type Route = RouteProp<ScorecardStackParamList, "BadmintonNewMatch">;
 
-const LOCKED_FIELD_STYLE = { backgroundColor: "#142533" };
+const lockedFieldStyle = () => ({ backgroundColor: colors.surfaceOverlay });
 
 const PLAY_MODE_OPTIONS: { label: string; value: PlayMode }[] = [
   { label: "Singles", value: "SINGLES" },
@@ -149,7 +149,7 @@ function TeamCard({
           placeholder={letter === "A" ? "e.g. Alex" : "e.g. Sam"}
           maxLength={40}
           editable={!locked}
-          containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
+          containerStyle={locked ? lockedFieldStyle() : undefined}
         />
         {teamNameClash && (
           <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
@@ -180,7 +180,7 @@ function TeamCard({
               placeholder="e.g. Alex"
               maxLength={40}
               editable={!locked}
-              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
+              containerStyle={locked ? lockedFieldStyle() : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
             {slot0Duplicate && (
@@ -197,7 +197,7 @@ function TeamCard({
               placeholder="e.g. Jo"
               maxLength={40}
               editable={!locked}
-              containerStyle={locked ? LOCKED_FIELD_STYLE : undefined}
+              containerStyle={locked ? lockedFieldStyle() : undefined}
               left={<Ionicons name="person-outline" size={17} color={colors.muted} style={{ marginRight: 8 }} />}
             />
             {slot1Duplicate && (
@@ -403,7 +403,7 @@ export default function BadmintonNewMatchScreen() {
             placeholder="e.g. Badminton Court Karachi"
             maxLength={60}
             editable={!prefill}
-            containerStyle={prefill ? LOCKED_FIELD_STYLE : undefined}
+            containerStyle={prefill ? lockedFieldStyle() : undefined}
           />
         </CardSection>
 

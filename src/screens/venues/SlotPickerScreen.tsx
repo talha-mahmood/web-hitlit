@@ -187,7 +187,7 @@ export default function SlotPickerScreen() {
                 // with an amber tint so it stands out either way.
                 const isSpecialPrice = !booked && price !== params.pricePerHour;
 
-                const iconBg = booked ? "#142533" : isSelected ? "rgba(255,255,255,0.22)" : isSpecialPrice ? "#352A13" : colors.primaryLight;
+                const iconBg = booked ? colors.surfaceOverlay : isSelected ? "rgba(255,255,255,0.22)" : isSpecialPrice ? colors.warningLight : colors.primaryLight;
                 const iconColor = booked ? colors.muted : isSelected ? "white" : isSpecialPrice ? "#D97706" : colors.primaryDark;
 
                 const slotInner = (
@@ -243,7 +243,7 @@ export default function SlotPickerScreen() {
                     ) : (
                       <View
                         className="flex-row items-center rounded-2xl px-2.5 py-3"
-                        style={{ backgroundColor: booked ? "#FAFAFA" : isSpecialPrice ? "#FFFBEB" : "#0A1723" }}
+                        style={{ backgroundColor: booked ? "#FAFAFA" : isSpecialPrice ? "#FFFBEB" : colors.surface }}
                       >
                         {slotInner}
                       </View>

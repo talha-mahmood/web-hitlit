@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
@@ -114,7 +113,7 @@ function CommentBubble({
     <View
       className="rounded-2xl p-3.5 mb-3"
       style={{
-        backgroundColor: isHighlighted ? colors.primaryLight : isRoot ? "#0A1723" : colors.primaryLight,
+        backgroundColor: isHighlighted ? colors.primaryLight : isRoot ? colors.surface : colors.primaryLight,
         borderWidth: isHighlighted ? 2 : 1,
         borderColor: isHighlighted ? colors.primary : isRoot ? colors.border : colors.primaryLight,
       }}
@@ -313,7 +312,6 @@ export default function CommentThreadScreen() {
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
-      {isFocused ? <StatusBar style="light" /> : null}
       <GradientFill
         className="flex-row items-center px-4 pb-4"
         style={{ paddingTop: insets.top + 16, gap: 12 }}

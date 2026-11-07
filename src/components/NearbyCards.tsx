@@ -141,7 +141,7 @@ export function NearbyGameCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,
@@ -219,7 +219,7 @@ export function NearbySquadCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,
@@ -298,7 +298,7 @@ export function NearbyVenueCard({
       onPress={onPress}
       style={{
         ...cardShadow,
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         width: NEARBY_CARD_WIDTH,
         height: NEARBY_CARD_HEIGHT,

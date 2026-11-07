@@ -107,7 +107,7 @@ function StatPanel({
 
 function TogglePill({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: "#1C2D3A" }}>
+    <View className="flex-row self-start rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
       {options.map((o) =>
         value === o ? (
           <Pressable key={o} onPress={() => onChange(o)}>
@@ -117,7 +117,7 @@ function TogglePill({ options, value, onChange }: { options: string[]; value: st
           </Pressable>
         ) : (
           <Pressable key={o} onPress={() => onChange(o)} className="px-4 py-1.5">
-            <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
+            <Text className="text-xs font-bold" style={{ color: colors.inkSecondary }}>
               {o}
             </Text>
           </Pressable>
@@ -210,7 +210,7 @@ export default function PlayerCricketOverview({ fullName, sportId }: { fullName:
           <Text className="text-jazba-white font-bold text-xs">Bat</Text>
         </GradientFill>
         {formEntries.map((f) => (
-          <View key={`${f.matchId}-bat`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#1C2D3A" }}>
+          <View key={`${f.matchId}-bat`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: colors.border }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
               {f.bat}
             </Text>
@@ -222,7 +222,7 @@ export default function PlayerCricketOverview({ fullName, sportId }: { fullName:
           <Text className="text-jazba-white font-bold text-xs">Bowl</Text>
         </GradientFill>
         {formEntries.map((f) => (
-          <View key={`${f.matchId}-bowl`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: "#1C2D3A" }}>
+          <View key={`${f.matchId}-bowl`} className="items-center justify-center rounded-full" style={{ width: 44, height: 44, backgroundColor: colors.border }}>
             <Text className="font-bold text-xs" style={{ color: colors.ink }}>
               {f.bowl}
             </Text>

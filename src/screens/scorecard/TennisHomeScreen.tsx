@@ -61,7 +61,7 @@ function MatchCard({
       onPress={onPress}
       onLongPress={onDelete}
       scaleTo={0.98}
-      style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 20 }}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 20 }}
     >
       <View className="rounded-[20px] bg-surface overflow-hidden" style={{ position: "relative" }}>
         {/* Corner accent triangles, player-colored — same as the football screens */}
@@ -82,7 +82,7 @@ function MatchCard({
 
         <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
           <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
-            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F5F7FA" }} /> : null}
+            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ink }} /> : null}
             <Text className={`text-xs font-bold ${isLive ? "text-jazba-white" : "text-green-700"}`}>
               {isLive ? "LIVE" : "COMPLETED"}
             </Text>

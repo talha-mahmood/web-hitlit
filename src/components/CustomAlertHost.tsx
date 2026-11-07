@@ -21,7 +21,7 @@ export default function CustomAlertHost() {
 
   const isDestructive = state.buttons.some((b) => b.style === "destructive");
   const hasCancel = state.buttons.some((b) => b.style === "cancel");
-  const iconBg = isDestructive ? "#351419" : colors.primaryLight;
+  const iconBg = isDestructive ? colors.dangerLight : colors.primaryLight;
   const iconColor = isDestructive ? colors.danger : colors.primaryDark;
   const iconName = isDestructive
     ? "warning-outline"
@@ -54,7 +54,7 @@ export default function CustomAlertHost() {
         />
         <View
           style={{
-            backgroundColor: "#0A1723",
+            backgroundColor: colors.surface,
             borderRadius: 26,
             padding: 24,
             width: "100%",
@@ -91,7 +91,7 @@ export default function CustomAlertHost() {
               const isCancel = b.style === "cancel";
               const isDanger = b.style === "destructive";
               const bg = isCancel ? "white" : isDanger ? colors.danger : colors.primary;
-              const textColor = isCancel ? "#CBD4DD" : "white";
+              const textColor = isCancel ? colors.inkSecondary : "white";
               return (
                 <Pressable
                   key={i}

@@ -70,7 +70,7 @@ export default function VenueCard({
     <Bouncy
       onPress={onPress}
       className={`rounded-2xl ${className}`}
-      style={{ ...cardShadow, backgroundColor: "#0A1723" }}
+      style={{ ...cardShadow, backgroundColor: colors.surface }}
       scaleTo={0.98}
     >
       <View className="bg-surface rounded-2xl border border-border overflow-hidden">

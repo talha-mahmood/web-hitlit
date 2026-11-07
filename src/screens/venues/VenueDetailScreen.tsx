@@ -150,7 +150,7 @@ export default function VenueDetailScreen() {
           <Text className="text-xl font-extrabold text-ink flex-1 mr-3">{venue.name}</Text>
           <View
             className="flex-row items-center rounded-full px-2.5 py-1"
-            style={{ backgroundColor: "#352A13", gap: 4 }}
+            style={{ backgroundColor: colors.warningLight, gap: 4 }}
           >
             <Ionicons name="star" size={14} color={colors.warning} />
             <Text className="text-ink font-bold text-sm">

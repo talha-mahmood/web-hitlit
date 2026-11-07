@@ -102,7 +102,7 @@ export default function EventJoinRequestModal({
                   )}
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center justify-center py-4" style={{ borderRadius: 28, backgroundColor: "#1C2D3A" }}>
+                <View className="flex-row items-center justify-center py-4" style={{ borderRadius: 28, backgroundColor: colors.border }}>
                   {submitting ? (
                     <ActivityIndicator color="white" />
                   ) : (

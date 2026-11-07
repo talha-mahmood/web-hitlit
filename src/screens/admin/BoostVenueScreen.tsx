@@ -55,7 +55,7 @@ export default function BoostVenueScreen() {
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
           <View
             className="rounded-2xl p-5 mb-5"
-            style={{ backgroundColor: "#111827" }}
+            style={{ backgroundColor: colors.surfaceSelection }}
           >
             <View className="flex-row items-center mb-2" style={{ gap: 8 }}>
               <Ionicons name="rocket" size={20} color="#F59E0B" />

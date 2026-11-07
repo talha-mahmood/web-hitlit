@@ -37,8 +37,8 @@ function StatusBadge({ status }: { status: BookingWithCourt["status"] }) {
   const bg =
     status === "CONFIRMED" ? colors.primaryLight :
     status === "PENDING"   ? "#FEF9C3" :
-    status === "CANCELLED" ? "#351419" :
-    status === "COMPLETED" ? "#DBEAFE" : "#142533";
+    status === "CANCELLED" ? colors.dangerLight :
+    status === "COMPLETED" ? "#DBEAFE" : colors.surfaceOverlay;
   const fg =
     status === "CONFIRMED" ? colors.primaryDark :
     status === "PENDING"   ? "#A16207" :
@@ -131,7 +131,7 @@ function BookingCard({ booking }: { booking: BookingWithCourt }) {
               (booking.status === "CONFIRMED" || booking.status === "PENDING") && (
                 <View
                   className="flex-row items-center rounded-full px-2.5 py-1"
-                  style={{ backgroundColor: "#352A13", gap: 4 }}
+                  style={{ backgroundColor: colors.warningLight, gap: 4 }}
                 >
                   <Ionicons name="card-outline" size={12} color="#B45309" />
                   <Text className="text-xs font-bold" style={{ color: "#B45309" }}>
@@ -202,7 +202,7 @@ export default function MyBookingsScreen() {
               className="flex-1 flex-row items-center justify-center rounded-full py-3"
               style={{
                 gap: 6,
-                backgroundColor: active ? colors.primary : "#0A1723",
+                backgroundColor: active ? colors.primary : colors.surface,
                 borderWidth: active ? 0 : 1,
                 borderColor: colors.border,
                 ...(active ? cardShadow : null),

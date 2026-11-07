@@ -652,7 +652,7 @@ function BallsTab({
                   style={{
                     width: ball.isWicket ? 30 : 26,
                     height: ball.isWicket ? 30 : 26,
-                    backgroundColor: ball.isWicket ? colors.danger : "#1C2D3A",
+                    backgroundColor: ball.isWicket ? colors.danger : colors.border,
                   }}
                 >
                   <Text className="font-bold text-center" style={{ color: ball.isWicket ? "white" : colors.ink, fontSize: 11 }}>
@@ -882,7 +882,7 @@ function SelectPlayerPanel({
                 disabled={disabled}
                 className="flex-row items-center rounded-2xl mb-2.5 px-3 py-2.5"
                 style={{
-                  backgroundColor: isSelected ? colors.primaryLight : "#0A1723",
+                  backgroundColor: isSelected ? colors.primaryLight : colors.surface,
                   borderWidth: 1,
                   borderColor: isSelected ? colors.primary : colors.border,
                   opacity: disabled ? 0.5 : 1,
@@ -890,7 +890,7 @@ function SelectPlayerPanel({
               >
                 <View
                   className="items-center justify-center rounded-full mr-3"
-                  style={{ width: 26, height: 26, backgroundColor: "#142533" }}
+                  style={{ width: 26, height: 26, backgroundColor: colors.surfaceOverlay }}
                 >
                   <Text className="text-ink font-bold" style={{ fontSize: 12 }}>{i + 1}</Text>
                 </View>
@@ -908,7 +908,7 @@ function SelectPlayerPanel({
                         if (isBenched) onToggleBench(name);
                       }}
                       className="rounded-lg px-2.5 py-1.5"
-                      style={{ backgroundColor: !isBenched ? colors.primaryLight : "#142533" }}
+                      style={{ backgroundColor: !isBenched ? colors.primaryLight : colors.surfaceOverlay }}
                     >
                       <Text className="text-xs font-bold" style={{ color: !isBenched ? colors.primaryDark : colors.muted }}>
                         Playing
@@ -920,7 +920,7 @@ function SelectPlayerPanel({
                         if (!isBenched) onToggleBench(name);
                       }}
                       className="rounded-lg px-2.5 py-1.5"
-                      style={{ backgroundColor: isBenched ? "#351419" : "#142533" }}
+                      style={{ backgroundColor: isBenched ? colors.dangerLight : colors.surfaceOverlay }}
                     >
                       <Text className="text-xs font-bold" style={{ color: isBenched ? "#DC2626" : colors.muted }}>
                         Bench
@@ -988,7 +988,7 @@ function ToggleOption({ label, selected, onPress }: { label: string; selected: b
       style={{
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? colors.primary : "#0A1723",
+        backgroundColor: selected ? colors.primary : colors.surface,
       }}
     >
       <Text className="font-bold text-sm" style={{ color: selected ? "white" : colors.ink }}>
@@ -1074,7 +1074,7 @@ function RunOutPanel({
                 style={{
                   borderWidth: 1.5,
                   borderColor: dismissedEnd === end ? colors.primary : colors.border,
-                  backgroundColor: dismissedEnd === end ? colors.primaryLight : "#0A1723",
+                  backgroundColor: dismissedEnd === end ? colors.primaryLight : colors.surface,
                 }}
               >
                 <PlayerAvatar name={name} />
@@ -1099,7 +1099,7 @@ function RunOutPanel({
                 ) : (
                   <View
                     className="items-center justify-center rounded-full"
-                    style={{ width: 38, height: 38, backgroundColor: "#142533" }}
+                    style={{ width: 38, height: 38, backgroundColor: colors.surfaceOverlay }}
                   >
                     <Ionicons name="add" size={20} color={colors.muted} />
                   </View>
@@ -1123,7 +1123,7 @@ function RunOutPanel({
                   height: 48,
                   borderWidth: 1.5,
                   borderColor: runs === n ? colors.primary : colors.border,
-                  backgroundColor: runs === n ? colors.primary : "#0A1723",
+                  backgroundColor: runs === n ? colors.primary : colors.surface,
                 }}
               >
                 <Text className="font-bold" style={{ color: runs === n ? "white" : colors.ink }}>
@@ -2107,7 +2107,7 @@ export default function LiveScoringScreen() {
             <ScoringCodeBadge code={match.scoring_code} variant="dark" />
             {match.status === "IN_PROGRESS" ? (
               <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F5F7FA" }} />
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.ink }} />
                 <Text className="text-jazba-white text-[10px] font-bold">LIVE</Text>
               </View>
             ) : isMatchCompleted ? (
@@ -2129,7 +2129,7 @@ export default function LiveScoringScreen() {
                 {t.label}
               </Text>
               {matchCentreTab === t.key && (
-                <View style={{ height: 2.5, width: "100%", backgroundColor: "#F5F7FA", borderRadius: 2, marginTop: 6 }} />
+                <View style={{ height: 2.5, width: "100%", backgroundColor: colors.ink, borderRadius: 2, marginTop: 6 }} />
               )}
             </Pressable>
           ))}
@@ -2142,7 +2142,7 @@ export default function LiveScoringScreen() {
             {(!isOnline || pendingBallCount > 0) && (
               <View
                 className="flex-row items-center rounded-2xl px-3.5 py-2.5 mb-4"
-                style={{ backgroundColor: isOnline ? colors.primaryLight : "#352A13", gap: 8 }}
+                style={{ backgroundColor: isOnline ? colors.primaryLight : colors.warningLight, gap: 8 }}
               >
                 <Ionicons
                   name={isOnline ? "cloud-upload-outline" : "cloud-offline-outline"}
@@ -2388,7 +2388,7 @@ export default function LiveScoringScreen() {
                                 style={{
                                   width: size,
                                   height: size,
-                                  backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : "#1C2D3A",
+                                  backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : colors.border,
                                 }}
                               >
                                 <Text
@@ -2480,7 +2480,7 @@ export default function LiveScoringScreen() {
                       <Text className="text-jazba-white font-bold text-sm">NB</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => handleRuns(DOT_BALL)}>
-                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#F5F7FA" }} />
+                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.ink }} />
                     </KeypadCell>
                   </KeypadRow>
                   <KeypadRow>
@@ -2575,14 +2575,14 @@ export default function LiveScoringScreen() {
                       <Pressable
                         onPress={() => setBonusSign(1)}
                         className="items-center justify-center rounded-full"
-                        style={{ width: 32, height: 32, backgroundColor: bonusSign === 1 ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                        style={{ width: 32, height: 32, backgroundColor: bonusSign === 1 ? colors.surfaceSelection : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
                         <Ionicons name="add" size={16} color="white" />
                       </Pressable>
                       <Pressable
                         onPress={() => setBonusSign(-1)}
                         className="items-center justify-center rounded-full"
-                        style={{ width: 32, height: 32, backgroundColor: bonusSign === -1 ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                        style={{ width: 32, height: 32, backgroundColor: bonusSign === -1 ? colors.surfaceSelection : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                       >
                         <Ionicons name="remove" size={16} color="white" />
                       </Pressable>
@@ -2752,14 +2752,14 @@ export default function LiveScoringScreen() {
                         <Pressable
                           onPress={() => setWicketEnd("striker")}
                           className="flex-1 items-center rounded-xl py-3"
-                          style={{ backgroundColor: wicketEnd === "striker" ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                          style={{ backgroundColor: wicketEnd === "striker" ? colors.surfaceSelection : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                         >
                           <Text className="text-jazba-white text-sm font-medium">{effectiveStriker}</Text>
                         </Pressable>
                         <Pressable
                           onPress={() => setWicketEnd("nonStriker")}
                           className="flex-1 items-center rounded-xl py-3"
-                          style={{ backgroundColor: wicketEnd === "nonStriker" ? "#111827" : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
+                          style={{ backgroundColor: wicketEnd === "nonStriker" ? colors.surfaceSelection : "transparent", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}
                         >
                           <Text className="text-jazba-white text-sm font-medium">{effectiveNonStriker}</Text>
                         </Pressable>
@@ -3085,7 +3085,7 @@ export default function LiveScoringScreen() {
                 style={{
                   borderWidth: 1.5,
                   borderColor: stumpedWide ? colors.primary : colors.border,
-                  backgroundColor: stumpedWide ? colors.primary : "#0A1723",
+                  backgroundColor: stumpedWide ? colors.primary : colors.surface,
                 }}
               >
                 <Text className="font-bold text-sm" style={{ color: stumpedWide ? "white" : colors.ink }}>

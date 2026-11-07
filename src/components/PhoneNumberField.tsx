@@ -37,7 +37,7 @@ export default function PhoneNumberField({
         style={{
           borderWidth: 1.5,
           borderColor: focused ? colors.primary : colors.border,
-          backgroundColor: focused ? colors.primaryLight : "#0A1723",
+          backgroundColor: focused ? colors.primaryLight : colors.surface,
         }}
       >
         <Pressable
@@ -74,7 +74,7 @@ export default function PhoneNumberField({
           exiting={FadeOutUp.duration(120)}
           style={{
             ...cardShadow,
-            backgroundColor: "#0A1723",
+            backgroundColor: colors.surface,
             borderRadius: 12,
             borderWidth: 1,
             borderColor: colors.border,
@@ -96,7 +96,7 @@ export default function PhoneNumberField({
                   className="flex-row items-center px-4 py-3"
                   style={{
                     gap: 10,
-                    backgroundColor: isSelected ? colors.primaryLight : "#0A1723",
+                    backgroundColor: isSelected ? colors.primaryLight : colors.surface,
                     borderBottomWidth: i === COUNTRY_CODES.length - 1 ? 0 : 1,
                     borderBottomColor: colors.border,
                   }}

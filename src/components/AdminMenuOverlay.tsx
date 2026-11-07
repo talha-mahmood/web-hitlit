@@ -34,11 +34,11 @@ export default function AdminMenuOverlay({
 
   return (
     <Modal visible={visible} animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 bg-[#0F172A]" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-app" style={{ paddingTop: insets.top }}>
         <View className="flex-row items-center justify-between px-5 py-4">
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <Ionicons name="tennisball" size={22} color={colors.primary} />
-            <Text className="text-jazba-white text-lg font-bold">HitLit</Text>
+            <Text className="text-ink text-lg font-bold">HitLit</Text>
           </View>
           <Pressable onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={26} color="white" />

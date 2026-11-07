@@ -150,7 +150,7 @@ export default function AdminSlotsScreen() {
           <Text className="text-muted text-xs">Booked</Text>
         </View>
         <View className="flex-row items-center" style={{ gap: 6 }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#351419" }} />
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.dangerLight }} />
           <Text className="text-muted text-xs">Blocked</Text>
         </View>
       </View>

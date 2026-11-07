@@ -429,7 +429,7 @@ export default function EventDetailScreen() {
           the page via a wave divider. */}
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#07301D", "#0F9F58", "#18C66A"]}
+          colors={["#07301D", colors.primaryDark, "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: insets.top + 10, paddingBottom: 28, paddingHorizontal: 16, overflow: "hidden" }}
@@ -456,7 +456,7 @@ export default function EventDetailScreen() {
               <Pressable
                 onPress={() => navigation.navigate("EventChat", { eventId: event.id, eventName: event.name })}
                 className="ml-3 items-center justify-center rounded-full"
-                style={{ width: 42, height: 42, backgroundColor: "#0A1723", shadowColor: "#0F172A", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 2 }}
+                style={{ width: 42, height: 42, backgroundColor: colors.surface, shadowColor: "#0F172A", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 2 }}
               >
                 <ChatIcon size={23} unreadCount={chatUnreadCount} />
               </Pressable>
@@ -473,7 +473,7 @@ export default function EventDetailScreen() {
                 onPress={handleToggleJoinBlocked}
                 disabled={setJoinBlocked.isPending}
                 className="flex-row items-center"
-                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5, backgroundColor: "#0A1723" }}
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, gap: 5, backgroundColor: colors.surface }}
               >
                 {setJoinBlocked.isPending ? (
                   <ActivityIndicator size="small" color={event.join_requests_blocked ? colors.primary : colors.danger} />

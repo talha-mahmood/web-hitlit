@@ -4,7 +4,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useVenues } from "../../hooks/useVenues";
@@ -62,7 +61,7 @@ function VenueListCard({
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
       <Bouncy
         onPress={onPress}
-        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 24 }}
         scaleTo={0.98}
       >
         <View className="border border-border overflow-hidden bg-surface" style={{ borderRadius: 24 }}>
@@ -222,7 +221,6 @@ export default function VenuesListScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact dark header with the existing back action. */}
       <View
         style={{
@@ -242,13 +240,13 @@ export default function VenuesListScreen() {
             }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
               Venues
             </Text>
-            <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+            <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
               Find and book venues nearby
             </Text>
           </View>
@@ -297,7 +295,7 @@ export default function VenuesListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="location-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Location
@@ -323,7 +321,7 @@ export default function VenuesListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="options-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Sports
@@ -349,7 +347,7 @@ export default function VenuesListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="navigate-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Distance
@@ -372,7 +370,7 @@ export default function VenuesListScreen() {
                   </Text>
                 </GradientFill>
               ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                     Price

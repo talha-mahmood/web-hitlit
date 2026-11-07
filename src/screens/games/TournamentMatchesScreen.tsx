@@ -239,7 +239,7 @@ function formatMatchSchedule(iso: string): string {
 function StatusPill({ completed, live }: { completed: boolean; live?: boolean }) {
   const label = completed ? "Completed" : live ? "Live" : "Upcoming";
   const color = completed ? colors.primaryDark : live ? "#DC2626" : "#2563EB";
-  const bg = completed ? colors.primaryLight : live ? "#351419" : "#102638";
+  const bg = completed ? colors.primaryLight : live ? colors.dangerLight : colors.infoLight;
   return (
     <View className="px-2.5 py-1 rounded-full" style={{ backgroundColor: bg }}>
       <Text className="text-xs font-bold" style={{ color }}>{label}</Text>
@@ -258,7 +258,7 @@ function TbdMatchRow({ matchNumber }: { matchNumber: number }) {
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "#0A1723", ...cardShadow, opacity: 0.65 }}
+      style={{ backgroundColor: colors.surface, ...cardShadow, opacity: 0.65 }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text className="text-muted text-xs font-bold">Match {matchNumber}</Text>
@@ -391,7 +391,7 @@ function MatchRow({
     return (
       <View
         className="rounded-2xl px-3 py-2.5"
-        style={{ backgroundColor: "#0A1723", ...cardShadow }}
+        style={{ backgroundColor: colors.surface, ...cardShadow }}
       >
         <View className="flex-row items-center justify-between mb-1.5">
           <Text className="text-muted text-xs font-bold">
@@ -440,7 +440,7 @@ function MatchRow({
   return (
     <View
       className="rounded-2xl px-3 py-2.5"
-      style={{ backgroundColor: "#0A1723", ...cardShadow }}
+      style={{ backgroundColor: colors.surface, ...cardShadow }}
     >
       <View className="flex-row items-center justify-between mb-1.5">
         <Text
@@ -875,7 +875,7 @@ function SelectMatchTeamModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -890,7 +890,7 @@ function SelectMatchTeamModal({
                   key={team.id}
                   onPress={() => onSelect(team)}
                   className="flex-row items-center rounded-2xl px-4 py-3 mb-2"
-                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: "#0A1723" }}
+                  style={{ gap: 10, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface }}
                 >
                   <Text className="text-ink font-semibold text-sm flex-1" numberOfLines={1}>
                     {team.name}
@@ -928,7 +928,7 @@ function TeamVsTeamPicker({
         <Pressable
           onPress={() => setPickingSide("A")}
           className="flex-1 rounded-xl px-3 py-2.5"
-          style={{ borderWidth: 1.5, borderColor: teamA ? colors.primary : colors.border, backgroundColor: "#0A1723" }}
+          style={{ borderWidth: 1.5, borderColor: teamA ? colors.primary : colors.border, backgroundColor: colors.surface }}
         >
           <Text className="text-xs text-muted">Team A</Text>
           <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{teamA?.name ?? "Pick a team"}</Text>
@@ -937,7 +937,7 @@ function TeamVsTeamPicker({
         <Pressable
           onPress={() => setPickingSide("B")}
           className="flex-1 rounded-xl px-3 py-2.5"
-          style={{ borderWidth: 1.5, borderColor: teamB ? colors.primary : colors.border, backgroundColor: "#0A1723" }}
+          style={{ borderWidth: 1.5, borderColor: teamB ? colors.primary : colors.border, backgroundColor: colors.surface }}
         >
           <Text className="text-xs text-muted">Team B</Text>
           <Text className="text-ink text-sm font-semibold" numberOfLines={1}>{teamB?.name ?? "Pick a team"}</Text>
@@ -1062,7 +1062,7 @@ function ManualTeamStatusModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -1082,7 +1082,7 @@ function ManualTeamStatusModal({
                     gap: 10,
                     borderWidth: 1.5,
                     borderColor: isCurrent ? colors.primary : colors.border,
-                    backgroundColor: isCurrent ? colors.primaryLight : "#0A1723",
+                    backgroundColor: isCurrent ? colors.primaryLight : colors.surface,
                   }}
                 >
                   <Ionicons name={meta.icon} size={18} color={isCurrent ? colors.primaryDark : meta.iconColor} />
@@ -1165,7 +1165,7 @@ function ManualTeamsPanel({
               onPress={() => isHost && setStatusModalTeam(t)}
               disabled={!isHost}
               className="flex-row items-center justify-between rounded-2xl px-3 py-2.5"
-              style={{ gap: 10, backgroundColor: "#0A1723" }}
+              style={{ gap: 10, backgroundColor: colors.surface }}
             >
               <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>
                 {t.name}
@@ -1343,7 +1343,7 @@ function ManualMatchesPanel({
                 style={{
                   borderWidth: 1.5,
                   borderColor: effectiveRound === r ? colors.primary : colors.border,
-                  backgroundColor: effectiveRound === r ? colors.primaryLight : "#0A1723",
+                  backgroundColor: effectiveRound === r ? colors.primaryLight : colors.surface,
                 }}
               >
                 <Text className="text-xs font-bold" style={{ color: effectiveRound === r ? colors.primaryDark : colors.muted }} numberOfLines={1}>
@@ -1359,7 +1359,7 @@ function ManualMatchesPanel({
               gap: 4,
               borderWidth: 1.5,
               borderColor: effectiveRound === newRoundNumber ? colors.primary : colors.border,
-              backgroundColor: effectiveRound === newRoundNumber ? colors.primaryLight : "#0A1723",
+              backgroundColor: effectiveRound === newRoundNumber ? colors.primaryLight : colors.surface,
             }}
           >
             <Ionicons name="add" size={14} color={effectiveRound === newRoundNumber ? colors.primaryDark : colors.muted} />
@@ -1388,7 +1388,7 @@ function ManualMatchesPanel({
                   style={{
                     borderWidth: 1.5,
                     borderColor: newStageName === preset ? colors.primary : colors.border,
-                    backgroundColor: newStageName === preset ? colors.primaryLight : "#0A1723",
+                    backgroundColor: newStageName === preset ? colors.primaryLight : colors.surface,
                     opacity: presetBlocked ? 0.4 : 1,
                   }}
                 >
@@ -1409,7 +1409,7 @@ function ManualMatchesPanel({
       )}
 
       {finalStageLimitReached ? (
-        <View className="rounded-xl px-3.5 py-3" style={{ backgroundColor: "#0A1723", borderWidth: 1.5, borderColor: colors.border }}>
+        <View className="rounded-xl px-3.5 py-3" style={{ backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border }}>
           <Text className="text-muted text-xs">
             Only one match is allowed in the Final stage, and it's already been added. Pick a different stage to add more matches.
           </Text>
@@ -2404,22 +2404,22 @@ export default function TournamentMatchesScreen() {
       >
         <View className="flex-row items-center" style={{ gap: 10 }}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color="white" />
+            <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
           <View className="flex-1">
-            <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: "700", letterSpacing: 0.5 }}>
+            <Text className="text-muted" style={{ fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>
               TOURNAMENT DASHBOARD
             </Text>
-            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 22 }} numberOfLines={1}>
               {game.title}
             </Text>
             <View className="flex-row items-center mt-1.5 flex-wrap" style={{ gap: 8 }}>
-              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-                <Text className="text-jazba-white text-xs font-semibold">
+              <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: colors.surfaceOverlay }}>
+                <Text className="text-ink text-xs font-semibold">
                   {game.tournament_format ? TOURNAMENT_FORMAT_LABEL[game.tournament_format] : "—"}
                 </Text>
               </View>
-              <Text className="text-jazba-white text-xs" style={{ opacity: 0.85 }}>
+              <Text className="text-muted text-xs">
                 {approvedTeamsFull.length} teams · {totalMatchesCount} matches
               </Text>
             </View>
@@ -2473,10 +2473,10 @@ export default function TournamentMatchesScreen() {
               realtime subscription (no refresh needed the instant one
               starts or finishes). */}
           {!!liveCricketMatches && liveCricketMatches.length > 0 && (
-            <View className="mx-4 mt-3 rounded-2xl p-4" style={{ backgroundColor: "#351419", borderWidth: 1, borderColor: "#FCA5A5" }}>
+            <View className="mx-4 mt-3 rounded-2xl p-4" style={{ backgroundColor: colors.dangerLight, borderWidth: 1, borderColor: "#FCA5A5" }}>
               <View className="flex-row items-center mb-3" style={{ gap: 6 }}>
                 <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F5F7FA" }} />
+                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.ink }} />
                   <Text className="text-jazba-white text-[10px] font-bold">LIVE</Text>
                 </View>
                 <Text className="font-bold text-sm" style={{ color: "#991B1B" }}>Live Now</Text>
@@ -2521,7 +2521,7 @@ export default function TournamentMatchesScreen() {
                       <Text className="text-jazba-white text-xs font-bold">{f.label}</Text>
                     </GradientFill>
                   ) : (
-                    <View className="rounded-full px-4 py-2" style={{ backgroundColor: "#142533" }}>
+                    <View className="rounded-full px-4 py-2" style={{ backgroundColor: colors.surfaceOverlay }}>
                       <Text className="text-muted text-xs font-bold">{f.label}</Text>
                     </View>
                   )}
@@ -2546,7 +2546,7 @@ export default function TournamentMatchesScreen() {
                       <View
                         className="rounded-full px-4 py-2"
                         style={{
-                          backgroundColor: selected ? colors.primaryLight : "#142533",
+                          backgroundColor: selected ? colors.primaryLight : colors.surfaceOverlay,
                           borderWidth: selected ? 1.5 : 0,
                           borderColor: colors.primary,
                         }}

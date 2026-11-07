@@ -25,7 +25,7 @@ export default function SportFilterDropdown({
       style={{
         marginHorizontal: 20,
         marginBottom: 12,
-        backgroundColor: "#0A1723",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         borderWidth: 1,
         borderColor: colors.border,
@@ -47,7 +47,7 @@ export default function SportFilterDropdown({
                 justifyContent: "space-between",
                 paddingHorizontal: 16,
                 paddingVertical: 13,
-                backgroundColor: selected ? colors.primaryLight : "#0A1723",
+                backgroundColor: selected ? colors.primaryLight : colors.surface,
                 borderBottomWidth: i === sports.length - 1 ? 0 : 1,
                 borderBottomColor: colors.border,
               }}

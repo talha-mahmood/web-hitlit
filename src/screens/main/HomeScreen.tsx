@@ -2,7 +2,6 @@ import { useMemo, useState, type ComponentProps, type ReactElement } from "react
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -237,7 +236,6 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact Jazba-style top bar. Existing profile and notification actions stay in place. */}
       <View
         style={{
@@ -250,12 +248,12 @@ export default function HomeScreen() {
         <View className="flex-row items-center justify-between" style={{ minHeight: 46 }}>
           <View style={{ width: 72 }} />
           <View className="absolute left-0 right-0 items-center" pointerEvents="none">
-            <Text className="text-jazba-white font-extrabold" style={{ fontSize: 22, letterSpacing: -0.4 }}>HitLit</Text>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 22, letterSpacing: -0.4 }}>HitLit</Text>
           </View>
           <View className="flex-row items-center" style={{ gap: 16 }}>
             <NotificationBell
               size={25}
-              color="#F5F7FA"
+              color={colors.ink}
               unreadCount={unreadCount}
               onPress={() => navigation.navigate("Notifications")}
             />
@@ -268,7 +266,7 @@ export default function HomeScreen() {
               {profile?.avatar ? (
                 <Image source={{ uri: profile.avatar }} style={{ width: 34, height: 34, borderRadius: 17 }} />
               ) : (
-                <Ionicons name="person" size={18} color="#F5F7FA" />
+                <Ionicons name="person" size={18} color={colors.ink} />
               )}
             </Pressable>
           </View>

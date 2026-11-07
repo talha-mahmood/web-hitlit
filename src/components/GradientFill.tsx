@@ -1,3 +1,4 @@
+import { colors } from "../constants/theme";
 import type { ComponentProps } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { cssInterop } from "nativewind";
@@ -8,10 +9,8 @@ import { cssInterop } from "nativewind";
 cssInterop(LinearGradient, { className: "style" });
 
 // The one brand green gradient used everywhere a solid green fill used to
-// be (buttons, hero banners, badges, icon tints, …) — same three stops as
-// the Game Detail screen's hero header, so every green surface in the app
-// now reads as the same gradient instead of several flat shades of green.
-export const BRAND_GREEN_GRADIENT = ["#0B6C3C", "#0F9F58", "#18C66A"] as const;
+// be. Read stops at render time so the same shared component follows the
+// selected theme while preserving the original dark palette.
 
 type Props = Omit<ComponentProps<typeof LinearGradient>, "colors"> & { className?: string };
 
@@ -20,5 +19,5 @@ type Props = Omit<ComponentProps<typeof LinearGradient>, "colors"> & { className
 // classes via `className`, minus the `bg-primary*` class, and this paints
 // the brand gradient as the background instead of a flat color.
 export default function GradientFill({ start = { x: 0, y: 0 }, end = { x: 1, y: 1 }, ...rest }: Props) {
-  return <LinearGradient colors={BRAND_GREEN_GRADIENT} start={start} end={end} {...rest} />;
+  return <LinearGradient colors={[colors.primaryDeep, colors.primaryDark, colors.primary]} start={start} end={end} {...rest} />;
 }

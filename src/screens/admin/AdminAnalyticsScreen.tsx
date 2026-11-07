@@ -173,7 +173,7 @@ export default function AdminAnalyticsScreen() {
               style={{
                 borderWidth: 1.5,
                 borderColor: !selectedSport ? colors.primary : colors.border,
-                backgroundColor: !selectedSport ? colors.primary : "#0A1723",
+                backgroundColor: !selectedSport ? colors.primary : colors.surface,
               }}
             >
               <Text className={`text-sm font-medium ${!selectedSport ? "text-jazba-white" : "text-ink"}`}>
@@ -190,7 +190,7 @@ export default function AdminAnalyticsScreen() {
                   style={{
                     borderWidth: 1.5,
                     borderColor: selected ? colors.primary : colors.border,
-                    backgroundColor: selected ? colors.primary : "#0A1723",
+                    backgroundColor: selected ? colors.primary : colors.surface,
                   }}
                 >
                   <Text className={`text-sm font-medium ${selected ? "text-jazba-white" : "text-ink"}`}>{sport}</Text>
@@ -205,7 +205,7 @@ export default function AdminAnalyticsScreen() {
             <Pressable
               onPress={() => setSelectedCourtId(null)}
               className="px-2.5 py-1.5 rounded-lg"
-              style={{ backgroundColor: !selectedCourtId ? colors.primaryLight : "#142533" }}
+              style={{ backgroundColor: !selectedCourtId ? colors.primaryLight : colors.surfaceOverlay }}
             >
               <Text className="text-xs font-medium" style={{ color: !selectedCourtId ? colors.primaryDark : colors.muted }}>
                 All {selectedSport} Courts
@@ -218,7 +218,7 @@ export default function AdminAnalyticsScreen() {
                   key={court.id}
                   onPress={() => setSelectedCourtId(court.id)}
                   className="px-2.5 py-1.5 rounded-lg"
-                  style={{ backgroundColor: selected ? colors.primaryLight : "#142533" }}
+                  style={{ backgroundColor: selected ? colors.primaryLight : colors.surfaceOverlay }}
                 >
                   <Text className="text-xs font-medium" style={{ color: selected ? colors.primaryDark : colors.muted }}>
                     {court.name}
@@ -265,7 +265,7 @@ export default function AdminAnalyticsScreen() {
             />
             <StatCard
               icon="close-circle"
-              iconBg="#351419"
+              iconBg={colors.dangerLight}
               iconColor="#DC2626"
               label="Cancellation Rate"
               value={isFiltered ? "—" : `${analytics.cancellationRate}%`}
@@ -281,7 +281,7 @@ export default function AdminAnalyticsScreen() {
                 />
                 <StatCard
                   icon="grid"
-                  iconBg="#103A2A"
+                  iconBg={colors.primaryLight}
                   iconColor={colors.primaryDark}
                   label="Most Popular Court"
                   value={analytics.mostPopularCourt ?? "—"}
@@ -290,7 +290,7 @@ export default function AdminAnalyticsScreen() {
             )}
             <StatCard
               icon="time"
-              iconBg="#352A13"
+              iconBg={colors.warningLight}
               iconColor="#D97706"
               label="Peak Hours"
               value={analytics.peakHourLabel ?? "—"}
@@ -339,7 +339,7 @@ export default function AdminAnalyticsScreen() {
                   key={scale}
                   onPress={() => setRevenueScale(scale)}
                   className="flex-1 items-center py-1.5 rounded-lg"
-                  style={{ backgroundColor: revenueScale === scale ? "#0A1723" : "transparent" }}
+                  style={{ backgroundColor: revenueScale === scale ? colors.surface : "transparent" }}
                 >
                   <Text
                     className="text-xs font-semibold capitalize"

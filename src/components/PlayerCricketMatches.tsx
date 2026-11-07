@@ -35,7 +35,7 @@ function MatchRow({ match }: { match: CricketMatchDetail }) {
           (PlayerCricketStatistics.tsx's MatchWiseCard) — background set on
           this plain View (not Bouncy's own style prop, which doesn't
           reliably apply through its Animated/cssInterop wrapping). */}
-      <View className="rounded-2xl p-4" style={{ backgroundColor: "#142533" }}>
+      <View className="rounded-2xl p-4" style={{ backgroundColor: colors.surfaceOverlay }}>
         <View className="flex-row items-center justify-between mb-3" style={{ gap: 8 }}>
           <Text className="text-muted text-xs font-semibold flex-1" numberOfLines={1}>
             Open Match, {match.format}, {dateLabel}

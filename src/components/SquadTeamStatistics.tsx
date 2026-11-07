@@ -31,8 +31,8 @@ function PillBar<T extends string>({ value, options, onChange }: { value: T; opt
             </GradientFill>
           </Pressable>
         ) : (
-          <Pressable key={o} onPress={() => onChange(o)} className="rounded-full px-4 py-2" style={{ backgroundColor: "#1C2D3A" }}>
-            <Text className="font-bold text-xs" style={{ color: "#CBD4DD" }}>{o}</Text>
+          <Pressable key={o} onPress={() => onChange(o)} className="rounded-full px-4 py-2" style={{ backgroundColor: colors.border }}>
+            <Text className="font-bold text-xs" style={{ color: colors.inkSecondary }}>{o}</Text>
           </Pressable>
         )
       )}
@@ -42,7 +42,7 @@ function PillBar<T extends string>({ value, options, onChange }: { value: T; opt
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: "#142533" }}>
+    <View className="flex-1 items-center py-3 rounded-xl" style={{ backgroundColor: colors.surfaceOverlay }}>
       <Text className="font-bold text-base" style={{ color: colors.ink }}>{value}</Text>
       <Text className="text-muted text-xs mt-0.5">{label}</Text>
     </View>
@@ -70,7 +70,7 @@ function RankedTable({
       </View>
       {rows.map((r) => (
         <View key={`${r.rank}-${r.name}`} className="flex-row items-center py-2.5" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <View className="items-center justify-center rounded-full" style={{ width: 20, height: 20, backgroundColor: "#1C2D3A" }}>
+          <View className="items-center justify-center rounded-full" style={{ width: 20, height: 20, backgroundColor: colors.border }}>
             <Text className="text-xs font-bold" style={{ color: colors.ink }}>{r.rank}</Text>
           </View>
           <Text className="text-ink text-sm font-semibold flex-1 ml-2" numberOfLines={1}>{r.name}</Text>
@@ -90,7 +90,7 @@ function PartnershipCard({ row }: { row: ReturnType<typeof squadPartnerships>[nu
   const widthA = Math.min(100, (row.runsA / total) * 100);
   const widthB = Math.min(100, (row.runsB / total) * 100);
   return (
-    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#142533" }}>
+    <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: colors.surfaceOverlay }}>
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">
           <Text className="text-ink text-sm">
@@ -263,7 +263,7 @@ function MvpSection({ roster }: { roster: RosterAggregateRow[] }) {
         <View className="mt-3">
           {rows.map((r, i) => (
             <View key={r.name} className="flex-row items-center py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-              <View className="items-center justify-center rounded-full" style={{ width: 22, height: 22, backgroundColor: "#1C2D3A" }}>
+              <View className="items-center justify-center rounded-full" style={{ width: 22, height: 22, backgroundColor: colors.border }}>
                 <Text className="text-xs font-bold">{i + 1}</Text>
               </View>
               <View className="flex-1 ml-2">
@@ -320,7 +320,7 @@ export default function SquadTeamStatistics({ squad }: { squad: SquadDetail }) {
 
   return (
     <View>
-      <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: "#142533" }}>
+      <View className="flex-row rounded-xl overflow-hidden" style={{ backgroundColor: colors.surfaceOverlay }}>
         {STAT_TABS.map((t) =>
           tab === t ? (
             <Pressable key={t} onPress={() => setTab(t)} className="flex-1">
@@ -330,7 +330,7 @@ export default function SquadTeamStatistics({ squad }: { squad: SquadDetail }) {
             </Pressable>
           ) : (
             <Pressable key={t} onPress={() => setTab(t)} className="flex-1 items-center py-2">
-              <Text className="text-xs font-bold" style={{ color: "#9AA8B7" }}>{t}</Text>
+              <Text className="text-xs font-bold" style={{ color: colors.muted }}>{t}</Text>
             </Pressable>
           )
         )}

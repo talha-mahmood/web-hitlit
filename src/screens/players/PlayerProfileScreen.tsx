@@ -141,7 +141,7 @@ export default function PlayerProfileScreen() {
       {/* Hero */}
       <View
         style={{
-          backgroundColor: "#103A2A",
+          backgroundColor: colors.primaryLight,
           paddingTop: insets.top + 10,
           paddingHorizontal: 14,
           paddingBottom: 16,
@@ -211,7 +211,7 @@ export default function PlayerProfileScreen() {
                   {followState?.isFollowing ? (
                     <View
                       className="flex-row items-center rounded-full px-4 py-2"
-                      style={{ gap: 6, backgroundColor: "#0A1723", borderWidth: 1, borderColor: colors.border }}
+                      style={{ gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
                     >
                       {toggleFollow.isPending ? (
                         <ActivityIndicator size="small" color={colors.primary} />
@@ -307,9 +307,9 @@ export default function PlayerProfileScreen() {
                     key={key}
                     onPress={() => setActiveTab(key)}
                     className="rounded-full px-4 py-2"
-                    style={{ backgroundColor: "#1C2D3A" }}
+                    style={{ backgroundColor: colors.border }}
                   >
-                    <Text className="text-xs font-bold" style={{ color: "#CBD4DD" }}>
+                    <Text className="text-xs font-bold" style={{ color: colors.inkSecondary }}>
                       {label}
                     </Text>
                   </Pressable>

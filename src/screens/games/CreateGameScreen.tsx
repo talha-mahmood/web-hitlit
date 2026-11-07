@@ -177,7 +177,7 @@ function ChipFill({
     return <GradientFill className={className}>{children}</GradientFill>;
   }
   return (
-    <View className={className} style={{ backgroundColor: "#0A1723" }}>
+    <View className={className} style={{ backgroundColor: colors.surface }}>
       {children}
     </View>
   );
@@ -323,12 +323,12 @@ function FormatCard({
         gap: 12,
         borderWidth: 1.5,
         borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? colors.primaryLight : "#0A1723",
+        backgroundColor: selected ? colors.primaryLight : colors.surface,
       }}
     >
       <View
         className="items-center justify-center rounded-full"
-        style={{ width: 40, height: 40, backgroundColor: selected ? "#0A1723" : "#142533" }}
+        style={{ width: 40, height: 40, backgroundColor: selected ? colors.surface : colors.surfaceOverlay }}
       >
         <Ionicons name={icon} size={19} color={selected ? colors.primaryDark : colors.muted} />
       </View>
@@ -387,7 +387,7 @@ function StepTracker({
               ) : (
                 <View
                   className="items-center justify-center rounded-full"
-                  style={{ width: 20, height: 20, backgroundColor: "#1C2D3A" }}
+                  style={{ width: 20, height: 20, backgroundColor: colors.border }}
                 >
                   <Text className="text-[11px] font-bold text-muted">{s.n}</Text>
                 </View>

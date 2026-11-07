@@ -21,11 +21,9 @@ import { SkeletonCardRows } from "../../components/Skeleton";
 type Nav = NativeStackNavigationProp<VenueEditingParamList, "AdminNotifications">;
 
 const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }> = {
-  venue_booking_created: { icon: "calendar", color: colors.primary, bg: "bg-primary-light" },
+  venue_booking_created: { icon: "calendar", get color() { return colors.primary; }, bg: "bg-primary-light" },
   venue_booking_cancelled: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
 };
-const DEFAULT_META = { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
-
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60_000);
@@ -52,7 +50,7 @@ function NotificationCard({
   onPress: () => void;
   onDelete: () => void;
 }) {
-  const meta = TYPE_META[notification.type ?? ""] ?? DEFAULT_META;
+  const meta = TYPE_META[notification.type ?? ""] ?? { icon: "notifications" as const, color: colors.muted, bg: "bg-gray-50" };
   const unread = !notification.is_read;
 
   return (
@@ -61,7 +59,7 @@ function NotificationCard({
       className="flex-row items-start rounded-2xl mb-3 px-4 py-3.5"
       style={{
         gap: 12,
-        backgroundColor: unread ? colors.primaryLight : "#0A1723",
+        backgroundColor: unread ? colors.primaryLight : colors.surface,
         borderWidth: 1,
         borderColor: unread ? colors.primary : colors.border,
       }}

@@ -46,16 +46,16 @@ const TEAM_STATUS_META: Record<
   string,
   { bg: string; text: string; label: string; iconBg: string; iconColor: string }
 > = {
-  FORMING: { bg: "bg-amber-50", text: "text-amber-700", label: "Recruiting", iconBg: "#352A13", iconColor: "#D97706" },
+  FORMING: { bg: "bg-amber-50", text: "text-amber-700", label: "Recruiting", iconBg: colors.warningLight, iconColor: "#D97706" },
   PENDING_HOST_APPROVAL: {
     bg: "bg-amber-50",
     text: "text-amber-700",
     label: "Awaiting Approval",
-    iconBg: "#352A13",
+    iconBg: colors.warningLight,
     iconColor: "#D97706",
   },
   APPROVED: { bg: "bg-green-50", text: "text-green-700", label: "Full", iconBg: colors.primaryLight, iconColor: colors.primaryDark },
-  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed", iconBg: "#351419", iconColor: colors.danger },
+  REJECTED: { bg: "bg-red-50", text: "text-red-600", label: "Removed", iconBg: colors.dangerLight, iconColor: colors.danger },
 };
 
 // A rotating palette so a team's member circles aren't all the same flat
@@ -250,7 +250,7 @@ function TeamCard({
       onPress={onOpenChat}
       hitSlop={8}
       className="items-center justify-center rounded-full"
-      style={{ width: 32, height: 32, backgroundColor: "#0A1723", marginLeft: 8 }}
+      style={{ width: 32, height: 32, backgroundColor: colors.surface, marginLeft: 8 }}
     >
       <ChatIcon size={16} unreadCount={teamChatUnread} />
     </Pressable>
@@ -260,7 +260,7 @@ function TeamCard({
     <View className="border border-border rounded-2xl bg-surface" style={{ ...cardShadow, overflow: "hidden" }}>
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={["#0F9F58", "#18C66A"]}
+          colors={[colors.primaryDark, "#18C66A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ padding: 16, paddingBottom: 28 }}
@@ -335,7 +335,7 @@ function TeamCard({
             <>
               <View
                 className="flex-row items-center rounded-xl px-3 py-2.5"
-                style={{ backgroundColor: "#352A13", gap: 8 }}
+                style={{ backgroundColor: colors.warningLight, gap: 8 }}
               >
                 <Ionicons name="information-circle" size={16} color="#D97706" />
                 <Text className="text-xs font-semibold flex-1" style={{ color: "#92400E" }}>
@@ -870,7 +870,7 @@ export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
           {isHost && !myTeam && (
             <Pressable onPress={() => setShowJoinTeamModal(true)} style={primaryButtonShadow}>
               <LinearGradient
-                colors={["#0F9F58", "#18C66A"]}
+                colors={[colors.primaryDark, "#18C66A"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{

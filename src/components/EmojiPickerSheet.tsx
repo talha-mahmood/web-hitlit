@@ -42,7 +42,7 @@ export default function EmojiPickerSheet({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 30, height: 30, backgroundColor: "#142533" }}
+              style={{ width: 30, height: 30, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={16} color={colors.ink} />
@@ -57,7 +57,7 @@ export default function EmojiPickerSheet({
                   key={cat.label}
                   onPress={() => setCategory(i)}
                   className="rounded-full px-3.5 py-1.5"
-                  style={{ backgroundColor: active ? colors.primary : "#142533" }}
+                  style={{ backgroundColor: active ? colors.primary : colors.surfaceOverlay }}
                 >
                   <Text className="font-semibold text-xs" style={{ color: active ? "white" : colors.muted }}>
                     {cat.label}

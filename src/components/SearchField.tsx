@@ -82,8 +82,8 @@ export default function SearchField({
       style={[
         {
           borderWidth: 1.5,
-          borderColor: focused ? colors.primary : "#1C2D3A",
-          backgroundColor: focused ? colors.primaryLight : "#0A1723",
+          borderColor: focused ? colors.primary : colors.border,
+          backgroundColor: focused ? colors.primaryLight : colors.surface,
           shadowColor: "#0F172A",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.06,

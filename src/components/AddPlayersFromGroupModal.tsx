@@ -128,7 +128,7 @@ export default function AddPlayersFromGroupModal({
                           <Text className="text-sm font-medium text-jazba-white">{s.name}</Text>
                         </GradientFill>
                       ) : (
-                        <View className="rounded-xl px-3 py-2" style={{ backgroundColor: "#0A1723" }}>
+                        <View className="rounded-xl px-3 py-2" style={{ backgroundColor: colors.surface }}>
                           <Text className="text-sm font-medium text-ink">{s.name}</Text>
                         </View>
                       )}

@@ -48,7 +48,7 @@ function ResultBadge({ letter }: { letter: "W" | "L" | "D" }) {
 
 function StatPanel({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <View className="flex-1 items-center rounded-2xl py-4" style={{ ...cardShadow, backgroundColor: "#0A1723" }}>
+    <View className="flex-1 items-center rounded-2xl py-4" style={{ ...cardShadow, backgroundColor: colors.surface }}>
       <Text className="font-extrabold" style={{ fontSize: 22, color }}>
         {value}
       </Text>

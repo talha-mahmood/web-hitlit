@@ -9,7 +9,6 @@ export type NewMatchSport = "padel" | "tennis" | "badminton" | "pickleball" | "t
 
 // The shapes behind the illustration use exactly the cricket New Match screen's
 // colours: the soft top-right circle and the green mound at the bottom-right.
-const BLOB_COLOR = colors.primaryLight;
 const MOUND_COLOR = "#4ADE80";
 
 // --- Small drawing helpers (plain Views, like the cricket stumps and ball) ---
@@ -179,7 +178,7 @@ const pentagon = (cx: number, cy: number, r: number, startDeg: number): Pt[] =>
   Array.from({ length: 5 }, (_, k) => polar(cx, cy, r, startDeg + k * 72));
 const pointsAttr = (pts: Pt[]) => pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 
-const BALL_INK = "#111827";
+const getBallInk = () => colors.surfaceSelection;
 const CENTER_PENTAGON = pentagon(50, 50, 17, 0);
 const RIM_ANGLES = [0, 72, 144, 216, 288];
 const RIM_PENTAGONS = RIM_ANGLES.map((a) => {
@@ -220,14 +219,14 @@ function FootballBall({ size, style }: { size: number; style?: object }) {
         <Circle cx={50} cy={50} r={48} fill="white" />
         <G clipPath="url(#footballClip)">
           {SEAMS.map(([a, b], i) => (
-            <Line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={BALL_INK} strokeWidth={2.2} strokeLinecap="round" />
+            <Line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={getBallInk()} strokeWidth={2.2} strokeLinecap="round" />
           ))}
           {RIM_PENTAGONS.map((p, i) => (
-            <Polygon key={i} points={pointsAttr(p)} fill={BALL_INK} stroke={BALL_INK} strokeWidth={1.5} strokeLinejoin="round" />
+            <Polygon key={i} points={pointsAttr(p)} fill={getBallInk()} stroke={getBallInk()} strokeWidth={1.5} strokeLinejoin="round" />
           ))}
-          <Polygon points={pointsAttr(CENTER_PENTAGON)} fill={BALL_INK} stroke={BALL_INK} strokeWidth={1.5} strokeLinejoin="round" />
+          <Polygon points={pointsAttr(CENTER_PENTAGON)} fill={getBallInk()} stroke={getBallInk()} strokeWidth={1.5} strokeLinejoin="round" />
         </G>
-        <Circle cx={50} cy={50} r={48} fill="none" stroke={BALL_INK} strokeWidth={3} />
+        <Circle cx={50} cy={50} r={48} fill="none" stroke={getBallInk()} strokeWidth={3} />
       </Svg>
     </View>
   );
@@ -271,7 +270,7 @@ function PadelArt() {
 function TennisArt() {
   return (
     <>
-      <Racket headW={36} headH={44} frame="#0F9F58" handle="#1F2937" handleH={22} rotate="-16deg" style={{ left: 16, bottom: 0 }} />
+      <Racket headW={36} headH={44} frame={colors.primaryDark} handle="#1F2937" handleH={22} rotate="-16deg" style={{ left: 16, bottom: 0 }} />
       <Ball size={26} color="#D9F99D" border="#65A30D" style={{ right: 4, bottom: 2 }} />
     </>
   );
@@ -368,6 +367,7 @@ export default function SportNewMatchHeader({
 }) {
   const insets = useSafeAreaInsets();
   const Art = ART[sport];
+  const blobColor = colors.primaryLight;
 
   return (
     <View className="overflow-hidden" style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}>
@@ -378,7 +378,7 @@ export default function SportNewMatchHeader({
           width: 220,
           height: 220,
           borderRadius: 110,
-          backgroundColor: BLOB_COLOR,
+          backgroundColor: blobColor,
           opacity: 0.5,
           top: -110,
           right: -60,

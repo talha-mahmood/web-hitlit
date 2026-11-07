@@ -57,7 +57,7 @@ export default function SelectSportModal({
             <Pressable
               onPress={onClose}
               className="items-center justify-center rounded-full"
-              style={{ width: 34, height: 34, backgroundColor: "#142533" }}
+              style={{ width: 34, height: 34, backgroundColor: colors.surfaceOverlay }}
               hitSlop={6}
             >
               <Ionicons name="close" size={18} color={colors.ink} />
@@ -83,7 +83,7 @@ export default function SelectSportModal({
                       borderRadius: 16,
                       borderWidth: 1.5,
                       borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: selected ? colors.primaryLight : "#0A1723",
+                      backgroundColor: selected ? colors.primaryLight : colors.surface,
                     }}
                   >
                     <View
@@ -124,7 +124,7 @@ export default function SelectSportModal({
             <Pressable
               onPress={() => onApply(undefined)}
               className="flex-1 items-center justify-center rounded-2xl"
-              style={{ height: 52, backgroundColor: "#0A1723", borderWidth: 1.5, borderColor: colors.border }}
+              style={{ height: 52, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border }}
             >
               <Text className="text-ink font-bold" style={{ fontSize: 16 }}>
                 Clear

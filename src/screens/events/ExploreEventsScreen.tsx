@@ -1,7 +1,6 @@
 import { View, Text, Image, FlatList, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect } from "react";
@@ -63,7 +62,7 @@ function EventCard({
     <Animated.View entering={FadeInDown.duration(400).delay(Math.min(index, 8) * 60)}>
       <Bouncy
         onPress={onPress}
-        style={{ ...cardShadow, backgroundColor: "#0A1723", borderRadius: 24 }}
+        style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 24 }}
         scaleTo={0.98}
       >
         <View className="border border-border overflow-hidden bg-surface" style={{ borderRadius: 24, position: "relative", minHeight: LIST_CARD_MIN_HEIGHT }}>
@@ -104,7 +103,7 @@ function EventCard({
           <View
             pointerEvents="none"
             className="items-center justify-center overflow-hidden"
-            style={{ position: "absolute", right: -28, top: 44, width: 82, height: 82, borderRadius: 41, backgroundColor: "#103A2A" }}
+            style={{ position: "absolute", right: -28, top: 44, width: 82, height: 82, borderRadius: 41, backgroundColor: colors.primaryLight }}
           >
             <Ionicons name="calendar" size={32} color={colors.primary} style={{ marginRight: 17, opacity: 0.8 }} />
           </View>
@@ -237,7 +236,6 @@ export default function ExploreEventsScreen() {
 
   return (
     <View className="flex-1 bg-app">
-      {isFocused ? <StatusBar style="light" /> : null}
       {/* Compact dark header; search, hosting, and filtering stay intact. */}
       <View
         style={{
@@ -251,14 +249,14 @@ export default function ExploreEventsScreen() {
           <View className="flex-row items-center flex-1" style={{ gap: 10 }}>
             {navigation.canGoBack() && (
               <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-                <Ionicons name="arrow-back" size={22} color="white" />
+                <Ionicons name="arrow-back" size={22} color={colors.ink} />
               </Pressable>
             )}
             <View className="flex-1">
-              <Text className="text-jazba-white font-extrabold" style={{ fontSize: 19 }}>
+              <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
                 Events
               </Text>
-              <Text style={{ fontSize: 10.5, marginTop: 1, color: "white" }} numberOfLines={1}>
+              <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
                 Find and join events nearby
               </Text>
             </View>
@@ -323,7 +321,7 @@ export default function ExploreEventsScreen() {
                         </Text>
                       </GradientFill>
                     ) : (
-                      <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "#0A1723" }}>
+                      <View className="rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: colors.surface }}>
                         <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
                           {p.label}
                         </Text>
@@ -345,7 +343,7 @@ export default function ExploreEventsScreen() {
                     </Text>
                   </GradientFill>
                 ) : (
-                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                     <Ionicons name="location-outline" size={14} color={colors.muted} />
                     <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                       Location
@@ -369,7 +367,7 @@ export default function ExploreEventsScreen() {
                     </Text>
                   </GradientFill>
                 ) : (
-                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: "#0A1723" }}>
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                     <Ionicons name="navigate-outline" size={14} color={colors.muted} />
                     <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
                       Distance
