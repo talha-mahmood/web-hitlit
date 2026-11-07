@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { colors } from "../constants/theme";
+import { getResolvedTheme, useThemeStore } from "../store/themeStore";
 
 const DOT_COUNT = 4;
 const DOT_COLOR = "#6EE7B0";
@@ -50,9 +51,13 @@ function LoadingDot({ index }: { index: number }) {
 }
 
 export default function SplashScreen() {
+  const preference = useThemeStore((s) => s.preference);
+  const systemTheme = useThemeStore((s) => s.systemTheme);
+  const isDarkTheme = getResolvedTheme({ ...useThemeStore.getState(), preference, systemTheme }) === "dark";
+
   return (
     <ImageBackground
-      source={require("../../assets/splash-background.png")}
+      source={isDarkTheme ? require("../../assets/splash-background-dark.png") : require("../../assets/splash-background.png")}
       className="flex-1"
       resizeMode="cover"
     >
