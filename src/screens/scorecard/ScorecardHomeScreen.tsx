@@ -153,7 +153,7 @@ function HeaderArt() {
       </Svg>
       <View>
         <Text
-          style={{ fontSize: 11, lineHeight: 14, fontStyle: "italic", fontWeight: "700", color: "white" }}
+          style={{ fontSize: 11, lineHeight: 14, fontStyle: "italic", fontWeight: "700", color: colors.muted }}
         >
           {"Keep\nScore\nKeep Playing"}
         </Text>
