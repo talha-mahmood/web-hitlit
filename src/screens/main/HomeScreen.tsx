@@ -28,6 +28,7 @@ import NotificationBell from "../../components/NotificationBell";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import { SkeletonBlock, SkeletonCardRows } from "../../components/Skeleton";
+import { useThemeStore } from "../../store/themeStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -138,6 +139,9 @@ export default function HomeScreen() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
+  const themePreference = useThemeStore((s) => s.preference);
+  const setThemePreference = useThemeStore((s) => s.setPreference);
+  const isLightTheme = themePreference === "light" || (themePreference === "system" && colors.background === "#F5F7FA");
 
   const [selectedSportId, setSelectedSportId] = useState<string | null>(null);
 
@@ -246,7 +250,51 @@ export default function HomeScreen() {
         }}
       >
         <View className="flex-row items-center justify-between" style={{ minHeight: 46 }}>
-          <View style={{ width: 72 }} />
+          <Pressable
+            onPress={() => setThemePreference(isLightTheme ? "dark" : "light")}
+            accessibilityRole="switch"
+            accessibilityLabel="Toggle light and dark theme"
+            accessibilityState={{ checked: isLightTheme }}
+            hitSlop={8}
+            style={{
+              width: 68,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: isLightTheme ? "#E6E7E8" : "#34383D",
+              borderWidth: 1,
+              borderColor: isLightTheme ? "#D4D7DA" : "#555B61",
+              justifyContent: "center",
+              paddingHorizontal: 3,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isLightTheme ? 0.14 : 0.24,
+              shadowRadius: 3,
+              elevation: 3,
+            }}
+          >
+            <Ionicons
+              name={isLightTheme ? "sunny" : "moon"}
+              size={16}
+              color="#F5B93B"
+              style={{ position: "absolute", left: isLightTheme ? 10 : 41 }}
+            />
+            <View
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                alignSelf: isLightTheme ? "flex-end" : "flex-start",
+                backgroundColor: "#FFFFFF",
+                borderWidth: 1,
+                borderColor: isLightTheme ? "#F4F4F4" : "#D5D7D9",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.16,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            />
+          </Pressable>
           <View className="absolute left-0 right-0 items-center" pointerEvents="none">
             <Text className="text-ink font-extrabold" style={{ fontSize: 22, letterSpacing: -0.4 }}>HitLit</Text>
           </View>

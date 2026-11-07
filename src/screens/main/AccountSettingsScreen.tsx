@@ -26,7 +26,6 @@ import FieldInput from "../../components/FieldInput";
 import type { ProfileStackParamList } from "../../navigation/ProfileStackNavigator";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { signOutWithPushCleanup } from "../../lib/pushNotifications";
-import { useThemeStore, type ThemePreference } from "../../store/themeStore";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "AccountSettings">;
 
@@ -70,8 +69,6 @@ export default function AccountSettingsScreen() {
   const profile = useProfileStore((s) => s.profile);
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const userId = useAuthStore((s) => s.session?.user.id);
-  const themePreference = useThemeStore((s) => s.preference);
-  const setThemePreference = useThemeStore((s) => s.setPreference);
 
   const [name, setName] = useState(profile?.full_name ?? "");
   const [savingName, setSavingName] = useState(false);
@@ -171,29 +168,6 @@ export default function AccountSettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <SectionCard icon="color-palette-outline" title="Appearance" subtitle="Choose how Jazba looks on this device.">
-          <View className="flex-row" style={{ gap: 8 }}>
-            {([
-              ["system", "System"],
-              ["light", "Light"],
-              ["dark", "Dark"],
-            ] as [ThemePreference, string][]).map(([value, label]) => {
-              const selected = themePreference === value;
-              return (
-                <Pressable
-                  key={value}
-                  onPress={() => setThemePreference(value)}
-                  className={`flex-1 rounded-xl border py-3 items-center ${selected ? "bg-primary-light border-primary" : "bg-surface border-border"}`}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                >
-                  <Text className={`font-semibold text-sm ${selected ? "text-primary" : "text-muted"}`}>{label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </SectionCard>
-
         <View className="bg-surface rounded-2xl p-4 mb-4 flex-row items-center" style={{ ...cardShadow, gap: 12 }}>
           <View
             className="items-center justify-center rounded-full"

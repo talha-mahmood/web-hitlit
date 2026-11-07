@@ -18,7 +18,7 @@ const STORAGE_KEY = "jazba.theme.preference";
 const resolveSystemTheme = (): ResolvedTheme => Appearance.getColorScheme() === "light" ? "light" : "dark";
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  preference: "dark",
+  preference: "light",
   systemTheme: resolveSystemTheme(),
   hydrated: false,
   setPreference: (preference) => {
