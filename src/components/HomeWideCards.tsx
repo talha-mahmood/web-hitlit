@@ -11,9 +11,8 @@ import type { GameListItem } from "../lib/api/games";
 import type { SquadListItem } from "../lib/api/squads";
 import type { EventListItem } from "../lib/api/events";
 
-// Shared square sport image tile used on Home and Create Group. A consistent
-// square canvas contains each full source image, including the landscape
-// photos, so sports stay aligned without cutting off equipment.
+// Shared square sport image tile used on Home and Create Group. Photo tiles
+// use the full square canvas so no dark inset frame remains around the image.
 export function HomeSportTile({
   name,
   selected,
@@ -31,12 +30,13 @@ export function HomeSportTile({
   return (
     <Pressable onPress={onPress} style={{ width, alignItems: "center" }}>
       <View
-        className="items-center justify-center overflow-hidden bg-surface"
+        className="items-center justify-center overflow-hidden"
         style={{
           width,
           height: width,
-          borderRadius: 18,
-          padding: 10,
+          borderRadius: 14,
+          padding: photo ? 0 : 10,
+          backgroundColor: photo ? colors.imageCanvas : colors.surface,
           // Only the selected tile has a visible border. Unselected tiles keep
           // the same width but transparent, so nothing shifts on select.
           borderWidth: 2.5,
@@ -44,12 +44,7 @@ export function HomeSportTile({
         }}
       >
         {photo ? (
-          <View
-            className="items-center justify-center overflow-hidden"
-            style={{ width: "100%", height: "100%", borderRadius: 10, backgroundColor: colors.imageCanvas }}
-          >
-            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-          </View>
+          <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
         ) : (
           <View
             className="items-center justify-center rounded-full"

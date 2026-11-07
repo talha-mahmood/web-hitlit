@@ -32,7 +32,7 @@ import { useThemeStore } from "../../store/themeStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
-const SPORT_TILE_WIDTH = 74;
+const SPORT_TILE_WIDTH = 52;
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<HomeStackParamList, "HomeFeed">,
