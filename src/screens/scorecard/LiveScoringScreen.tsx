@@ -2107,7 +2107,7 @@ export default function LiveScoringScreen() {
             <ScoringCodeBadge code={match.scoring_code} variant="dark" />
             {match.status === "IN_PROGRESS" ? (
               <View className="flex-row items-center bg-red-500 rounded-full px-2 py-0.5" style={{ gap: 4 }}>
-                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.ink }} />
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#FFFFFF" }} />
                 <Text className="text-jazba-white text-[10px] font-bold">LIVE</Text>
               </View>
             ) : isMatchCompleted ? (
@@ -2129,7 +2129,7 @@ export default function LiveScoringScreen() {
                 {t.label}
               </Text>
               {matchCentreTab === t.key && (
-                <View style={{ height: 2.5, width: "100%", backgroundColor: colors.ink, borderRadius: 2, marginTop: 6 }} />
+                <View style={{ height: 2.5, width: "100%", backgroundColor: "#FFFFFF", borderRadius: 2, marginTop: 6 }} />
               )}
             </Pressable>
           ))}
@@ -2480,7 +2480,7 @@ export default function LiveScoringScreen() {
                       <Text className="text-jazba-white font-bold text-sm">NB</Text>
                     </KeypadCell>
                     <KeypadCell onPress={() => handleRuns(DOT_BALL)}>
-                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.ink }} />
+                      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#FFFFFF" }} />
                     </KeypadCell>
                   </KeypadRow>
                   <KeypadRow>

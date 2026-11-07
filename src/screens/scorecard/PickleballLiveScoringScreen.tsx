@@ -371,7 +371,7 @@ export default function PickleballLiveScoringScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
         <View className="flex-row items-center px-2.5 py-1 rounded-full bg-red-500" style={{ gap: 5 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ink }} />
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFFFFF" }} />
           <Text className="text-jazba-white text-xs font-bold">LIVE</Text>
         </View>
         <View className="flex-1">

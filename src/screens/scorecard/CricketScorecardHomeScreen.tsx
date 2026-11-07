@@ -98,7 +98,7 @@ function MatchCard({
 
         <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
           <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
-            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ink }} /> : null}
+            {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFFFFF" }} /> : null}
             <Text className={`text-xs font-bold ${isLive ? "text-jazba-white" : "text-green-700"}`}>
               {isLive ? "LIVE" : "COMPLETED"}
             </Text>
