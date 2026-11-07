@@ -88,10 +88,10 @@ export default function SelectSportModal({
                   >
                     <View
                       className="items-center justify-center overflow-hidden rounded-full"
-                      style={{ width: 40, height: 40, backgroundColor: photo ? colors.border : bg }}
+                      style={{ width: 40, height: 40, backgroundColor: photo ? "#FFFFFF" : bg }}
                     >
                       {photo ? (
-                        <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                        <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
                       ) : (
                         <MaterialCommunityIcons name={icon} size={20} color={fg} />
                       )}
