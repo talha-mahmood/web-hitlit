@@ -57,13 +57,7 @@ function SportCard({
         style={{ width: 54, height: 54, backgroundColor: disc, padding: 9 }}
       >
         {photo ? (
-          // Sized to exactly fill the (padded) disc — same approach the
-          // Home screen's "Filter by Sport" tiles use — so the whole photo
-          // scales down to fit instead of being cropped by the disc's
-          // overflow:hidden like the old oversized fixed-size box was.
-          <View style={{ width: "100%", height: "100%", mixBlendMode: "multiply" }}>
-            <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-          </View>
+          <Image source={photo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
         ) : (
           <MaterialCommunityIcons name={icon} size={26} color={fg} />
         )}

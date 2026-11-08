@@ -6,16 +6,16 @@ import type { ImageSourcePropType } from "react-native";
 // existing vector-icon badge (see AdminDashboardScreen's SportBadge /
 // getSportIcon).
 const SPORT_IMAGES: Record<string, ImageSourcePropType> = {
-  badminton: require("../../assets/sport-icons/badminton.jpg"),
-  football: require("../../assets/sport-icons/football.jpg"),
-  futsal: require("../../assets/sport-icons/football.jpg"),
-  cricket: require("../../assets/sport-icons/outdoor-cricket.png"),
-  "hard ball": require("../../assets/sport-icons/outdoor-cricket.png"),
-  "tape ball": require("../../assets/sport-icons/box-cricket.jpg"),
-  padel: require("../../assets/sport-icons/padel.jpg"),
-  pickleball: require("../../assets/sport-icons/pickleball.jpg"),
-  "table tennis": require("../../assets/sport-icons/table-tennis.jpg"),
-  tennis: require("../../assets/sport-icons/tennis.jpg"),
+  badminton: require("../../assets/sport-icons/badminton-transparent.png"),
+  football: require("../../assets/sport-icons/football-transparent.png"),
+  futsal: require("../../assets/sport-icons/football-transparent.png"),
+  cricket: require("../../assets/sport-icons/outdoor-cricket-transparent.png"),
+  "hard ball": require("../../assets/sport-icons/outdoor-cricket-transparent.png"),
+  "tape ball": require("../../assets/sport-icons/box-cricket-transparent.png"),
+  padel: require("../../assets/sport-icons/padel-transparent.png"),
+  pickleball: require("../../assets/sport-icons/pickleball-transparent.png"),
+  "table tennis": require("../../assets/sport-icons/table-tennis-transparent.png"),
+  tennis: require("../../assets/sport-icons/tennis-transparent.png"),
 };
 
 export function getSportImage(sportName: string): ImageSourcePropType | null {
@@ -33,7 +33,7 @@ export function getSportImage(sportName: string): ImageSourcePropType | null {
 // Tournaments listing cards) — every other padel usage still goes through
 // getSportImage/SPORT_IMAGES above.
 const SPORT_CARD_THUMBS: Record<string, ImageSourcePropType> = {
-  padel: require("../../assets/sport-icons/padel-card.jpg"),
+  padel: require("../../assets/sport-icons/padel-card-transparent.png"),
 };
 
 export function getSportCardThumb(sportName: string): ImageSourcePropType | null {

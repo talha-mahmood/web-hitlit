@@ -49,9 +49,7 @@ export default function PlayerCricketEntityCard({
           style={{ position: "absolute", right: -18, top: 10, width: 76, height: 76, borderRadius: 38, backgroundColor: colors.primaryLight }}
         >
           {sportPhoto ? (
-            <View style={{ width: 78, height: 44, marginRight: 16, mixBlendMode: "multiply" }}>
-              <Image source={sportPhoto} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-            </View>
+            <Image source={sportPhoto} style={{ width: 78, height: 44, marginRight: 16 }} resizeMode="contain" />
           ) : (
             <MaterialCommunityIcons name={sportGlyph.icon} size={30} color={sportGlyph.fg} style={{ marginRight: 16, opacity: 0.8 }} />
           )}

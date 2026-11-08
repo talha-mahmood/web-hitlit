@@ -152,9 +152,7 @@ function SquadCard({
             }}
           >
             {sportPhoto ? (
-              <View style={{ width: 86, height: 48, marginRight: 17, mixBlendMode: "multiply" }}>
-                <Image source={sportPhoto} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-              </View>
+              <Image source={sportPhoto} style={{ width: 86, height: 48, marginRight: 17 }} resizeMode="contain" />
             ) : sportName ? (
               <MaterialCommunityIcons name={sportGlyph.icon} size={35} color={sportGlyph.fg} style={{ marginRight: 17, opacity: 0.8 }} />
             ) : (
