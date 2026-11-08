@@ -18,12 +18,14 @@ function StatCard({
   fg,
   value,
   label,
+  loading = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   bg: string;
   fg: string;
   value: string | number;
   label: string;
+  loading?: boolean;
 }) {
   return (
     <View
@@ -37,7 +39,11 @@ function StatCard({
           <Ionicons name={icon} size={17} color={fg} />
         </View>
       </View>
-      <Text className="text-ink font-extrabold text-xl">{value}</Text>
+      {loading ? (
+        <SkeletonBlock width={30} height={20} borderRadius={6} style={{ marginBottom: 4 }} />
+      ) : (
+        <Text className="text-ink font-extrabold text-xl">{value}</Text>
+      )}
       <Text className="text-[11px] mt-0.5" style={{ color: colors.muted }} numberOfLines={2}>
         {label}
       </Text>
@@ -178,14 +184,10 @@ export default function PlayerStatCards({
           </View>
         </View>
 
-        {isLoading ? (
-          <View className="flex-row mb-6" style={{ gap: 12 }}>
-            <SkeletonBlock height={88} borderRadius={16} style={{ flex: 1 }} />
-            <SkeletonBlock height={88} borderRadius={16} style={{ flex: 1 }} />
-          </View>
-        ) : (
-          <>
-            {/* Games Win + Followers — two compact cards side by side, right under the rating card */}
+        <>
+            {/* Games Win + Followers — two compact cards side by side, right under the rating card.
+                Card shells (icon + label) render immediately, same as every other
+                section on this app; only the numbers swap for skeletons while loading. */}
             <View className="flex-row items-stretch mb-6" style={{ gap: 12 }}>
               <View
                 style={{ flex: 1, backgroundColor: colors.surface, ...cardShadow, borderRadius: 16, padding: 14 }}
@@ -198,22 +200,30 @@ export default function PlayerStatCards({
                     <Ionicons name="locate" size={17} color="#18C66A" />
                   </View>
                   <View className="items-end">
-                    <Text className="text-ink font-extrabold text-base">{winPercentage}%</Text>
-                    {winTag && (
+                    {isLoading ? (
+                      <SkeletonBlock width={30} height={16} borderRadius={6} />
+                    ) : (
+                      <Text className="text-ink font-extrabold text-base">{winPercentage}%</Text>
+                    )}
+                    {!isLoading && winTag && (
                       <View className="rounded-full px-2 py-0.5 mt-0.5" style={{ backgroundColor: colors.surfaceOverlay }}>
                         <Text className="text-[10px] font-bold text-ink">{winTag}</Text>
                       </View>
                     )}
                   </View>
                 </View>
-                <Text className="text-ink font-extrabold text-xl">
-                  {matchesWon} / {matchesPlayed}
-                </Text>
+                {isLoading ? (
+                  <SkeletonBlock width={60} height={22} borderRadius={6} style={{ marginBottom: 6 }} />
+                ) : (
+                  <Text className="text-ink font-extrabold text-xl">
+                    {matchesWon} / {matchesPlayed}
+                  </Text>
+                )}
                 <Text className="text-xs mt-0.5 mb-2" style={{ color: colors.muted }} numberOfLines={1}>
                   {filterSportName ? `Games Win · ${filterSportName}` : "Games Win"}
                 </Text>
                 <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.surfaceOverlay, marginTop: "auto" }}>
-                  <GradientFill style={{ height: 6, borderRadius: 3, width: `${winPercentage}%` }} />
+                  {!isLoading && <GradientFill style={{ height: 6, borderRadius: 3, width: `${winPercentage}%` }} />}
                 </View>
               </View>
 
@@ -228,7 +238,11 @@ export default function PlayerStatCards({
                     <Ionicons name="people" size={17} color="#2563EB" />
                   </View>
                 </View>
-                <Text className="text-ink font-extrabold text-xl">{followerCount}</Text>
+                {isLoading ? (
+                  <SkeletonBlock width={30} height={22} borderRadius={6} style={{ marginBottom: 4 }} />
+                ) : (
+                  <Text className="text-ink font-extrabold text-xl">{followerCount}</Text>
+                )}
                 <Text className="text-xs mt-0.5" style={{ color: colors.muted }} numberOfLines={1}>
                   Followers
                 </Text>
@@ -237,12 +251,12 @@ export default function PlayerStatCards({
 
             {/* Stat grid */}
             <View className="flex-row flex-wrap justify-between mb-6" style={{ rowGap: 12 }}>
-              <StatCard icon="football-outline" bg={colors.infoLight} fg="#2563EB" value={gamesPlayed} label="Games Played" />
-              <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" />
-              <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" />
-              <StatCard icon="people-outline" bg={colors.primaryLight} fg="#18C66A" value={activeSquads} label="Active Groups" />
-              <StatCard icon="time-outline" bg={colors.infoLight} fg="#2563EB" value={hoursPlayed} label="Hours Played" />
-              <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
+              <StatCard icon="football-outline" bg={colors.infoLight} fg="#2563EB" value={gamesPlayed} label="Games Played" loading={isLoading} />
+              <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" loading={isLoading} />
+              <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" loading={isLoading} />
+              <StatCard icon="people-outline" bg={colors.primaryLight} fg="#18C66A" value={activeSquads} label="Active Groups" loading={isLoading} />
+              <StatCard icon="time-outline" bg={colors.infoLight} fg="#2563EB" value={hoursPlayed} label="Hours Played" loading={isLoading} />
+              <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" loading={isLoading} />
             </View>
 
             {/* Sport breakdown — now the only card in this row, full width
@@ -257,7 +271,16 @@ export default function PlayerStatCards({
                   Sports Played
                 </Text>
               </View>
-              {sportSegments.length === 0 ? (
+              {isLoading ? (
+                <View className="items-center py-1">
+                  <SkeletonBlock width={110} height={110} borderRadius={55} />
+                  <View className="w-full mt-3" style={{ gap: 6 }}>
+                    <SkeletonBlock width="100%" height={10} />
+                    <SkeletonBlock width="80%" height={10} />
+                    <SkeletonBlock width="60%" height={10} />
+                  </View>
+                </View>
+              ) : sportSegments.length === 0 ? (
                 <View className="items-center py-4">
                   <Ionicons name="bar-chart-outline" size={24} color="#9CA3AF" />
                   <Text className="text-xs mt-2 text-center" style={{ color: colors.muted }}>
@@ -303,7 +326,7 @@ export default function PlayerStatCards({
             {/* Sport-specific totals — only once filtered to that one sport.
                 Cricket has its own dedicated Statistics tab once selected, so
                 no redundant runs/wickets card here. */}
-            {totals && filterSportName?.toLowerCase() === "football" && (
+            {!isLoading && totals && filterSportName?.toLowerCase() === "football" && (
               <View
                   style={{ backgroundColor: colors.surface, ...cardShadow, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}
                 >
@@ -375,7 +398,6 @@ export default function PlayerStatCards({
               </View>
             )}
           </>
-        )}
 
     </>
   );
