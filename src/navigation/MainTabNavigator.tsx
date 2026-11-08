@@ -111,7 +111,7 @@ export default function MainTabNavigator() {
             ) : route.name === "Scorecard" ? (
               <ScorecardTabIcon color={color} size={size} />
             ) : route.name === "Profile" ? (
-              <ProfileTabIcon focused={focused} size={size} />
+              <ProfileTabIcon color={color} size={size} />
             ) : (
               <Ionicons
                 name={ICONS[route.name as keyof MainTabParamList]!}

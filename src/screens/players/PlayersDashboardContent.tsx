@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, Image, Pressable, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { Ionicons } from "@expo/vector-icons";
 import { useSports } from "../../hooks/useSports";
 import { useTopPlayers } from "../../hooks/usePlayers";

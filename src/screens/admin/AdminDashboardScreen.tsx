@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert, Image } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal, Alert } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";

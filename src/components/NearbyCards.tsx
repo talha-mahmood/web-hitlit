@@ -1,4 +1,5 @@
-import { View, Text, Image, Pressable, Dimensions } from "react-native";
+import { View, Text, Pressable, Dimensions } from "react-native";
+import Image from "./images/OptimizedImage";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import Bouncy from "./Bouncy";
 import { colors, cardShadow } from "../constants/theme";

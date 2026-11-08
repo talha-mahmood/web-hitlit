@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, Image, Alert } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
+import Image from "./images/OptimizedImage";
 import { primaryButtonShadow } from "../constants/theme";
 import FieldInput from "./FieldInput";
 import GradientFill from "./GradientFill";

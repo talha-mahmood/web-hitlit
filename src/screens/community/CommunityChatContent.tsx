@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Image, RefreshControl } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../../constants/theme";
 import FieldInput from "../../components/FieldInput";

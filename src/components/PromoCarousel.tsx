@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  Image,
   FlatList,
   type ImageSourcePropType,
   Dimensions,
@@ -11,6 +10,7 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from "react-native";
+import Image from "./images/OptimizedImage";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../constants/theme";

@@ -2,7 +2,6 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   View,
   Text,
-  Image,
   Pressable,
   ScrollView,
   Alert,
@@ -14,6 +13,7 @@ import {
   type NativeScrollEvent,
   type LayoutChangeEvent,
 } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import type * as ImagePicker from "expo-image-picker";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

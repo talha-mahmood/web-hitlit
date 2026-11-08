@@ -1,4 +1,5 @@
-import { View, Text, Image, FlatList, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
+import { View, Text, FlatList, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation } from "@react-navigation/native";

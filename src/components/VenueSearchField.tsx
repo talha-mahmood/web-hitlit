@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { View, Text, TextInput, Image, Pressable, ActivityIndicator, ScrollView, type ImageSourcePropType } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, type ImageSourcePropType } from "react-native";
+import Image from "./images/OptimizedImage";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 

@@ -2,11 +2,11 @@ import { useState } from "react";
 import {
   View,
   Text,
-  Image,
   FlatList,
   Pressable,
   RefreshControl,
 } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";

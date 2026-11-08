@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { View, Text, Pressable, ScrollView, Dimensions, Image, BackHandler } from "react-native";
+import { View, Text, Pressable, ScrollView, Dimensions, BackHandler } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";

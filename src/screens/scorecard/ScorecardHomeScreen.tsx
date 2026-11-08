@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { View, Text, Image, ScrollView, Pressable, BackHandler } from "react-native";
+import { View, Text, ScrollView, Pressable, BackHandler } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, Text, Image, Pressable, ScrollView, type LayoutChangeEvent } from "react-native";
+import { View, Text, Pressable, ScrollView, type LayoutChangeEvent } from "react-native";
+import Image from "./images/OptimizedImage";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

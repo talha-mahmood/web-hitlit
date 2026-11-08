@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Modal, View, Text, Pressable, ActivityIndicator, ScrollView, Image } from "react-native";
+import { Modal, View, Text, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import Image from "./images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, heroShadow, primaryButtonShadow } from "../constants/theme";

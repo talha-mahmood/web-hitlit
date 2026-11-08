@@ -1,5 +1,6 @@
-import { useMemo, useState, type ComponentProps, type ReactElement } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Image, FlatList, Dimensions, RefreshControl } from "react-native";
+import { useEffect, useMemo, useState, type ComponentProps, type ReactElement } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, FlatList, Dimensions, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
@@ -29,6 +30,7 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import { SkeletonBlock, SkeletonCardRows } from "../../components/Skeleton";
 import { useThemeStore } from "../../store/themeStore";
+import { prefetchImages } from "../../services/images/imagePrefetch";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -214,6 +216,16 @@ export default function HomeScreen() {
     // distance ordering rather than folded into it.
     return [...sorted].sort((a, b) => Number(isVenueBoosted(b.item)) - Number(isVenueBoosted(a.item)));
   }, [venues, coords]);
+
+  useEffect(() => {
+    const likelyVisibleImages = [
+      ...nearbyVenues.slice(0, 2).map(({ item }) => ({ url: item.venue_images?.[0]?.image_url, fit: "cover" as const })),
+      ...nearbyRegularGames.slice(0, 2).map(({ item }) => ({ url: item.icon_url, fit: "cover" as const })),
+      ...nearbySquads.slice(0, 2).map(({ item }) => ({ url: item.icon_url, fit: "cover" as const })),
+      ...nearbyEvents.slice(0, 2).map(({ item }) => ({ url: item.icon_url, fit: "cover" as const })),
+    ];
+    void prefetchImages(likelyVisibleImages).catch(() => undefined);
+  }, [nearbyVenues, nearbyRegularGames, nearbySquads, nearbyEvents]);
 
   const promoSlides: PromoSlide[] = [
     {

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable, FlatList, Alert, RefreshControl, Image } from "react-native";
+import { View, Text, Pressable, FlatList, Alert, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { SkeletonCardRows } from "../../components/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";

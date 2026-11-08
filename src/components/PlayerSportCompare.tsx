@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, Image } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import Image from "./images/OptimizedImage";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import GradientFill from "./GradientFill";

@@ -6,9 +6,9 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
 } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";

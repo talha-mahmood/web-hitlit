@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
-import { supabase } from "./supabase";
+import { uploadOptimizedImage } from "../services/images/imageUpload";
 
 // Generalizes the single-avatar-upload flow used elsewhere (e.g. Profile's
 // own avatar picker) for multi-image, non-square uploads (venue/court photos).
@@ -21,7 +21,9 @@ export async function pickImages(opts: {
     allowsEditing: opts.allowsEditing ?? false,
     aspect: opts.aspect,
     allowsMultipleSelection: opts.allowsMultipleSelection ?? false,
-    quality: 0.7,
+    // Keep the selected source intact here; uploadImage performs one
+    // category-aware resize/compression pass before it reaches Storage.
+    quality: 1,
   });
   if (result.canceled) return [];
   return result.assets;
@@ -31,19 +33,13 @@ export async function uploadImage(
   asset: ImagePicker.ImagePickerAsset,
   opts: { bucket: string; pathPrefix: string }
 ): Promise<{ publicUrl: string; path: string }> {
-  const extension = asset.uri.split(".").pop()?.toLowerCase() ?? "jpg";
-  const random = Math.random().toString(36).slice(2, 8);
-  const path = `${opts.pathPrefix}/${Date.now()}-${random}.${extension}`;
-
-  const response = await fetch(asset.uri);
-  const arrayBuffer = await response.arrayBuffer();
-
-  const { error } = await supabase.storage.from(opts.bucket).upload(path, arrayBuffer, {
-    contentType: asset.mimeType ?? "image/jpeg",
-    upsert: false,
+  const uploaded = await uploadOptimizedImage({
+    uri: asset.uri,
+    mimeType: asset.mimeType,
+    width: asset.width,
+    height: asset.height,
+    bucket: opts.bucket,
+    folder: opts.pathPrefix,
   });
-  if (error) throw error;
-
-  const { data } = supabase.storage.from(opts.bucket).getPublicUrl(path);
-  return { publicUrl: data.publicUrl, path };
+  return { publicUrl: uploaded.publicUrl, path: uploaded.path };
 }

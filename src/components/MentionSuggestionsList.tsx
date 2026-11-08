@@ -1,4 +1,5 @@
-import { View, Text, Pressable, ActivityIndicator, Image } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import Image from "./images/OptimizedImage";
 // Gesture-handler's ScrollView (not RN's): this dropdown is absolutely
 // positioned *outside* its parent's bounds (top/bottom: 100%), and on
 // Android RN's own touch system never delivers touches that land outside a

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Pressable, Alert, Image } from "react-native";
+import { View, Text, Pressable, Alert } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";

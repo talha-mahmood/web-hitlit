@@ -9,8 +9,8 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
-  Image,
-} from "react-native";
+  } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";

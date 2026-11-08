@@ -14,7 +14,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "associatedDomains": ["applinks:hitlit.pk"]
+      "associatedDomains": [
+        "applinks:hitlit.pk"
+      ]
     },
     "android": {
       "package": "com.playoye.app",
@@ -38,7 +40,10 @@
               "pathPrefix": "/comment"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -91,7 +96,8 @@
           "recordAudioAndroid": false,
           "enableBackgroundPlayback": false
         }
-      ]
+      ],
+      "expo-image"
     ],
     "extra": {
       "eas": {

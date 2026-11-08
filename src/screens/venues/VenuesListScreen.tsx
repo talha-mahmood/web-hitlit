@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl, BackHandler, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, FlatList, ScrollView, ActivityIndicator, RefreshControl, BackHandler, useWindowDimensions } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused, useRoute, useNavigation, RouteProp } from "@react-navigation/native";

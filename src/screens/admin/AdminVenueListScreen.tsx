@@ -1,4 +1,5 @@
-import { View, Text, Pressable, FlatList, Image, RefreshControl } from "react-native";
+import { View, Text, Pressable, FlatList, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";

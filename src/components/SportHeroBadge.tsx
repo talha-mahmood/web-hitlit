@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Image } from "react-native";
+
+import Image from "./images/OptimizedImage";
 import Animated, {
   Easing,
   useAnimatedStyle,

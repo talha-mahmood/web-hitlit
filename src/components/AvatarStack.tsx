@@ -1,4 +1,5 @@
-import { View, Text, Image } from "react-native";
+import { View, Text } from "react-native";
+import Image from "./images/OptimizedImage";
 import { colors } from "../constants/theme";
 
 type Person = { avatar: string | null; name: string | null };

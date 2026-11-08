@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Image, Pressable, ActivityIndicator, Alert, Platform, Modal, ScrollView } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Alert, Platform, Modal, ScrollView } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import type { Session } from "@supabase/supabase-js";
 import { Ionicons } from "@expo/vector-icons";

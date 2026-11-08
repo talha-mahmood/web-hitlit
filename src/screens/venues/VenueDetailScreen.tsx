@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   View,
   Text,
-  Image,
   ScrollView,
   Pressable,
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";

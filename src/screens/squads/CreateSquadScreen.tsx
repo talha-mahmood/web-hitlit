@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Image,
   Pressable,
   ScrollView,
   Alert,
@@ -11,6 +10,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
+import Image from "../../components/images/OptimizedImage";
 import type * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
