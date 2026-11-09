@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -26,8 +26,19 @@ export default function TeamChallengeDetailsScreen() {
   const { data: squads = [], isLoading: squadsLoading } = useMyOwnedSquads(userId);
   const managerSquads = useMemo(() => squads.filter((squad) => squad.group_type === "team" && challengeFormatsForSport(squad.sports?.name).length > 0), [squads]);
   const managerIds = useMemo(() => managerSquads.map((squad) => squad.id).sort(), [managerSquads]);
-  const { data: challenges = [], isLoading } = useTeamChallenges(managerIds);
+  const { data: challenges = [], isLoading, isFetching, refetch } = useTeamChallenges(managerIds);
   const challenge = challenges.find((item) => item.id === route.params.challengeId);
+  const challengeId = route.params.challengeId;
+
+  // Opening this screen (e.g. from a push notification) for a challenge
+  // that was created *after* this list was last cached won't be in it yet,
+  // and react-query only auto-refetches a stale-enough cache on mount —
+  // force one explicitly so a fresh-but-not-yet-stale cache doesn't leave
+  // the shell up for the full 30s refetchInterval instead of a moment.
+  useEffect(() => {
+    if (managerIds.length > 0 && !challenge) void refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [managerIds.join(","), challengeId]);
   const respond = useRespondToTeamChallenge(managerIds);
   const cancel = useCancelTeamChallenge(managerIds);
   const isReceiver = challenge ? managerIds.includes(challenge.receiver_squad_id) : false;
@@ -53,7 +64,21 @@ export default function TeamChallengeDetailsScreen() {
     }
   }
 
-  const loading = squadsLoading || (managerIds.length > 0 && isLoading);
+  // Two separate causes of the same flash, both covered here:
+  // 1) useMyOwnedSquads/useTeamChallenges are disabled until userId/
+  //    managerIds are known, and a disabled react-query reports
+  //    isLoading: false (not "loaded empty", just not allowed to start
+  //    yet) — `!userId` covers that window before auth settles.
+  // 2) Opening a brand-new challenge (e.g. tapping its push notification)
+  //    while this list is already cached from earlier in the session reads
+  //    isLoading: false immediately too — react-query serves the stale
+  //    cache without a loading state while it refetches in the background.
+  //    That stale cache doesn't have the brand-new challenge yet, so
+  //    `challenge` comes back not-found for a frame. Staying on the shell
+  //    until that background refetch (isFetching) finishes — but only
+  //    while the challenge is still missing — covers this without ever
+  //    re-showing the shell over already-loaded real content.
+  const loading = !userId || squadsLoading || (managerIds.length > 0 && (isLoading || (isFetching && !challenge)));
 
   return (
     <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>

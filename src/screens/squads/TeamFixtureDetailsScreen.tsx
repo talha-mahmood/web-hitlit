@@ -47,9 +47,14 @@ export default function TeamFixtureDetailsScreen() {
   const route = useRoute<RouteProp<HomeStackParamList, "TeamFixtureDetails">>();
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((state) => state.session?.user.id);
-  const { data: fixture, isLoading, error } = useTeamFixture(route.params.fixtureId);
+  const { data: fixture, isLoading: fixtureLoading, error } = useTeamFixture(route.params.fixtureId);
   const { data: memberships = [] } = useMySquads(userId);
   const { data: managed = [] } = useMyOwnedSquads(userId);
+  // useMySquads is disabled (and so reports isLoading: false, not "done,
+  // no memberships") until userId resolves — without waiting on `!userId`
+  // too, the "member of fixture?" check below would read false for a frame
+  // before auth/memberships settle and flash "Fixture unavailable".
+  const isLoading = fixtureLoading || !userId;
   const memberOfFixture = fixture && memberships.some((team) => team.id === fixture.home_squad_id || team.id === fixture.away_squad_id);
   const isManager = fixture && managed.some((team) => (team.id === fixture.home_squad_id || team.id === fixture.away_squad_id) && team.group_type === "team");
   const canStart = Boolean(isManager && fixture?.status === "scheduled" && new Date(fixture.scheduled_at).getTime() <= Date.now());

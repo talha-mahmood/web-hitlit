@@ -198,7 +198,7 @@ export default function TeamChallengesScreen() {
           </Pressable>
         ))}
       </View>
-      {teamsLoading || membershipsLoading || (tab === "fixtures" ? fixturesLoading : managerIds.length > 0 && isLoading) ? (
+      {!userId || teamsLoading || membershipsLoading || (tab === "fixtures" ? fixturesLoading : managerIds.length > 0 && isLoading) ? (
         <View style={{ paddingHorizontal: 12, paddingTop: 2 }}>
           {Array.from({ length: 4 }, (_, i) => (tab === "fixtures" ? <FixtureCardSkeleton key={i} /> : <ChallengeCardSkeleton key={i} />))}
         </View>
