@@ -42,6 +42,7 @@ export type CreateTeamChallengeInput = {
   matchFormat: TeamChallengeFormat;
   sportId: string;
   idempotencyKey: string;
+  totalPlayers: number;
 };
 
 export type TeamFixturePrefill = {
@@ -149,6 +150,7 @@ export async function createTeamChallenge(input: CreateTeamChallengeInput): Prom
     p_match_format: input.matchFormat,
     p_sport_id: input.sportId,
     p_idempotency_key: input.idempotencyKey,
+    p_total_players: input.totalPlayers,
   });
   if (error) throw new Error(error.message);
   return data;

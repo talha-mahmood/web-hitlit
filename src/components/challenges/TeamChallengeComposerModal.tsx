@@ -44,6 +44,7 @@ export default function TeamChallengeComposerModal({
   const [date, setDate] = useState(DAYS[0]?.iso ?? "");
   const [time, setTime] = useState("");
   const [format, setFormat] = useState<TeamChallengeFormat>("5v5");
+  const [totalPlayers, setTotalPlayers] = useState("");
   const [idempotencyKey, setIdempotencyKey] = useState(requestKey);
   const sportName = opponent?.sports?.name ?? "";
   const formats = useMemo(() => challengeFormatsForSport(sportName), [sportName]);
@@ -59,13 +60,16 @@ export default function TeamChallengeComposerModal({
     setDate(DAYS[0]?.iso ?? "");
     setTime("");
     setFormat(initialFormat && formats.some((option) => option.value === initialFormat) ? initialFormat : formats[0]?.value ?? "5v5");
+    setTotalPlayers("");
     setIdempotencyKey(requestKey());
     sendChallenge.reset();
   }, [visible, matchingSenderTeams, formats, initialFormat, sendChallenge.reset]);
 
+  const totalPlayersValue = Number(totalPlayers);
+  const totalPlayersValid = totalPlayers.length > 0 && Number.isInteger(totalPlayersValue) && totalPlayersValue >= 1 && totalPlayersValue <= 20;
   const valid = Boolean(
     opponent && matchingSenderTeams.some((team) => team.id === senderSquadId) && senderSquadId !== opponent.id && formats.some((option) => option.value === format) && venue.trim().length >= 2 &&
-    date && time && !isTimeSlotPast(date, time)
+    date && time && !isTimeSlotPast(date, time) && totalPlayersValid
   );
   const times = TIME_SLOTS.filter((slot) => !isTimeSlotPast(date, slot.value));
 
@@ -80,6 +84,7 @@ export default function TeamChallengeComposerModal({
         matchFormat: format,
         sportId: opponent.sport_id!,
         idempotencyKey,
+        totalPlayers: totalPlayersValue,
       });
       onSent();
     } catch {
@@ -182,6 +187,21 @@ export default function TeamChallengeComposerModal({
                 );
               })}
             </ScrollView>
+
+            <Text className="mb-2 mt-5 text-ink font-semibold">Total players</Text>
+            <TextInput
+              value={totalPlayers}
+              onChangeText={(value) => setTotalPlayers(value.replace(/[^0-9]/g, "").slice(0, 2))}
+              placeholder="e.g. 11"
+              placeholderTextColor={colors.muted}
+              style={inputStyle}
+              keyboardType="number-pad"
+              maxLength={2}
+              returnKeyType="done"
+            />
+            {totalPlayers.length > 0 && !totalPlayersValid ? (
+              <Text className="mt-1.5 text-xs" style={{ color: colors.danger }}>Enter a number from 1 to 20</Text>
+            ) : null}
 
             {sendChallenge.error ? <Text className="mt-4 text-sm" style={{ color: colors.danger }}>{displayError(sendChallenge.error)}</Text> : null}
             <View className="mt-6 flex-row" style={{ gap: 10 }}>

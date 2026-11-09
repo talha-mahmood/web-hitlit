@@ -2872,6 +2872,7 @@ export type Database = {
           scheduled_at: string
           sender_squad_id: string
           status: string
+          total_players: number | null
           updated_at: string
           venue: string
         }
@@ -2888,6 +2889,7 @@ export type Database = {
           scheduled_at: string
           sender_squad_id: string
           status?: string
+          total_players?: number | null
           updated_at?: string
           venue: string
         }
@@ -2904,6 +2906,7 @@ export type Database = {
           scheduled_at?: string
           sender_squad_id?: string
           status?: string
+          total_players?: number | null
           updated_at?: string
           venue?: string
         }
@@ -2927,6 +2930,7 @@ export type Database = {
           result: string | null
           scheduled_at: string
           status: string
+          total_players: number | null
           updated_at: string
           venue: string
         }
@@ -2944,6 +2948,7 @@ export type Database = {
           result?: string | null
           scheduled_at: string
           status?: string
+          total_players?: number | null
           updated_at?: string
           venue: string
         }
@@ -2961,6 +2966,7 @@ export type Database = {
           result?: string | null
           scheduled_at?: string
           status?: string
+          total_players?: number | null
           updated_at?: string
           venue?: string
         }
@@ -3989,6 +3995,7 @@ export type Database = {
           p_sender_squad_id: string
           p_venue: string
           p_sport_id: string
+          p_total_players: number
         }
         Returns: string
       }
