@@ -149,12 +149,12 @@ export function HomeSquadCard({
           {onChallenge ? (
             <Pressable
               onPress={(event) => { event.stopPropagation(); onChallenge(); }}
-              className="rounded-full px-5 py-2"
-              style={{ backgroundColor: colors.primary }}
+              className="rounded-full px-3 py-1"
+              style={{ backgroundColor: colors.primary, minHeight: 30, justifyContent: "center" }}
               accessibilityRole="button"
               accessibilityLabel={`Challenge ${squad.name}`}
             >
-              <Text className="text-white font-bold">Challenge</Text>
+              <Text className="text-white font-bold" style={{ fontSize: 12 }}>Challenge</Text>
             </Pressable>
           ) : (
             <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusBg }}>
