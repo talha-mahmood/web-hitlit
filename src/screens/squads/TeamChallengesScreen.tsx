@@ -136,7 +136,6 @@ export default function TeamChallengesScreen() {
           <Ionicons name="search" size={14} color="#fff" />
           <Text className="ml-1 text-white font-bold" style={{ fontSize: 11 }}>Find teams</Text>
         </Pressable>
-        <Pressable onPress={() => void refresh()} hitSlop={8} className="h-8 w-6 items-center justify-center"><Ionicons name="refresh" size={18} color={colors.primary} /></Pressable>
       </View>
       <View className="mx-3 mb-2.5 flex-row rounded-xl bg-surfaceRaised p-1">
         {(["received", "sent", "fixtures", "history"] as const).map((key) => (
