@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import { SkeletonBlock } from "../../components/Skeleton";
 import { useCancelTeamChallenge, useRespondToTeamChallenge, useTeamChallenges } from "../../hooks/useSquads";
@@ -12,6 +12,8 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+import { getSportIcon } from "../../lib/sportIcons";
+import { getSportImage } from "../../lib/sportImages";
 
 const dateTime = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Karachi" }).format(new Date(value));
 
@@ -95,12 +97,16 @@ export default function TeamChallengeDetailsScreen() {
           <>
             <View className="rounded-3xl border border-border bg-surface p-5">
               <View className="flex-row items-center">
-                {[challenge.sender, challenge.receiver].map((team) => (
+                {[challenge.sender, challenge.receiver].map((team) => {
+                  const { icon, bg, fg } = getSportIcon(team.sports?.name ?? "");
+                  const photo = team.icon_url ? { uri: team.icon_url } : getSportImage(team.sports?.name ?? "");
+                  return (
                   <View key={team.id} className="flex-1 items-center" style={{ gap: 8 }}>
-                    {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl bg-surfaceRaised" style={{ width: 68, height: 68 }}><Ionicons name="shield" size={32} color={colors.primary} /></View>}
+                    {photo ? <Image source={photo} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl" style={{ width: 68, height: 68, backgroundColor: bg }}><MaterialCommunityIcons name={icon} size={32} color={fg} /></View>}
                     <Text className="text-center text-ink font-bold" numberOfLines={2}>{team.name}</Text>
                   </View>
-                ))}
+                  );
+                })}
               </View>
               <View className="mt-5 items-center rounded-xl px-3 py-2" style={{ backgroundColor: colors.primaryLight }}><Text className="text-primary font-bold capitalize">{challenge.status}</Text></View>
               <View className="mt-5" style={{ gap: 16 }}>

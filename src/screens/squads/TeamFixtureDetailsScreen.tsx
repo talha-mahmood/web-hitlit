@@ -2,9 +2,11 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { CommonActions, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import { SkeletonBlock } from "../../components/Skeleton";
+import { getSportIcon } from "../../lib/sportIcons";
+import { getSportImage } from "../../lib/sportImages";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useMySquads } from "../../hooks/useSquadTeamFill";
 import { useTeamFixture } from "../../hooks/useSquads";
@@ -94,12 +96,16 @@ export default function TeamFixtureDetailsScreen() {
         ) : (
           <View className="rounded-3xl border border-border bg-surface p-5">
             <View className="flex-row items-center">
-              {[fixture.home, fixture.away].map((team) => (
+              {[fixture.home, fixture.away].map((team) => {
+                const { icon, bg, fg } = getSportIcon(fixture.sportName);
+                const photo = team.icon_url ? { uri: team.icon_url } : getSportImage(fixture.sportName);
+                return (
                 <View key={team.id} className="flex-1 items-center" style={{ gap: 8 }}>
-                  {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl bg-surfaceRaised" style={{ width: 68, height: 68 }}><Ionicons name="shield" size={32} color={colors.primary} /></View>}
+                  {photo ? <Image source={photo} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl" style={{ width: 68, height: 68, backgroundColor: bg }}><MaterialCommunityIcons name={icon} size={32} color={fg} /></View>}
                   <Text className="text-center text-ink font-bold" numberOfLines={2}>{team.name}</Text>
                 </View>
-              ))}
+                );
+              })}
             </View>
             <View className="mt-5 items-center rounded-xl px-3 py-2" style={{ backgroundColor: colors.primaryLight }}><Text className="text-primary font-bold capitalize">{fixture.status}</Text></View>
             <View className="mt-5" style={{ gap: 16 }}>
