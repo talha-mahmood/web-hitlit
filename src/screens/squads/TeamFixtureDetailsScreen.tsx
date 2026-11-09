@@ -1,0 +1,96 @@
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { CommonActions, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
+import Image from "../../components/images/OptimizedImage";
+import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
+import { useMySquads } from "../../hooks/useSquadTeamFill";
+import { useTeamFixture } from "../../hooks/useSquads";
+import { useAuthStore } from "../../store/authStore";
+import { colors } from "../../constants/theme";
+import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
+import type { TeamFixturePrefill } from "../../lib/api/teamChallenges";
+
+const newMatchRoute = (sportName: string): keyof HomeStackParamList => {
+  const sport = sportName.toLowerCase();
+  if (sport === "football") return "FootballNewMatch";
+  if (["hard ball", "tape ball", "outdoor cricket", "cricket"].includes(sport)) return "NewMatch";
+  if (sport === "padel") return "PadelNewMatch";
+  if (sport === "tennis") return "TennisNewMatch";
+  if (sport === "badminton") return "BadmintonNewMatch";
+  if (sport === "pickleball") return "PickleballNewMatch";
+  return "TableTennisNewMatch";
+};
+
+const liveRoute = (table: string): keyof HomeStackParamList => {
+  const routes: Record<string, keyof HomeStackParamList> = {
+    football_matches: "FootballLiveScoring",
+    cricket_matches: "LiveScoring",
+    padel_matches: "PadelLiveScoring",
+    tennis_matches: "TennisLiveScoring",
+    badminton_matches: "BadmintonLiveScoring",
+    pickleball_matches: "PickleballLiveScoring",
+    table_tennis_matches: "TableTennisLiveScoring",
+  };
+  return routes[table] ?? "FootballLiveScoring";
+};
+
+const dateTime = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Karachi" }).format(new Date(value));
+
+export default function TeamFixtureDetailsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const route = useRoute<RouteProp<HomeStackParamList, "TeamFixtureDetails">>();
+  const userId = useAuthStore((state) => state.session?.user.id);
+  const { data: fixture, isLoading, error } = useTeamFixture(route.params.fixtureId);
+  const { data: memberships = [] } = useMySquads(userId);
+  const { data: managed = [] } = useMyOwnedSquads(userId);
+  const memberOfFixture = fixture && memberships.some((team) => team.id === fixture.home_squad_id || team.id === fixture.away_squad_id);
+  const isManager = fixture && managed.some((team) => (team.id === fixture.home_squad_id || team.id === fixture.away_squad_id) && team.group_type === "team");
+  const canStart = Boolean(isManager && fixture?.status === "scheduled" && new Date(fixture.scheduled_at).getTime() <= Date.now());
+  const linkedTable = fixture?.scorecard_table ?? (fixture?.football_match_id ? "football_matches" : null);
+  const linkedMatchId = fixture?.scorecard_match_id ?? fixture?.football_match_id ?? null;
+
+  if (isLoading) return <View className="flex-1 items-center justify-center bg-app"><ActivityIndicator color={colors.primary} /></View>;
+
+  return (
+    <View className="flex-1 bg-app">
+      <View className="flex-row items-center px-5" style={{ paddingTop: 18, paddingBottom: 16, gap: 14 }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8}><Ionicons name="arrow-back" size={23} color={colors.ink} /></Pressable>
+        <View className="flex-1"><Text className="text-ink text-xl font-extrabold">Team fixture</Text><Text className="text-muted text-sm">Confirmed match details</Text></View>
+      </View>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+        {!fixture || error || !memberOfFixture ? (
+          <View className="items-center rounded-2xl border border-border bg-surface p-6"><Ionicons name="alert-circle-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-bold">Fixture unavailable</Text><Text className="mt-1 text-center text-muted">{error instanceof Error ? error.message : "This fixture is only visible to members of either team."}</Text></View>
+        ) : (
+          <View className="rounded-3xl border border-border bg-surface p-5">
+            <View className="flex-row items-center">
+              {[fixture.home, fixture.away].map((team) => (
+                <View key={team.id} className="flex-1 items-center" style={{ gap: 8 }}>
+                  {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl bg-surfaceRaised" style={{ width: 68, height: 68 }}><Ionicons name="shield" size={32} color={colors.primary} /></View>}
+                  <Text className="text-center text-ink font-bold" numberOfLines={2}>{team.name}</Text>
+                </View>
+              ))}
+            </View>
+            <View className="mt-5 items-center rounded-xl px-3 py-2" style={{ backgroundColor: colors.primaryLight }}><Text className="text-primary font-bold capitalize">{fixture.status}</Text></View>
+            <View className="mt-5" style={{ gap: 16 }}>
+              <View className="flex-row items-center" style={{ gap: 12 }}><Ionicons name="location" size={19} color={colors.primary} /><View><Text className="text-muted text-xs">Venue</Text><Text className="text-ink font-semibold">{fixture.venue}</Text></View></View>
+              <View className="flex-row items-center" style={{ gap: 12 }}><Ionicons name="calendar" size={19} color={colors.primary} /><View><Text className="text-muted text-xs">Date and time</Text><Text className="text-ink font-semibold">{dateTime(fixture.scheduled_at)}</Text></View></View>
+              <View className="flex-row items-center" style={{ gap: 12 }}><Ionicons name="trophy" size={19} color={colors.primary} /><View><Text className="text-muted text-xs">Sport and format</Text><Text className="text-ink font-semibold">{fixture.sportName} · {fixture.match_format}</Text></View></View>
+            </View>
+            {fixture.result ? <View className="mt-5 rounded-xl bg-surfaceRaised p-3"><Text className="text-muted text-xs">Final result</Text><Text className="mt-1 text-ink font-bold">{fixture.result}</Text></View> : null}
+            {isManager && linkedTable && linkedMatchId ? (
+              <Pressable onPress={() => navigation.dispatch(CommonActions.navigate(liveRoute(linkedTable), { matchId: linkedMatchId }))} className="mt-5 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Open Scorecard</Text></Pressable>
+            ) : isManager && canStart ? (
+              <Pressable onPress={() => {
+                const teamFixture: TeamFixturePrefill = { fixtureId: fixture.id, sportId: fixture.sport_id, sportName: fixture.sportName, matchFormat: fixture.match_format as TeamFixturePrefill["matchFormat"], teamAName: fixture.home.name, teamBName: fixture.away.name, venue: fixture.venue };
+                navigation.dispatch(CommonActions.navigate(newMatchRoute(fixture.sportName), { teamFixture }));
+              }} className="mt-5 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Start {fixture.sportName} Scorecard</Text></Pressable>
+            ) : isManager && fixture.status === "scheduled" ? (
+              <Text className="mt-5 text-center text-muted text-xs">The match scorecard will be available at the scheduled time.</Text>
+            ) : null}
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
+}

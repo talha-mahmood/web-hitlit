@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useCreateBadmintonMatch } from "../../hooks/useBadminton";
 import { friendlyBadmintonError } from "../../lib/api/badminton";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
+import { linkTeamFixtureScorecard } from "../../lib/api/teamChallenges";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
@@ -245,12 +246,13 @@ export default function BadmintonNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
+  const teamFixture = params?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateBadmintonMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
     { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
     { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
@@ -267,9 +269,9 @@ export default function BadmintonNewMatchScreen() {
   // fill the (locked, blank) second player slot Doubles requires.
   const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
   const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
-  const [playMode, setPlayMode] = useState<PlayMode | null>(canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(teamFixture?.matchFormat === "SINGLES" ? "SINGLES" : teamFixture?.matchFormat === "DOUBLES" ? "DOUBLES" : canOfferDoubles ? "DOUBLES" : "SINGLES");
   const [firstServingTeam, setFirstServingTeam] = useState<Team | null>(null);
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
   const [pointsToWin, setPointsToWin] = useState<string | null>(String(STANDARD_POINTS_TO_WIN));
   const [gamesToWin, setGamesToWin] = useState<string | null>(String(STANDARD_GAMES_TO_WIN));
 
@@ -326,11 +328,17 @@ export default function BadmintonNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) {
-            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "badminton", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) {
+              await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "badminton", scorecardMatchId: matchId });
+            }
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "badminton_matches");
+            navigation.replace("BadmintonLiveScoring", { matchId });
+          } catch (err) {
+            Alert.alert("Match created", err instanceof Error ? err.message : "The scorecard was created but could not be linked to its fixture.");
+            navigation.replace("BadmintonLiveScoring", { matchId });
           }
-          navigation.replace("BadmintonLiveScoring", { matchId });
         },
         onError: (err) => Alert.alert("Error", friendlyBadmintonError(err, "Could not create match.")),
       }

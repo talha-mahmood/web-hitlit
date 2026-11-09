@@ -62,6 +62,11 @@ const TYPE_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: s
   team_invite_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
   community_reply: { icon: "chatbubble-ellipses", color: "#3B82F6", bg: "bg-blue-50" },
   followed_post: { icon: "chatbubble-ellipses", get color() { return colors.primary; }, bg: "bg-primary-light" },
+  team_challenge_received: { icon: "football", get color() { return colors.primary; }, bg: "bg-primary-light" },
+  team_challenge_accepted: { icon: "checkmark-circle", get color() { return colors.primary; }, bg: "bg-primary-light" },
+  team_challenge_declined: { icon: "close-circle", color: "#DC2626", bg: "bg-red-50" },
+  team_challenge_cancelled: { icon: "remove-circle", color: "#DC2626", bg: "bg-red-50" },
+  team_fixture_confirmed: { icon: "calendar", get color() { return colors.primary; }, bg: "bg-primary-light" },
 };
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -79,13 +84,14 @@ function timeAgo(iso: string): string {
 // gameId covers games, tournaments, and team events (all surfaced on the
 // game detail screen); squadId covers squad events; inviteId is only set on
 // a team_invite, for its inline Approve/Decline below.
-function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string; inviteId?: string } {
+function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string; inviteId?: string; challengeId?: string } {
   const data = (n.data ?? {}) as Record<string, unknown>;
   return {
     gameId: typeof data.gameId === "string" ? data.gameId : undefined,
     squadId: typeof data.squadId === "string" ? data.squadId : undefined,
     commentId: typeof data.commentId === "string" ? data.commentId : undefined,
     inviteId: typeof data.inviteId === "string" ? data.inviteId : undefined,
+    challengeId: typeof data.challengeId === "string" ? data.challengeId : undefined,
   };
 }
 
@@ -218,13 +224,15 @@ export default function NotificationsScreen() {
   // Shared by tapping the card itself and by approving an invite from it —
   // both land the user on whatever the notification is actually about.
   const navigateToTarget = (n: NotificationRow) => {
-    const { gameId, squadId, commentId } = resolveTarget(n);
+    const { gameId, squadId, commentId, challengeId } = resolveTarget(n);
     if (gameId) {
       navigation.navigate("GameDetail", { gameId });
     } else if (squadId) {
       navigation.navigate("Community", { screen: "SquadDetail", params: { squadId } });
     } else if (commentId) {
       navigation.navigate("Community", { screen: "CommentThread", params: { rootId: commentId } });
+    } else if (challengeId) {
+      navigation.navigate("TeamChallengeDetails", { challengeId });
     }
   };
 

@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useCreatePadelMatch } from "../../hooks/usePadel";
 import { friendlyPadelError } from "../../lib/api/padel";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
+import { linkTeamFixtureScorecard } from "../../lib/api/teamChallenges";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
@@ -251,6 +252,7 @@ export default function PadelNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
+  const teamFixture = params?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePadelMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
@@ -261,9 +263,9 @@ export default function PadelNewMatchScreen() {
   // fill the (locked, blank) second player slot Doubles requires.
   const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
   const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
-  const [playMode, setPlayMode] = useState<PlayMode | null>(canOfferDoubles ? "DOUBLES" : "SINGLES");
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(teamFixture?.matchFormat === "SINGLES" ? "SINGLES" : teamFixture?.matchFormat === "DOUBLES" ? "DOUBLES" : canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
     { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
     { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
@@ -272,11 +274,11 @@ export default function PadelNewMatchScreen() {
     { name: prefill?.teamBPlayers[0]?.name ?? "", sourceId: prefill?.teamBPlayers[0]?.userId ?? null },
     { name: prefill?.teamBPlayers[1]?.name ?? "", sourceId: prefill?.teamBPlayers[1]?.userId ?? null },
   ]);
-  const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
+  const [format, setFormat] = useState<MatchFormat | null>(teamFixture?.matchFormat === "BEST_OF_1" || teamFixture?.matchFormat === "BEST_OF_3" || teamFixture?.matchFormat === "BEST_OF_3_MATCH_TIEBREAK" ? teamFixture.matchFormat : "BEST_OF_3");
   const [deuceType, setDeuceType] = useState<DeuceType | null>("ADVANTAGE");
   const [firstServerTeam, setFirstServerTeam] = useState<Team | null>(null);
   const [firstServerPlayerIndex, setFirstServerPlayerIndex] = useState<0 | 1 | null>(null);
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const isDoubles = playMode === "DOUBLES";
@@ -334,11 +336,17 @@ export default function PadelNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) {
-            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "padel", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) {
+              await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "padel", scorecardMatchId: matchId });
+            }
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "padel_matches");
+            navigation.replace("PadelLiveScoring", { matchId });
+          } catch (err) {
+            Alert.alert("Match created", err instanceof Error ? err.message : "The scorecard was created but could not be linked to its fixture.");
+            navigation.replace("PadelLiveScoring", { matchId });
           }
-          navigation.replace("PadelLiveScoring", { matchId });
         },
         onError: (err) => Alert.alert("Error", friendlyPadelError(err, "Could not create match.")),
       }

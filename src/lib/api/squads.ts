@@ -12,6 +12,7 @@ export type SquadListItem = SquadRow & {
     avatar: string | null;
     latitude: number | null;
     longitude: number | null;
+    city: string | null;
   } | null;
   sports: { id: string; name: string } | null;
   squad_members: {
@@ -67,7 +68,7 @@ export type UpdateSquadParams = {
 };
 
 const LIST_SELECT =
-  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar, latitude, longitude), squad_members(id, status, user_id, role, profiles(avatar, full_name))";
+  "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar, latitude, longitude, city), squad_members(id, status, user_id, role, profiles(avatar, full_name))";
 
 const DETAIL_SELECT =
   "*, sports(id, name), profiles!squads_squad_owner_id_fkey(id, full_name, avatar), squad_members(id, status, user_id, joined_at, role, skill_level, location, profiles(id, full_name, avatar, skill_level, city))";

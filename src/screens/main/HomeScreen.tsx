@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type ComponentProps, type ReactElement } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, FlatList, Dimensions, RefreshControl } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, FlatList, Dimensions, RefreshControl, Alert } from "react-native";
 import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
+import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
@@ -31,6 +31,8 @@ import { colors } from "../../constants/theme";
 import { SkeletonBlock, SkeletonCardRows } from "../../components/Skeleton";
 import { useThemeStore } from "../../store/themeStore";
 import { prefetchImages } from "../../services/images/imagePrefetch";
+import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
+import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -73,6 +75,7 @@ function NearbySection<T>({
   keyExtractor,
   renderItem,
   onSeeAll,
+  seeAllLabel = "See all",
   // Venues/Squads stay a horizontal scroll (unchanged interaction — just a
   // restyled card). Games/Tournaments render as a short vertical preview
   // instead, matching the wide row-card layout — capped at previewCount
@@ -89,6 +92,7 @@ function NearbySection<T>({
   keyExtractor: (item: T) => string;
   renderItem: (entry: { item: T; km: number | null }) => ReactElement;
   onSeeAll: () => void;
+  seeAllLabel?: string;
   horizontal?: boolean;
   previewCount?: number;
 }) {
@@ -100,7 +104,7 @@ function NearbySection<T>({
           <Text className="text-lg font-semibold text-ink">{title}</Text>
         </View>
         <Pressable onPress={onSeeAll} className="flex-row items-center" hitSlop={8} style={{ gap: 2 }}>
-          <Text className="text-primary text-sm font-semibold">See all</Text>
+          <Text className="text-primary text-sm font-semibold">{seeAllLabel}</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.primary} />
         </Pressable>
       </View>
@@ -140,7 +144,6 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const userId = useAuthStore((s) => s.session?.user.id);
   const insets = useSafeAreaInsets();
-  const isFocused = useIsFocused();
   const themePreference = useThemeStore((s) => s.preference);
   const setThemePreference = useThemeStore((s) => s.setPreference);
   const isLightTheme = themePreference === "light" || (themePreference === "system" && colors.background === "#F5F7FA");
@@ -160,6 +163,11 @@ export default function HomeScreen() {
   const { data: squads, isLoading: squadsLoading, refetch: refetchSquads, isRefetching: squadsRefetching } = useSquads({
     sportId: selectedSportId ?? undefined,
   });
+  const { data: ownedSquads = [] } = useMyOwnedSquads(userId);
+  const managedTeams = useMemo(
+    () => ownedSquads.filter((squad) => squad.group_type === "team" && challengeFormatsForSport(squad.sports?.name).length > 0),
+    [ownedSquads]
+  );
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents, isRefetching: eventsRefetching } = useEvents();
   // Pull-to-refresh refetches everything this screen shows at once rather
   // than picking one "main" query — there isn't a single source of truth
@@ -198,6 +206,14 @@ export default function HomeScreen() {
       })),
     [squads, coords]
   );
+  const nearbyChallengeTeams = useMemo(
+    () => nearbySquads.filter(({ item }) => item.group_type === "team" && challengeFormatsForSport(item.sports?.name).length > 0),
+    [nearbySquads]
+  );
+  const nearbyGroups = useMemo(
+    () => nearbySquads.filter(({ item }) => item.group_type !== "team" || challengeFormatsForSport(item.sports?.name).length === 0),
+    [nearbySquads]
+  );
   const nearbyEvents = useMemo(
     () =>
       withDistance(events ?? [], coords, (e: EventListItem) => ({
@@ -216,6 +232,10 @@ export default function HomeScreen() {
     // distance ordering rather than folded into it.
     return [...sorted].sort((a, b) => Number(isVenueBoosted(b.item)) - Number(isVenueBoosted(a.item)));
   }, [venues, coords]);
+
+  const beginChallenge = (opponent: SquadListItem) => {
+    navigation.navigate("ChallengeTeams", { sportId: opponent.sport_id ?? undefined, opponentId: opponent.id });
+  };
 
   useEffect(() => {
     const likelyVisibleImages = [
@@ -385,9 +405,33 @@ export default function HomeScreen() {
         />
 
         <NearbySection
+          title="Play Near You"
+          titleIcon="football"
+          data={nearbyChallengeTeams}
+          isLoading={squadsLoading}
+          emptyIcon="football-outline"
+          emptyLabel="No teams for these sports near you yet"
+          keyExtractor={(s: SquadListItem) => s.id}
+          renderItem={({ item, km }) => (
+            <View style={{ width: VENUE_CARD_WIDTH }}>
+              <HomeSquadCard
+                squad={item}
+                currentUserId={userId}
+                myGender={profile?.gender}
+                distanceLabel={km !== null ? formatDistanceKm(km) : undefined}
+                onChallenge={managedTeams.some((team) => team.id === item.id) ? undefined : () => beginChallenge(item)}
+                onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
+              />
+            </View>
+          )}
+          onSeeAll={() => navigation.navigate("TeamChallenges", undefined)}
+          seeAllLabel="My challenges"
+        />
+
+        <NearbySection
           title="Groups near you"
           titleIcon="people"
-          data={nearbySquads}
+          data={nearbyGroups}
           isLoading={squadsLoading}
           emptyIcon="people-outline"
           emptyLabel="No groups near you yet"

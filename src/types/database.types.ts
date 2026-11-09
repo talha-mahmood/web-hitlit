@@ -2858,6 +2858,118 @@ export type Database = {
           },
         ]
       }
+      team_challenges: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          idempotency_key: string
+          match_format: string
+          sport_id: string
+          receiver_squad_id: string
+          responded_at: string | null
+          responded_by: string | null
+          scheduled_at: string
+          sender_squad_id: string
+          status: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          idempotency_key: string
+          match_format: string
+          sport_id: string
+          receiver_squad_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          scheduled_at: string
+          sender_squad_id: string
+          status?: string
+          updated_at?: string
+          venue: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          idempotency_key?: string
+          match_format?: string
+          sport_id?: string
+          receiver_squad_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          scheduled_at?: string
+          sender_squad_id?: string
+          status?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: [
+          { foreignKeyName: "team_challenges_sender_squad_id_fkey"; columns: ["sender_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
+          { foreignKeyName: "team_challenges_receiver_squad_id_fkey"; columns: ["receiver_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
+        ]
+      }
+      team_fixtures: {
+        Row: {
+          away_squad_id: string
+          challenge_id: string
+          created_at: string
+          football_match_id: string | null
+          home_squad_id: string
+          id: string
+          match_format: string
+          sport_id: string
+          scorecard_table: string | null
+          scorecard_match_id: string | null
+          result: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          away_squad_id: string
+          challenge_id: string
+          created_at?: string
+          football_match_id?: string | null
+          home_squad_id: string
+          id?: string
+          match_format: string
+          sport_id: string
+          scorecard_table?: string | null
+          scorecard_match_id?: string | null
+          result?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          venue: string
+        }
+        Update: {
+          away_squad_id?: string
+          challenge_id?: string
+          created_at?: string
+          football_match_id?: string | null
+          home_squad_id?: string
+          id?: string
+          match_format?: string
+          sport_id?: string
+          scorecard_table?: string | null
+          scorecard_match_id?: string | null
+          result?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: [
+          { foreignKeyName: "team_fixtures_challenge_id_fkey"; columns: ["challenge_id"]; isOneToOne: true; referencedRelation: "team_challenges"; referencedColumns: ["id"] },
+          { foreignKeyName: "team_fixtures_home_squad_id_fkey"; columns: ["home_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
+          { foreignKeyName: "team_fixtures_away_squad_id_fkey"; columns: ["away_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
+        ]
+      }
       team_chat_reads: {
         Row: {
           last_read_at: string
@@ -3842,6 +3954,8 @@ export type Database = {
         Returns: undefined
       }
       is_superadmin: { Args: never; Returns: boolean }
+      is_squad_manager: { Args: { p_squad_id: string }; Returns: boolean }
+      link_team_fixture_scorecard: { Args: { p_fixture_id: string; p_football_match_id: string }; Returns: undefined }
       is_venue_admin: { Args: { target_venue_id: string }; Returns: boolean }
       is_venue_owner: { Args: { target_venue_id: string }; Returns: boolean }
       moderate_remove_content: {
@@ -3857,6 +3971,7 @@ export type Database = {
         Args: { response_text: string; target_review_id: string }
         Returns: undefined
       }
+      respond_to_team_challenge: { Args: { p_accept: boolean; p_challenge_id: string }; Returns: string }
       revoke_venue_admin: {
         Args: { target_user_id: string; target_venue_id: string }
         Returns: undefined
@@ -3865,6 +3980,23 @@ export type Database = {
         Args: { p_message: string; p_recipient_id: string }
         Returns: undefined
       }
+      send_team_challenge: {
+        Args: {
+          p_idempotency_key: string
+          p_match_format: string
+          p_receiver_squad_id: string
+          p_scheduled_at: string
+          p_sender_squad_id: string
+          p_venue: string
+          p_sport_id: string
+        }
+        Returns: string
+      }
+      link_team_fixture_scorecard_sport: {
+        Args: { p_fixture_id: string; p_scorecard_match_id: string; p_scorecard_table: string }
+        Returns: undefined
+      }
+      cancel_team_challenge: { Args: { p_challenge_id: string }; Returns: undefined }
       squad_add_members_to_team: {
         Args: {
           p_member_user_ids: string[]

@@ -181,7 +181,8 @@ export default function CreateSquadScreen() {
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [groupType, setGroupType] = useState<SquadGroupType>(params?.presetType ?? "group");
   const lockType = !!params?.lockType;
-  const [sportId, setSportId] = useState<string | null>(null);
+  const [sportId, setSportId] = useState<string | null>(params?.presetSportId ?? null);
+  const lockSport = !!params?.lockSport;
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
@@ -496,22 +497,30 @@ export default function CreateSquadScreen() {
 
         {/* Sport */}
         <FormCard icon="trophy" title="Sport" required hint="Select your sport">
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ gap: sportTileGap }}
-          >
-            {(sports ?? []).map((s) => (
-              <HomeSportTile
-                key={s.id}
-                name={s.name}
-                width={sportTileWidth}
-                selected={sportId === s.id}
-                onPress={() => setSportId(s.id)}
-              />
-            ))}
-          </ScrollView>
+          {lockSport ? (
+            <View className="flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-4 py-3" style={{ gap: 8 }}>
+              <Ionicons name="football" size={20} color={colors.primary} />
+              <Text className="text-ink font-semibold">{selectedSportName ?? "Football"}</Text>
+              <Text className="ml-auto text-muted text-xs">Fixed for this challenge</Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ gap: sportTileGap }}
+            >
+              {(sports ?? []).map((s) => (
+                <HomeSportTile
+                  key={s.id}
+                  name={s.name}
+                  width={sportTileWidth}
+                  selected={sportId === s.id}
+                  onPress={() => setSportId(s.id)}
+                />
+              ))}
+            </ScrollView>
+          )}
         </FormCard>
 
         {/* Skill Level */}

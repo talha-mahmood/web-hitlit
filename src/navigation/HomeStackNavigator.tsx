@@ -21,6 +21,10 @@ import ExploreEventsScreen from "../screens/events/ExploreEventsScreen";
 import EventDetailScreen from "../screens/events/EventDetailScreen";
 import EventChatScreen from "../screens/events/EventChatScreen";
 import NotificationsScreen from "../screens/main/NotificationsScreen";
+import TeamChallengesScreen from "../screens/squads/TeamChallengesScreen";
+import ChallengeTeamsScreen from "../screens/squads/ChallengeTeamsScreen";
+import TeamChallengeDetailsScreen from "../screens/squads/TeamChallengeDetailsScreen";
+import TeamFixtureDetailsScreen from "../screens/squads/TeamFixtureDetailsScreen";
 import PlayersDashboardScreen from "../screens/players/PlayersDashboardScreen";
 import PlayerProfileScreen from "../screens/players/PlayerProfileScreen";
 import ManualScoreScreen from "../screens/scorecard/ManualScoreScreen";
@@ -43,12 +47,17 @@ import type { SlotPickerParams, BookingCheckoutParams, BookingConfirmationParams
 import type { Database } from "../types/database.types";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
 import type { ManualScoreParams } from "../lib/manualScore";
+import type { TeamFixturePrefill } from "../lib/api/teamChallenges";
 import AddTeamScreen from "../screens/games/AddTeamScreen";
 import type { CreateSquadRouteParams, AddTeamParams } from "./addTeamTypes";
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
   Notifications: undefined;
+  TeamChallenges: { focusChallengeId?: string } | undefined;
+  ChallengeTeams: { sportId?: string; opponentId?: string } | undefined;
+  TeamChallengeDetails: { challengeId: string };
+  TeamFixtureDetails: { fixtureId: string };
   VenueDetail: { venueId: string; forGameId?: string };
   SlotPicker: SlotPickerParams;
   BookingCheckout: BookingCheckoutParams;
@@ -71,20 +80,20 @@ export type HomeStackParamList = {
   // sportId/sportName: set when opened from Top Players with a sport filter on.
   PlayerProfile: { userId: string; sportId?: string; sportName?: string };
   ManualScore: ManualScoreParams;
-  NewMatch: { prefill?: ScorecardPrefill } | undefined;
+  NewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
-  PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PadelNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   PadelLiveScoring: { matchId: string };
-  TennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TennisNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   TennisLiveScoring: { matchId: string };
-  BadmintonNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  BadmintonNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   BadmintonLiveScoring: { matchId: string };
-  PickleballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PickleballNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   PickleballLiveScoring: { matchId: string };
-  TableTennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TableTennisNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   TableTennisLiveScoring: { matchId: string };
-  FootballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  FootballNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   FootballLiveScoring: { matchId: string };
   // Squads are reachable from the Home screen's "Venues near you"/squad
   // rows, hosted here for the same reason tournaments are above — so
@@ -110,6 +119,10 @@ export default function HomeStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeFeed" component={HomeScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="TeamChallenges" component={TeamChallengesScreen} />
+      <Stack.Screen name="ChallengeTeams" component={ChallengeTeamsScreen} />
+      <Stack.Screen name="TeamChallengeDetails" component={TeamChallengeDetailsScreen} />
+      <Stack.Screen name="TeamFixtureDetails" component={TeamFixtureDetailsScreen} />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} />
       <Stack.Screen name="SlotPicker" component={SlotPickerScreen} />
       <Stack.Screen name="BookingCheckout" component={BookingCheckoutScreen} />

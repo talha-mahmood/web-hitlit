@@ -23,30 +23,31 @@ import FootballHomeScreen from "../screens/scorecard/FootballHomeScreen";
 import FootballNewMatchScreen from "../screens/scorecard/FootballNewMatchScreen";
 import FootballLiveScoringScreen from "../screens/scorecard/FootballLiveScoringScreen";
 import type { ScorecardPrefill } from "../lib/api/tournamentMatches";
+import type { TeamFixturePrefill } from "../lib/api/teamChallenges";
 
 export type ScorecardStackParamList = {
   ScorecardHome: undefined;
   CricketHome: undefined;
-  NewMatch: { prefill?: ScorecardPrefill } | undefined;
+  NewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   LiveScoring: { matchId: string };
   FullScorecard: { matchId: string };
   PadelHome: undefined;
-  PadelNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PadelNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   PadelLiveScoring: { matchId: string };
   TennisHome: undefined;
-  TennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TennisNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   TennisLiveScoring: { matchId: string };
   PickleballHome: undefined;
-  PickleballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  PickleballNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   PickleballLiveScoring: { matchId: string };
   BadmintonHome: undefined;
-  BadmintonNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  BadmintonNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   BadmintonLiveScoring: { matchId: string };
   TableTennisHome: undefined;
-  TableTennisNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  TableTennisNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   TableTennisLiveScoring: { matchId: string };
   FootballHome: undefined;
-  FootballNewMatch: { prefill?: ScorecardPrefill } | undefined;
+  FootballNewMatch: { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | undefined;
   FootballLiveScoring: { matchId: string };
 };
 

@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useCreateFootballMatch } from "../../hooks/useFootball";
 import { friendlyFootballError } from "../../lib/api/football";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
+import { linkTeamFixtureScorecard } from "../../lib/api/teamChallenges";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
@@ -191,12 +192,14 @@ export default function FootballNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
+  const teamFixture = params?.teamFixture;
+  const fieldsLocked = Boolean(prefill || teamFixture);
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateFootballMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   // Players come pre-filled from the tournament roster and are locked, same
   // as cricket's NewMatchScreen — each carries the real tournament member's
   // user_id as its sourceId.
@@ -209,7 +212,7 @@ export default function FootballNewMatchScreen() {
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
   const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
 
   const totalMatchNumber = parseInt(totalMatchMinutes ?? "", 10);
   const isMatchDurationValid = !!totalMatchMinutes && totalMatchNumber > 0;
@@ -258,11 +261,17 @@ export default function FootballNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) {
-            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "football", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) {
+              await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "football", scorecardMatchId: matchId });
+            }
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "football_matches");
+            navigation.replace("FootballLiveScoring", { matchId });
+          } catch (err) {
+            Alert.alert("Match created", friendlyFootballError(err, "The scorecard was created but could not be linked to its fixture."));
+            navigation.replace("FootballLiveScoring", { matchId });
           }
-          navigation.replace("FootballLiveScoring", { matchId });
         },
         onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not create match.")),
       }
@@ -279,9 +288,8 @@ export default function FootballNewMatchScreen() {
       />
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 260 }} keyboardShouldPersistTaps="handled">
-        {prefill && (
-          <InfoBox text="Team names and venue come from the tournament match and can't be changed here — everything else is up to you." />
-        )}
+        {prefill && <InfoBox text="Team names and venue come from the tournament match and can't be changed here — everything else is up to you." />}
+        {teamFixture && <InfoBox text="Team names and venue come from the confirmed fixture and can't be changed here — everything else is up to you." />}
 
         <CardSection icon="shirt-outline" title="Team A">
           <FieldInput
@@ -289,8 +297,8 @@ export default function FootballNewMatchScreen() {
             onChangeText={setTeamAName}
             placeholder="e.g. Strikers FC"
             maxLength={40}
-            editable={!prefill}
-            containerStyle={prefill ? lockedFieldStyle() : undefined}
+            editable={!fieldsLocked}
+            containerStyle={fieldsLocked ? lockedFieldStyle() : undefined}
           />
           {namesClash(teamAName, teamBName) && (
             <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
@@ -306,8 +314,8 @@ export default function FootballNewMatchScreen() {
             onChangeText={setTeamBName}
             placeholder="e.g. United FC"
             maxLength={40}
-            editable={!prefill}
-            containerStyle={prefill ? lockedFieldStyle() : undefined}
+            editable={!fieldsLocked}
+            containerStyle={fieldsLocked ? lockedFieldStyle() : undefined}
           />
           {namesClash(teamAName, teamBName) && (
             <Text className="text-xs mt-1.5" style={{ color: colors.danger }}>
@@ -323,8 +331,8 @@ export default function FootballNewMatchScreen() {
             onChangeText={setVenue}
             placeholder="e.g. City Stadium"
             maxLength={60}
-            editable={!prefill}
-            containerStyle={prefill ? lockedFieldStyle() : undefined}
+            editable={!fieldsLocked}
+            containerStyle={fieldsLocked ? lockedFieldStyle() : undefined}
           />
         </CardSection>
 

@@ -20,5 +20,5 @@ export type AddTeamReturnTo = {
 export type AddTeamParams = AddTeamReturnTo & { squadId?: string };
 
 export type CreateSquadRouteParams =
-  | { presetType?: SquadGroupType; lockType?: boolean; returnTo?: AddTeamReturnTo }
+  | { presetType?: SquadGroupType; lockType?: boolean; presetSportId?: string; lockSport?: boolean; returnTo?: AddTeamReturnTo }
   | undefined;

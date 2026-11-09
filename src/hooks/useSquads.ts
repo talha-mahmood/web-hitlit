@@ -20,6 +20,15 @@ import {
 import { supabase } from "../lib/supabase";
 import { uniqueChannelName } from "../lib/realtimeChannel";
 import type { Database } from "../types/database.types";
+import {
+  cancelTeamChallenge,
+  createTeamChallenge,
+  fetchTeamChallenges,
+  fetchTeamFixture,
+  fetchTeamFixtures,
+  respondToTeamChallenge,
+  type CreateTeamChallengeInput,
+} from "../lib/api/teamChallenges";
 
 export function useSquads(filters: { search?: string; sportId?: string } = {}) {
   const qc = useQueryClient();
@@ -98,6 +107,7 @@ export function useCreateSquad() {
     mutationFn: createSquad,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["squads"] });
+      qc.invalidateQueries({ queryKey: ["myOwnedSquads"] });
     },
   });
 }
@@ -235,5 +245,61 @@ export function useSetMemberHost(squadId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["squad", squadId] });
     },
+  });
+}
+
+export function useTeamChallenges(managerSquadIds: string[]) {
+  const stableIds = [...new Set(managerSquadIds)].sort();
+  return useQuery({
+    queryKey: ["teamChallenges", stableIds],
+    queryFn: () => fetchTeamChallenges(stableIds),
+    enabled: stableIds.length > 0,
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useTeamFixtures(squadIds: string[]) {
+  const stableIds = [...new Set(squadIds)].sort();
+  return useQuery({
+    queryKey: ["teamFixtures", stableIds],
+    queryFn: () => fetchTeamFixtures(stableIds),
+    enabled: stableIds.length > 0,
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useTeamFixture(fixtureId: string) {
+  return useQuery({
+    queryKey: ["teamFixture", fixtureId],
+    queryFn: () => fetchTeamFixture(fixtureId),
+    enabled: !!fixtureId,
+    staleTime: 10_000,
+  });
+}
+
+export function useSendTeamChallenge(managerSquadIds: string[]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateTeamChallengeInput) => createTeamChallenge(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["teamChallenges", [...new Set(managerSquadIds)].sort()] }),
+  });
+}
+
+export function useRespondToTeamChallenge(managerSquadIds: string[]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ challengeId, accept }: { challengeId: string; accept: boolean }) =>
+      respondToTeamChallenge(challengeId, accept),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["teamChallenges", [...new Set(managerSquadIds)].sort()] }),
+  });
+}
+
+export function useCancelTeamChallenge(managerSquadIds: string[]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (challengeId: string) => cancelTeamChallenge(challengeId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["teamChallenges", [...new Set(managerSquadIds)].sort()] }),
   });
 }

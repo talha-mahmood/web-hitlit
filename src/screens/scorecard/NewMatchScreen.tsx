@@ -11,6 +11,7 @@ import { useSports } from "../../hooks/useSports";
 import { useCreateCricketMatch } from "../../hooks/useCricket";
 import { friendlyCricketError } from "../../lib/api/cricket";
 import { useLinkCricketMatch } from "../../hooks/useTournamentMatches";
+import { linkTeamFixtureScorecard } from "../../lib/api/teamChallenges";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
@@ -300,13 +301,14 @@ export default function NewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
+  const teamFixture = params?.teamFixture;
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateCricketMatch();
   const linkCricketMatch = useLinkCricketMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   // Players come pre-filled from the tournament roster and are locked. Each
   // one carries the real tournament member's user_id as its sourceId — two
   // different real people can share a display name without being treated
@@ -317,8 +319,12 @@ export default function NewMatchScreen() {
   const [teamBPlayers, setTeamBPlayers] = useState<PlayerEntry[]>(
     (prefill?.teamBPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId }))
   );
-  const [oversLimit, setOversLimit] = useState<string | null>(null);
-  const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(null);
+  const [oversLimit, setOversLimit] = useState<string | null>(
+    teamFixture?.matchFormat === "T10" ? "10" : teamFixture?.matchFormat === "T20" ? "20" : teamFixture?.matchFormat === "ODI" ? "50" : null
+  );
+  const [format, setFormat] = useState<"T10" | "T20" | "ODI" | "Club" | null>(
+    teamFixture && ["T10", "T20", "ODI", "Club"].includes(teamFixture.matchFormat) ? teamFixture.matchFormat as "T10" | "T20" | "ODI" | "Club" : null
+  );
   const [tossMode, setTossMode] = useState<"manual" | "auto">("manual");
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [tossDecision, setTossDecision] = useState<"BAT" | "BOWL" | null>(null);
@@ -331,7 +337,7 @@ export default function NewMatchScreen() {
   // playing alone once their team is down to one, instead of the innings
   // ending at totalPlayers-1 wickets.
   const [lastManStand, setLastManStand] = useState<"on" | "off">("off");
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
 
   // A match started from a booked tournament game already knows its sport
   // (Hard Ball/Tape Ball/Outdoor Cricket) — only a standalone "quick
@@ -350,7 +356,7 @@ export default function NewMatchScreen() {
   // of leaving the button silently gray with no explanation.
   const validationReason =
     describeRosterIssue(teamAName, teamBName, teamAPlayers, teamBPlayers, 2) ??
-    (!prefill?.sportId && !cricketSportId ? "Pick Hard Ball or Tape Ball." : null) ??
+    (!(prefill?.sportId ?? teamFixture?.sportId) && !cricketSportId ? "Pick Hard Ball or Tape Ball." : null) ??
     (!oversLimit || parseInt(oversLimit, 10) <= 0 ? "Set the overs per innings." : null) ??
     (!format ? "Pick a match format." : null) ??
     (!tossWinner ? "Pick who won the toss." : null) ??
@@ -379,14 +385,18 @@ export default function NewMatchScreen() {
         tossDecision,
         venue: venue.trim() || undefined,
         lastManStand: lastManStand === "on",
-        sportId: prefill?.sportId ?? cricketSportId,
+        sportId: prefill?.sportId ?? teamFixture?.sportId ?? cricketSportId,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) {
-            linkCricketMatch.mutate({ matchId: prefill.tournamentMatchId, cricketMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) await linkCricketMatch.mutateAsync({ matchId: prefill.tournamentMatchId, cricketMatchId: matchId });
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "cricket_matches");
+            navigation.replace("LiveScoring", { matchId });
+          } catch (err) {
+            Alert.alert("Match created", err instanceof Error ? err.message : "The scorecard was created but could not be linked to its fixture.");
+            navigation.replace("LiveScoring", { matchId });
           }
-          navigation.replace("LiveScoring", { matchId });
         },
         onError: (err) => Alert.alert("Error", friendlyCricketError(err, "Could not create match.")),
       }
@@ -535,7 +545,7 @@ export default function NewMatchScreen() {
           />
         </CardSection>
 
-        {!prefill?.sportId && cricketSportOptions.length > 0 && (
+        {!prefill?.sportId && !teamFixture?.sportId && cricketSportOptions.length > 0 && (
           <CardSection icon="baseball-outline" title="Cricket Format">
             <PillRow
               options={cricketSportOptions.map((s) => ({ label: s.name, value: s.id }))}

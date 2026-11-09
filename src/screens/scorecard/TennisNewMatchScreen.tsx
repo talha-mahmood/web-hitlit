@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useCreateTennisMatch } from "../../hooks/useTennis";
 import { friendlyTennisError } from "../../lib/api/tennis";
 import { useLinkScorecardMatch } from "../../hooks/useTournamentMatches";
+import { linkTeamFixtureScorecard } from "../../lib/api/teamChallenges";
 import { PillRow } from "../../components/GameFormControls";
 import FieldInput from "../../components/FieldInput";
 import AddPlayersFromGroupModal from "../../components/AddPlayersFromGroupModal";
@@ -250,6 +251,7 @@ export default function TennisNewMatchScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const prefill = params?.prefill;
+  const teamFixture = params?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateTennisMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
@@ -260,9 +262,9 @@ export default function TennisNewMatchScreen() {
   // fill the (locked, blank) second player slot Doubles requires.
   const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
   const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
-  const [playMode, setPlayMode] = useState<PlayMode | null>(prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
-  const [playerAName, setPlayerAName] = useState(prefill?.teamAName ?? "");
-  const [playerBName, setPlayerBName] = useState(prefill?.teamBName ?? "");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(teamFixture?.matchFormat === "SINGLES" ? "SINGLES" : teamFixture?.matchFormat === "DOUBLES" ? "DOUBLES" : prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [playerAName, setPlayerAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [playerBName, setPlayerBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [playerAPlayers, setPlayerAPlayers] = useState<[PlayerEntry, PlayerEntry]>([
     { name: prefill?.teamAPlayers[0]?.name ?? "", sourceId: prefill?.teamAPlayers[0]?.userId ?? null },
     { name: prefill?.teamAPlayers[1]?.name ?? "", sourceId: prefill?.teamAPlayers[1]?.userId ?? null },
@@ -273,9 +275,9 @@ export default function TennisNewMatchScreen() {
   ]);
   const [playerAServerIndex, setPlayerAServerIndex] = useState<0 | 1>(0);
   const [playerBServerIndex, setPlayerBServerIndex] = useState<0 | 1>(0);
-  const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
+  const [format, setFormat] = useState<MatchFormat | null>(teamFixture?.matchFormat === "BEST_OF_1" || teamFixture?.matchFormat === "BEST_OF_3" ? teamFixture.matchFormat : "BEST_OF_3");
   const [firstServer, setFirstServer] = useState<Player | null>(null);
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const isDoubles = playMode === "DOUBLES";
@@ -333,11 +335,17 @@ export default function TennisNewMatchScreen() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) {
-            linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "tennis", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) {
+              await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "tennis", scorecardMatchId: matchId });
+            }
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "tennis_matches");
+            navigation.replace("TennisLiveScoring", { matchId });
+          } catch (err) {
+            Alert.alert("Match created", err instanceof Error ? err.message : "The scorecard was created but could not be linked to its fixture.");
+            navigation.replace("TennisLiveScoring", { matchId });
           }
-          navigation.replace("TennisLiveScoring", { matchId });
         },
         onError: (err) => Alert.alert("Error", friendlyTennisError(err, "Could not create match.")),
       }

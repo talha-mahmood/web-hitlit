@@ -75,11 +75,15 @@ export function HomeSquadCard({
   currentUserId,
   myGender,
   onPress,
+  distanceLabel,
+  onChallenge,
 }: {
   squad: SquadListItem;
   currentUserId?: string;
   myGender?: string | null;
   onPress: () => void;
+  distanceLabel?: string;
+  onChallenge?: () => void;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
@@ -130,17 +134,35 @@ export function HomeSquadCard({
               {active.length}{squad.max_players ? `/${squad.max_players}` : ""} members
             </Text>
           </View>
+          {distanceLabel ? (
+            <View className="flex-row items-center" style={{ gap: 4 }}>
+              <Ionicons name="navigate-outline" size={13} color={colors.primary} />
+              <Text className="text-muted text-xs">{distanceLabel} away</Text>
+            </View>
+          ) : null}
         </View>
         <View className="flex-row items-center justify-between mt-3">
           <AvatarStack
             people={active.map((m) => ({ avatar: m.profiles?.avatar ?? null, name: m.profiles?.full_name ?? null }))}
             size={22}
           />
-          <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusBg }}>
-            <Text className="text-xs font-bold" style={{ color: statusColor }}>
-              {statusLabel}
-            </Text>
-          </View>
+          {onChallenge ? (
+            <Pressable
+              onPress={(event) => { event.stopPropagation(); onChallenge(); }}
+              className="rounded-full px-5 py-2"
+              style={{ backgroundColor: colors.primary }}
+              accessibilityRole="button"
+              accessibilityLabel={`Challenge ${squad.name}`}
+            >
+              <Text className="text-white font-bold">Challenge</Text>
+            </Pressable>
+          ) : (
+            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: statusBg }}>
+              <Text className="text-xs font-bold" style={{ color: statusColor }}>
+                {statusLabel}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </Bouncy>
