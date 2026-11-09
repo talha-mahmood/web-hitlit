@@ -8,6 +8,12 @@ import { useSendTeamChallenge } from "../../hooks/useSquads";
 import type { SquadListItem } from "../../lib/api/squads";
 import type { TeamChallengeFormat } from "../../lib/api/teamChallenges";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+
+// Racquet sports are always played 1-a-side (Singles) or 2-a-side
+// (Doubles) — a free-form "enter a number" field doesn't make sense there,
+// so those sports get a plain 1/2 picker instead of the numeric text input
+// every other (team-size) sport still uses.
+const RACQUET_SPORTS = new Set(["padel", "tennis", "badminton", "pickleball", "table tennis"]);
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 
@@ -48,6 +54,7 @@ export default function TeamChallengeComposerModal({
   const [idempotencyKey, setIdempotencyKey] = useState(requestKey);
   const sportName = opponent?.sports?.name ?? "";
   const formats = useMemo(() => challengeFormatsForSport(sportName), [sportName]);
+  const isRacquetSport = RACQUET_SPORTS.has(sportName.trim().toLowerCase());
   const matchingSenderTeams = useMemo(
     () => senderTeams.filter((team) => team.sport_id === opponent?.sport_id),
     [senderTeams, opponent?.sport_id]
@@ -189,19 +196,34 @@ export default function TeamChallengeComposerModal({
             </ScrollView>
 
             <Text className="mb-2 mt-5 text-ink font-semibold">Total players</Text>
-            <TextInput
-              value={totalPlayers}
-              onChangeText={(value) => setTotalPlayers(value.replace(/[^0-9]/g, "").slice(0, 2))}
-              placeholder="e.g. 11"
-              placeholderTextColor={colors.muted}
-              style={inputStyle}
-              keyboardType="number-pad"
-              maxLength={2}
-              returnKeyType="done"
-            />
-            {totalPlayers.length > 0 && !totalPlayersValid ? (
-              <Text className="mt-1.5 text-xs" style={{ color: colors.danger }}>Enter a number from 1 to 20</Text>
-            ) : null}
+            {isRacquetSport ? (
+              <View className="flex-row" style={{ gap: 10 }}>
+                {["1", "2"].map((value) => {
+                  const selected = totalPlayers === value;
+                  return (
+                    <Pressable key={value} onPress={() => setTotalPlayers(value)} className="flex-1 items-center justify-center rounded-2xl border" style={{ minHeight: 52, borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surfaceRaised }}>
+                      <Text style={{ color: selected ? colors.primary : colors.ink, fontWeight: "700", fontSize: 16 }}>{value}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : (
+              <>
+                <TextInput
+                  value={totalPlayers}
+                  onChangeText={(value) => setTotalPlayers(value.replace(/[^0-9]/g, "").slice(0, 2))}
+                  placeholder="e.g. 11"
+                  placeholderTextColor={colors.muted}
+                  style={inputStyle}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  returnKeyType="done"
+                />
+                {totalPlayers.length > 0 && !totalPlayersValid ? (
+                  <Text className="mt-1.5 text-xs" style={{ color: colors.danger }}>Enter a number from 1 to 20</Text>
+                ) : null}
+              </>
+            )}
 
             {sendChallenge.error ? <Text className="mt-4 text-sm" style={{ color: colors.danger }}>{displayError(sendChallenge.error)}</Text> : null}
             <View className="mt-6 flex-row" style={{ gap: 10 }}>
