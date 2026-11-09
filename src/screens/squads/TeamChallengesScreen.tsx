@@ -144,10 +144,6 @@ export default function TeamChallengesScreen() {
       <View className="flex-row items-center px-4" style={{ minHeight: 54, paddingBottom: 10, gap: 8 }}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={7} className="h-8 w-7 items-center justify-center"><Ionicons name="arrow-back" size={21} color={colors.ink} /></Pressable>
         <View className="flex-1"><Text className="text-ink font-extrabold" numberOfLines={1} style={{ fontSize: 17 }}>Team Challenges</Text><Text className="text-muted" numberOfLines={1} style={{ fontSize: 11 }}>Requests and confirmed fixtures</Text></View>
-        <Pressable onPress={() => navigation.navigate("ChallengeTeams", undefined)} accessibilityLabel="Find teams to challenge" className="mr-0.5 h-8 flex-row items-center rounded-lg px-2" style={{ backgroundColor: colors.primary }}>
-          <Ionicons name="search" size={14} color="#fff" />
-          <Text className="ml-1 text-white font-bold" style={{ fontSize: 11 }}>Find teams</Text>
-        </Pressable>
       </View>
       <View className="mx-3 mb-2.5 flex-row rounded-xl bg-surfaceRaised p-1">
         {(["received", "sent", "fixtures", "history"] as const).map((key) => (
