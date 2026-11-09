@@ -79,6 +79,11 @@ export default function TeamChallengeDetailsScreen() {
                 <View className="flex-row items-center" style={{ gap: 12 }}><Ionicons name="time-outline" size={19} color={colors.primary} /><View><Text className="text-muted text-xs">Sent</Text><Text className="text-ink font-semibold">{dateTime(challenge.created_at)}</Text></View></View>
               </View>
             </View>
+            {challenge.status === "accepted" && challenge.fixture?.game_id ? (
+              <Pressable onPress={() => navigation.navigate("GameDetail", { gameId: challenge.fixture!.game_id! })} className="mt-4 items-center rounded-2xl py-4" style={{ backgroundColor: colors.primary }}>
+                <Text className="text-white font-bold">Go to Game</Text>
+              </Pressable>
+            ) : null}
             {challenge.status === "pending" && isReceiver ? (
               <View className="mt-4 flex-row" style={{ gap: 10 }}>
                 <Pressable disabled={respond.isPending} onPress={() => void handleResponse(false)} className="flex-1 items-center rounded-2xl border border-border bg-surfaceRaised py-4"><Text className="text-ink font-bold">Decline</Text></Pressable>
