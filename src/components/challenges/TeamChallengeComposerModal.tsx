@@ -172,16 +172,16 @@ export default function TeamChallengeComposerModal({
               <Text className="text-ink font-semibold">{sportName} format</Text>
               <Ionicons name="people-outline" size={18} color={colors.primary} />
             </View>
-            <View className="mt-2 flex-row" style={{ gap: 9 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2" contentContainerStyle={{ gap: 9, paddingRight: 20 }}>
               {formats.map(({ value, label }) => {
                 const selected = format === value;
                 return (
-                  <Pressable key={value} onPress={() => setFormat(value)} className="items-center rounded-xl border px-4 py-2.5" style={{ borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surfaceRaised }}>
+                  <Pressable key={value} onPress={() => setFormat(value)} className="items-center rounded-xl border px-4 py-2.5" style={{ flexShrink: 0, borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surfaceRaised }}>
                     <Text style={{ color: selected ? colors.primary : colors.ink, fontWeight: "700" }}>{label}</Text>
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
 
             {sendChallenge.error ? <Text className="mt-4 text-sm" style={{ color: colors.danger }}>{displayError(sendChallenge.error)}</Text> : null}
             <View className="mt-6 flex-row" style={{ gap: 10 }}>
