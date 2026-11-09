@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -114,25 +114,29 @@ export default function ChallengeTeamsScreen() {
 
       {expanded ? (
         <View className="mx-3 mb-3 rounded-3xl border border-border bg-surface p-2.5" style={cardShadow}>
-          <View className="flex-row items-center" style={{ gap: 6, minWidth: 0 }}>
-            <Pressable onPress={() => { setScope("near"); setSelectedCity(null); }} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: scope === "near" ? colors.primary : colors.border, backgroundColor: scope === "near" ? colors.primaryLight : colors.surfaceRaised }}>
-              <Ionicons name="navigate-outline" size={15} color={scope === "near" ? colors.primary : colors.muted} />
-              <Text className="ml-1 font-bold" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: scope === "near" ? colors.primary : colors.muted }}>Near me</Text>
-            </Pressable>
-            <Pressable onPress={() => setCityPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: selectedCity ? colors.primary : colors.border, backgroundColor: selectedCity ? colors.primaryLight : colors.surfaceRaised }}>
-              <Ionicons name="business-outline" size={16} color={selectedCity ? colors.primary : colors.muted} />
-              <Text className="ml-1 font-medium" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: selectedCity ? colors.primary : colors.muted }}>{selectedCity ?? "City"}</Text>
-            </Pressable>
-            <Pressable onPress={() => setSportPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: sportId ? colors.primary : colors.border, backgroundColor: sportId ? colors.primaryLight : colors.surfaceRaised }}>
-              <Ionicons name="options-outline" size={15} color={sportId ? colors.primary : colors.muted} />
-              <Text className="ml-1 font-medium" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: sportId ? colors.primary : colors.muted }}>{sport?.name ?? "Sport"}</Text>
-            </Pressable>
-          </View>
-          <View className="mt-2.5 flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-3" style={{ minHeight: 46 }}>
+          <View className="flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-3" style={{ minHeight: 46 }}>
             <Ionicons name="search-outline" size={19} color={colors.muted} />
             <TextInput value={search} onChangeText={setSearch} placeholder="Team name..." placeholderTextColor={colors.muted} className="ml-2 flex-1 text-ink" style={{ fontSize: 14 }} returnKeyType="search" autoCapitalize="none" />
             {search ? <Pressable onPress={() => setSearch("")} hitSlop={8}><Ionicons name="close-circle" size={19} color={colors.muted} /></Pressable> : null}
           </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6 }}>
+            <Pressable onPress={() => { setScope("near"); setSelectedCity(null); }} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: scope === "near" ? colors.primary : colors.border, backgroundColor: scope === "near" ? colors.primaryLight : colors.surfaceRaised }}>
+              <Ionicons name="navigate-outline" size={15} color={scope === "near" ? colors.primary : colors.muted} />
+              <Text className="ml-1 font-bold" numberOfLines={1} style={{ fontSize: 12, color: scope === "near" ? colors.primary : colors.muted }}>Near me</Text>
+            </Pressable>
+            <Pressable onPress={() => setCityPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: selectedCity ? colors.primary : colors.border, backgroundColor: selectedCity ? colors.primaryLight : colors.surfaceRaised }}>
+              <Ionicons name="business-outline" size={16} color={selectedCity ? colors.primary : colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: selectedCity ? colors.primary : colors.muted }}>{selectedCity ?? "City"}</Text>
+            </Pressable>
+            <Pressable onPress={() => setSportPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: sportId ? colors.primary : colors.border, backgroundColor: sportId ? colors.primaryLight : colors.surfaceRaised }}>
+              <Ionicons name="options-outline" size={15} color={sportId ? colors.primary : colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: sportId ? colors.primary : colors.muted }}>{sport?.name ?? "Sport"}</Text>
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate("TeamChallenges", undefined)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: colors.border, backgroundColor: colors.surfaceRaised }}>
+              <Ionicons name="list-outline" size={15} color={colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: colors.muted }}>My Challenges</Text>
+            </Pressable>
+          </ScrollView>
         </View>
       ) : null}
 
