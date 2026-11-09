@@ -8,6 +8,7 @@ import Image from "../../components/images/OptimizedImage";
 import TeamManagerRequiredModal from "../../components/challenges/TeamManagerRequiredModal";
 import TeamChallengeComposerModal from "../../components/challenges/TeamChallengeComposerModal";
 import SelectChallengeCityModal from "../../components/SelectChallengeCityModal";
+import SelectSportModal from "../../components/SelectSportModal";
 import { useSquads } from "../../hooks/useSquads";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useSports } from "../../hooks/useSports";
@@ -29,13 +30,14 @@ export default function ChallengeTeamsScreen() {
   const focused = useIsFocused();
   const userId = useAuthStore((state) => state.session?.user.id);
   const { coords } = useDeviceLocation();
-  const { data: sports = [] } = useSports();
+  const { data: sports = [], isLoading: sportsLoading } = useSports();
   const { data: managedTeams = [], refetch: refetchManagedTeams } = useMyOwnedSquads(userId);
   const [sportId, setSportId] = useState(route.params?.sportId ?? "");
   const [search, setSearch] = useState("");
   const [scope, setScope] = useState<Scope>("near");
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
+  const [sportPickerVisible, setSportPickerVisible] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [opponent, setOpponent] = useState<SquadListItem | null>(null);
   const [managerModalVisible, setManagerModalVisible] = useState(false);
@@ -43,12 +45,6 @@ export default function ChallengeTeamsScreen() {
   const pendingCreateOpponentId = useRef<string | null>(null);
   const sport = sports.find((item) => item.id === sportId);
   const { data: squads = [], isLoading, isFetching, error, refetch } = useSquads({ search, sportId: sportId || undefined });
-
-  useEffect(() => {
-    if (sportId || !sports.length) return;
-    const defaultSport = sports.find((item) => item.name.toLowerCase() === "football") ?? sports.find((item) => challengeFormatsForSport(item.name).length > 0);
-    if (defaultSport) setSportId(defaultSport.id);
-  }, [sportId, sports]);
 
   useEffect(() => {
     if (!focused) return;
@@ -118,14 +114,18 @@ export default function ChallengeTeamsScreen() {
 
       {expanded ? (
         <View className="mx-3 mb-3 rounded-3xl border border-border bg-surface p-2.5" style={cardShadow}>
-          <View className="flex-row items-center" style={{ gap: 7 }}>
-            <Pressable onPress={() => { setScope("near"); setSelectedCity(null); }} className="flex-row items-center rounded-full border px-3 py-1.5" style={{ borderColor: scope === "near" ? colors.primary : colors.border, backgroundColor: scope === "near" ? colors.primaryLight : colors.surfaceRaised }}>
+          <View className="flex-row items-center" style={{ gap: 6, minWidth: 0 }}>
+            <Pressable onPress={() => { setScope("near"); setSelectedCity(null); }} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: scope === "near" ? colors.primary : colors.border, backgroundColor: scope === "near" ? colors.primaryLight : colors.surfaceRaised }}>
               <Ionicons name="navigate-outline" size={15} color={scope === "near" ? colors.primary : colors.muted} />
-              <Text className="ml-1.5 font-bold" style={{ fontSize: 13, color: scope === "near" ? colors.primary : colors.muted }}>Near me</Text>
+              <Text className="ml-1 font-bold" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: scope === "near" ? colors.primary : colors.muted }}>Near me</Text>
             </Pressable>
-            <Pressable onPress={() => setCityPickerVisible(true)} className="flex-row items-center rounded-full border px-3 py-1.5" style={{ borderColor: selectedCity ? colors.primary : colors.border, backgroundColor: selectedCity ? colors.primaryLight : colors.surfaceRaised }}>
+            <Pressable onPress={() => setCityPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: selectedCity ? colors.primary : colors.border, backgroundColor: selectedCity ? colors.primaryLight : colors.surfaceRaised }}>
               <Ionicons name="business-outline" size={16} color={selectedCity ? colors.primary : colors.muted} />
-              <Text className="ml-1.5 font-medium" style={{ fontSize: 13, color: selectedCity ? colors.primary : colors.muted }}>{selectedCity ?? "City"}</Text>
+              <Text className="ml-1 font-medium" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: selectedCity ? colors.primary : colors.muted }}>{selectedCity ?? "City"}</Text>
+            </Pressable>
+            <Pressable onPress={() => setSportPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5" style={{ flex: 1, minWidth: 0, paddingHorizontal: 7, borderColor: sportId ? colors.primary : colors.border, backgroundColor: sportId ? colors.primaryLight : colors.surfaceRaised }}>
+              <Ionicons name="options-outline" size={15} color={sportId ? colors.primary : colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} ellipsizeMode="tail" style={{ flexShrink: 1, fontSize: 12, color: sportId ? colors.primary : colors.muted }}>{sport?.name ?? "Sport"}</Text>
             </Pressable>
           </View>
           <View className="mt-2.5 flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-3" style={{ minHeight: 46 }}>
@@ -136,18 +136,8 @@ export default function ChallengeTeamsScreen() {
         </View>
       ) : null}
 
-      {!sportId ? (
+      {sportsLoading ? (
         <View className="flex-1 items-center justify-center"><ActivityIndicator color={colors.primary} /></View>
-      ) : !route.params?.sportId ? (
-        <>
-          <View className="px-4 pb-3">
-            <FlatList horizontal data={sports.filter((item) => challengeFormatsForSport(item.name).length > 0)} keyExtractor={(item) => item.id} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} renderItem={({ item }) => {
-              const active = sportId === item.id;
-              return <Pressable onPress={() => setSportId(item.id)} className="rounded-full border px-3 py-1.5" style={{ borderColor: active ? colors.primary : colors.border, backgroundColor: active ? colors.primaryLight : colors.surface }}><Text className="font-semibold" style={{ fontSize: 13, color: active ? colors.primary : colors.ink }}>{item.name}</Text></Pressable>;
-            }} />
-          </View>
-          {renderTeamList()}
-        </>
       ) : renderTeamList()}
 
       <TeamManagerRequiredModal visible={managerModalVisible} onClose={() => { setManagerModalVisible(false); setOpponent(null); }} onCreateTeam={() => {
@@ -159,6 +149,10 @@ export default function ChallengeTeamsScreen() {
         setSelectedCity(city);
         setScope(city ? "city" : "near");
         setCityPickerVisible(false);
+      }} />
+      <SelectSportModal visible={sportPickerVisible} onClose={() => setSportPickerVisible(false)} sports={sports} selectedSportId={sportId || undefined} onApply={(id) => {
+        setSportId(id ?? "");
+        setSportPickerVisible(false);
       }} />
       <TeamChallengeComposerModal visible={composerVisible} senderTeams={managedTeams.filter((team) => team.group_type === "team")} opponent={selectedOpponent} onClose={() => { setComposerVisible(false); setOpponent(null); }} onSent={() => { setComposerVisible(false); setOpponent(null); navigation.navigate("TeamChallenges", undefined); }} />
     </View>

@@ -429,8 +429,8 @@ export default function HomeScreen() {
               />
             </View>
           )}
-          onSeeAll={() => navigation.navigate("TeamChallenges", undefined)}
-          seeAllLabel="My challenges"
+          onSeeAll={() => navigation.navigate("ChallengeTeams", { sportId: selectedSportId ?? undefined })}
+          seeAllLabel="See all"
         />
 
         <NearbySection
