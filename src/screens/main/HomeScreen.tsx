@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type ComponentProps, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactElement } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, FlatList, Dimensions, RefreshControl, Alert } from "react-native";
 import Image from "../../components/images/OptimizedImage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
+import { useIsFocused, useNavigation, type CompositeNavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
@@ -33,6 +33,8 @@ import { useThemeStore } from "../../store/themeStore";
 import { prefetchImages } from "../../services/images/imagePrefetch";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+import TeamManagerRequiredModal from "../../components/challenges/TeamManagerRequiredModal";
+import TeamChallengeComposerModal from "../../components/challenges/TeamChallengeComposerModal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VENUE_CARD_WIDTH = Math.round((SCREEN_WIDTH - 20 * 2 - 10) * 0.48);
@@ -143,12 +145,18 @@ export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const profile = useProfileStore((s) => s.profile);
   const userId = useAuthStore((s) => s.session?.user.id);
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const themePreference = useThemeStore((s) => s.preference);
   const setThemePreference = useThemeStore((s) => s.setPreference);
   const isLightTheme = themePreference === "light" || (themePreference === "system" && colors.background === "#F5F7FA");
 
   const [selectedSportId, setSelectedSportId] = useState<string | null>(null);
+  const [challengeOpponent, setChallengeOpponent] = useState<SquadListItem | null>(null);
+  const [managerRequiredVisible, setManagerRequiredVisible] = useState(false);
+  const [challengeComposerVisible, setChallengeComposerVisible] = useState(false);
+  const [resumeChallengeAfterTeamCreate, setResumeChallengeAfterTeamCreate] = useState(false);
+  const leftHomeForTeamCreation = useRef(false);
 
   const { data: sports } = useSports();
   const { data: venues, isLoading: venuesLoading, refetch: refetchVenues, isRefetching: venuesRefetching } = useVenues({
@@ -163,7 +171,7 @@ export default function HomeScreen() {
   const { data: squads, isLoading: squadsLoading, refetch: refetchSquads, isRefetching: squadsRefetching } = useSquads({
     sportId: selectedSportId ?? undefined,
   });
-  const { data: ownedSquads = [] } = useMyOwnedSquads(userId);
+  const { data: ownedSquads = [], refetch: refetchOwnedSquads } = useMyOwnedSquads(userId);
   const managedTeams = useMemo(
     () => ownedSquads.filter((squad) => squad.group_type === "team" && challengeFormatsForSport(squad.sports?.name).length > 0),
     [ownedSquads]
@@ -238,8 +246,29 @@ export default function HomeScreen() {
     return [...sorted].sort((a, b) => Number(isVenueBoosted(b.item)) - Number(isVenueBoosted(a.item)));
   }, [venues, coords]);
 
+  useEffect(() => {
+    if (!resumeChallengeAfterTeamCreate) return;
+    if (!isFocused) {
+      leftHomeForTeamCreation.current = true;
+      return;
+    }
+    if (!leftHomeForTeamCreation.current || !challengeOpponent) return;
+    leftHomeForTeamCreation.current = false;
+    void refetchOwnedSquads().then(({ data }) => {
+      setResumeChallengeAfterTeamCreate(false);
+      if (data?.some((team) => team.group_type === "team" && team.sport_id === challengeOpponent.sport_id)) {
+        setChallengeComposerVisible(true);
+      }
+    });
+  }, [isFocused, resumeChallengeAfterTeamCreate, challengeOpponent, refetchOwnedSquads]);
+
   const beginChallenge = (opponent: SquadListItem) => {
-    navigation.navigate("ChallengeTeams", { sportId: opponent.sport_id ?? undefined, opponentId: opponent.id });
+    setChallengeOpponent(opponent);
+    if (managedTeams.some((team) => team.sport_id === opponent.sport_id)) {
+      setChallengeComposerVisible(true);
+    } else {
+      setManagerRequiredVisible(true);
+    }
   };
 
   useEffect(() => {
@@ -514,6 +543,32 @@ export default function HomeScreen() {
         />
       </View>
       </ScrollView>
+      <TeamManagerRequiredModal
+        visible={managerRequiredVisible}
+        onClose={() => { setManagerRequiredVisible(false); setChallengeOpponent(null); }}
+        onCreateTeam={() => {
+          setManagerRequiredVisible(false);
+          leftHomeForTeamCreation.current = false;
+          setResumeChallengeAfterTeamCreate(true);
+          navigation.navigate("CreateSquad", {
+            presetType: "team",
+            lockType: true,
+            presetSportId: challengeOpponent?.sport_id ?? undefined,
+            lockSport: Boolean(challengeOpponent?.sport_id),
+          });
+        }}
+      />
+      <TeamChallengeComposerModal
+        visible={challengeComposerVisible}
+        senderTeams={managedTeams}
+        opponent={challengeOpponent}
+        onClose={() => { setChallengeComposerVisible(false); setChallengeOpponent(null); }}
+        onSent={() => {
+          setChallengeComposerVisible(false);
+          setChallengeOpponent(null);
+          Alert.alert("Challenge sent", "The other team’s managers have been notified.");
+        }}
+      />
     </View>
   );
 }
