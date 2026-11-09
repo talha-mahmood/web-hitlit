@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Alert, Appearance, Platform, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, AppState, Appearance, Platform, View } from "react-native";
 import { vars } from "nativewind";
 import * as SystemUI from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
@@ -22,6 +22,7 @@ import AcceptTermsScreen from "../screens/onboarding/AcceptTermsScreen";
 import AccountSuspendedScreen from "../screens/onboarding/AccountSuspendedScreen";
 import { setActiveThemePalette, themePalettes } from "../constants/theme";
 import { getResolvedTheme, hydrateThemePreference, useThemeStore } from "../store/themeStore";
+import InAppNotificationBanner from "../components/InAppNotificationBanner";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
 
@@ -112,6 +113,17 @@ export default function RootNavigator() {
   // with leftovers queued from a previous offline session.
   const qc = useQueryClient();
   const isOnline = useNetworkStore((s) => s.isOnline);
+  const [foregroundNotifications, setForegroundNotifications] = useState<Notifications.Notification[]>([]);
+  const seenForegroundNotificationIds = useRef(new Set<string>());
+  const handleForegroundNotificationDismiss = useCallback((identifier: string) => {
+    setForegroundNotifications((current) => current.filter((item) => item.request.identifier !== identifier));
+  }, []);
+  const handleForegroundNotificationPress = useCallback(() => {
+    if (!navigationRef.isReady()) return;
+    const isAdminSide = profile?.type === "owner" || profile?.type === "superadmin";
+    if (isAdminSide) navigationRef.navigate("AdminNotifications");
+    else navigationRef.navigate("Home", { screen: "Notifications" });
+  }, [profile?.type]);
   useEffect(() => {
     if (!isOnline) return;
     flushTournamentSyncQueue(qc);
@@ -159,6 +171,32 @@ export default function RootNavigator() {
   useEffect(() => {
     if (pushReady) registerForPushNotifications();
   }, [pushReady, session?.user.id]);
+
+  // This listener only adds an in-app presentation of foreground pushes.
+  // The existing setNotificationHandler remains responsible for native OS
+  // presentation, and background/tap behavior stays on its existing path.
+  useEffect(() => {
+    if (!session?.user.id) {
+      setForegroundNotifications([]);
+      return;
+    }
+
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      // Only the active app gets the in-app banner. Read AppState at receipt
+      // time so transitions to background cannot reuse a stale React value.
+      if (AppState.currentState !== "active") return;
+      const id = `${session.user.id}:${notification.request.identifier}`;
+      if (seenForegroundNotificationIds.current.has(id)) return;
+      seenForegroundNotificationIds.current.add(id);
+      if (seenForegroundNotificationIds.current.size > 120) {
+        const oldest = seenForegroundNotificationIds.current.values().next().value;
+        if (oldest) seenForegroundNotificationIds.current.delete(oldest);
+      }
+      setForegroundNotifications((current) => [...current, notification]);
+    });
+
+    return () => subscription.remove();
+  }, [session?.user.id]);
 
   // Tapping a push notification (including the one that cold-started the
   // app) opens that account's notifications screen.
@@ -297,6 +335,11 @@ export default function RootNavigator() {
       ]}
     >
       <NavigationContainer ref={navigationRef} theme={navigationTheme}>{content}</NavigationContainer>
+      <InAppNotificationBanner
+        notification={foregroundNotifications[0] ?? null}
+        onDismiss={handleForegroundNotificationDismiss}
+        onPress={handleForegroundNotificationPress}
+      />
     </View>
   );
 }

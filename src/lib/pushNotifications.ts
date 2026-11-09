@@ -1,18 +1,21 @@
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { supabase } from "./supabase";
 
-// Show the banner + play the sound even while the app is open, the same way a
-// chat app does — otherwise a notification arriving in the foreground would
-// be silent.
+// Foreground pushes are presented by the app's existing floating banner.
+// Suppress Expo's native presentation in that state to avoid showing the same
+// event twice. Background/terminated delivery remains owned by Android/Expo.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async () => {
+    const isForeground = AppState.currentState === "active";
+    return {
+      shouldShowBanner: !isForeground,
+      shouldShowList: !isForeground,
+      shouldPlaySound: !isForeground,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 // Renamed from "default": Android never lets an app edit a channel after it
