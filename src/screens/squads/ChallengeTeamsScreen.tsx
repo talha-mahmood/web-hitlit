@@ -3,7 +3,7 @@ import { FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-na
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import TeamManagerRequiredModal from "../../components/challenges/TeamManagerRequiredModal";
 import TeamChallengeComposerModal from "../../components/challenges/TeamChallengeComposerModal";
@@ -18,6 +18,8 @@ import { useAuthStore } from "../../store/authStore";
 import { colors, cardShadow } from "../../constants/theme";
 import { distanceKm, formatDistanceKm } from "../../lib/distance";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+import { getSportIcon } from "../../lib/sportIcons";
+import { getSportImage } from "../../lib/sportImages";
 import type { SquadListItem } from "../../lib/api/squads";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
@@ -142,7 +144,7 @@ export default function ChallengeTeamsScreen() {
         <View className="mx-3 mb-3 rounded-3xl border border-border bg-surface p-2.5" style={cardShadow}>
           <View className="flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-3" style={{ minHeight: 46 }}>
             <Ionicons name="search-outline" size={19} color={colors.muted} />
-            <TextInput value={search} onChangeText={setSearch} placeholder="Team name..." placeholderTextColor={colors.muted} className="ml-2 flex-1 text-ink" style={{ fontSize: 14 }} returnKeyType="search" autoCapitalize="none" />
+            <TextInput value={search} onChangeText={setSearch} placeholder="Team name or ID..." placeholderTextColor={colors.muted} className="ml-2 flex-1 text-ink" style={{ fontSize: 14 }} returnKeyType="search" autoCapitalize="none" />
             {search ? <Pressable onPress={() => setSearch("")} hitSlop={8}><Ionicons name="close-circle" size={19} color={colors.muted} /></Pressable> : null}
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6 }}>
@@ -202,9 +204,17 @@ export default function ChallengeTeamsScreen() {
         ListEmptyComponent={<View className="flex-1 items-center justify-center py-16"><Ionicons name="search-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-semibold">No teams found</Text><Text className="mt-1 text-center text-muted">Try another name, sport, or location filter.</Text></View>}
         renderItem={({ item: { team, km } }) => {
           const alreadyPending = pendingReceiverIds.has(team.id);
+          const { icon, bg, fg } = getSportIcon(team.sports?.name ?? "");
+          const photo = team.icon_url ? { uri: team.icon_url } : getSportImage(team.sports?.name ?? "");
           return (
             <View className="mb-1.5 flex-row items-center rounded-2xl border border-border bg-surface px-2 py-1.5" style={{ minHeight: 56, ...cardShadow }}>
-              {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 36, height: 36, borderRadius: 9 }} resizeMode="cover" /> : <View className="h-9 w-9 items-center justify-center rounded-lg bg-surfaceRaised"><Ionicons name="shield-outline" size={19} color={colors.primary} /></View>}
+              {photo ? (
+                <Image source={photo} style={{ width: 36, height: 36, borderRadius: 9 }} resizeMode="cover" />
+              ) : (
+                <View className="h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: bg }}>
+                  <MaterialCommunityIcons name={icon} size={18} color={fg} />
+                </View>
+              )}
               <View className="ml-2 mr-1.5 flex-1 justify-center">
                 <Text className="text-ink font-semibold" numberOfLines={1} style={{ fontSize: 14 }}>{team.name}</Text>
                 <View className="mt-0.5 flex-row items-center">
