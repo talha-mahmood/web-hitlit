@@ -9,7 +9,7 @@ import TeamManagerRequiredModal from "../../components/challenges/TeamManagerReq
 import TeamChallengeComposerModal from "../../components/challenges/TeamChallengeComposerModal";
 import SelectChallengeCityModal from "../../components/SelectChallengeCityModal";
 import SelectSportModal from "../../components/SelectSportModal";
-import { useSquads } from "../../hooks/useSquads";
+import { useSquads, useTeamChallenges } from "../../hooks/useSquads";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useSports } from "../../hooks/useSports";
 import { useDeviceLocation } from "../../hooks/useDeviceLocation";
@@ -45,6 +45,15 @@ export default function ChallengeTeamsScreen() {
   const pendingCreateOpponentId = useRef<string | null>(null);
   const sport = sports.find((item) => item.id === sportId);
   const { data: squads = [], isLoading, isFetching, error, refetch } = useSquads({ search, sportId: sportId || undefined });
+  const managerIds = useMemo(() => managedTeams.map((team) => team.id).sort(), [managedTeams]);
+  const { data: myChallenges = [] } = useTeamChallenges(managerIds);
+  // Teams a managed team of mine has already challenged and is still
+  // waiting on a response from — send_team_challenge blocks a second
+  // pending challenge to the same team, so reflect that here too.
+  const pendingReceiverIds = useMemo(
+    () => new Set(myChallenges.filter((c) => c.status === "pending" && managerIds.includes(c.sender_squad_id)).map((c) => c.receiver_squad_id)),
+    [myChallenges, managerIds]
+  );
 
   useEffect(() => {
     if (!focused) return;
@@ -172,19 +181,28 @@ export default function ChallengeTeamsScreen() {
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20, flexGrow: 1 }}
         ListHeaderComponent={error ? <Text className="mb-3 text-center" style={{ color: colors.danger }}>Could not load teams. Pull to refresh and try again.</Text> : null}
         ListEmptyComponent={isLoading ? <View className="flex-1 items-center justify-center py-16"><ActivityIndicator color={colors.primary} /></View> : <View className="flex-1 items-center justify-center py-16"><Ionicons name="search-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-semibold">No teams found</Text><Text className="mt-1 text-center text-muted">Try another name, sport, or location filter.</Text></View>}
-        renderItem={({ item: { team, km } }) => (
-          <View className="mb-1.5 flex-row items-center rounded-2xl border border-border bg-surface px-2 py-1.5" style={{ minHeight: 56, ...cardShadow }}>
-            {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 36, height: 36, borderRadius: 9 }} resizeMode="cover" /> : <View className="h-9 w-9 items-center justify-center rounded-lg bg-surfaceRaised"><Ionicons name="shield-outline" size={19} color={colors.primary} /></View>}
-            <View className="ml-2 mr-1.5 flex-1 justify-center">
-              <Text className="text-ink font-semibold" numberOfLines={1} style={{ fontSize: 14 }}>{team.name}</Text>
-              <View className="mt-0.5 flex-row items-center">
-                <Ionicons name="location" size={12} color={colors.muted} />
-                <Text className="ml-1 flex-1 text-muted" numberOfLines={1} style={{ fontSize: 11.5 }}>{team.location || team.profiles?.city || "Location not set"}{km !== null ? ` · ${formatDistanceKm(km)}` : ""}</Text>
+        renderItem={({ item: { team, km } }) => {
+          const alreadyPending = pendingReceiverIds.has(team.id);
+          return (
+            <View className="mb-1.5 flex-row items-center rounded-2xl border border-border bg-surface px-2 py-1.5" style={{ minHeight: 56, ...cardShadow }}>
+              {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 36, height: 36, borderRadius: 9 }} resizeMode="cover" /> : <View className="h-9 w-9 items-center justify-center rounded-lg bg-surfaceRaised"><Ionicons name="shield-outline" size={19} color={colors.primary} /></View>}
+              <View className="ml-2 mr-1.5 flex-1 justify-center">
+                <Text className="text-ink font-semibold" numberOfLines={1} style={{ fontSize: 14 }}>{team.name}</Text>
+                <View className="mt-0.5 flex-row items-center">
+                  <Ionicons name="location" size={12} color={colors.muted} />
+                  <Text className="ml-1 flex-1 text-muted" numberOfLines={1} style={{ fontSize: 11.5 }}>{team.location || team.profiles?.city || "Location not set"}{km !== null ? ` · ${formatDistanceKm(km)}` : ""}</Text>
+                </View>
               </View>
+              {alreadyPending ? (
+                <View className="items-center justify-center rounded-lg px-2.5 border border-border bg-surfaceRaised" style={{ minHeight: 32 }}>
+                  <Text className="text-muted font-bold" style={{ fontSize: 11.5 }}>Pending</Text>
+                </View>
+              ) : (
+                <Pressable onPress={() => startChallenge(team)} className="items-center justify-center rounded-lg px-2.5" style={{ minHeight: 32, backgroundColor: colors.primary }}><Text className="text-white font-bold" style={{ fontSize: 11.5 }}>Challenge</Text></Pressable>
+              )}
             </View>
-            <Pressable onPress={() => startChallenge(team)} className="items-center justify-center rounded-lg px-2.5" style={{ minHeight: 32, backgroundColor: colors.primary }}><Text className="text-white font-bold" style={{ fontSize: 11.5 }}>Challenge</Text></Pressable>
-          </View>
-        )}
+          );
+        }}
       />
     );
   }

@@ -77,6 +77,7 @@ export function HomeSquadCard({
   onPress,
   distanceLabel,
   onChallenge,
+  challengePending = false,
 }: {
   squad: SquadListItem;
   currentUserId?: string;
@@ -84,6 +85,10 @@ export function HomeSquadCard({
   onPress: () => void;
   distanceLabel?: string;
   onChallenge?: () => void;
+  // A challenge to this squad is already pending their response — shows a
+  // disabled "Pending" pill instead of the "Challenge" button until they
+  // accept (or decline/it's cancelled), matching ChallengeTeamsScreen.
+  challengePending?: boolean;
 }) {
   const active = squad.squad_members.filter((m) => m.status === "ACTIVE");
   const isFull = !!squad.max_players && active.length >= squad.max_players;
@@ -146,7 +151,11 @@ export function HomeSquadCard({
             people={active.map((m) => ({ avatar: m.profiles?.avatar ?? null, name: m.profiles?.full_name ?? null }))}
             size={22}
           />
-          {onChallenge ? (
+          {onChallenge && challengePending ? (
+            <View className="rounded-full px-3 py-1 border border-border" style={{ backgroundColor: colors.surfaceRaised, minHeight: 30, justifyContent: "center" }}>
+              <Text className="text-muted font-bold" style={{ fontSize: 12 }}>Pending</Text>
+            </View>
+          ) : onChallenge ? (
             <Pressable
               onPress={(event) => { event.stopPropagation(); onChallenge(); }}
               className="rounded-full px-3 py-1"

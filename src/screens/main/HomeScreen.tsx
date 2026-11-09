@@ -11,7 +11,7 @@ import type { MainTabParamList } from "../../navigation/MainTabNavigator";
 import { useProfileStore } from "../../store/profileStore";
 import { useSports } from "../../hooks/useSports";
 import { useGames } from "../../hooks/useGames";
-import { useSquads } from "../../hooks/useSquads";
+import { useSquads, useTeamChallenges } from "../../hooks/useSquads";
 import { useEvents } from "../../hooks/useEvents";
 import { useVenues } from "../../hooks/useVenues";
 import { useUnreadNotificationCount } from "../../hooks/useNotifications";
@@ -175,6 +175,15 @@ export default function HomeScreen() {
   const managedTeams = useMemo(
     () => ownedSquads.filter((squad) => squad.group_type === "team" && challengeFormatsForSport(squad.sports?.name).length > 0),
     [ownedSquads]
+  );
+  const managerIds = useMemo(() => managedTeams.map((team) => team.id).sort(), [managedTeams]);
+  const { data: myTeamChallenges = [] } = useTeamChallenges(managerIds);
+  // A team I manage has already challenged this squad and is still waiting
+  // on their response — send_team_challenge blocks a second pending
+  // challenge to the same team, so the "Challenge" button reflects that.
+  const pendingChallengeReceiverIds = useMemo(
+    () => new Set(myTeamChallenges.filter((c) => c.status === "pending" && managerIds.includes(c.sender_squad_id)).map((c) => c.receiver_squad_id)),
+    [myTeamChallenges, managerIds]
   );
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents, isRefetching: eventsRefetching } = useEvents();
   // Pull-to-refresh refetches everything this screen shows at once rather
@@ -454,6 +463,7 @@ export default function HomeScreen() {
                 myGender={profile?.gender}
                 distanceLabel={km !== null ? formatDistanceKm(km) : undefined}
                 onChallenge={managedTeams.some((team) => team.id === item.id) ? undefined : () => beginChallenge(item)}
+                challengePending={pendingChallengeReceiverIds.has(item.id)}
                 onPress={() => navigation.navigate("SquadDetail", { squadId: item.id })}
               />
             </View>
