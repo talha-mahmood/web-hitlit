@@ -1,9 +1,10 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { CommonActions, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
+import { SkeletonBlock } from "../../components/Skeleton";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useMySquads } from "../../hooks/useSquadTeamFill";
 import { useTeamFixture } from "../../hooks/useSquads";
@@ -52,8 +53,6 @@ export default function TeamFixtureDetailsScreen() {
   const linkedTable = fixture?.scorecard_table ?? (fixture?.football_match_id ? "football_matches" : null);
   const linkedMatchId = fixture?.scorecard_match_id ?? fixture?.football_match_id ?? null;
 
-  if (isLoading) return <View className="flex-1 items-center justify-center bg-app"><ActivityIndicator color={colors.primary} /></View>;
-
   return (
     <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
       <View className="flex-row items-center px-4" style={{ minHeight: 58, paddingBottom: 8, gap: 10 }}>
@@ -61,7 +60,36 @@ export default function TeamFixtureDetailsScreen() {
         <View className="flex-1"><Text className="text-ink font-extrabold" style={{ fontSize: 18 }}>Team fixture</Text><Text className="text-muted" style={{ fontSize: 12 }}>Confirmed match details</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
-        {!fixture || error || !memberOfFixture ? (
+        {isLoading ? (
+          <View className="rounded-3xl border border-border bg-surface p-5">
+            <View className="flex-row items-center">
+              {[0, 1].map((i) => (
+                <View key={i} className="flex-1 items-center" style={{ gap: 8 }}>
+                  <SkeletonBlock width={68} height={68} borderRadius={20} />
+                  <SkeletonBlock width={80} height={14} />
+                </View>
+              ))}
+            </View>
+            <View className="mt-5 items-center rounded-xl px-3 py-2" style={{ backgroundColor: colors.primaryLight }}>
+              <SkeletonBlock width={70} height={14} />
+            </View>
+            <View className="mt-5" style={{ gap: 16 }}>
+              {([
+                { icon: "location", label: "Venue" },
+                { icon: "calendar", label: "Date and time" },
+                { icon: "trophy", label: "Sport and format" },
+              ] as const).map((row) => (
+                <View key={row.label} className="flex-row items-center" style={{ gap: 12 }}>
+                  <Ionicons name={row.icon} size={19} color={colors.primary} />
+                  <View>
+                    <Text className="text-muted text-xs">{row.label}</Text>
+                    <SkeletonBlock width={140} height={14} style={{ marginTop: 4 }} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : !fixture || error || !memberOfFixture ? (
           <View className="items-center rounded-2xl border border-border bg-surface p-6"><Ionicons name="alert-circle-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-bold">Fixture unavailable</Text><Text className="mt-1 text-center text-muted">{error instanceof Error ? error.message : "This fixture is only visible to members of either team."}</Text></View>
         ) : (
           <View className="rounded-3xl border border-border bg-surface p-5">

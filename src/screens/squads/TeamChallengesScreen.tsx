@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
+import { SkeletonBlock } from "../../components/Skeleton";
 import { useTeamChallenges, useTeamFixtures, useRespondToTeamChallenge, useCancelTeamChallenge } from "../../hooks/useSquads";
 import { useMyOwnedSquads, useMySquads } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
@@ -22,6 +23,46 @@ function TeamBadge({ team }: { team: TeamChallenge["sender"] }) {
     <View className="flex-1 items-center" style={{ gap: 6 }}>
       {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 28, height: 28, borderRadius: 8 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-lg bg-surfaceRaised" style={{ width: 28, height: 28 }}><Ionicons name="shield" size={16} color={colors.primary} /></View>}
       <Text className="text-center text-ink font-semibold" numberOfLines={1} style={{ fontSize: 10.5 }}>{team.name}</Text>
+    </View>
+  );
+}
+
+// Same shapes as renderItem/renderFixture below, with DB-driven text swapped
+// for skeleton blocks — cards appear immediately on open instead of a bare
+// spinner, then just fill in once challenges/fixtures load.
+function ChallengeCardSkeleton() {
+  return (
+    <View className="mb-2 overflow-hidden rounded-xl border border-border bg-surface p-2.5">
+      <View className="flex-row items-center">
+        <View className="flex-1 items-center" style={{ gap: 6 }}>
+          <SkeletonBlock width={28} height={28} borderRadius={8} />
+          <SkeletonBlock width={60} height={10} />
+        </View>
+        <View className="items-center px-1.5"><Ionicons name="arrow-forward" size={17} color={colors.muted} /></View>
+        <View className="flex-1 items-center" style={{ gap: 6 }}>
+          <SkeletonBlock width={28} height={28} borderRadius={8} />
+          <SkeletonBlock width={60} height={10} />
+        </View>
+      </View>
+      <View className="mt-2" style={{ gap: 6 }}>
+        <View className="flex-row items-center" style={{ gap: 5 }}><Ionicons name="location-outline" size={13} color={colors.primary} /><SkeletonBlock width="60%" height={11} /></View>
+        <View className="flex-row items-center" style={{ gap: 5 }}><Ionicons name="calendar-outline" size={13} color={colors.primary} /><SkeletonBlock width="75%" height={10} /></View>
+      </View>
+    </View>
+  );
+}
+
+function FixtureCardSkeleton() {
+  return (
+    <View className="mb-2 rounded-xl border border-border bg-surface p-2.5">
+      <View className="flex-row items-center">
+        <View className="flex-1 items-center"><SkeletonBlock width="70%" height={14} /></View>
+        <View className="px-3"><Ionicons name="trophy" size={19} color={colors.primary} /></View>
+        <View className="flex-1 items-center"><SkeletonBlock width="70%" height={14} /></View>
+      </View>
+      <View className="mt-2 items-center"><SkeletonBlock width="55%" height={11} /></View>
+      <View className="mt-2 flex-row items-center" style={{ gap: 6 }}><Ionicons name="location-outline" size={14} color={colors.primary} /><SkeletonBlock width="60%" height={13} /></View>
+      <View className="mt-1.5 flex-row items-center" style={{ gap: 6 }}><Ionicons name="calendar-outline" size={14} color={colors.primary} /><SkeletonBlock width="50%" height={12} /></View>
     </View>
   );
 }
@@ -152,7 +193,11 @@ export default function TeamChallengesScreen() {
           </Pressable>
         ))}
       </View>
-      {teamsLoading || membershipsLoading || (tab === "fixtures" ? fixturesLoading : managerIds.length > 0 && isLoading) ? <View className="flex-1 items-center justify-center"><ActivityIndicator color={colors.primary} /></View> : tab !== "fixtures" && managerIds.length === 0 ? (
+      {teamsLoading || membershipsLoading || (tab === "fixtures" ? fixturesLoading : managerIds.length > 0 && isLoading) ? (
+        <View style={{ paddingHorizontal: 12, paddingTop: 2 }}>
+          {Array.from({ length: 4 }, (_, i) => (tab === "fixtures" ? <FixtureCardSkeleton key={i} /> : <ChallengeCardSkeleton key={i} />))}
+        </View>
+      ) : tab !== "fixtures" && managerIds.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8"><Ionicons name="shield-outline" size={42} color={colors.muted} /><Text className="mt-3 text-center text-ink font-bold text-lg">No managed team yet</Text><Text className="mt-2 text-center text-muted">Team owners and active hosts can manage challenges for supported sports.</Text><Pressable onPress={() => navigation.navigate("CreateSquad", { presetType: "team", lockType: true })} className="mt-5 rounded-2xl px-5 py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Create Team</Text></Pressable></View>
       ) : (
         tab === "fixtures" ? (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import TeamManagerRequiredModal from "../../components/challenges/TeamManagerRequiredModal";
 import TeamChallengeComposerModal from "../../components/challenges/TeamChallengeComposerModal";
+import { SkeletonBlock } from "../../components/Skeleton";
 import SelectChallengeCityModal from "../../components/SelectChallengeCityModal";
 import SelectSportModal from "../../components/SelectSportModal";
 import { useSquads, useTeamChallenges } from "../../hooks/useSquads";
@@ -22,6 +23,22 @@ import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, "ChallengeTeams">;
 type Scope = "near" | "city";
+
+// Same shape as a real team row below, with DB-driven text swapped for
+// skeleton blocks — the list of cards appears immediately on open instead
+// of a bare spinner, then just fills in once teams load.
+function TeamRowSkeleton() {
+  return (
+    <View className="mb-1.5 flex-row items-center rounded-2xl border border-border bg-surface px-2 py-1.5" style={{ minHeight: 56, ...cardShadow }}>
+      <SkeletonBlock width={36} height={36} borderRadius={9} />
+      <View className="ml-2 mr-1.5 flex-1 justify-center" style={{ gap: 6 }}>
+        <SkeletonBlock width="55%" height={13} />
+        <SkeletonBlock width="70%" height={11} />
+      </View>
+      <SkeletonBlock width={70} height={32} borderRadius={8} />
+    </View>
+  );
+}
 
 export default function ChallengeTeamsScreen() {
   const navigation = useNavigation<Nav>();
@@ -149,8 +166,10 @@ export default function ChallengeTeamsScreen() {
         </View>
       ) : null}
 
-      {sportsLoading ? (
-        <View className="flex-1 items-center justify-center"><ActivityIndicator color={colors.primary} /></View>
+      {sportsLoading || isLoading ? (
+        <View style={{ paddingHorizontal: 12, paddingTop: 2 }}>
+          {Array.from({ length: 6 }, (_, i) => <TeamRowSkeleton key={i} />)}
+        </View>
       ) : renderTeamList()}
 
       <TeamManagerRequiredModal visible={managerModalVisible} onClose={() => { setManagerModalVisible(false); setOpponent(null); }} onCreateTeam={() => {
@@ -180,7 +199,7 @@ export default function ChallengeTeamsScreen() {
         refreshing={isFetching && !isLoading}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20, flexGrow: 1 }}
         ListHeaderComponent={error ? <Text className="mb-3 text-center" style={{ color: colors.danger }}>Could not load teams. Pull to refresh and try again.</Text> : null}
-        ListEmptyComponent={isLoading ? <View className="flex-1 items-center justify-center py-16"><ActivityIndicator color={colors.primary} /></View> : <View className="flex-1 items-center justify-center py-16"><Ionicons name="search-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-semibold">No teams found</Text><Text className="mt-1 text-center text-muted">Try another name, sport, or location filter.</Text></View>}
+        ListEmptyComponent={<View className="flex-1 items-center justify-center py-16"><Ionicons name="search-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-semibold">No teams found</Text><Text className="mt-1 text-center text-muted">Try another name, sport, or location filter.</Text></View>}
         renderItem={({ item: { team, km } }) => {
           const alreadyPending = pendingReceiverIds.has(team.id);
           return (

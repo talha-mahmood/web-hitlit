@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
+import { SkeletonBlock } from "../../components/Skeleton";
 import { useCancelTeamChallenge, useRespondToTeamChallenge, useTeamChallenges } from "../../hooks/useSquads";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
@@ -49,7 +50,7 @@ export default function TeamChallengeDetailsScreen() {
     }
   }
 
-  if (squadsLoading || (managerIds.length > 0 && isLoading)) return <View className="flex-1 items-center justify-center bg-app"><ActivityIndicator color={colors.primary} /></View>;
+  const loading = squadsLoading || (managerIds.length > 0 && isLoading);
 
   return (
     <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
@@ -58,7 +59,37 @@ export default function TeamChallengeDetailsScreen() {
         <View className="flex-1"><Text className="text-ink font-extrabold" style={{ fontSize: 18 }}>Challenge details</Text><Text className="text-muted" style={{ fontSize: 12 }}>Team match request</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-        {!challenge ? (
+        {loading ? (
+          <View className="rounded-3xl border border-border bg-surface p-5">
+            <View className="flex-row items-center">
+              {[0, 1].map((i) => (
+                <View key={i} className="flex-1 items-center" style={{ gap: 8 }}>
+                  <SkeletonBlock width={68} height={68} borderRadius={20} />
+                  <SkeletonBlock width={80} height={14} />
+                </View>
+              ))}
+            </View>
+            <View className="mt-5 items-center rounded-xl px-3 py-2" style={{ backgroundColor: colors.primaryLight }}>
+              <SkeletonBlock width={70} height={14} />
+            </View>
+            <View className="mt-5" style={{ gap: 16 }}>
+              {([
+                { icon: "location", label: "Venue" },
+                { icon: "calendar", label: "Date and time" },
+                { icon: "trophy", label: "Sport and format" },
+                { icon: "time-outline", label: "Sent" },
+              ] as const).map((row) => (
+                <View key={row.label} className="flex-row items-center" style={{ gap: 12 }}>
+                  <Ionicons name={row.icon} size={19} color={colors.primary} />
+                  <View>
+                    <Text className="text-muted text-xs">{row.label}</Text>
+                    <SkeletonBlock width={140} height={14} style={{ marginTop: 4 }} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : !challenge ? (
           <View className="items-center rounded-2xl border border-border bg-surface p-6"><Ionicons name="alert-circle-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-bold">Challenge unavailable</Text><Text className="mt-1 text-center text-muted">It may have been removed or you may no longer manage either team.</Text></View>
         ) : (
           <>
