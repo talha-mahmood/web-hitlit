@@ -68,6 +68,7 @@ export default function ChallengeTeamsScreen() {
   const teams = useMemo(() => {
     const eligible = squads.filter((team) =>
       team.group_type === "team" && team.id !== opponent?.id && team.squad_owner_id !== userId &&
+      !team.squad_members.some((member) => member.status === "ACTIVE" && member.user_id === userId) &&
       !managedTeams.some((managed) => managed.id === team.id) && challengeFormatsForSport(team.sports?.name).length > 0
     );
     const currentCity = selectedCity?.trim().toLocaleLowerCase();

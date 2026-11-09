@@ -207,8 +207,13 @@ export default function HomeScreen() {
     [squads, coords]
   );
   const nearbyChallengeTeams = useMemo(
-    () => nearbySquads.filter(({ item }) => item.group_type === "team" && challengeFormatsForSport(item.sports?.name).length > 0),
-    [nearbySquads]
+    () => nearbySquads.filter(({ item }) =>
+      item.group_type === "team" &&
+      challengeFormatsForSport(item.sports?.name).length > 0 &&
+      item.squad_owner_id !== userId &&
+      !item.squad_members.some((member) => member.status === "ACTIVE" && member.user_id === userId)
+    ),
+    [nearbySquads, userId]
   );
   const nearbyGroups = useMemo(
     () => nearbySquads.filter(({ item }) => item.group_type !== "team" || challengeFormatsForSport(item.sports?.name).length === 0),
