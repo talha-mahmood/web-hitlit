@@ -357,8 +357,8 @@ export default function PadelNewMatchScreen() {
     <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="padel"
-        title="New Padel Match"
-        subtitle="Set up teams and match rules"
+        title="New Match"
+        subtitle="Set up your match details"
         onBack={() => navigation.goBack()}
       />
 

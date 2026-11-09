@@ -335,8 +335,8 @@ export default function TableTennisNewMatchScreen() {
     <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="tableTennis"
-        title="Table Tennis Match"
-        subtitle="Set up players and match rules"
+        title="New Match"
+        subtitle="Set up your match details"
         onBack={() => navigation.goBack()}
       />
 

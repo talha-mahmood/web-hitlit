@@ -282,8 +282,8 @@ export default function FootballNewMatchScreen() {
     <KeyboardAvoidingView className="flex-1 bg-app" behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <SportNewMatchHeader
         sport="football"
-        title="New Football Match"
-        subtitle="Kicks off immediately once created"
+        title="New Match"
+        subtitle="Set up your match details"
         onBack={() => navigation.goBack()}
       />
 
