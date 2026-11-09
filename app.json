@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.playoye.app",
-      "versionCode": 9,
+      "versionCode": 10,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
