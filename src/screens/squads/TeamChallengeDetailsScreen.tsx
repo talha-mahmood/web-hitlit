@@ -14,6 +14,7 @@ import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getSportImage } from "../../lib/sportImages";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 const dateTime = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Karachi" }).format(new Date(value));
 
@@ -38,7 +39,7 @@ export default function TeamChallengeDetailsScreen() {
       await respond.mutateAsync({ challengeId: challenge.id, accept });
       Alert.alert(accept ? "Challenge accepted" : "Challenge declined", accept ? "The fixture is confirmed." : "The sender has been notified.");
     } catch (error) {
-      Alert.alert("Could not update challenge", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert("Could not update challenge", getFriendlyErrorMessage(error, "Please try again."));
     }
   }
 
@@ -48,7 +49,7 @@ export default function TeamChallengeDetailsScreen() {
       await cancel.mutateAsync(challenge.id);
       navigation.goBack();
     } catch (error) {
-      Alert.alert("Could not cancel challenge", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert("Could not cancel challenge", getFriendlyErrorMessage(error, "Please try again."));
     }
   }
 

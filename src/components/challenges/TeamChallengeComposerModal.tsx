@@ -8,6 +8,7 @@ import { useSendTeamChallenge } from "../../hooks/useSquads";
 import type { SquadListItem } from "../../lib/api/squads";
 import type { TeamChallengeFormat } from "../../lib/api/teamChallenges";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 
 function requestKey() {
@@ -18,8 +19,7 @@ function requestKey() {
 }
 
 function displayError(error: unknown) {
-  if (error instanceof Error) return error.message;
-  return "We couldn't send this challenge. Please try again.";
+  return getFriendlyErrorMessage(error, "We couldn't send this challenge. Please try again.");
 }
 
 export default function TeamChallengeComposerModal({

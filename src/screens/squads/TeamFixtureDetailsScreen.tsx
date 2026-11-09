@@ -7,6 +7,7 @@ import Image from "../../components/images/OptimizedImage";
 import { SkeletonBlock } from "../../components/Skeleton";
 import { getSportIcon } from "../../lib/sportIcons";
 import { getSportImage } from "../../lib/sportImages";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useMySquads } from "../../hooks/useSquadTeamFill";
 import { useTeamFixture } from "../../hooks/useSquads";
@@ -92,7 +93,7 @@ export default function TeamFixtureDetailsScreen() {
             </View>
           </View>
         ) : !fixture || error || !memberOfFixture ? (
-          <View className="items-center rounded-2xl border border-border bg-surface p-6"><Ionicons name="alert-circle-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-bold">Fixture unavailable</Text><Text className="mt-1 text-center text-muted">{error instanceof Error ? error.message : "This fixture is only visible to members of either team."}</Text></View>
+          <View className="items-center rounded-2xl border border-border bg-surface p-6"><Ionicons name="alert-circle-outline" size={38} color={colors.muted} /><Text className="mt-3 text-ink font-bold">Fixture unavailable</Text><Text className="mt-1 text-center text-muted">{error ? getFriendlyErrorMessage(error, "This fixture is only visible to members of either team.") : "This fixture is only visible to members of either team."}</Text></View>
         ) : (
           <View className="rounded-3xl border border-border bg-surface p-5">
             <View className="flex-row items-center">

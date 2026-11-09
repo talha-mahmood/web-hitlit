@@ -15,6 +15,7 @@ import { colors } from "../../constants/theme";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
 import type { TeamChallenge } from "../../lib/api/teamChallenges";
 import { challengeFormatsForSport } from "../../lib/teamChallengeFormats";
+import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 
 type Tab = "received" | "sent" | "fixtures" | "history";
 const formatDate = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Karachi" }).format(new Date(value));
@@ -110,7 +111,7 @@ export default function TeamChallengesScreen() {
       await respond.mutateAsync({ challengeId: challenge.id, accept });
       Alert.alert(accept ? "Challenge accepted" : "Challenge declined", accept ? "The fixture has been confirmed for both teams." : "The sender has been notified.");
     } catch (error) {
-      Alert.alert("Could not update challenge", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert("Could not update challenge", getFriendlyErrorMessage(error, "Please try again."));
     }
   }
 
@@ -118,7 +119,7 @@ export default function TeamChallengesScreen() {
     try {
       await cancel.mutateAsync(challenge.id);
     } catch (error) {
-      Alert.alert("Could not cancel challenge", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert("Could not cancel challenge", getFriendlyErrorMessage(error, "Please try again."));
     }
   }
 
