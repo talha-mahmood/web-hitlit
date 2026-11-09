@@ -19,6 +19,7 @@ import {
 } from "../../hooks/useTournamentTeams";
 import { useCreateTeamInvite, usePendingTeamInviteCount } from "../../hooks/useInvites";
 import { useTeamChatUnreadCount } from "../../hooks/useTeamMessages";
+import { usePlayerTeamSquads } from "../../hooks/useSquads";
 import { manualSportForName } from "../../lib/manualScore";
 import { isCricketFamily } from "../../lib/api/sports";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
@@ -234,11 +235,23 @@ function TeamCard({
   // "Invite a Player"/"Fill with my Squad" — recruiting into an open slot,
   // available to the host or anyone already on this specific team.
   const canManageRecruiting = isRosterEditable && !isTeamFull && (isHost || isJoinedMember);
+  // A team claimed by a squad (see squad_fill_tournament_team / the
+  // team-challenge auto-created game) is only ever open to that squad's own
+  // members — mirrors the RLS check on tournament_team_members so the
+  // button doesn't offer a join that the server would reject.
+  const { data: myTeamSquads } = usePlayerTeamSquads(userId);
+  const belongsToFillingSquad =
+    !team.filled_by_squad_id || (myTeamSquads ?? []).some((s) => s.id === team.filled_by_squad_id);
   // "Join Team" — a non-host without a team of their own yet can join any
   // open (not full) team directly, same one-tap mechanic as the host's own
   // "Add Myself", just inline on the card instead of behind a picker.
   const canJoinTeam =
-    isRosterEditable && !isTeamFull && !hasActiveTeamElsewhere && !isJoinedMember && !genderMismatch;
+    isRosterEditable &&
+    !isTeamFull &&
+    !hasActiveTeamElsewhere &&
+    !isJoinedMember &&
+    !genderMismatch &&
+    belongsToFillingSquad;
   // Host can pull a member off the roster under the same pre-venue-booked
   // window a member can leave under themselves (see enforce_team_roster_rules).
   const canHostRemoveMembers =
