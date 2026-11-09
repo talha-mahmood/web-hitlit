@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import { useCancelTeamChallenge, useRespondToTeamChallenge, useTeamChallenges } from "../../hooks/useSquads";
@@ -16,6 +17,7 @@ const dateTime = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday: 
 export default function TeamChallengeDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const route = useRoute<RouteProp<HomeStackParamList, "TeamChallengeDetails">>();
+  const insets = useSafeAreaInsets();
   const userId = useAuthStore((state) => state.session?.user.id);
   const { data: squads = [], isLoading: squadsLoading } = useMyOwnedSquads(userId);
   const managerSquads = useMemo(() => squads.filter((squad) => squad.group_type === "team" && challengeFormatsForSport(squad.sports?.name).length > 0), [squads]);
@@ -50,10 +52,10 @@ export default function TeamChallengeDetailsScreen() {
   if (squadsLoading || (managerIds.length > 0 && isLoading)) return <View className="flex-1 items-center justify-center bg-app"><ActivityIndicator color={colors.primary} /></View>;
 
   return (
-    <View className="flex-1 bg-app">
-      <View className="flex-row items-center px-5" style={{ paddingTop: 18, paddingBottom: 16, gap: 14 }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}><Ionicons name="arrow-back" size={23} color={colors.ink} /></Pressable>
-        <View className="flex-1"><Text className="text-ink text-xl font-extrabold">Challenge details</Text><Text className="text-muted text-sm">Team match request</Text></View>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
+      <View className="flex-row items-center px-4" style={{ minHeight: 58, paddingBottom: 8, gap: 10 }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} className="h-9 w-8 items-center justify-center"><Ionicons name="arrow-back" size={21} color={colors.ink} /></Pressable>
+        <View className="flex-1"><Text className="text-ink font-extrabold" style={{ fontSize: 18 }}>Challenge details</Text><Text className="text-muted" style={{ fontSize: 12 }}>Team match request</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
         {!challenge ? (
