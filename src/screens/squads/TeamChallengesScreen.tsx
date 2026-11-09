@@ -47,8 +47,10 @@ export default function TeamChallengesScreen() {
     const selected = challenges.filter((challenge) => {
       const received = managerIds.includes(challenge.receiver_squad_id);
       const sent = managerIds.includes(challenge.sender_squad_id);
-      if (tab === "received") return received && challenge.status === "pending";
-      if (tab === "sent") return sent && challenge.status === "pending";
+      // Pending or just-accepted, so the card stays put (now showing "Go to
+      // Game") right where it was accepted instead of jumping to History.
+      if (tab === "received") return received && (challenge.status === "pending" || challenge.status === "accepted");
+      if (tab === "sent") return sent && (challenge.status === "pending" || challenge.status === "accepted");
       return challenge.status !== "pending";
     });
     if (route.params?.focusChallengeId) {
@@ -121,6 +123,16 @@ export default function TeamChallengesScreen() {
             ) : (
               <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void cancelPending(item); }} className="flex-1 items-center justify-center rounded-lg border border-border bg-surfaceRaised" style={{ minHeight: 32 }}><Text className="text-ink font-bold" style={{ fontSize: 11 }}>Cancel challenge</Text></Pressable>
             )}
+          </View>
+        ) : item.status === "accepted" && item.fixture?.game_id ? (
+          <View className="mt-2.5">
+            <Pressable
+              onPress={(event) => { event.stopPropagation(); navigation.navigate("GameDetail", { gameId: item.fixture!.game_id! }); }}
+              className="items-center justify-center rounded-lg"
+              style={{ minHeight: 32, backgroundColor: colors.primary }}
+            >
+              <Text className="text-white font-bold" style={{ fontSize: 11 }}>Go to Game</Text>
+            </Pressable>
           </View>
         ) : null}
       </Pressable>

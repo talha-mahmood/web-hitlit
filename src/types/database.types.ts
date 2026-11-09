@@ -2921,6 +2921,7 @@ export type Database = {
           challenge_id: string
           created_at: string
           football_match_id: string | null
+          game_id: string | null
           home_squad_id: string
           id: string
           match_format: string
@@ -2939,6 +2940,7 @@ export type Database = {
           challenge_id: string
           created_at?: string
           football_match_id?: string | null
+          game_id?: string | null
           home_squad_id: string
           id?: string
           match_format: string
@@ -2957,6 +2959,7 @@ export type Database = {
           challenge_id?: string
           created_at?: string
           football_match_id?: string | null
+          game_id?: string | null
           home_squad_id?: string
           id?: string
           match_format?: string
@@ -2974,6 +2977,7 @@ export type Database = {
           { foreignKeyName: "team_fixtures_challenge_id_fkey"; columns: ["challenge_id"]; isOneToOne: true; referencedRelation: "team_challenges"; referencedColumns: ["id"] },
           { foreignKeyName: "team_fixtures_home_squad_id_fkey"; columns: ["home_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
           { foreignKeyName: "team_fixtures_away_squad_id_fkey"; columns: ["away_squad_id"]; isOneToOne: false; referencedRelation: "squads"; referencedColumns: ["id"] },
+          { foreignKeyName: "team_fixtures_game_id_fkey"; columns: ["game_id"]; isOneToOne: false; referencedRelation: "games"; referencedColumns: ["id"] },
         ]
       }
       team_chat_reads: {
