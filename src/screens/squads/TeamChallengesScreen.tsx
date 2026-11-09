@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Image from "../../components/images/OptimizedImage";
 import { useTeamChallenges, useTeamFixtures, useRespondToTeamChallenge, useCancelTeamChallenge } from "../../hooks/useSquads";
@@ -19,8 +20,8 @@ const formatTime = (value: string) => new Intl.DateTimeFormat("en-PK", { hour: "
 function TeamBadge({ team }: { team: TeamChallenge["sender"] }) {
   return (
     <View className="flex-1 items-center" style={{ gap: 6 }}>
-      {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 42, height: 42, borderRadius: 12 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-xl bg-surfaceRaised" style={{ width: 42, height: 42 }}><Ionicons name="shield" size={21} color={colors.primary} /></View>}
-      <Text className="text-center text-ink font-semibold" numberOfLines={1} style={{ fontSize: 13 }}>{team.name}</Text>
+      {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 28, height: 28, borderRadius: 8 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-lg bg-surfaceRaised" style={{ width: 28, height: 28 }}><Ionicons name="shield" size={16} color={colors.primary} /></View>}
+      <Text className="text-center text-ink font-semibold" numberOfLines={1} style={{ fontSize: 10.5 }}>{team.name}</Text>
     </View>
   );
 }
@@ -28,6 +29,7 @@ function TeamBadge({ team }: { team: TeamChallenge["sender"] }) {
 export default function TeamChallengesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const route = useRoute<RouteProp<HomeStackParamList, "TeamChallenges">>();
+  const insets = useSafeAreaInsets();
   const userId = useAuthStore((state) => state.session?.user.id);
   const { data: memberships = [], isLoading: membershipsLoading } = useMySquads(userId);
   const participantTeams = useMemo(() => memberships.filter((team) => team.group_type === "team" && challengeFormatsForSport(team.sports?.name).length > 0 && (team.squad_owner_id === userId || team.squad_members.some((member) => member.status === "ACTIVE" && member.user_id === userId))), [memberships, userId]);
@@ -78,16 +80,16 @@ export default function TeamChallengesScreen() {
   }
 
   const renderFixture = ({ item }: { item: (typeof fixtures)[number] }) => (
-    <Pressable onPress={() => navigation.navigate("TeamFixtureDetails", { fixtureId: item.id })} className="mb-3 rounded-2xl border border-border bg-surface p-4">
+    <Pressable onPress={() => navigation.navigate("TeamFixtureDetails", { fixtureId: item.id })} className="mb-2 rounded-xl border border-border bg-surface p-2.5">
       <View className="flex-row items-center">
         <Text className="flex-1 text-center text-ink font-bold" numberOfLines={1}>{item.home.name}</Text>
         <View className="px-3"><Ionicons name="trophy" size={19} color={colors.primary} /></View>
         <Text className="flex-1 text-center text-ink font-bold" numberOfLines={1}>{item.away.name}</Text>
       </View>
-      <Text className="mt-3 text-center text-primary text-xs font-bold">{item.status === "completed" ? "Completed" : "Confirmed fixture"} · {item.sportName} · {item.match_format}</Text>
-      <View className="mt-3 flex-row items-center" style={{ gap: 7 }}><Ionicons name="location-outline" size={16} color={colors.primary} /><Text className="flex-1 text-muted" numberOfLines={1}>{item.venue}</Text></View>
-      <View className="mt-2 flex-row items-center" style={{ gap: 7 }}><Ionicons name="calendar-outline" size={16} color={colors.primary} /><Text className="text-muted">{formatDate(item.scheduled_at)} · {formatTime(item.scheduled_at)}</Text></View>
-      {item.result ? <Text className="mt-3 text-center text-ink font-bold">{item.result}</Text> : null}
+      <Text className="mt-2 text-center text-primary font-bold" style={{ fontSize: 11 }}>{item.status === "completed" ? "Completed" : "Confirmed fixture"} · {item.sportName} · {item.match_format}</Text>
+      <View className="mt-2 flex-row items-center" style={{ gap: 6 }}><Ionicons name="location-outline" size={14} color={colors.primary} /><Text className="flex-1 text-muted" numberOfLines={1} style={{ fontSize: 13 }}>{item.venue}</Text></View>
+      <View className="mt-1.5 flex-row items-center" style={{ gap: 6 }}><Ionicons name="calendar-outline" size={14} color={colors.primary} /><Text className="text-muted" style={{ fontSize: 12 }}>{formatDate(item.scheduled_at)} · {formatTime(item.scheduled_at)}</Text></View>
+      {item.result ? <Text className="mt-2 text-center text-ink font-bold">{item.result}</Text> : null}
     </Pressable>
   );
 
@@ -95,29 +97,29 @@ export default function TeamChallengesScreen() {
     const received = managerIds.includes(item.receiver_squad_id);
     const busy = respond.isPending || cancel.isPending;
     return (
-      <Pressable onPress={() => navigation.navigate("TeamChallengeDetails", { challengeId: item.id })} className="mb-3 overflow-hidden rounded-2xl border border-border bg-surface p-4">
+      <Pressable onPress={() => navigation.navigate("TeamChallengeDetails", { challengeId: item.id })} className="mb-2 overflow-hidden rounded-xl border border-border bg-surface p-2.5">
         <View className="flex-row items-center">
           <TeamBadge team={item.sender} />
-          <View className="items-center px-2">
-            <Ionicons name="arrow-forward" size={19} color={colors.muted} />
-            <Text className="mt-1 text-primary text-xs font-bold">{item.status === "pending" ? "Pending" : item.status}</Text>
+          <View className="items-center px-1.5">
+            <Ionicons name="arrow-forward" size={17} color={colors.muted} />
+            <Text className="mt-0.5 text-primary font-bold" style={{ fontSize: 10 }}>{item.status === "pending" ? "Pending" : item.status}</Text>
           </View>
           <TeamBadge team={item.receiver} />
         </View>
-        <View className="mt-4" style={{ gap: 7 }}>
-          <View className="flex-row items-center" style={{ gap: 7 }}><Ionicons name="location-outline" size={16} color={colors.primary} /><Text className="flex-1 text-ink" numberOfLines={1}>{item.venue}</Text></View>
-          <View className="flex-row items-center" style={{ gap: 7 }}><Ionicons name="calendar-outline" size={16} color={colors.primary} /><Text className="text-muted">{formatDate(item.scheduled_at)} · {formatTime(item.scheduled_at)} · {item.sender.sports?.name} · {item.match_format}</Text></View>
-          {item.fixture ? <Text className="text-primary text-xs font-semibold">Confirmed fixture · {item.fixture.id.slice(0, 8).toUpperCase()}</Text> : null}
+        <View className="mt-2" style={{ gap: 4 }}>
+          <View className="flex-row items-center" style={{ gap: 5 }}><Ionicons name="location-outline" size={13} color={colors.primary} /><Text className="flex-1 text-ink" numberOfLines={1} style={{ fontSize: 12 }}>{item.venue}</Text></View>
+          <View className="flex-row items-center" style={{ gap: 5 }}><Ionicons name="calendar-outline" size={13} color={colors.primary} /><Text className="flex-1 text-muted" numberOfLines={1} style={{ fontSize: 11 }}>{formatDate(item.scheduled_at)} · {formatTime(item.scheduled_at)} · {item.sender.sports?.name} · {item.match_format}</Text></View>
+          {item.fixture ? <Text className="text-primary font-semibold" style={{ fontSize: 11 }}>Confirmed fixture · {item.fixture.id.slice(0, 8).toUpperCase()}</Text> : null}
         </View>
         {item.status === "pending" ? (
-          <View className="mt-4 flex-row" style={{ gap: 8 }}>
+          <View className="mt-2.5 flex-row" style={{ gap: 6 }}>
             {received ? (
               <>
-                <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void answer(item, false); }} className="flex-1 items-center rounded-xl border border-border bg-surfaceRaised py-3"><Text className="text-ink font-bold">Decline</Text></Pressable>
-                <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void answer(item, true); }} className="flex-1 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Accept</Text></Pressable>
+                <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void answer(item, false); }} className="flex-1 items-center justify-center rounded-lg border border-border bg-surfaceRaised" style={{ minHeight: 32 }}><Text className="text-ink font-bold" style={{ fontSize: 11 }}>Decline</Text></Pressable>
+                <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void answer(item, true); }} className="flex-1 items-center justify-center rounded-lg" style={{ minHeight: 32, backgroundColor: colors.primary }}><Text className="text-white font-bold" style={{ fontSize: 11 }}>Accept</Text></Pressable>
               </>
             ) : (
-              <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void cancelPending(item); }} className="flex-1 items-center rounded-xl border border-border bg-surfaceRaised py-3"><Text className="text-ink font-bold">Cancel challenge</Text></Pressable>
+              <Pressable disabled={busy} onPress={(event) => { event.stopPropagation(); void cancelPending(item); }} className="flex-1 items-center justify-center rounded-lg border border-border bg-surfaceRaised" style={{ minHeight: 32 }}><Text className="text-ink font-bold" style={{ fontSize: 11 }}>Cancel challenge</Text></Pressable>
             )}
           </View>
         ) : null}
@@ -126,20 +128,20 @@ export default function TeamChallengesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-app">
-      <View className="flex-row items-center px-5" style={{ paddingTop: 18, paddingBottom: 16, gap: 14 }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}><Ionicons name="arrow-back" size={23} color={colors.ink} /></Pressable>
-        <View className="flex-1"><Text className="text-ink text-xl font-extrabold">Team Challenges</Text><Text className="text-muted text-sm">Requests and confirmed fixtures</Text></View>
-        <Pressable onPress={() => navigation.navigate("ChallengeTeams", undefined)} accessibilityLabel="Find teams to challenge" className="mr-1 h-10 flex-row items-center rounded-xl px-3" style={{ backgroundColor: colors.primary }}>
-          <Ionicons name="search" size={17} color="#fff" />
-          <Text className="ml-1.5 text-white font-bold">Find teams</Text>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center px-4" style={{ minHeight: 54, gap: 8 }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={7} className="h-8 w-7 items-center justify-center"><Ionicons name="arrow-back" size={21} color={colors.ink} /></Pressable>
+        <View className="flex-1"><Text className="text-ink font-extrabold" numberOfLines={1} style={{ fontSize: 17 }}>Team Challenges</Text><Text className="text-muted" numberOfLines={1} style={{ fontSize: 11 }}>Requests and confirmed fixtures</Text></View>
+        <Pressable onPress={() => navigation.navigate("ChallengeTeams", undefined)} accessibilityLabel="Find teams to challenge" className="mr-0.5 h-8 flex-row items-center rounded-lg px-2" style={{ backgroundColor: colors.primary }}>
+          <Ionicons name="search" size={14} color="#fff" />
+          <Text className="ml-1 text-white font-bold" style={{ fontSize: 11 }}>Find teams</Text>
         </Pressable>
-        <Pressable onPress={() => void refresh()} hitSlop={8}><Ionicons name="refresh" size={21} color={colors.primary} /></Pressable>
+        <Pressable onPress={() => void refresh()} hitSlop={8} className="h-8 w-6 items-center justify-center"><Ionicons name="refresh" size={18} color={colors.primary} /></Pressable>
       </View>
-      <View className="mx-4 mb-3 flex-row rounded-2xl bg-surfaceRaised p-1">
+      <View className="mx-3 mb-2.5 flex-row rounded-xl bg-surfaceRaised p-1">
         {(["received", "sent", "fixtures", "history"] as const).map((key) => (
-          <Pressable key={key} onPress={() => setTab(key)} className="flex-1 items-center rounded-xl py-2.5" style={{ backgroundColor: tab === key ? colors.primaryLight : "transparent" }}>
-            <Text style={{ color: tab === key ? colors.primary : colors.muted, fontWeight: "700", textTransform: "capitalize" }}>{key}</Text>
+          <Pressable key={key} onPress={() => setTab(key)} className="flex-1 items-center rounded-lg py-2" style={{ backgroundColor: tab === key ? colors.primaryLight : "transparent" }}>
+            <Text style={{ color: tab === key ? colors.primary : colors.muted, fontWeight: "700", textTransform: "capitalize", fontSize: 12 }}>{key}</Text>
           </Pressable>
         ))}
       </View>
@@ -151,7 +153,7 @@ export default function TeamChallengesScreen() {
             data={fixtures}
             keyExtractor={(item) => item.id}
             renderItem={renderFixture}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30, flexGrow: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20, flexGrow: 1 }}
             onRefresh={() => void refresh()}
             refreshing={false}
             ListEmptyComponent={<View className="flex-1 items-center justify-center py-16"><Ionicons name="trophy-outline" size={42} color={colors.muted} /><Text className="mt-3 text-center text-ink font-semibold">No confirmed fixtures yet</Text><Text className="mt-1 text-center text-muted">Fixtures involving your sports teams will appear here.</Text></View>}
@@ -161,7 +163,7 @@ export default function TeamChallengesScreen() {
             data={visibleChallenges}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30, flexGrow: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20, flexGrow: 1 }}
             onRefresh={() => void refresh()}
             refreshing={false}
             ListEmptyComponent={<View className="flex-1 items-center justify-center py-16"><Ionicons name="trophy-outline" size={42} color={colors.muted} /><Text className="mt-3 text-center text-ink font-semibold">No {tab} challenges yet</Text><Text className="mt-1 text-center text-muted">Challenges to your managed teams will show here.</Text></View>}
