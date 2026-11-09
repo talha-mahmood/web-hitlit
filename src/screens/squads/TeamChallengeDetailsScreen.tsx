@@ -79,20 +79,6 @@ export default function TeamChallengeDetailsScreen() {
                 <View className="flex-row items-center" style={{ gap: 12 }}><Ionicons name="time-outline" size={19} color={colors.primary} /><View><Text className="text-muted text-xs">Sent</Text><Text className="text-ink font-semibold">{dateTime(challenge.created_at)}</Text></View></View>
               </View>
             </View>
-            {challenge.fixture ? (
-              <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-                <Text className="text-ink font-bold">Confirmed fixture</Text>
-                <Text className="mt-1 text-muted">Fixture ID {challenge.fixture.id}</Text>
-                <Text className="mt-1 text-muted">Status: {challenge.fixture.status}</Text>
-                {challenge.fixture.result ? <Text className="mt-2 text-ink">Result: {challenge.fixture.result}</Text> : null}
-                <Pressable onPress={() => navigation.navigate("TeamFixtureDetails", { fixtureId: challenge.fixture!.id })} className="mt-4 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}>
-                  <Text className="text-white font-bold">View {challenge.sender.sports?.name ?? "Team"} Fixture</Text>
-                </Pressable>
-                {!challenge.fixture.scorecard_match_id && !challenge.fixture.football_match_id && new Date(challenge.fixture.scheduled_at).getTime() > Date.now() ? (
-                  <Text className="mt-2 text-center text-muted text-xs">Scorecard opens at the scheduled match time.</Text>
-                ) : null}
-              </View>
-            ) : null}
             {challenge.status === "pending" && isReceiver ? (
               <View className="mt-4 flex-row" style={{ gap: 10 }}>
                 <Pressable disabled={respond.isPending} onPress={() => void handleResponse(false)} className="flex-1 items-center rounded-2xl border border-border bg-surfaceRaised py-4"><Text className="text-ink font-bold">Decline</Text></Pressable>
