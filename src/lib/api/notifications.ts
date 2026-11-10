@@ -3,6 +3,17 @@ import type { Database } from "../../types/database.types";
 
 export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
 
+export async function fetchNotificationById(id: string): Promise<NotificationRow | null> {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function fetchNotifications(userId: string): Promise<NotificationRow[]> {
   const { data, error } = await supabase
     .from("notifications")

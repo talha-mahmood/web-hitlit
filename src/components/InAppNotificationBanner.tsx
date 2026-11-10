@@ -8,7 +8,7 @@ import { colors, heroShadow } from "../constants/theme";
 type Props = {
   notification: Notifications.Notification | null;
   onDismiss: (identifier: string) => void;
-  onPress: () => void;
+  onPress: (notification: Notifications.Notification) => void;
 };
 
 function notificationIcon(data: Record<string, unknown>) {
@@ -73,7 +73,7 @@ export default function InAppNotificationBanner({ notification, onDismiss, onPre
     >
       <View className="overflow-hidden rounded-2xl border border-border bg-surface" style={heroShadow}>
         <View className="flex-row items-start px-3.5 py-3" style={{ gap: 10 }}>
-          <Pressable onPress={onPress} className="flex-1 flex-row items-start" style={{ gap: 10 }} accessibilityRole="button" accessibilityLabel="Open notification inbox">
+          <Pressable onPress={() => onPress(notification)} className="flex-1 flex-row items-start" style={{ gap: 10 }} accessibilityRole="button" accessibilityLabel="Open notification">
             <View className="mt-0.5 h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: colors.primaryLight }}>
               <Ionicons name={notificationIcon(data)} size={19} color={colors.primary} />
             </View>

@@ -26,6 +26,7 @@ import {
 import type { NotificationRow } from "../../lib/api/notifications";
 import { colors } from "../../constants/theme";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { resolveNotificationTarget } from "../../lib/notificationTarget";
 import GradientFill from "../../components/GradientFill";
 import { SkeletonCardRows } from "../../components/Skeleton";
 
@@ -224,15 +225,34 @@ export default function NotificationsScreen() {
   // Shared by tapping the card itself and by approving an invite from it —
   // both land the user on whatever the notification is actually about.
   const navigateToTarget = (n: NotificationRow) => {
-    const { gameId, squadId, commentId, challengeId } = resolveTarget(n);
-    if (gameId) {
-      navigation.navigate("GameDetail", { gameId });
-    } else if (squadId) {
-      navigation.navigate("Community", { screen: "SquadDetail", params: { squadId } });
-    } else if (commentId) {
-      navigation.navigate("Community", { screen: "CommentThread", params: { rootId: commentId } });
-    } else if (challengeId) {
-      navigation.navigate("TeamChallengeDetails", { challengeId });
+    const target = resolveNotificationTarget(n.data);
+    if (!target) return;
+
+    switch (target.screen) {
+      case "CommentThread":
+        navigation.navigate("Community", { screen: "CommentThread", params: target.params });
+        break;
+      case "SquadDetail":
+        navigation.navigate("Community", { screen: "SquadDetail", params: target.params });
+        break;
+      case "GameDetail":
+        navigation.navigate("GameDetail", target.params);
+        break;
+      case "EventDetail":
+        navigation.navigate("EventDetail", target.params);
+        break;
+      case "VenueDetail":
+        navigation.navigate("VenueDetail", target.params);
+        break;
+      case "TeamChallengeDetails":
+        navigation.navigate("TeamChallengeDetails", target.params);
+        break;
+      case "TeamFixtureDetails":
+        navigation.navigate("TeamFixtureDetails", target.params);
+        break;
+      case "VenueBookings":
+        // Admin venue notifications are handled by AdminNotificationsScreen.
+        break;
     }
   };
 

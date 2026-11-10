@@ -23,8 +23,54 @@ import AccountSuspendedScreen from "../screens/onboarding/AccountSuspendedScreen
 import { setActiveThemePalette, themePalettes } from "../constants/theme";
 import { getResolvedTheme, hydrateThemePreference, useThemeStore } from "../store/themeStore";
 import InAppNotificationBanner from "../components/InAppNotificationBanner";
+import { fetchNotificationById } from "../lib/api/notifications";
+import { resolveNotificationRecordId, resolveNotificationTarget } from "../lib/notificationTarget";
 
 const navigationRef = createNavigationContainerRef<ParamListBase>();
+
+async function openNotificationDestination(payload: unknown, isAdminSide: boolean): Promise<boolean> {
+  let target = resolveNotificationTarget(payload, { isAdmin: isAdminSide });
+  if (!target) {
+    const notificationId = resolveNotificationRecordId(payload);
+    if (notificationId) {
+      try {
+        const row = await fetchNotificationById(notificationId);
+        target = resolveNotificationTarget(row?.data, { isAdmin: isAdminSide });
+      } catch {
+        // If the record cannot be fetched, the existing inbox fallback below
+        // still gives the user access to their notification.
+      }
+    }
+  }
+  if (!target || !navigationRef.isReady()) return false;
+
+  switch (target.screen) {
+    case "CommentThread":
+      navigationRef.navigate("Community", { screen: "CommentThread", params: target.params });
+      return true;
+    case "VenueBookings":
+      navigationRef.navigate("VenueBookings", target.params);
+      return true;
+    case "VenueDetail":
+      navigationRef.navigate("Home", { screen: "VenueDetail", params: target.params });
+      return true;
+    case "GameDetail":
+      navigationRef.navigate("Home", { screen: "GameDetail", params: target.params });
+      return true;
+    case "SquadDetail":
+      navigationRef.navigate("Home", { screen: "SquadDetail", params: target.params });
+      return true;
+    case "EventDetail":
+      navigationRef.navigate("Home", { screen: "EventDetail", params: target.params });
+      return true;
+    case "TeamChallengeDetails":
+      navigationRef.navigate("Home", { screen: "TeamChallengeDetails", params: target.params });
+      return true;
+    case "TeamFixtureDetails":
+      navigationRef.navigate("Home", { screen: "TeamFixtureDetails", params: target.params });
+      return true;
+  }
+}
 
 const utilityColorPalettes = {
   dark: {
@@ -118,9 +164,11 @@ export default function RootNavigator() {
   const handleForegroundNotificationDismiss = useCallback((identifier: string) => {
     setForegroundNotifications((current) => current.filter((item) => item.request.identifier !== identifier));
   }, []);
-  const handleForegroundNotificationPress = useCallback(() => {
+  const handleForegroundNotificationPress = useCallback(async (notification: Notifications.Notification) => {
     if (!navigationRef.isReady()) return;
     const isAdminSide = profile?.type === "owner" || profile?.type === "superadmin";
+    const data = notification.request.content.data;
+    if (await openNotificationDestination(data, isAdminSide)) return;
     if (isAdminSide) navigationRef.navigate("AdminNotifications");
     else navigationRef.navigate("Home", { screen: "Notifications" });
   }, [profile?.type]);
@@ -199,7 +247,7 @@ export default function RootNavigator() {
   }, [session?.user.id]);
 
   // Tapping a push notification (including the one that cold-started the
-  // app) opens that account's notifications screen.
+  // app) opens its destination directly when the payload identifies one.
   const lastResponse = Notifications.useLastNotificationResponse();
   const handledResponseRef = useRef<string | null>(null);
   useEffect(() => {
@@ -216,8 +264,12 @@ export default function RootNavigator() {
         return;
       }
       handledResponseRef.current = responseKey;
-      if (isAdminSide) navigationRef.navigate("AdminNotifications");
-      else navigationRef.navigate("Home", { screen: "Notifications" });
+      const data = lastResponse.notification.request.content.data;
+      void openNotificationDestination(data, isAdminSide).then((opened) => {
+        if (opened) return;
+        if (isAdminSide) navigationRef.navigate("AdminNotifications");
+        else navigationRef.navigate("Home", { screen: "Notifications" });
+      });
     };
     open();
     return () => {
