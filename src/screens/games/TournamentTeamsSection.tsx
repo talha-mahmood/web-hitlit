@@ -529,6 +529,20 @@ function HeadToHeadMatchCard({
 
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = isCricketFamily(sportName);
+  const linkedScorecardId = (() => {
+    if (!match) return null;
+    if (isCricketSport) return match.cricket_match_id;
+    switch (sportName) {
+      case "padel": return match.padel_match_id;
+      case "tennis": return match.tennis_match_id;
+      case "badminton": return match.badminton_match_id;
+      case "pickleball": return match.pickleball_match_id;
+      case "table tennis": return match.table_tennis_match_id;
+      case "football": return match.football_match_id;
+      default: return null;
+    }
+  })();
+  const isLive = !!linkedScorecardId && match?.status !== "COMPLETED";
   // Once the match has a result (scored live or entered by hand) there's
   // nothing left to score, so neither scoring button is offered. Scoring no
   // longer waits on the venue being booked — a host can start scoring as
@@ -628,8 +642,34 @@ function HeadToHeadMatchCard({
     }
   };
 
+  // Every signed-in game participant can open a linked scorecard. Each live
+  // scoring screen independently checks its scorer id and hides write
+  // controls from everyone else, while keeping the same live view/realtime.
+  const handleWatchScorecard = () => {
+    if (!linkedScorecardId) return;
+    if (isCricketSport) {
+      navigation.navigate("LiveScoring", { matchId: linkedScorecardId });
+      return;
+    }
+    switch (sportName) {
+      case "padel": navigation.navigate("PadelLiveScoring", { matchId: linkedScorecardId }); return;
+      case "tennis": navigation.navigate("TennisLiveScoring", { matchId: linkedScorecardId }); return;
+      case "badminton": navigation.navigate("BadmintonLiveScoring", { matchId: linkedScorecardId }); return;
+      case "pickleball": navigation.navigate("PickleballLiveScoring", { matchId: linkedScorecardId }); return;
+      case "table tennis": navigation.navigate("TableTennisLiveScoring", { matchId: linkedScorecardId }); return;
+      case "football": navigation.navigate("FootballLiveScoring", { matchId: linkedScorecardId }); return;
+    }
+  };
+
   return (
-    <View className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4" style={cardShadow}>
+    <Pressable
+      onPress={linkedScorecardId ? handleWatchScorecard : undefined}
+      disabled={!linkedScorecardId}
+      accessibilityRole={linkedScorecardId ? "button" : undefined}
+      accessibilityLabel={linkedScorecardId ? `${teamAName} versus ${teamBName}, ${isLive ? "live" : "completed"}. Open scorecard` : undefined}
+      className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4"
+      style={cardShadow}
+    >
       <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
       <View className="bg-gray-50 rounded-xl px-3 py-2.5">
         <View className="flex-row items-center justify-between">
@@ -637,27 +677,40 @@ function HeadToHeadMatchCard({
           <Text className="text-muted text-xs mx-2">vs</Text>
           <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
         </View>
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="text-muted text-xs">{match?.scheduled_at ? new Date(match.scheduled_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) : "Head-to-head"}</Text>
+          <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: match?.status === "COMPLETED" ? colors.primaryLight : isLive ? colors.dangerLight : colors.infoLight }}>
+            <Text className="text-xs font-bold" style={{ color: match?.status === "COMPLETED" ? colors.primaryDark : isLive ? "#DC2626" : "#2563EB" }}>
+              {match?.status === "COMPLETED" ? "Completed" : isLive ? "LIVE" : "Upcoming"}
+            </Text>
+          </View>
+        </View>
         {match?.status === "COMPLETED" && (match.is_draw || match.winner_team) ? (
           <Text className="text-primary text-xs font-semibold mt-1.5">
             {match.is_draw ? "Draw" : `${match.winner_team?.name} won`}
           </Text>
         ) : null}
         {match ? <LinkedMatchScoreDetails match={match} /> : null}
-        {canGoToScorecard && (
+        {linkedScorecardId && (
+          <View className="mt-2 rounded-lg border border-primary py-2 items-center">
+            <Text className="text-primary text-xs font-semibold">{isLive ? "Watch Live Score" : "View Scorecard"}</Text>
+          </View>
+        )}
+        {canGoToScorecard && !linkedScorecardId && (
           <Pressable onPress={handleGoToScorecard} className="mt-2">
             <GradientFill className="rounded-lg py-2 items-center">
               <Text className="text-jazba-white text-xs font-semibold">Go To Scorecard</Text>
             </GradientFill>
           </Pressable>
         )}
-        {canGoToScorecard && (
+        {canGoToScorecard && !linkedScorecardId && (
           <Pressable onPress={handleEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
             <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
           </Pressable>
         )}
       </View>
 
-    </View>
+    </Pressable>
   );
 }
 
