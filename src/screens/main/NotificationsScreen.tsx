@@ -234,6 +234,18 @@ export default function NotificationsScreen() {
       case "CommentThread":
         navigation.navigate("Community", { screen: "CommentThread", params: target.params });
         break;
+      case "GameChat":
+        navigation.navigate("GameChat", target.params);
+        break;
+      case "TeamChat":
+        navigation.navigate("TeamChat", target.params);
+        break;
+      case "SquadChat":
+        navigation.navigate("SquadChat", target.params);
+        break;
+      case "EventChat":
+        navigation.navigate("EventChat", target.params);
+        break;
       case "SquadDetail":
         navigation.navigate("Community", { screen: "SquadDetail", params: target.params });
         break;

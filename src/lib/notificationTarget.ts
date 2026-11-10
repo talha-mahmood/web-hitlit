@@ -6,6 +6,10 @@
 export type NotificationTarget =
   | { screen: "TeamFixtureDetails"; params: { fixtureId: string } }
   | { screen: "TeamChallengeDetails"; params: { challengeId: string } }
+  | { screen: "GameChat"; params: { gameId: string } }
+  | { screen: "TeamChat"; params: { teamId: string } }
+  | { screen: "SquadChat"; params: { squadId: string } }
+  | { screen: "EventChat"; params: { eventId: string } }
   | { screen: "GameDetail"; params: { gameId: string } }
   | { screen: "SquadDetail"; params: { squadId: string } }
   | { screen: "CommentThread"; params: { rootId: string; highlightId?: string } }
@@ -31,6 +35,28 @@ export function resolveNotificationTarget(
   const data = nestedData && typeof nestedData === "object" && !Array.isArray(nestedData)
     ? { ...outer, ...(nestedData as Record<string, unknown>) }
     : outer;
+
+  const category = stringValue(data, "eventCategory", "event_category", "type")?.toLowerCase();
+  if (category === "chat_message" || category === "game_message" || category === "team_message" ||
+      category === "squad_message" || category === "event_message" || category === "community_reply") {
+    const teamId = stringValue(data, "teamId", "team_id");
+    if (teamId) return { screen: "TeamChat", params: { teamId } };
+
+    const gameId = stringValue(data, "gameId", "game_id");
+    if (gameId) return { screen: "GameChat", params: { gameId } };
+
+    const squadId = stringValue(data, "squadId", "squad_id");
+    if (squadId) return { screen: "SquadChat", params: { squadId } };
+
+    const eventId = stringValue(data, "eventId", "event_id");
+    if (eventId) return { screen: "EventChat", params: { eventId } };
+
+    const commentId = stringValue(data, "commentId", "comment_id", "rootId", "root_id");
+    if (commentId) {
+      const highlightId = stringValue(data, "highlightId", "highlight_id");
+      return { screen: "CommentThread", params: { rootId: commentId, ...(highlightId ? { highlightId } : {}) } };
+    }
+  }
 
   // Accepted challenges also carry challengeId. Prefer the fixture so both
   // teams land on the confirmed match rather than its request record.

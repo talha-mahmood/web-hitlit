@@ -48,6 +48,18 @@ async function openNotificationDestination(payload: unknown, isAdminSide: boolea
     case "CommentThread":
       navigationRef.navigate("Community", { screen: "CommentThread", params: target.params });
       return true;
+    case "GameChat":
+      navigationRef.navigate("Home", { screen: "GameChat", params: target.params });
+      return true;
+    case "TeamChat":
+      navigationRef.navigate("Home", { screen: "TeamChat", params: target.params });
+      return true;
+    case "SquadChat":
+      navigationRef.navigate("Home", { screen: "SquadChat", params: target.params });
+      return true;
+    case "EventChat":
+      navigationRef.navigate("Home", { screen: "EventChat", params: target.params });
+      return true;
     case "VenueBookings":
       navigationRef.navigate("VenueBookings", target.params);
       return true;
