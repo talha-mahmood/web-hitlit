@@ -4,15 +4,21 @@ import Constants from "expo-constants";
 import { supabase } from "./supabase";
 
 // Foreground pushes are presented by the app's existing floating banner.
-// Suppress Expo's native presentation in that state to avoid showing the same
-// event twice. Background/terminated delivery remains owned by Android/Expo.
+// Suppress the native presentation while the app is active to avoid showing
+// the Android banner at the same time. Background/terminated delivery remains
+// owned by Android/Expo.
 Notifications.setNotificationHandler({
   handleNotification: async () => {
-    const isForeground = AppState.currentState === "active";
+    // Only opt into native presentation when the app is explicitly in the
+    // background. Treat `inactive`/unknown lifecycle transitions as
+    // foreground so a received push cannot flash both banners during a state
+    // change. Terminated pushes are presented by Android directly.
+    const isBackground = AppState.currentState === "background";
     return {
-      shouldShowBanner: !isForeground,
-      shouldShowList: !isForeground,
-      shouldPlaySound: !isForeground,
+      shouldShowAlert: false,
+      shouldShowBanner: isBackground,
+      shouldShowList: isBackground,
+      shouldPlaySound: isBackground,
       shouldSetBadge: false,
     };
   },
