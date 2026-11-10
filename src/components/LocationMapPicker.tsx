@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, cardShadow, primaryButtonShadow } from "../constants/theme";
-import { reverseGeocodeViaNominatim } from "../lib/locationPicker";
+import { getDeviceCoordsForMapCenter, reverseGeocodeViaNominatim, PAKISTAN_DEFAULT_CENTER } from "../lib/locationPicker";
 import GradientFill from "./GradientFill";
 
 // A small, self-contained Leaflet + OpenStreetMap page, loaded straight
@@ -59,8 +59,11 @@ export default function LocationMapPicker({
   confirming,
   selectedLabel,
 }: {
-  initialLat: number;
-  initialLng: number;
+  // Optional — when omitted, the picker detects the device's current
+  // location in the background (falling back to PAKISTAN_DEFAULT_CENTER on
+  // denial/failure) instead of requiring the caller to pre-fetch it.
+  initialLat?: number;
+  initialLng?: number;
   onConfirm: (lat: number, lng: number) => void;
   confirming: boolean;
   // The host's last confirmed pick (set by the caller once onConfirm's own
@@ -70,16 +73,44 @@ export default function LocationMapPicker({
   selectedLabel?: string | null;
 }) {
   const insets = useSafeAreaInsets();
-  const [picked, setPicked] = useState<{ lat: number; lng: number }>({ lat: initialLat, lng: initialLng });
-  const [mapReady, setMapReady] = useState(false);
+  const hasInitialCoords = initialLat != null && initialLng != null;
+  // `picked` stays null until a center is known (either given by the
+  // caller, or auto-detected below) — the map box itself doesn't render
+  // until then, so there's nothing to show a loader for: the search field
+  // above renders immediately regardless of this being null.
+  const [picked, setPicked] = useState<{ lat: number; lng: number } | null>(
+    hasInitialCoords ? { lat: initialLat!, lng: initialLng! } : null
+  );
+  const autoDetectStarted = useRef(hasInitialCoords);
+  useEffect(() => {
+    if (autoDetectStarted.current) return;
+    autoDetectStarted.current = true;
+    (async () => {
+      const coords = await getDeviceCoordsForMapCenter();
+      setPicked(
+        coords
+          ? { lat: coords.latitude, lng: coords.longitude }
+          : { lat: PAKISTAN_DEFAULT_CENTER.latitude, lng: PAKISTAN_DEFAULT_CENTER.longitude }
+      );
+    })();
+  }, []);
+
+  // Flips once the WebView's underlying page finishes loading — the map
+  // itself (WebView) only mounts once `picked` is known, and stays
+  // invisible (opacity 0, but still mounted so it loads in the background)
+  // until this is also true, so it only ever appears fully ready, never as
+  // an empty map that fills in afterward.
+  const [webviewLoaded, setWebviewLoaded] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const hasCenter = picked !== null;
   // Reseeded from the current pin position (not the original initial props)
   // whenever fullscreen is toggled on or off, so switching views never loses
-  // whatever the host already picked. Only recomputed on that transition —
-  // the map then tracks drags/taps/search picks live via injectJavaScript,
-  // same as it always has, without needing a fresh HTML load for those.
+  // whatever the host already picked. Only recomputed on that transition
+  // (and once, when a center first becomes known) — the map then tracks
+  // drags/taps/search picks live via injectJavaScript, same as it always
+  // has, without needing a fresh HTML load for those.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const html = useMemo(() => buildMapHtml(picked.lat, picked.lng), [fullscreen]);
+  const html = useMemo(() => (picked ? buildMapHtml(picked.lat, picked.lng) : null), [fullscreen, hasCenter]);
   const webviewRef = useRef<WebView>(null);
 
   const [query, setQuery] = useState("");
@@ -88,17 +119,17 @@ export default function LocationMapPicker({
   // Guards against a slower, older request's results landing after a
   // newer one's and clobbering what's on screen.
   const searchRequestId = useRef(0);
-  // The map posts the marker's starting position once on load (same as
-  // every later drag/tap) — skip reverse-geocoding that first report so the
-  // search box starts empty instead of auto-filling with the initial
-  // center's address before the host has picked anything.
-  const hasMapLoadedOnce = useRef(false);
   // Picking a search result already sets the box to that result's own
   // label (see handlePickResult) — skip the next reverse-geocode sync so it
   // isn't immediately overwritten by a (usually near-identical, but
   // possibly differently worded) address for the same coordinates.
   const skipNextGeocodeSync = useRef(false);
   const geocodeSyncRequestId = useRef(0);
+  // De-dupes reverse-geocode syncs for a coordinate pair already synced —
+  // the map reposts the marker's current position on every load/reload
+  // (initial load, fullscreen toggle), which would otherwise re-geocode the
+  // exact same point it just did moments earlier.
+  const lastGeocodedKey = useRef<string | null>(null);
 
   const handleMessage = (e: WebViewMessageEvent) => {
     try {
@@ -110,18 +141,20 @@ export default function LocationMapPicker({
   };
 
   // Keeps the search box showing wherever the pin currently is — like
-  // Google Maps' search bar echoing the selected place — whenever it moves
-  // because the host dragged or tapped the map (not because a search
-  // result was picked, which already set a label directly).
+  // Google Maps' search bar echoing the selected place — whenever it moves,
+  // whether because a center was just auto-detected, the host dragged or
+  // tapped the map, or the map reposted the same point on load/reload (not
+  // because a search result was picked, which already set a label directly).
   useEffect(() => {
-    if (!hasMapLoadedOnce.current) {
-      hasMapLoadedOnce.current = true;
-      return;
-    }
+    if (!picked) return;
+    const key = `${picked.lat},${picked.lng}`;
     if (skipNextGeocodeSync.current) {
       skipNextGeocodeSync.current = false;
+      lastGeocodedKey.current = key;
       return;
     }
+    if (key === lastGeocodedKey.current) return;
+    lastGeocodedKey.current = key;
     const requestId = ++geocodeSyncRequestId.current;
     reverseGeocodeViaNominatim(picked.lat, picked.lng)
       .then((label) => {
@@ -130,7 +163,6 @@ export default function LocationMapPicker({
       .catch(() => {
         // Best-effort — leave whatever text is already in the box.
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
 
   // OSM's own free geocoder — no API key, same OSM ecosystem the tiles
@@ -187,13 +219,10 @@ export default function LocationMapPicker({
   };
 
   // Reloads the map at its current size (the WebView's `source` prop
-  // changing re-triggers its loading state) — reset the "skip the very
-  // first report" guard too, so the reloaded map's own initial position
-  // report doesn't overwrite the search box the same way a real first load
-  // wouldn't.
+  // changing re-triggers its loading state) — hidden again via
+  // `webviewLoaded` until that reload finishes, same as the very first load.
   const toggleFullscreen = () => {
-    hasMapLoadedOnce.current = false;
-    setMapReady(false);
+    setWebviewLoaded(false);
     setFullscreen((f) => !f);
   };
 
@@ -244,46 +273,57 @@ export default function LocationMapPicker({
         </View>
       )}
 
-      <View
-        className="rounded-2xl overflow-hidden"
-        style={fullscreen ? { flex: 1 } : { height: 260, ...cardShadow }}
-      >
-        <WebView ref={webviewRef} source={{ html }} onMessage={handleMessage} onLoadEnd={() => setMapReady(true)} style={{ flex: 1 }} />
-        {!mapReady && (
-          <View className="absolute inset-0 items-center justify-center bg-surface">
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        )}
-        {/* Only in the embedded view — the full-screen view exits via its
-            own header's close button instead. */}
-        {!fullscreen && (
-          <Pressable
-            onPress={toggleFullscreen}
-            hitSlop={6}
-            className="absolute top-3 right-3 items-center justify-center"
-            style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.surface, ...cardShadow }}
-          >
-            <Ionicons name="expand-outline" size={16} color={colors.ink} />
-          </Pressable>
-        )}
-        <Pressable
-          onPress={() => onConfirm(picked.lat, picked.lng)}
-          disabled={confirming}
-          className="absolute bottom-3 left-3 right-3"
-          style={primaryButtonShadow}
+      {/* The whole map box stays unmounted (not just invisible) until a
+          center is known — nothing renders here while auto-detect runs, by
+          design: no loader, just the search field above until this is
+          ready. Once `html` exists, the WebView mounts and loads in the
+          background (opacity 0) and only fades in once `webviewLoaded`, so
+          it's never shown mid-load or centered on the wrong point. */}
+      {picked && html && (
+        <View
+          className="rounded-2xl overflow-hidden"
+          style={fullscreen ? { flex: 1 } : { height: 260, ...cardShadow }}
         >
-          <GradientFill className="flex-row items-center justify-center rounded-xl py-3" style={{ gap: 8 }}>
-            {confirming ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Ionicons name="checkmark" size={18} color="white" />
-                <Text className="text-jazba-white font-bold text-sm">Use This Location</Text>
-              </>
-            )}
-          </GradientFill>
-        </Pressable>
-      </View>
+          <WebView
+            ref={webviewRef}
+            source={{ html }}
+            onMessage={handleMessage}
+            onLoadEnd={() => setWebviewLoaded(true)}
+            style={{ flex: 1, opacity: webviewLoaded ? 1 : 0 }}
+          />
+          {/* Only in the embedded view — the full-screen view exits via its
+              own header's close button instead. */}
+          {!fullscreen && webviewLoaded && (
+            <Pressable
+              onPress={toggleFullscreen}
+              hitSlop={6}
+              className="absolute top-3 right-3 items-center justify-center"
+              style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.surface, ...cardShadow }}
+            >
+              <Ionicons name="expand-outline" size={16} color={colors.ink} />
+            </Pressable>
+          )}
+          {webviewLoaded && (
+            <Pressable
+              onPress={() => onConfirm(picked.lat, picked.lng)}
+              disabled={confirming}
+              className="absolute bottom-3 left-3 right-3"
+              style={primaryButtonShadow}
+            >
+              <GradientFill className="flex-row items-center justify-center rounded-xl py-3" style={{ gap: 8 }}>
+                {confirming ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark" size={18} color="white" />
+                    <Text className="text-jazba-white font-bold text-sm">Use This Location</Text>
+                  </>
+                )}
+              </GradientFill>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {selectedLabel && (
         <View className="flex-row items-center rounded-xl px-3.5 py-2.5 mt-2" style={{ backgroundColor: colors.primaryLight, gap: 8 }}>

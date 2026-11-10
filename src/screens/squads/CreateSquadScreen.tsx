@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -31,7 +31,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
-import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
+import { reverseGeocodeViaNominatim } from "../../lib/locationPicker";
 import type { SquadGroupType } from "../../lib/api/squads";
 import type { AddTeamParams } from "../../navigation/addTeamTypes";
 import GradientFill from "../../components/GradientFill";
@@ -211,24 +211,9 @@ export default function CreateSquadScreen() {
   // field (which itself copies Host Tournament's "Enter Location Manually"
   // flow). No app venue list to fall back to here either, so this is the
   // only mode and starts centered on the host's current location.
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [locatingDevice, setLocatingDevice] = useState(true);
+  // LocationMapPicker detects that location itself (falling back on its own
+  // if denied), so there's nothing to pre-fetch here.
   const [confirmingLocation, setConfirmingLocation] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const { latitude, longitude } = await detectCurrentCoordinates();
-        setMapCenter({ lat: latitude, lng: longitude });
-      } catch {
-        // Permission denied or GPS unavailable — a sensible default center
-        // (Lahore; this app is Pakistan-only) beats blocking the picker.
-        setMapCenter({ lat: 31.5204, lng: 74.3587 });
-      } finally {
-        setLocatingDevice(false);
-      }
-    })();
-  }, []);
 
   const handleConfirmMapLocation = async (lat: number, lng: number) => {
     setConfirmingLocation(true);
@@ -590,20 +575,11 @@ export default function CreateSquadScreen() {
             Location field (no app venue list here either, so it's always
             on, no toggle). */}
         <FormCard icon="location" title="Location" required>
-          {locatingDevice || !mapCenter ? (
-            <View className="rounded-2xl items-center justify-center" style={{ height: 260, backgroundColor: colors.primaryLight }}>
-              <ActivityIndicator color={colors.primary} />
-              <Text className="text-primary text-xs font-semibold mt-2">Finding your location…</Text>
-            </View>
-          ) : (
-            <LocationMapPicker
-              initialLat={mapCenter.lat}
-              initialLng={mapCenter.lng}
-              onConfirm={handleConfirmMapLocation}
-              confirming={confirmingLocation}
-              selectedLabel={location}
-            />
-          )}
+          <LocationMapPicker
+            onConfirm={handleConfirmMapLocation}
+            confirming={confirmingLocation}
+            selectedLabel={location}
+          />
           {/* The map's own reverse-geocoded label isn't always exact — once a
               spot is picked, let the host type over it with the real address. */}
           {location && (

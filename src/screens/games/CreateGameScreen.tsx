@@ -37,7 +37,7 @@ import type { Database } from "../../types/database.types";
 import { SectionLabel, PillRow } from "../../components/GameFormControls";
 import VenueSearchField from "../../components/VenueSearchField";
 import LocationMapPicker from "../../components/LocationMapPicker";
-import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
+import { reverseGeocodeViaNominatim } from "../../lib/locationPicker";
 import FieldInput from "../../components/FieldInput";
 import Bouncy from "../../components/Bouncy";
 import { HomeSportTile } from "../../components/HomeWideCards";
@@ -454,8 +454,6 @@ export default function CreateGameScreen() {
   const [manualLocationMode, setManualLocationMode] = useState(false);
   const [customVenueLat, setCustomVenueLat] = useState<number | null>(null);
   const [customVenueLng, setCustomVenueLng] = useState<number | null>(null);
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [locatingDevice, setLocatingDevice] = useState(false);
   const [confirmingLocation, setConfirmingLocation] = useState(false);
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -518,7 +516,7 @@ export default function CreateGameScreen() {
     setCustomVenueLng(null);
   };
 
-  const handleToggleManualLocation = async () => {
+  const handleToggleManualLocation = () => {
     if (manualLocationMode) {
       // Switching back to the app's own venue list — drop whatever manual
       // pick was made.
@@ -531,17 +529,8 @@ export default function CreateGameScreen() {
     setVenueId(null);
     setCustomVenueName(null);
     setManualLocationMode(true);
-    setLocatingDevice(true);
-    try {
-      const { latitude, longitude } = await detectCurrentCoordinates();
-      setMapCenter({ lat: latitude, lng: longitude });
-    } catch {
-      // Permission denied or GPS unavailable — a sensible default center
-      // (Lahore; this app is Pakistan-only) beats blocking the picker.
-      setMapCenter({ lat: 31.5204, lng: 74.3587 });
-    } finally {
-      setLocatingDevice(false);
-    }
+    // LocationMapPicker detects the device's current location itself (and
+    // falls back on its own if denied) — nothing to pre-fetch here.
   };
 
   const handleConfirmMapLocation = async (lat: number, lng: number) => {
@@ -1024,20 +1013,11 @@ export default function CreateGameScreen() {
         </Pressable>
         {manualLocationMode ? (
           <>
-            {locatingDevice || !mapCenter ? (
-              <View className="rounded-2xl items-center justify-center" style={{ height: 260, backgroundColor: colors.primaryLight }}>
-                <ActivityIndicator color={colors.primary} />
-                <Text className="text-primary text-xs font-semibold mt-2">Finding your location…</Text>
-              </View>
-            ) : (
-              <LocationMapPicker
-                initialLat={mapCenter.lat}
-                initialLng={mapCenter.lng}
-                onConfirm={handleConfirmMapLocation}
-                confirming={confirmingLocation}
-                selectedLabel={customVenueName}
-              />
-            )}
+            <LocationMapPicker
+              onConfirm={handleConfirmMapLocation}
+              confirming={confirmingLocation}
+              selectedLabel={customVenueName}
+            />
             {/* The map's own reverse-geocoded label isn't always exact (an
                 unmapped building, a generic area name, ...) — once a spot is
                 picked, let the host type over it with the real address
