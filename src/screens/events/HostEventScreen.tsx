@@ -232,12 +232,17 @@ export default function HostEventScreen() {
   // LocationMapPicker detects that location itself (falling back on its own
   // if denied), so there's nothing to pre-fetch here.
   const [confirmingLocation, setConfirmingLocation] = useState(false);
+  // Sticky once a pin's been confirmed — keeps the Address field on screen
+  // even if the host clears it to blank (it's optional text, not a toggle),
+  // instead of the field itself vanishing along with the last character.
+  const [addressFieldVisible, setAddressFieldVisible] = useState(false);
 
   const handleConfirmMapLocation = async (lat: number, lng: number) => {
     setConfirmingLocation(true);
     try {
       const label = await reverseGeocodeViaNominatim(lat, lng);
       setLocation(label);
+      setAddressFieldVisible(true);
     } catch (err) {
       Alert.alert("Error", getFriendlyErrorMessage(err, "Could not look up an address for this location."));
     } finally {
@@ -511,7 +516,7 @@ export default function HostEventScreen() {
           />
           {/* The map's own reverse-geocoded label isn't always exact — once a
               spot is picked, let the host type over it with the real address. */}
-          {location && (
+          {addressFieldVisible && (
             <View className="mt-3">
               <Text className="text-ink text-sm font-semibold mb-1.5">
                 Address <Text className="text-muted font-normal">(optional — edit if this isn't exact)</Text>

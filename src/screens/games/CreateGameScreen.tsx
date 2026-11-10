@@ -455,6 +455,11 @@ export default function CreateGameScreen() {
   const [customVenueLat, setCustomVenueLat] = useState<number | null>(null);
   const [customVenueLng, setCustomVenueLng] = useState<number | null>(null);
   const [confirmingLocation, setConfirmingLocation] = useState(false);
+  // Sticky once a pin's been confirmed — keeps the Address field on screen
+  // even if the host clears it to blank (it's optional text, not a toggle),
+  // instead of the field itself vanishing along with the last character.
+  // Explicitly reset alongside customVenueName wherever that's cleared.
+  const [addressFieldVisible, setAddressFieldVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(DAYS[0].iso);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [duration, setDuration] = useState<number>(1);
@@ -511,6 +516,7 @@ export default function CreateGameScreen() {
     setSportId(id);
     setVenueId(null); // venue list depends on sport, so a prior pick may no longer apply
     setCustomVenueName(null);
+    setAddressFieldVisible(false);
     setManualLocationMode(false);
     setCustomVenueLat(null);
     setCustomVenueLng(null);
@@ -522,12 +528,14 @@ export default function CreateGameScreen() {
       // pick was made.
       setManualLocationMode(false);
       setCustomVenueName(null);
+      setAddressFieldVisible(false);
       setCustomVenueLat(null);
       setCustomVenueLng(null);
       return;
     }
     setVenueId(null);
     setCustomVenueName(null);
+    setAddressFieldVisible(false);
     setManualLocationMode(true);
     // LocationMapPicker detects the device's current location itself (and
     // falls back on its own if denied) — nothing to pre-fetch here.
@@ -538,6 +546,7 @@ export default function CreateGameScreen() {
     try {
       const label = await reverseGeocodeViaNominatim(lat, lng);
       setCustomVenueName(label);
+      setAddressFieldVisible(true);
       setCustomVenueLat(lat);
       setCustomVenueLng(lng);
     } catch (err) {
@@ -1023,13 +1032,13 @@ export default function CreateGameScreen() {
                 picked, let the host type over it with the real address
                 instead. Pre-filled with whatever was auto-detected so
                 there's nothing to redo when it's already correct. */}
-            {customVenueName && (
+            {addressFieldVisible && (
               <View className="mt-3">
                 <Text className="text-ink text-sm font-semibold mb-1.5">
                   Address <Text className="text-muted font-normal">(optional — edit if this isn't exact)</Text>
                 </Text>
                 <FieldInput
-                  value={customVenueName}
+                  value={customVenueName ?? ""}
                   onChangeText={setCustomVenueName}
                   placeholder="Enter the exact address"
                   multiline
