@@ -121,30 +121,32 @@ function NotificationCard({
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-start rounded-2xl mb-3 px-4 py-3.5"
+      className="flex-row items-center mb-3.5 px-4 py-3.5"
       style={{
         gap: 12,
+        minHeight: 112,
+        borderRadius: 24,
         backgroundColor: unread ? colors.primaryLight : colors.surface,
         borderWidth: 1,
-        borderColor: unread ? colors.primary : colors.border,
+        borderColor: unread ? `${colors.primary}40` : colors.border,
       }}
     >
-      <View className={`w-10 h-10 rounded-full items-center justify-center ${meta.bg}`}>
-        <Ionicons name={meta.icon} size={19} color={meta.color} />
+      <View className="h-11 w-11 rounded-full items-center justify-center" style={{ backgroundColor: colors.infoLight }}>
+        <Ionicons name={meta.icon} size={21} color={meta.color} />
       </View>
-      <View className="flex-1">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
+      <View className="flex-1" style={{ gap: 2 }}>
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Text className="text-ink font-bold flex-1" style={{ fontSize: 16, lineHeight: 22 }} numberOfLines={1}>
             {notification.title}
           </Text>
-          {unread && <GradientFill className="w-2 h-2 rounded-full ml-2" />}
+          {unread && <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.primary }} />}
         </View>
         {notification.body && (
-          <Text className="text-muted text-sm mt-1" numberOfLines={2}>
+          <Text className="text-muted" style={{ fontSize: 14, lineHeight: 19 }} numberOfLines={2}>
             {notification.body}
           </Text>
         )}
-        <Text className="text-muted text-xs mt-1.5">{timeAgo(notification.created_at)}</Text>
+        <Text className="text-muted mt-1" style={{ fontSize: 13 }}>{timeAgo(notification.created_at)}</Text>
         {inviteActions && (
           <View className="flex-row mt-3" style={{ gap: 8 }}>
             <Pressable
@@ -179,8 +181,8 @@ function NotificationCard({
           </View>
         )}
       </View>
-      <Pressable onPress={onDelete} hitSlop={10} className="p-1 -mt-1 -mr-1">
-        <Ionicons name="close" size={18} color={colors.muted} />
+      <Pressable onPress={onDelete} hitSlop={10} className="p-1">
+        <Ionicons name="trash-outline" size={22} color={colors.danger} />
       </Pressable>
     </Pressable>
   );
@@ -312,23 +314,33 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
-      <View className="flex-row items-center justify-between px-3.5 mb-4">
-        <View className="flex-row items-center" style={{ gap: 10 }}>
-          <Pressable onPress={() => navigation.goBack()} className="p-1 -ml-1">
-            <Ionicons name="arrow-back" size={22} color={colors.ink} />
-          </Pressable>
-          <Text className="text-2xl font-bold text-ink">Notifications</Text>
-        </View>
-        <View className="flex-row items-center" style={{ gap: 16 }}>
+    <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 12 }}>
+      <View className="flex-row items-center justify-center px-6 mb-7" style={{ minHeight: 52 }}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          className="h-12 w-12 items-center justify-center rounded-full border border-border"
+          style={{ position: "absolute", left: 16, backgroundColor: colors.surfaceRaised }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.ink} />
+        </Pressable>
+        <Text className="text-2xl font-bold text-ink">Notifications</Text>
+      </View>
+
+      <View className="flex-row items-center justify-between px-6 mb-4">
+        <Text className="text-muted" style={{ fontSize: 16 }}>
+          {notifications?.filter((item) => !item.is_read).length ?? 0} unread
+        </Text>
+        <View className="flex-row items-center" style={{ gap: 18 }}>
           {hasUnread && (
             <Pressable onPress={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
-              <Text className="text-primary font-semibold text-sm">Mark all read</Text>
+              <Text className="text-primary font-semibold" style={{ fontSize: 16 }}>Mark all read</Text>
             </Pressable>
           )}
           {(notifications?.length ?? 0) > 0 && (
-            <Pressable onPress={handleDeleteAll} disabled={deleteAll.isPending} hitSlop={8}>
-              <Text className="text-danger font-semibold text-sm">Delete all</Text>
+            <Pressable onPress={handleDeleteAll} disabled={deleteAll.isPending} hitSlop={8} accessibilityLabel="Delete all notifications">
+              <Ionicons name="trash-outline" size={19} color={colors.danger} />
             </Pressable>
           )}
         </View>
@@ -340,8 +352,8 @@ export default function NotificationsScreen() {
         <FlatList
           data={notifications ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 20, paddingTop: 0 }}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 0, paddingBottom: 24 }}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View className="items-center mt-16" style={{ gap: 12 }}>
               <Ionicons name="notifications-outline" size={48} color={colors.border} />
