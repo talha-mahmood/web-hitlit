@@ -53,6 +53,8 @@ export default function PlayerCricketClubs({ userId }: { userId: string }) {
           <PlayerCricketEntityCard
             key={s.id}
             photoUrl={s.icon_url}
+            entityId={s.id}
+            kind="squad"
             title={s.name}
             subtitle={`${s.location ?? "Location not set"} · ${activeCount} member${activeCount === 1 ? "" : "s"}`}
             sportName={s.sports?.name ?? "cricket"}

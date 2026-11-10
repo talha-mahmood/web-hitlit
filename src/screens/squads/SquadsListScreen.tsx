@@ -1,5 +1,6 @@
 import { View, Text, FlatList, ScrollView, Pressable, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import Image from "../../components/images/OptimizedImage";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -166,9 +167,7 @@ function SquadCard({
                 clear of the corner CTA above via a wider right gutter, and
                 truncates to one line if there isn't room. */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              {squad.icon_url && (
-                <Image source={{ uri: squad.icon_url }} style={{ width: 22, height: 22, borderRadius: 6 }} resizeMode="cover" />
-              )}
+              <GeneratedEntityVisual id={squad.id} name={squad.name} sport={sportName} kind={squad.group_type === "team" ? "team" : "squad"} imageUrl={squad.icon_url} size={22} />
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {squad.name}
               </Text>

@@ -48,6 +48,8 @@ export default function PlayerSportMatches({ sport, fullName }: { sport: Generic
           <PlayerCricketEntityCard
             key={m.id}
             title={`${m.sideAName} vs ${m.sideBName}`}
+            entityId={m.id}
+            kind="event"
             subtitle={isLive ? `Live · ${dateLabel}` : m.resultSummary ?? dateLabel}
             subtitleIcon={isLive ? "radio-outline" : "calendar-outline"}
             pillLabel={isLive ? "Live" : "Completed"}

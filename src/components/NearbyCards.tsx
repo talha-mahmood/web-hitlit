@@ -1,9 +1,9 @@
 import { View, Text, Pressable, Dimensions } from "react-native";
 import Image from "./images/OptimizedImage";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import GeneratedEntityVisual from "./GeneratedEntityVisual";
+import { Ionicons } from "@expo/vector-icons";
 import Bouncy from "./Bouncy";
 import { colors, cardShadow } from "../constants/theme";
-import { getSportIcon } from "../lib/sportIcons";
 import { getSportImage } from "../lib/sportImages";
 import { getVenuePhoto } from "../lib/venuePhotos";
 import { SPORT_ICON_BADGE_SIZE } from "./SportsBySportSection";
@@ -54,38 +54,18 @@ function SportBadge({
   sportName,
   size = SPORT_ICON_BADGE_SIZE,
   iconUrl,
+  id,
+  name,
+  kind,
 }: {
   sportName: string;
   size?: number;
   iconUrl?: string | null;
+  id: string;
+  name: string;
+  kind: "game" | "tournament" | "squad";
 }) {
-  const photo = iconUrl ? { uri: iconUrl } : getSportImage(sportName);
-  const { icon, bg, fg } = getSportIcon(sportName);
-
-  if (photo) {
-    return (
-      <Image
-        source={photo}
-        style={{ width: size, height: size, borderRadius: size / 2 }}
-        resizeMode="cover"
-      />
-    );
-  }
-
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: bg,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <MaterialCommunityIcons name={icon} size={size * 0.55} color={fg} />
-    </View>
-  );
+  return <GeneratedEntityVisual id={id} name={name} sport={sportName} kind={kind} imageUrl={iconUrl} size={size} style={{ borderRadius: size / 2 }} />;
 }
 
 function DistancePill({ km }: { km: number | null }) {
@@ -162,7 +142,7 @@ export function NearbyGameCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={game.sports?.name ?? ""} iconUrl={game.icon_url} />
+          <SportBadge id={game.id} name={game.title} sportName={game.sports?.name ?? ""} kind={isTournament ? "tournament" : "game"} iconUrl={game.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}
@@ -240,7 +220,7 @@ export function NearbySquadCard({
         }}
       >
         <View style={{ alignItems: "center", maxWidth: CARD_TEXT_MAX_WIDTH }}>
-          <SportBadge sportName={squad.sports?.name ?? ""} iconUrl={squad.icon_url} />
+          <SportBadge id={squad.id} name={squad.name} sportName={squad.sports?.name ?? ""} kind="squad" iconUrl={squad.icon_url} />
           <Text
             className="text-ink font-bold text-[11px] mt-2 text-center"
             numberOfLines={1}

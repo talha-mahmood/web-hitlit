@@ -3,11 +3,9 @@ import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import Image from "../../components/images/OptimizedImage";
+import { Ionicons } from "@expo/vector-icons";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import { SkeletonBlock } from "../../components/Skeleton";
-import { getSportIcon } from "../../lib/sportIcons";
-import { getSportImage } from "../../lib/sportImages";
 import { useTeamChallenges, useTeamFixtures, useRespondToTeamChallenge, useCancelTeamChallenge } from "../../hooks/useSquads";
 import { useMyOwnedSquads, useMySquads } from "../../hooks/useSquadTeamFill";
 import { useAuthStore } from "../../store/authStore";
@@ -22,11 +20,9 @@ const formatDate = (value: string) => new Intl.DateTimeFormat("en-PK", { weekday
 const formatTime = (value: string) => new Intl.DateTimeFormat("en-PK", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Karachi" }).format(new Date(value));
 
 function TeamBadge({ team }: { team: TeamChallenge["sender"] }) {
-  const { icon, bg, fg } = getSportIcon(team.sports?.name ?? "");
-  const photo = team.icon_url ? { uri: team.icon_url } : getSportImage(team.sports?.name ?? "");
   return (
     <View className="flex-1 items-center" style={{ gap: 6 }}>
-      {photo ? <Image source={photo} style={{ width: 28, height: 28, borderRadius: 8 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-lg" style={{ width: 28, height: 28, backgroundColor: bg }}><MaterialCommunityIcons name={icon} size={16} color={fg} /></View>}
+      <GeneratedEntityVisual id={team.id} name={team.name} sport={team.sports?.name} kind="team" imageUrl={team.icon_url} size={28} />
       <Text className="text-center text-ink font-semibold" numberOfLines={1} style={{ fontSize: 10.5 }}>{team.name}</Text>
     </View>
   );

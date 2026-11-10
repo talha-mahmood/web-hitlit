@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Image from "../images/OptimizedImage";
+import GeneratedEntityVisual from "../GeneratedEntityVisual";
 import { colors } from "../../constants/theme";
 import { DAYS, TIME_SLOTS, isTimeSlotPast } from "../../lib/gameFormHelpers";
 import { useSendTeamChallenge } from "../../hooks/useSquads";
@@ -134,7 +134,7 @@ export default function TeamChallengeComposerModal({
                     const selected = team.id === senderSquadId;
                     return (
                       <Pressable key={team.id} onPress={() => setSenderSquadId(team.id)} className="flex-row items-center rounded-2xl border px-3 py-2" style={{ borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primaryLight : colors.surfaceRaised, gap: 8 }}>
-                        {team.icon_url ? <Image source={{ uri: team.icon_url }} style={{ width: 26, height: 26, borderRadius: 13 }} /> : null}
+                        <GeneratedEntityVisual id={team.id} name={team.name} sport={team.sports?.name} kind="team" imageUrl={team.icon_url} size={26} />
                         <Text className="text-ink font-semibold" numberOfLines={1}>{team.name}</Text>
                       </Pressable>
                     );

@@ -64,6 +64,8 @@ import {
 import { pickImages, uploadImage } from "../../lib/upload";
 import { supabase } from "../../lib/supabase";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
+import { saveGeneratedVisualAsset } from "../../services/assets/assetGenerator";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<GamesStackParamList, "CreateGame">,
@@ -808,6 +810,19 @@ export default function CreateGameScreen() {
       if (iconAsset) {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "game-icons", pathPrefix: game.id });
         await supabase.from("games").update({ icon_url: publicUrl }).eq("id", game.id);
+      } else {
+        try {
+          const publicUrl = await saveGeneratedVisualAsset({
+            id: game.id,
+            name: game.title,
+            sport: selectedSportName,
+            kind: isTournament ? "tournament" : "game",
+          }, { bucket: "game-icons", folder: game.id });
+          const { error: iconUpdateError } = await supabase.from("games").update({ icon_url: publicUrl }).eq("id", game.id);
+          if (iconUpdateError) throw iconUpdateError;
+        } catch {
+          // Use the same deterministic local design if storage is unavailable.
+        }
       }
     } catch (err) {
       Alert.alert(
@@ -928,9 +943,14 @@ export default function CreateGameScreen() {
                     resizeMode="cover"
                   />
                 ) : (
-                  <View className="items-center justify-center rounded-xl bg-surface" style={{ width: 34, height: 34 }}>
-                    <Ionicons name="camera" size={17} color="#07301D" />
-                  </View>
+                  <GeneratedEntityVisual
+                    id={title.trim() || `${isTournament ? "tournament" : "game"}-${selectedSportName ?? "sport"}`}
+                    name={title.trim() || (isTournament ? "Your Tournament" : "Your Game")}
+                    sport={selectedSportName}
+                    kind={isTournament ? "tournament" : "game"}
+                    size={44}
+                    style={{ borderRadius: 22 }}
+                  />
                 )}
               </View>
               <GradientFill
@@ -943,14 +963,14 @@ export default function CreateGameScreen() {
             <View style={{ maxWidth: "62%" }}>
               <View className="flex-row items-center flex-wrap" style={{ gap: 4 }}>
                 <Text className="font-bold text-base text-jazba-white">
-                  {iconAsset ? "Change icon" : "Add a custom icon"}
+                  {iconAsset ? "Change icon" : "Upload custom icon"}
                 </Text>
                 <Text className="text-xs text-jazba-white" style={{ opacity: 0.65 }}>
                   (optional)
                 </Text>
               </View>
               <Text className="text-xs mt-1 text-jazba-white" style={{ opacity: 0.65 }}>
-                Make your {isTournament ? "tournament" : "game"} stand out with a custom icon.
+                A generated {isTournament ? "tournament emblem" : "game badge"} is included. You can upload your own.
               </Text>
             </View>
           </View>

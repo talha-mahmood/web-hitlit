@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import Image from "../../components/images/OptimizedImage";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -40,6 +40,7 @@ import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import GradientFill from "../../components/GradientFill";
+import { saveGeneratedVisualAsset } from "../../services/assets/assetGenerator";
 
 type EditRoute = RouteProp<GamesStackParamList, "EditGame">;
 type Nav = NativeStackNavigationProp<GamesStackParamList, "EditGame">;
@@ -145,6 +146,21 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
       setIconUrl(publicUrl);
     } catch (err) {
       Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload icon."));
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+
+  const handleUseGeneratedIcon = async () => {
+    setUploadingIcon(true);
+    try {
+      const icon = await saveGeneratedVisualAsset(
+        { id: game.id, name: title, sport: game.sports?.name, kind: isTournament ? "tournament" : "game" },
+        { bucket: "game-icons", folder: game.id },
+      );
+      setIconUrl(icon);
+    } catch (err) {
+      Alert.alert("Could not generate icon", getFriendlyErrorMessage(err, "Please try again."));
     } finally {
       setUploadingIcon(false);
     }
@@ -284,15 +300,16 @@ function EditGameForm({ game, minPlayers }: { game: GameDetail; minPlayers: numb
           <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
             {uploadingIcon ? (
               <ActivityIndicator color={colors.primary} />
-            ) : iconUrl ? (
-              <Image source={{ uri: iconUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
             ) : (
-              <Ionicons name="image-outline" size={22} color={colors.muted} />
+              <GeneratedEntityVisual id={game.id} name={title} sport={game.sports?.name} kind={isTournament ? "tournament" : "game"} imageUrl={iconUrl} size={56} />
             )}
           </View>
           <Text className="text-primary font-semibold text-sm">
             {iconUrl ? "Change icon" : "Add a custom icon (optional)"}
           </Text>
+        </Pressable>
+        <Pressable onPress={handleUseGeneratedIcon} disabled={uploadingIcon} className="mb-4 self-start">
+          <Text className="text-primary font-semibold text-xs">Use generated {isTournament ? "tournament emblem" : "game badge"}</Text>
         </Pressable>
 
         {/* Title */}

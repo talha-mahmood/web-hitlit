@@ -36,6 +36,8 @@ export default function PlayerTeamSquadsList({ userId, sportId }: { userId: stri
         <PlayerCricketEntityCard
           key={s.id}
           photoUrl={s.icon_url}
+          entityId={s.id}
+          kind="team"
           title={s.name.toUpperCase()}
           subtitle={`${s.member_count} member${s.member_count === 1 ? "" : "s"}`}
           subtitleIcon="people-outline"

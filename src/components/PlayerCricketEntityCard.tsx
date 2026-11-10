@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import Image from "./images/OptimizedImage";
+import GeneratedEntityVisual from "./GeneratedEntityVisual";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import Bouncy from "./Bouncy";
@@ -14,6 +15,8 @@ import { getSportImage } from "../lib/sportImages";
 // player's profile.
 export default function PlayerCricketEntityCard({
   photoUrl,
+  entityId,
+  kind = "squad",
   title,
   subtitle,
   subtitleIcon = "location-outline",
@@ -22,6 +25,8 @@ export default function PlayerCricketEntityCard({
   onPress,
 }: {
   photoUrl?: string | null;
+  entityId?: string;
+  kind?: "team" | "squad" | "tournament" | "league" | "event";
   title: string;
   subtitle?: string | null;
   subtitleIcon?: keyof typeof Ionicons.glyphMap;
@@ -58,9 +63,7 @@ export default function PlayerCricketEntityCard({
 
         <View className="px-4" style={{ paddingRight: 72 }}>
           <View className="flex-row items-center mb-1" style={{ gap: 7 }}>
-            {photoUrl ? (
-              <Image source={{ uri: photoUrl }} style={{ width: 22, height: 22, borderRadius: 6 }} resizeMode="cover" />
-            ) : null}
+            <GeneratedEntityVisual id={entityId ?? title} name={title} sport={sportName} kind={kind} imageUrl={photoUrl} size={22} />
             <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 15.5 }} numberOfLines={1}>
               {title}
             </Text>

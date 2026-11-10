@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import Image from "./images/OptimizedImage";
+import GeneratedEntityVisual from "./GeneratedEntityVisual";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
@@ -98,8 +99,6 @@ export function HomeSquadCard({
   const hasRequested = squad.squad_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
   const isGenderRestricted =
     squad.gender !== "mixed" && (!myGender || myGender !== squad.gender) && !hasJoined && !hasRequested;
-  const { icon, bg, fg } = getSportIcon(squad.sports?.name ?? "");
-  const photo = squad.icon_url ? { uri: squad.icon_url } : getSportImage(squad.sports?.name ?? "");
 
   const statusLabel = isClosedToJoins
     ? "Full"
@@ -121,16 +120,7 @@ export function HomeSquadCard({
     >
       <View className="border border-border rounded-2xl bg-surface p-3">
         <View className="flex-row items-center" style={{ gap: 8 }}>
-          {photo ? (
-            <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
-          ) : (
-            <View
-              className="items-center justify-center"
-              style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: bg }}
-            >
-              <MaterialCommunityIcons name={icon} size={18} color={fg} />
-            </View>
-          )}
+          <GeneratedEntityVisual id={squad.id} name={squad.name} sport={squad.sports?.name} kind={squad.group_type === "team" ? "team" : "squad"} imageUrl={squad.icon_url} size={36} />
           <View className="flex-1">
             <Text className="text-ink font-bold text-sm" numberOfLines={1}>
               {squad.name}
@@ -198,7 +188,6 @@ export function HomeEventCard({
   const hasRequested = event.event_members.some((m) => m.user_id === currentUserId && m.status === "PENDING");
   const isGenderRestricted =
     event.gender !== "mixed" && (!myGender || myGender !== event.gender) && !hasJoined && !hasRequested;
-  const photo = event.icon_url ? { uri: event.icon_url } : null;
 
   const statusLabel = isClosedToJoins
     ? "Closed"
@@ -220,13 +209,7 @@ export function HomeEventCard({
     >
       <View className="border border-border rounded-2xl bg-surface p-3">
         <View className="flex-row items-center" style={{ gap: 8 }}>
-          {photo ? (
-            <Image source={photo} style={{ width: 36, height: 36, borderRadius: 10 }} resizeMode="cover" />
-          ) : (
-            <View className="items-center justify-center" style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryLight }}>
-              <Ionicons name="calendar" size={18} color={colors.primary} />
-            </View>
-          )}
+          <GeneratedEntityVisual id={event.id} name={event.name} sport={event.event_type} kind="event" imageUrl={event.icon_url} size={36} />
           <View className="flex-1">
             <Text className="text-ink font-bold text-sm" numberOfLines={1}>
               {event.name}

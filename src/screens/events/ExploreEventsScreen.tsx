@@ -1,5 +1,5 @@
 import { View, Text, FlatList, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
-import Image from "../../components/images/OptimizedImage";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -112,9 +112,7 @@ function EventCard({
           <View className="px-2.5 pt-2 pb-2">
             {/* Row 2: Icon (if the owner set a custom one) + Name */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              {event.icon_url && (
-                <Image source={{ uri: event.icon_url }} style={{ width: 22, height: 22, borderRadius: 6 }} resizeMode="cover" />
-              )}
+              <GeneratedEntityVisual id={event.id} name={event.name} sport={event.event_type} kind="event" imageUrl={event.icon_url} size={22} />
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {event.name}
               </Text>

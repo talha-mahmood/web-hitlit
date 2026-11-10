@@ -66,6 +66,8 @@ export default function PlayerSportTournaments({ sport, fullName }: { sport: Gen
         <PlayerCricketEntityCard
           key={t.gameId}
           photoUrl={t.iconUrl}
+          entityId={t.gameId}
+          kind="tournament"
           title={t.title}
           subtitle={
             t.gameDate

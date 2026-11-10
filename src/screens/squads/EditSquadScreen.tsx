@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import Image from "../../components/images/OptimizedImage";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,6 +28,7 @@ import FieldInput from "../../components/FieldInput";
 import { isValidName, NAME_REQUIREMENT_HINT } from "../../lib/nameValidation";
 import { pickImages, uploadImage } from "../../lib/upload";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
+import { saveGeneratedVisualAsset } from "../../services/assets/assetGenerator";
 
 type EditRoute = RouteProp<SquadsStackParamList, "EditSquad">;
 type Nav = NativeStackNavigationProp<SquadsStackParamList, "EditSquad">;
@@ -75,6 +76,21 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
       setIconUrl(publicUrl);
     } catch (err) {
       Alert.alert("Upload failed", getFriendlyErrorMessage(err, "Could not upload icon."));
+    } finally {
+      setUploadingIcon(false);
+    }
+  };
+
+  const handleUseGeneratedIcon = async () => {
+    setUploadingIcon(true);
+    try {
+      const icon = await saveGeneratedVisualAsset(
+        { id: squad.id, name, sport: squad.sports?.name, kind: squad.group_type === "team" ? "team" : "squad" },
+        { bucket: "squad-icons", folder: squad.id },
+      );
+      setIconUrl(icon);
+    } catch (err) {
+      Alert.alert("Could not generate icon", getFriendlyErrorMessage(err, "Please try again."));
     } finally {
       setUploadingIcon(false);
     }
@@ -144,15 +160,16 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
           <View className="w-14 h-14 rounded-2xl bg-gray-100 items-center justify-center overflow-hidden">
             {uploadingIcon ? (
               <ActivityIndicator color={colors.primary} />
-            ) : iconUrl ? (
-              <Image source={{ uri: iconUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
             ) : (
-              <Ionicons name="image-outline" size={22} color={colors.muted} />
+              <GeneratedEntityVisual id={squad.id} name={name} sport={squad.sports?.name} kind={squad.group_type === "team" ? "team" : "squad"} imageUrl={iconUrl} size={56} />
             )}
           </View>
           <Text className="text-primary font-semibold text-sm">
             {iconUrl ? "Change icon" : "Add a custom icon (optional)"}
           </Text>
+        </Pressable>
+        <Pressable onPress={handleUseGeneratedIcon} disabled={uploadingIcon} className="mb-4 self-start">
+          <Text className="text-primary font-semibold text-xs">Use generated {squad.group_type === "team" ? "team badge" : "squad icon"}</Text>
         </Pressable>
 
         {/* Name */}

@@ -2,11 +2,9 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { CommonActions, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import Image from "../../components/images/OptimizedImage";
+import { Ionicons } from "@expo/vector-icons";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import { SkeletonBlock } from "../../components/Skeleton";
-import { getSportIcon } from "../../lib/sportIcons";
-import { getSportImage } from "../../lib/sportImages";
 import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { useMyOwnedSquads } from "../../hooks/useSquadTeamFill";
 import { useMySquads } from "../../hooks/useSquadTeamFill";
@@ -103,11 +101,9 @@ export default function TeamFixtureDetailsScreen() {
           <View className="rounded-3xl border border-border bg-surface p-5">
             <View className="flex-row items-center">
               {[fixture.home, fixture.away].map((team) => {
-                const { icon, bg, fg } = getSportIcon(fixture.sportName);
-                const photo = team.icon_url ? { uri: team.icon_url } : getSportImage(fixture.sportName);
                 return (
                 <View key={team.id} className="flex-1 items-center" style={{ gap: 8 }}>
-                  {photo ? <Image source={photo} style={{ width: 68, height: 68, borderRadius: 20 }} resizeMode="cover" /> : <View className="items-center justify-center rounded-2xl" style={{ width: 68, height: 68, backgroundColor: bg }}><MaterialCommunityIcons name={icon} size={32} color={fg} /></View>}
+                  <GeneratedEntityVisual id={team.id} name={team.name} sport={fixture.sportName} kind="team" imageUrl={team.icon_url} size={68} />
                   <Text className="text-center text-ink font-bold" numberOfLines={2}>{team.name}</Text>
                 </View>
                 );

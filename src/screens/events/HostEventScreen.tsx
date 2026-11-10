@@ -32,6 +32,8 @@ import { getFriendlyErrorMessage } from "../../lib/friendlyError";
 import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/locationPicker";
 import { useSelectPulse } from "../../lib/useSelectPulse";
 import GradientFill from "../../components/GradientFill";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
+import { saveGeneratedVisualAsset } from "../../services/assets/assetGenerator";
 import {
   DAYS,
   TIME_SLOTS,
@@ -314,6 +316,18 @@ export default function HostEventScreen() {
       if (iconAsset) {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "event-icons", pathPrefix: event.id });
         await supabase.from("events").update({ icon_url: publicUrl }).eq("id", event.id);
+      } else {
+        try {
+          const iconUrl = await saveGeneratedVisualAsset(
+            { id: event.id, name: name.trim(), sport: eventType.trim(), kind: "event" },
+            { bucket: "event-icons", folder: event.id },
+          );
+          const { error: iconUpdateError } = await supabase.from("events").update({ icon_url: iconUrl }).eq("id", event.id);
+          if (iconUpdateError) throw iconUpdateError;
+        } catch (iconError) {
+          // Icon generation is supplemental; keep the existing event creation successful.
+          console.warn("Could not save generated event icon", iconError);
+        }
       }
       navigation.replace("EventDetail", { eventId: event.id });
     } catch (err) {
@@ -399,7 +413,7 @@ export default function HostEventScreen() {
                 {iconAsset ? (
                   <Image source={{ uri: iconAsset.uri }} style={{ width: 52, height: 52 }} resizeMode="cover" />
                 ) : (
-                  <Ionicons name="image-outline" size={22} color={colors.muted} />
+                  <GeneratedEntityVisual id="event-preview" name={name || "Sports Event"} sport={eventType || "Event"} kind="event" size={52} />
                 )}
               </View>
               <GradientFill
@@ -411,7 +425,7 @@ export default function HostEventScreen() {
             </View>
             <View className="rounded-2xl" style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
-                {iconAsset ? "Change icon" : "Add a custom icon"}
+                {iconAsset ? "Change icon" : "Upload custom icon"}
               </Text>
             </View>
           </Pressable>

@@ -1,5 +1,6 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, Alert, ScrollView } from "react-native";
 import Image from "../../components/images/OptimizedImage";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -274,13 +275,7 @@ function GameCard({
             {/* Row 1: Icon (if the host set a custom one) + Title — kept clear
                 of the corner CTA via a wider right gutter, one line. */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              {game.icon_url && (
-                <Image
-                  source={{ uri: game.icon_url }}
-                  style={{ width: SPORT_ICON_BADGE_SIZE, height: SPORT_ICON_BADGE_SIZE, borderRadius: 8 }}
-                  resizeMode="cover"
-                />
-              )}
+              <GeneratedEntityVisual id={game.id} name={game.title} sport={sportName} kind={isTournament ? "tournament" : "game"} imageUrl={game.icon_url} size={SPORT_ICON_BADGE_SIZE} />
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {game.title}
               </Text>

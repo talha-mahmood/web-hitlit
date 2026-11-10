@@ -35,6 +35,8 @@ import { detectCurrentCoordinates, reverseGeocodeViaNominatim } from "../../lib/
 import type { SquadGroupType } from "../../lib/api/squads";
 import type { AddTeamParams } from "../../navigation/addTeamTypes";
 import GradientFill from "../../components/GradientFill";
+import GeneratedEntityVisual from "../../components/GeneratedEntityVisual";
+import { saveGeneratedVisualAsset } from "../../services/assets/assetGenerator";
 
 // This screen is registered identically in the Squads/Community/Home/Games
 // stacks (same pattern as PlayerProfile etc.) — typed against
@@ -287,6 +289,20 @@ export default function CreateSquadScreen() {
       if (iconAsset) {
         const { publicUrl } = await uploadImage(iconAsset, { bucket: "squad-icons", pathPrefix: squad.id });
         await supabase.from("squads").update({ icon_url: publicUrl }).eq("id", squad.id);
+      } else {
+        try {
+          const publicUrl = await saveGeneratedVisualAsset({
+            id: squad.id,
+            name: squad.name,
+            sport: selectedSportName,
+            kind: groupType === "team" ? "team" : "squad",
+          }, { bucket: "squad-icons", folder: squad.id });
+          const { error: iconUpdateError } = await supabase.from("squads").update({ icon_url: publicUrl }).eq("id", squad.id);
+          if (iconUpdateError) throw iconUpdateError;
+        } catch {
+          // The deterministic local SVG remains available if storage is
+          // temporarily unavailable; generation never blocks creation.
+        }
       }
     } catch (err) {
       Alert.alert(
@@ -424,7 +440,13 @@ export default function CreateSquadScreen() {
                 {iconAsset ? (
                   <Image source={{ uri: iconAsset.uri }} style={{ width: 52, height: 52 }} resizeMode="cover" />
                 ) : (
-                  <Ionicons name="image-outline" size={22} color={colors.muted} />
+                  <GeneratedEntityVisual
+                    id={name.trim() || `${groupType}-${selectedSportName ?? "sport"}`}
+                    name={name.trim() || `Your ${noun}`}
+                    sport={selectedSportName}
+                    kind={groupType === "team" ? "team" : "squad"}
+                    size={52}
+                  />
                 )}
               </View>
               <GradientFill
@@ -445,7 +467,7 @@ export default function CreateSquadScreen() {
             </View>
             <View className="rounded-2xl" style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 16, paddingVertical: 10 }}>
               <Text className="font-bold" style={{ color: colors.primaryDark, fontSize: 13 }}>
-                {iconAsset ? "Change icon" : "Add a custom icon"}
+                {iconAsset ? "Change icon" : "Upload custom icon"}
               </Text>
             </View>
           </Pressable>
