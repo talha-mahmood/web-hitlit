@@ -448,7 +448,7 @@ export default function HomeScreen() {
         />
 
         <NearbySection
-          title="Play Near You"
+          title="Challenge a Team"
           titleIcon="football"
           data={nearbyChallengeTeams}
           isLoading={squadsLoading}
