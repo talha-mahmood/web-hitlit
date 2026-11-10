@@ -11,6 +11,7 @@ export type NotificationTarget =
   | { screen: "SquadChat"; params: { squadId: string } }
   | { screen: "EventChat"; params: { eventId: string } }
   | { screen: "GameDetail"; params: { gameId: string } }
+  | { screen: "TournamentMatches"; params: { gameId: string } }
   | { screen: "SquadDetail"; params: { squadId: string } }
   | { screen: "CommentThread"; params: { rootId: string; highlightId?: string } }
   | { screen: "EventDetail"; params: { eventId: string } }
@@ -66,7 +67,15 @@ export function resolveNotificationTarget(
   const challengeId = stringValue(data, "challengeId", "challenge_id");
   if (challengeId) return { screen: "TeamChallengeDetails", params: { challengeId } };
 
-  const gameId = stringValue(data, "gameId", "game_id");
+  // Tournament score notifications identify the linked tournament match as
+  // well as its parent game. Open the tournament fixture list directly.
+  const tournamentMatchId = stringValue(data, "tournamentMatchId", "tournament_match_id");
+  const tournamentGameId = stringValue(data, "gameId", "game_id");
+  if (tournamentMatchId && tournamentGameId) {
+    return { screen: "TournamentMatches", params: { gameId: tournamentGameId } };
+  }
+
+  const gameId = tournamentGameId;
   if (gameId) return { screen: "GameDetail", params: { gameId } };
 
   const squadId = stringValue(data, "squadId", "squad_id");

@@ -87,12 +87,19 @@ function timeAgo(iso: string): string {
 // a team_invite, for its inline Approve/Decline below.
 function resolveTarget(n: NotificationRow): { gameId?: string; squadId?: string; commentId?: string; inviteId?: string; challengeId?: string } {
   const data = (n.data ?? {}) as Record<string, unknown>;
+  const value = (...keys: string[]) => {
+    for (const key of keys) {
+      const candidate = data[key];
+      if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+    }
+    return undefined;
+  };
   return {
-    gameId: typeof data.gameId === "string" ? data.gameId : undefined,
-    squadId: typeof data.squadId === "string" ? data.squadId : undefined,
-    commentId: typeof data.commentId === "string" ? data.commentId : undefined,
-    inviteId: typeof data.inviteId === "string" ? data.inviteId : undefined,
-    challengeId: typeof data.challengeId === "string" ? data.challengeId : undefined,
+    gameId: value("gameId", "game_id"),
+    squadId: value("squadId", "squad_id"),
+    commentId: value("commentId", "comment_id"),
+    inviteId: value("inviteId", "invite_id"),
+    challengeId: value("challengeId", "challenge_id"),
   };
 }
 
@@ -251,6 +258,9 @@ export default function NotificationsScreen() {
         break;
       case "GameDetail":
         navigation.navigate("GameDetail", target.params);
+        break;
+      case "TournamentMatches":
+        navigation.navigate("TournamentMatches", target.params);
         break;
       case "EventDetail":
         navigation.navigate("EventDetail", target.params);

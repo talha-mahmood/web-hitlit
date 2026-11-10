@@ -38,7 +38,8 @@ function timeAgo(iso: string): string {
 
 function resolveVenueId(n: NotificationRow): string | undefined {
   const data = (n.data ?? {}) as Record<string, unknown>;
-  return typeof data.venue_id === "string" ? data.venue_id : undefined;
+  const venueId = data.venueId ?? data.venue_id;
+  return typeof venueId === "string" ? venueId : undefined;
 }
 
 function NotificationCard({

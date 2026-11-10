@@ -69,6 +69,9 @@ async function openNotificationDestination(payload: unknown, isAdminSide: boolea
     case "GameDetail":
       navigationRef.navigate("Home", { screen: "GameDetail", params: target.params });
       return true;
+    case "TournamentMatches":
+      navigationRef.navigate("Home", { screen: "TournamentMatches", params: target.params });
+      return true;
     case "SquadDetail":
       navigationRef.navigate("Home", { screen: "SquadDetail", params: target.params });
       return true;
