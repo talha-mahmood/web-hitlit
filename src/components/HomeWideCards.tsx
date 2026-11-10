@@ -4,7 +4,7 @@ import GeneratedEntityVisual from "./GeneratedEntityVisual";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, cardShadow } from "../constants/theme";
 import { getSportIcon } from "../lib/sportIcons";
-import { getSportImage, getSportCardThumb } from "../lib/sportImages";
+import { getSportImage } from "../lib/sportImages";
 import { formatDistanceKm } from "../lib/distance";
 import { dayLabel, timeBadgeColor } from "../lib/badgeColors";
 import AvatarStack from "./AvatarStack";
@@ -265,8 +265,6 @@ export function HomeGameRowCard({
   const joined = game.game_players.filter((p) => p.status === "JOINED");
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
   const placeName = game.venues?.name ?? game.custom_venue_name ?? "Location TBD";
-  const photo = getSportCardThumb(game.sports?.name ?? "");
-  const { icon, bg, fg } = getSportIcon(game.sports?.name ?? "");
   const isFull = game.status === "FULL" || (!isTeamBased && joined.length >= game.max_players);
 
   return (
@@ -277,16 +275,15 @@ export function HomeGameRowCard({
       className="mb-3"
     >
       <View className="flex-row items-center border border-border rounded-2xl bg-surface p-3" style={{ gap: 12 }}>
-        {photo ? (
-          <Image source={photo} style={{ width: 60, height: 60, borderRadius: 14 }} resizeMode="cover" />
-        ) : (
-          <View
-            className="items-center justify-center"
-            style={{ width: 60, height: 60, borderRadius: 14, backgroundColor: bg }}
-          >
-            <MaterialCommunityIcons name={icon} size={28} color={fg} />
-          </View>
-        )}
+        <GeneratedEntityVisual
+          id={game.id}
+          name={game.title}
+          sport={game.sports?.name}
+          kind={isTournament ? "tournament" : "game"}
+          imageUrl={game.icon_url}
+          size={60}
+          style={{ borderRadius: 14 }}
+        />
         <View className="flex-1">
           <View className="flex-row items-center" style={{ gap: 6 }}>
             <Text className="text-ink font-bold text-sm flex-1" numberOfLines={1}>
