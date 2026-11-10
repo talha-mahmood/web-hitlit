@@ -236,14 +236,6 @@ function MyCommunityContent({
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
-              source={require("../../../assets/community-icons/host-event.jpeg")}
-              onPress={() => navigation.navigate("HostEvent")}
-              title="Host Event"
-              description="Plan a community event"
-            />
-            <ImageCard
-              width={CARD_WIDTH}
-              height={imageHeight}
               source={require("../../../assets/community-icons/explore-events.jpeg")}
               onPress={() => navigation.navigate("ExploreEvents")}
               title="Explore Events"
