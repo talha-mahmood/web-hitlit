@@ -662,55 +662,59 @@ function HeadToHeadMatchCard({
   };
 
   return (
-    <Pressable
-      onPress={linkedScorecardId ? handleWatchScorecard : undefined}
-      disabled={!linkedScorecardId}
-      accessibilityRole={linkedScorecardId ? "button" : undefined}
-      accessibilityLabel={linkedScorecardId ? `${teamAName} versus ${teamBName}, ${isLive ? "live" : "completed"}. Open scorecard` : undefined}
-      className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4"
-      style={cardShadow}
-    >
-      <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
-      <View className="bg-gray-50 rounded-xl px-3 py-2.5">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
-          <Text className="text-muted text-xs mx-2">vs</Text>
-          <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
-        </View>
-        <View className="flex-row items-center justify-between mt-2">
-          <Text className="text-muted text-xs">{match?.scheduled_at ? new Date(match.scheduled_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) : "Head-to-head"}</Text>
-          <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: match?.status === "COMPLETED" ? colors.primaryLight : isLive ? colors.dangerLight : colors.infoLight }}>
-            <Text className="text-xs font-bold" style={{ color: match?.status === "COMPLETED" ? colors.primaryDark : isLive ? "#DC2626" : "#2563EB" }}>
-              {match?.status === "COMPLETED" ? "Completed" : isLive ? "LIVE" : "Upcoming"}
+    <View className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4" style={cardShadow}>
+      <Pressable
+        onPress={linkedScorecardId ? handleWatchScorecard : undefined}
+        disabled={!linkedScorecardId}
+        accessibilityRole={linkedScorecardId ? "button" : undefined}
+        accessibilityLabel={linkedScorecardId ? `${teamAName} versus ${teamBName}, ${isLive ? "live" : "completed"}. Open scorecard` : undefined}
+      >
+        <Text className="text-ink font-semibold text-sm mb-2">Match</Text>
+        <View className="bg-gray-50 rounded-xl px-3 py-2.5">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-ink text-sm font-medium flex-1" numberOfLines={1}>{teamAName}</Text>
+            <Text className="text-muted text-xs mx-2">vs</Text>
+            <Text className="text-ink text-sm font-medium flex-1 text-right" numberOfLines={1}>{teamBName}</Text>
+          </View>
+          <View className="flex-row items-center justify-between mt-2">
+            <Text className="text-muted text-xs">{match?.scheduled_at ? new Date(match.scheduled_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) : "Head-to-head"}</Text>
+            <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: match?.status === "COMPLETED" ? colors.primaryLight : isLive ? colors.dangerLight : colors.infoLight }}>
+              <Text className="text-xs font-bold" style={{ color: match?.status === "COMPLETED" ? colors.primaryDark : isLive ? "#DC2626" : "#2563EB" }}>
+                {match?.status === "COMPLETED" ? "Completed" : isLive ? "LIVE" : "Upcoming"}
+              </Text>
+            </View>
+          </View>
+          {match?.status === "COMPLETED" && (match.is_draw || match.winner_team) ? (
+            <Text className="text-primary text-xs font-semibold mt-1.5">
+              {match.is_draw ? "Draw" : `${match.winner_team?.name} won`}
             </Text>
-          </View>
+          ) : null}
+          {match ? <LinkedMatchScoreDetails match={match} /> : null}
         </View>
-        {match?.status === "COMPLETED" && (match.is_draw || match.winner_team) ? (
-          <Text className="text-primary text-xs font-semibold mt-1.5">
-            {match.is_draw ? "Draw" : `${match.winner_team?.name} won`}
-          </Text>
-        ) : null}
-        {match ? <LinkedMatchScoreDetails match={match} /> : null}
-        {linkedScorecardId && (
-          <View className="mt-2 rounded-lg border border-primary py-2 items-center">
-            <Text className="text-primary text-xs font-semibold">{isLive ? "Watch Live Score" : "View Scorecard"}</Text>
-          </View>
-        )}
-        {canGoToScorecard && !linkedScorecardId && (
-          <Pressable onPress={handleGoToScorecard} className="mt-2">
+      </Pressable>
+      {canGoToScorecard && (
+        <View className="mt-2" style={{ gap: 8 }}>
+          <Pressable onPress={handleGoToScorecard}>
             <GradientFill className="rounded-lg py-2 items-center">
               <Text className="text-jazba-white text-xs font-semibold">Go To Scorecard</Text>
             </GradientFill>
           </Pressable>
-        )}
-        {canGoToScorecard && !linkedScorecardId && (
-          <Pressable onPress={handleEnterScoreManually} className="border border-primary rounded-lg py-2 items-center mt-2">
+          <Pressable onPress={handleEnterScoreManually} className="border border-primary rounded-lg py-2 items-center">
             <Text className="text-primary text-xs font-semibold">Enter Score Manually</Text>
           </Pressable>
-        )}
-      </View>
-
-    </Pressable>
+        </View>
+      )}
+      {linkedScorecardId && !isHost && (
+        <Pressable
+          onPress={handleWatchScorecard}
+          className="mt-2 rounded-lg border border-primary py-2 items-center"
+          accessibilityRole="button"
+          accessibilityLabel={`${isLive ? "Watch" : "View"} ${teamAName} versus ${teamBName} scorecard`}
+        >
+          <Text className="text-primary text-xs font-semibold">{isLive ? "Watch Live" : "View Scorecard"}</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
