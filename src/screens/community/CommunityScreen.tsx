@@ -26,19 +26,6 @@ const GRID_SIDE_PADDING = 16;
 const GRID_COL_GAP = 16;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - GRID_SIDE_PADDING * 2 - GRID_COL_GAP) / 2);
 const CARD_TEXT_HEIGHT = 58;
-// Section heading above each pair of cards — same icon + text row style as
-// the Home screen's NearbySection title (e.g. "Games near you").
-function PairHeading({ icon, title }: { icon: keyof typeof Ionicons.glyphMap; title: string }) {
-  return (
-    <View className="flex-row items-center mb-3" style={{ gap: 9 }}>
-      <View className="items-center justify-center" style={{ width: 30, height: 30, borderRadius: 10, backgroundColor: colors.primaryLight }}>
-        <Ionicons name={icon} size={16} color={colors.primaryDark} />
-      </View>
-      <Text className="text-ink font-bold" style={{ fontSize: 16, letterSpacing: -0.2 }}>{title}</Text>
-      <View style={{ height: 1, flex: 1, backgroundColor: colors.border, marginLeft: 3 }} />
-    </View>
-  );
-}
 
 // Every card uses a provided illustration that already has its own title +
 // subtitle baked into the image itself — no extra text/icon overlay needed,
@@ -224,7 +211,6 @@ function MyCommunityContent({
           <Text className="text-muted" style={{ fontSize: 13, lineHeight: 19, marginTop: 3 }}>Play, connect, and make every game count.</Text>
         </View>
         <View style={{ marginBottom: ROW_GAP }}>
-          <PairHeading icon="chatbubbles-outline" title="Connect & Chat" />
           <View className="flex-row justify-between">
             <ImageCard
               width={CARD_WIDTH}
@@ -246,7 +232,6 @@ function MyCommunityContent({
         </View>
 
         <View>
-          <PairHeading icon="calendar-outline" title="Events" />
           <View className="flex-row justify-between">
             <ImageCard
               width={CARD_WIDTH}
