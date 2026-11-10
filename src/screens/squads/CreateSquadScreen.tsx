@@ -50,6 +50,15 @@ const GROUP_TYPE_LABELS: Record<SquadGroupType, string> = {
   training_camp: "Training Camp",
   team: "Team",
 };
+// Shown under the Squad Type picker so the pick isn't blind — Team is the
+// only type with captain/host roles, match-linked stats and Challenge a
+// Team eligibility (see SquadDetailScreen's isTeamGroup gate); every other
+// type is a plain roster with none of that.
+const GROUP_TYPE_DESCRIPTIONS: Partial<Record<SquadGroupType, string>> = {
+  team: "Unlocks captain/host roles, match-linked stats (Overview, Players, Matches, Tournaments), and eligibility to send or receive Challenge a Team requests.",
+  club: "A simple roster for regulars — join requests, group chat, and member management, without match stats, roles, or challenge features.",
+};
+
 type SkillLevel = Database["public"]["Enums"]["skill_level_type"];
 type Gender = Database["public"]["Enums"]["game_gender_type"];
 
@@ -501,6 +510,11 @@ export default function CreateSquadScreen() {
                 />
               </ScrollView>
             )}
+            {GROUP_TYPE_DESCRIPTIONS[groupType] ? (
+              <Text className="text-muted" style={{ fontSize: 11.5, marginTop: 10, lineHeight: 15 }}>
+                {GROUP_TYPE_DESCRIPTIONS[groupType]}
+              </Text>
+            ) : null}
           </FormCard>
         )}
 
