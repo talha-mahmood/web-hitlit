@@ -241,6 +241,14 @@ function MyCommunityContent({
               title="Explore Events"
               description="Discover upcoming events"
             />
+            <ImageCard
+              width={CARD_WIDTH}
+              height={imageHeight}
+              source={require("../../../assets/community-icons/Explore-TrainingCamps.jpeg")}
+              onPress={() => navigation.navigate("ExploreTrainingCamps")}
+              title="Explore Training Camps"
+              description="Find training camps near you"
+            />
           </View>
         </View>
       </ScrollView>

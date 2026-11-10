@@ -236,8 +236,16 @@ function SquadCard({
   );
 }
 
-export default function SquadsListScreen() {
+// lockedGroupType: renders this same screen scoped to one squad type only
+// (e.g. Training Camps) — no type filter pill (there's nothing to pick),
+// and Create jumps straight into CreateSquad pre-locked to that type. Used
+// by the Community screen's "Explore Training Camps" card; omitted, this
+// is the regular all-types Squads list.
+export default function SquadsListScreen({ lockedGroupType }: { lockedGroupType?: SquadGroupType } = {}) {
   const navigation = useNavigation<Nav>();
+  const kindLabel = lockedGroupType ? GROUP_TYPE_LABELS[lockedGroupType] : "Squad";
+  const kindLabelPlural = `${kindLabel}s`;
+  const kindLabelPluralLower = kindLabelPlural.toLowerCase();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const userId = useAuthStore((s) => s.session?.user.id);
@@ -279,9 +287,10 @@ export default function SquadsListScreen() {
           s.squad_members.some((m) => m.user_id === userId && m.status === "ACTIVE")
       )
     : locationFiltered;
+  const effectiveTypeFilters = lockedGroupType ? [lockedGroupType] : groupTypeFilters;
   const scoped =
-    groupTypeFilters.length > 0
-      ? (myScoped ?? []).filter((s) => groupTypeFilters.includes(s.group_type as SquadGroupType))
+    effectiveTypeFilters.length > 0
+      ? (myScoped ?? []).filter((s) => effectiveTypeFilters.includes(s.group_type as SquadGroupType))
       : myScoped;
   // Squads don't carry their own coordinates (just a typed-in location
   // label), so "near me" is measured from the squad owner's own registered
@@ -335,15 +344,15 @@ export default function SquadsListScreen() {
             )}
             <View className="flex-1">
               <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
-                Squads
+                {kindLabelPlural}
               </Text>
               <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
-                Find and join squads nearby
+                Find and join {kindLabelPluralLower} nearby
               </Text>
             </View>
           </View>
           <Pressable
-            onPress={() => navigation.navigate("CreateSquad")}
+            onPress={() => navigation.navigate("CreateSquad", lockedGroupType ? { presetType: lockedGroupType, lockType: true } : undefined)}
             className="flex-row items-center bg-surface rounded-full px-3.5 py-2"
             style={{ gap: 4, ...cardShadow }}
           >
@@ -362,7 +371,7 @@ export default function SquadsListScreen() {
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search squads..."
+          placeholder={`Search ${kindLabelPluralLower}...`}
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}
@@ -383,7 +392,7 @@ export default function SquadsListScreen() {
             {(
               [
                 { key: "all", label: "All" },
-                { key: "mine", label: "My Squads" },
+                { key: "mine", label: `My ${kindLabelPlural}` },
               ] as const
             ).map((p) => {
               const active = listFilter === p.key;
@@ -415,35 +424,37 @@ export default function SquadsListScreen() {
                 </Pressable>
               );
             })}
-            {/* "Group Type" — opens a multi-select popup (Group/Club/Training
-                Camp, the same set CreateSquadScreen offers) rather than two
-                separate single-select toggle pills. */}
-            <Pressable
-              onPress={() => {
-                setDistanceOpen(false);
-                setGroupTypeOpen(true);
-              }}
-              className="rounded-full"
-              style={{ borderWidth: 1, borderColor: groupTypeFilters.length > 0 ? colors.primary : colors.border }}
-            >
-              {groupTypeFilters.length > 0 ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
-                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
-                    {groupTypeFilters.length === 1
-                      ? GROUP_TYPE_LABELS[groupTypeFilters[0]]
-                      : `${groupTypeFilters.length} types`}
-                  </Text>
-                  <Ionicons name="chevron-down" size={14} color="white" />
-                </GradientFill>
-              ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
-                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
-                    Squad Type
-                  </Text>
-                  <Ionicons name="chevron-down" size={14} color={colors.muted} />
-                </View>
-              )}
-            </Pressable>
+            {/* "Squad Type" — opens a multi-select popup (Team/Club) rather
+                than two separate single-select toggle pills. Hidden entirely
+                on a lockedGroupType screen — there's nothing to pick. */}
+            {!lockedGroupType && (
+              <Pressable
+                onPress={() => {
+                  setDistanceOpen(false);
+                  setGroupTypeOpen(true);
+                }}
+                className="rounded-full"
+                style={{ borderWidth: 1, borderColor: groupTypeFilters.length > 0 ? colors.primary : colors.border }}
+              >
+                {groupTypeFilters.length > 0 ? (
+                  <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
+                    <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
+                      {groupTypeFilters.length === 1
+                        ? GROUP_TYPE_LABELS[groupTypeFilters[0]]
+                        : `${groupTypeFilters.length} types`}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="white" />
+                  </GradientFill>
+                ) : (
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
+                    <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
+                      Squad Type
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color={colors.muted} />
+                  </View>
+                )}
+              </Pressable>
+            )}
             {/* "Location" — opens a bottom sheet with a free-text field plus
                 city suggestions (multi-select), in place of the old
                 always-visible inline field. Right after All/My Squads. */}
@@ -583,31 +594,31 @@ export default function SquadsListScreen() {
             debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null || groupTypeFilters.length > 0 ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No squads found</Text>
+                <Text className="text-ink font-semibold text-base">No {kindLabelPluralLower} found</Text>
                 <Text className="text-muted text-sm text-center px-8">
                   {debouncedSearch && locationTags.length > 0
-                    ? `No squads match "${debouncedSearch}" near "${locationTags.join(", ")}".`
+                    ? `No ${kindLabelPluralLower} match "${debouncedSearch}" near "${locationTags.join(", ")}".`
                     : locationTags.length > 0
-                      ? `No squads found near "${locationTags.join(", ")}".`
+                      ? `No ${kindLabelPluralLower} found near "${locationTags.join(", ")}".`
                       : debouncedSearch
-                        ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
+                        ? `No ${kindLabelPluralLower} match "${debouncedSearch}". Try a different name or squad ID.`
                         : myOnly
-                          ? "You haven't created any squads yet."
+                          ? `You haven't created any ${kindLabelPluralLower} yet.`
                           : distanceKmFilter != null
-                            ? `No squads found within ${distanceKmFilter} km.`
+                            ? `No ${kindLabelPluralLower} found within ${distanceKmFilter} km.`
                             : "No squads match this sport filter yet."}
                 </Text>
               </View>
             ) : (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="people-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No squads yet</Text>
+                <Text className="text-ink font-semibold text-base">No {kindLabelPluralLower} yet</Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  Create a squad to find regular playmates near you!
+                  Create a {kindLabel.toLowerCase()} to find regular playmates near you!
                 </Text>
-                <Pressable onPress={() => navigation.navigate("CreateSquad")}>
+                <Pressable onPress={() => navigation.navigate("CreateSquad", lockedGroupType ? { presetType: lockedGroupType, lockType: true } : undefined)}>
                   <GradientFill className="rounded-xl px-6 py-3 mt-2">
-                    <Text className="text-jazba-white font-semibold">Create a Squad</Text>
+                    <Text className="text-jazba-white font-semibold">Create a {kindLabel}</Text>
                   </GradientFill>
                 </Pressable>
               </View>

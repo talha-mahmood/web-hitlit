@@ -179,8 +179,15 @@ export default function CreateSquadScreen() {
 
   const [name, setName] = useState("");
   const [iconAsset, setIconAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [groupType, setGroupType] = useState<SquadGroupType>(params?.presetType ?? "group");
+  const [groupType, setGroupType] = useState<SquadGroupType>(params?.presetType ?? "team");
   const lockType = !!params?.lockType;
+  // Reached from the "Explore Training Camps" screen's Create button — the
+  // Squad Type field is dropped entirely (not just locked to a badge, like
+  // the "team" lock from AddTeamScreen keeps) since there's nothing to show
+  // once it's the only reason this flow exists, and every other label reads
+  // "Training Camp" instead of "Squad" to match.
+  const isTrainingCampLocked = lockType && groupType === "training_camp";
+  const noun = isTrainingCampLocked ? "Training Camp" : "Squad";
   const [sportId, setSportId] = useState<string | null>(params?.presetSportId ?? null);
   const lockSport = !!params?.lockSport;
   const [skillLevel, setSkillLevel] = useState<SkillLevel | null>(null);
@@ -227,7 +234,7 @@ export default function CreateSquadScreen() {
   const handleCreate = async () => {
     if (!userId) return;
     if (!isValidName(name)) {
-      Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
+      Alert.alert("Invalid Name", `${noun} name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
     if (!sportId) {
@@ -276,8 +283,8 @@ export default function CreateSquadScreen() {
       Alert.alert(
         "Error",
         navigatedAway
-          ? getFriendlyErrorMessage(err, "The squad was created, but uploading its icon failed. You can set it from the squad's page.")
-          : getFriendlyErrorMessage(err, "Could not create squad. Please try again.")
+          ? getFriendlyErrorMessage(err, `The ${noun.toLowerCase()} was created, but uploading its icon failed. You can set it from its page.`)
+          : getFriendlyErrorMessage(err, `Could not create ${noun.toLowerCase()}. Please try again.`)
       );
     }
   };
@@ -294,10 +301,10 @@ export default function CreateSquadScreen() {
         </Bouncy>
         <View className="flex-1">
           <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
-            Create Squad
+            Create {noun}
           </Text>
           <Text className="text-muted" style={{ fontSize: 13, marginTop: 1 }}>
-            Build a team, find players
+            {isTrainingCampLocked ? "Set up your training camp" : "Build a team, find players"}
           </Text>
         </View>
         <Pressable onPress={handleCreate} disabled={createSquad.isPending} style={primaryButtonShadow}>
@@ -343,7 +350,7 @@ export default function CreateSquadScreen() {
                 Play Together
               </Text>
               <Text className="text-jazba-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
-                Create a squad and bring people together!
+                Create a {noun.toLowerCase()} and bring people together!
               </Text>
             </View>
             <View className="items-center justify-center" style={{ width: 56, height: 48 }}>
@@ -380,9 +387,9 @@ export default function CreateSquadScreen() {
         {/* Custom listing icon (optional) */}
         <FormCard
           icon="pricetag"
-          title="Squad Icon"
+          title={`${noun} Icon`}
           optional
-          subtitle="Add a custom icon to make your squad stand out"
+          subtitle={`Add a custom icon to make your ${noun.toLowerCase()} stand out`}
         >
           <Pressable
             onPress={async () => {
@@ -436,7 +443,7 @@ export default function CreateSquadScreen() {
         </FormCard>
 
         {/* Name */}
-        <FormCard icon="people" title="Squad Name" required>
+        <FormCard icon="people" title={`${noun} Name`} required>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View
               className="items-center justify-center"
@@ -457,43 +464,45 @@ export default function CreateSquadScreen() {
         </FormCard>
 
         {/* Group Type — locked to "Team" (non-editable) when creating a
-            tournament team via AddTeamScreen's "Create Team" button. */}
-        <FormCard icon="albums" title="Squad Type" hint={lockType ? undefined : "What kind of squad is this?"}>
-          {lockType ? (
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <View
-                className="rounded-full"
-                style={{
-                  paddingHorizontal: 11,
-                  paddingVertical: 6.5,
-                  borderWidth: 1.5,
-                  borderColor: colors.primary,
-                  backgroundColor: colors.primaryLight,
-                }}
-              >
-                <Text className="font-bold" style={{ fontSize: 12, color: colors.primaryDark }}>
-                  {GROUP_TYPE_LABELS[groupType]}
+            tournament team via AddTeamScreen's "Create Team" button. Dropped
+            entirely (not even the locked badge) for a training-camp-locked
+            create, since this flow only ever makes training camps. */}
+        {!isTrainingCampLocked && (
+          <FormCard icon="albums" title="Squad Type" hint={lockType ? undefined : "What kind of squad is this?"}>
+            {lockType ? (
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <View
+                  className="rounded-full"
+                  style={{
+                    paddingHorizontal: 11,
+                    paddingVertical: 6.5,
+                    borderWidth: 1.5,
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primaryLight,
+                  }}
+                >
+                  <Text className="font-bold" style={{ fontSize: 12, color: colors.primaryDark }}>
+                    {GROUP_TYPE_LABELS[groupType]}
+                  </Text>
+                </View>
+                <Text className="text-muted" style={{ fontSize: 12 }}>
+                  Locked
                 </Text>
               </View>
-              <Text className="text-muted" style={{ fontSize: 12 }}>
-                Locked
-              </Text>
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <ChipRow<SquadGroupType>
-                options={[
-                  { label: "Group", value: "group" },
-                  { label: "Club", value: "club" },
-                  { label: "Training Camp", value: "training_camp" },
-                  { label: "Team", value: "team" },
-                ]}
-                value={groupType}
-                onChange={setGroupType}
-              />
-            </ScrollView>
-          )}
-        </FormCard>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ChipRow<SquadGroupType>
+                  options={[
+                    { label: "Team", value: "team" },
+                    { label: "Club", value: "club" },
+                  ]}
+                  value={groupType}
+                  onChange={setGroupType}
+                />
+              </ScrollView>
+            )}
+          </FormCard>
+        )}
 
         {/* Sport */}
         <FormCard icon="trophy" title="Sport" required hint="Select your sport">
@@ -524,7 +533,7 @@ export default function CreateSquadScreen() {
         </FormCard>
 
         {/* Skill Level */}
-        <FormCard icon="stats-chart" title="Skill Level" required hint="Choose your squad's level">
+        <FormCard icon="stats-chart" title="Skill Level" required hint={`Choose your ${noun.toLowerCase()}'s level`}>
           <ChipRow<SkillLevel>
             options={[
               { label: "Beginner", value: "beginner" },
@@ -576,7 +585,7 @@ export default function CreateSquadScreen() {
           <FieldInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Notes about your squad (how often you play, vibe, etc.)"
+            placeholder={`Notes about your ${noun.toLowerCase()} (how often you play, vibe, etc.)`}
             multiline
             numberOfLines={3}
             maxLength={300}

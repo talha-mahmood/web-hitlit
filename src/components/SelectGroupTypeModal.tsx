@@ -7,10 +7,8 @@ import GradientFill from "./GradientFill";
 import type { SquadGroupType } from "../lib/api/squads";
 
 const GROUP_TYPE_OPTIONS: { label: string; value: SquadGroupType }[] = [
-  { label: "Group", value: "group" },
-  { label: "Club", value: "club" },
-  { label: "Training Camp", value: "training_camp" },
   { label: "Team", value: "team" },
+  { label: "Club", value: "club" },
 ];
 
 // Bottom sheet for the groups list's "Group Type" filter — same shape as

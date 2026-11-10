@@ -72,6 +72,7 @@ export type CommunityStackParamList = {
   TournamentMatches: { gameId: string };
   AddTeam: AddTeamParams;
   SquadsList: undefined;
+  ExploreTrainingCamps: undefined;
   CreateSquad: CreateSquadRouteParams;
   SquadDetail: { squadId: string };
   SquadChat: { squadId: string; squadName?: string };
@@ -124,6 +125,9 @@ export default function CommunityStackNavigator() {
       <Stack.Screen name="TournamentMatches" component={TournamentMatchesScreen} />
       <Stack.Screen name="AddTeam" component={AddTeamScreen} />
       <Stack.Screen name="SquadsList" component={SquadsListScreen} />
+      <Stack.Screen name="ExploreTrainingCamps">
+        {(props) => <SquadsListScreen {...props} lockedGroupType="training_camp" />}
+      </Stack.Screen>
       <Stack.Screen name="CreateSquad" component={CreateSquadScreen} />
       <Stack.Screen name="SquadDetail" component={SquadDetailScreen} />
       <Stack.Screen name="SquadChat" component={SquadChatScreen} />
