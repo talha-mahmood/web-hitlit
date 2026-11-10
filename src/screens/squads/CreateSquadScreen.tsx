@@ -227,7 +227,7 @@ export default function CreateSquadScreen() {
   const handleCreate = async () => {
     if (!userId) return;
     if (!isValidName(name)) {
-      Alert.alert("Invalid Name", `Group name must be ${NAME_REQUIREMENT_HINT}.`);
+      Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
     if (!sportId) {
@@ -276,8 +276,8 @@ export default function CreateSquadScreen() {
       Alert.alert(
         "Error",
         navigatedAway
-          ? getFriendlyErrorMessage(err, "The group was created, but uploading its icon failed. You can set it from the group's page.")
-          : getFriendlyErrorMessage(err, "Could not create group. Please try again.")
+          ? getFriendlyErrorMessage(err, "The squad was created, but uploading its icon failed. You can set it from the squad's page.")
+          : getFriendlyErrorMessage(err, "Could not create squad. Please try again.")
       );
     }
   };
@@ -294,7 +294,7 @@ export default function CreateSquadScreen() {
         </Bouncy>
         <View className="flex-1">
           <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
-            Create Group
+            Create Squad
           </Text>
           <Text className="text-muted" style={{ fontSize: 13, marginTop: 1 }}>
             Build a team, find players
@@ -343,7 +343,7 @@ export default function CreateSquadScreen() {
                 Play Together
               </Text>
               <Text className="text-jazba-white" style={{ fontSize: 12, lineHeight: 16, marginTop: 3, opacity: 0.8 }}>
-                Create a group and bring people together!
+                Create a squad and bring people together!
               </Text>
             </View>
             <View className="items-center justify-center" style={{ width: 56, height: 48 }}>
@@ -380,9 +380,9 @@ export default function CreateSquadScreen() {
         {/* Custom listing icon (optional) */}
         <FormCard
           icon="pricetag"
-          title="Group Icon"
+          title="Squad Icon"
           optional
-          subtitle="Add a custom icon to make your group stand out"
+          subtitle="Add a custom icon to make your squad stand out"
         >
           <Pressable
             onPress={async () => {
@@ -436,7 +436,7 @@ export default function CreateSquadScreen() {
         </FormCard>
 
         {/* Name */}
-        <FormCard icon="people" title="Group Name" required>
+        <FormCard icon="people" title="Squad Name" required>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View
               className="items-center justify-center"
@@ -458,7 +458,7 @@ export default function CreateSquadScreen() {
 
         {/* Group Type — locked to "Team" (non-editable) when creating a
             tournament team via AddTeamScreen's "Create Team" button. */}
-        <FormCard icon="albums" title="Group Type" hint={lockType ? undefined : "What kind of group is this?"}>
+        <FormCard icon="albums" title="Squad Type" hint={lockType ? undefined : "What kind of squad is this?"}>
           {lockType ? (
             <View className="flex-row items-center" style={{ gap: 8 }}>
               <View
@@ -524,7 +524,7 @@ export default function CreateSquadScreen() {
         </FormCard>
 
         {/* Skill Level */}
-        <FormCard icon="stats-chart" title="Skill Level" required hint="Choose your group's level">
+        <FormCard icon="stats-chart" title="Skill Level" required hint="Choose your squad's level">
           <ChipRow<SkillLevel>
             options={[
               { label: "Beginner", value: "beginner" },
@@ -576,7 +576,7 @@ export default function CreateSquadScreen() {
           <FieldInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Notes about your group (how often you play, vibe, etc.)"
+            placeholder="Notes about your squad (how often you play, vibe, etc.)"
             multiline
             numberOfLines={3}
             maxLength={300}

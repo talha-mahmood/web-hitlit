@@ -128,7 +128,7 @@ export default function CompleteDetailsScreen() {
               Just one more step
             </Text>
             <Text className="text-muted text-center mt-1.5 text-sm px-2">
-              We use your gender to match you into gender-specific games and squads, like Male Only or Female Only groups.
+              We use your gender to match you into gender-specific games and squads, like Male Only or Female Only squads.
             </Text>
 
             <View className="w-full mt-6">

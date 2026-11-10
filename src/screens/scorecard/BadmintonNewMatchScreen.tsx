@@ -165,7 +165,7 @@ function TeamCard({
           >
             <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
             <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-              Add From a Group
+              Add From a Squad
             </Text>
           </Pressable>
         )}
@@ -214,7 +214,7 @@ function TeamCard({
               >
                 <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
                 <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-                  Add From a Group
+                  Add From a Squad
                 </Text>
               </Pressable>
             )}
@@ -294,7 +294,7 @@ export default function BadmintonNewMatchScreen() {
       : null) ??
     (!doublesPlayersValid ? "Enter both players' names for each doubles team." : null) ??
     (isDoubles && hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])
-      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      ? "Two players share the same name — rename one, or add them from a squad so they're tracked as separate people."
       : null) ??
     (!playMode ? "Pick Singles or Doubles." : null) ??
     (!firstServingTeam ? "Pick who serves first." : null) ??

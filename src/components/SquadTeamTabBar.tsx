@@ -5,7 +5,7 @@ import GradientFill from "./GradientFill";
 export type SquadTeamTab = "detail" | "overview" | "players" | "matches" | "tournaments" | "statistics" | "compare";
 
 const BASE_TABS: [SquadTeamTab, string][] = [
-  ["detail", "Group Detail"],
+  ["detail", "Squad Detail"],
   ["overview", "Team Overview"],
   ["players", "Players"],
   ["matches", "Matches"],

@@ -328,7 +328,7 @@ export default function SquadDetailScreen() {
   if (error || !squad) {
     return (
       <View className="flex-1 bg-app items-center justify-center px-6">
-        <Text className="text-ink font-semibold text-base mb-2">Group not found</Text>
+        <Text className="text-ink font-semibold text-base mb-2">Squad not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
         </Pressable>
@@ -389,8 +389,8 @@ export default function SquadDetailScreen() {
     Alert.alert(
       nextBlocked ? "Block New Join Requests?" : "Unblock New Join Requests?",
       nextBlocked
-        ? "No one will be able to request to join this group until you unblock it."
-        : "Players will be able to request to join this group again.",
+        ? "No one will be able to request to join this squad until you unblock it."
+        : "Players will be able to request to join this squad again.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -412,7 +412,7 @@ export default function SquadDetailScreen() {
 
   const handleLeave = () => {
     if (!userId) return;
-    Alert.alert("Leave Group", "Are you sure you want to leave?", [
+    Alert.alert("Leave Squad", "Are you sure you want to leave?", [
       { text: "Stay", style: "cancel" },
       {
         text: "Leave",
@@ -432,7 +432,7 @@ export default function SquadDetailScreen() {
 
   const handleCancelRequest = () => {
     if (!userId) return;
-    Alert.alert("Cancel Request", "Withdraw your request to join this group?", [
+    Alert.alert("Cancel Request", "Withdraw your request to join this squad?", [
       { text: "Keep Request", style: "cancel" },
       {
         text: "Withdraw",
@@ -490,7 +490,7 @@ export default function SquadDetailScreen() {
   const handleRemove = (squadMemberId: string, name: string | null) => {
     Alert.alert(
       "Remove Member",
-      `Remove ${name ?? "this member"} from the group? They won't be able to rejoin without sending a new request.`,
+      `Remove ${name ?? "this member"} from the squad? They won't be able to rejoin without sending a new request.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -510,10 +510,10 @@ export default function SquadDetailScreen() {
   const handleManageMember = (squadMemberId: string, name: string | null, currentlyHost: boolean) => {
     const label = name ?? "this member";
     Alert.alert(
-      currentlyHost ? "Remove as Host?" : "Make Group Host?",
+      currentlyHost ? "Remove as Host?" : "Make Squad Host?",
       currentlyHost
         ? `${label} will lose host privileges and go back to being a regular member.`
-        : `${label} will be able to manage members, edit the group, and everything else a host can do.`,
+        : `${label} will be able to manage members, edit the squad, and everything else a host can do.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -538,13 +538,13 @@ export default function SquadDetailScreen() {
   const handleOpenMemberMenu = (squadMemberId: string, name: string | null, currentlyHost: boolean) => {
     Alert.alert(name ?? "Member", undefined, [
       { text: "Cancel", style: "cancel" },
-      { text: currentlyHost ? "Remove as Host" : "Make Group Host", onPress: () => handleManageMember(squadMemberId, name, currentlyHost) },
+      { text: currentlyHost ? "Remove as Host" : "Make Squad Host", onPress: () => handleManageMember(squadMemberId, name, currentlyHost) },
       { text: "Remove Member", style: "destructive", onPress: () => handleRemove(squadMemberId, name) },
     ]);
   };
 
   const handleDisband = () => {
-    Alert.alert("Disband Group", "This will permanently disband the group for everyone. This cannot be undone.", [
+    Alert.alert("Disband Squad", "This will permanently disband the squad for everyone. This cannot be undone.", [
       { text: "Keep", style: "cancel" },
       {
         text: "Disband",
@@ -751,7 +751,7 @@ export default function SquadDetailScreen() {
           <View className="mx-5 mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-4">
             <View className="flex-row items-start">
               <Text className="text-ink font-semibold text-sm mb-1 flex-1 pr-2">
-                {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this group
+                {mySquadInvite.profiles?.full_name ?? "The owner"} invited you to this squad
               </Text>
               <Pressable onPress={() => dismissInvite(mySquadInvite.id)} hitSlop={8} className="-mt-1 -mr-1 p-1">
                 <Ionicons name="close" size={18} color={colors.muted} />
@@ -797,10 +797,10 @@ export default function SquadDetailScreen() {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center" style={{ gap: 6 }}>
-                  <Text className="text-ink font-bold text-base">Group Details</Text>
+                  <Text className="text-ink font-bold text-base">Squad Details</Text>
                   <BlinkingEyeIcon size={16} />
                 </View>
-                <Text className="text-muted text-xs mt-0.5">View complete group information</Text>
+                <Text className="text-muted text-xs mt-0.5">View complete squad information</Text>
               </View>
               <Ionicons name={detailsExpanded ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
             </Pressable>
@@ -812,7 +812,7 @@ export default function SquadDetailScreen() {
                 {(isOwner || hasJoined) && (
                   <InfoRow
                     icon="pricetag-outline"
-                    label="Group ID"
+                    label="Squad ID"
                     value={squad.squad_code}
                     action={
                       <Pressable
@@ -858,7 +858,7 @@ export default function SquadDetailScreen() {
                 <Ionicons name="megaphone-outline" size={19} color={colors.primaryDark} />
               </View>
               <View className="flex-1">
-                <Text className="text-ink font-bold text-base mb-1">About this group</Text>
+                <Text className="text-ink font-bold text-base mb-1">About this squad</Text>
                 <Text className="text-muted text-sm leading-relaxed">{squad.description}</Text>
               </View>
             </View>
@@ -951,7 +951,7 @@ export default function SquadDetailScreen() {
               Game Invites ({gameInvites!.length})
             </Text>
             <Text className="text-muted text-xs mb-2">
-              A host invited your group to join their game or tournament.
+              A host invited your squad to join their game or tournament.
             </Text>
             {gameInvites!.map((invite) => (
               <View
@@ -1012,7 +1012,7 @@ export default function SquadDetailScreen() {
             ))}
             {isFull && (
               <Text className="text-orange-600 text-xs mt-2">
-                Group is full — reject remaining requests or remove a member to approve more.
+                Squad is full — reject remaining requests or remove a member to approve more.
               </Text>
             )}
           </View>
@@ -1058,7 +1058,7 @@ export default function SquadDetailScreen() {
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Pressable onPress={handleDisband} className="border border-danger rounded-xl py-4 items-center">
-                  <Text className="text-danger font-semibold">Delete This Group</Text>
+                  <Text className="text-danger font-semibold">Delete This Squad</Text>
                 </Pressable>
               ))}
             {hasJoined && !isOwner && (
@@ -1066,7 +1066,7 @@ export default function SquadDetailScreen() {
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Pressable onPress={handleLeave} className="border border-danger rounded-xl py-4 items-center">
-                  <Text className="text-danger font-semibold">Leave Group</Text>
+                  <Text className="text-danger font-semibold">Leave Squad</Text>
                 </Pressable>
               )
             )}
@@ -1096,7 +1096,7 @@ export default function SquadDetailScreen() {
           </View>
         ) : isClosedToJoins ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center">
-            <Text className="text-muted font-semibold">Group is Full</Text>
+            <Text className="text-muted font-semibold">Squad is Full</Text>
           </View>
         ) : isGenderRestricted ? (
           <View className="bg-gray-100 rounded-xl py-4 items-center px-6">
@@ -1153,7 +1153,7 @@ export default function SquadDetailScreen() {
         onClose={() => setShowAddByIdModal(false)}
         squadId={squad.id}
         excludeUserIds={[squad.squad_owner_id, ...squad.squad_members.map((m) => m.user_id)]}
-        disabledReason={isFull ? "This group is full." : undefined}
+        disabledReason={isFull ? "This squad is full." : undefined}
       />
     </View>
   );

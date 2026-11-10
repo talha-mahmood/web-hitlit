@@ -92,7 +92,7 @@ export default function AddPlayersFromGroupModal({
         >
           <View className="flex-row items-center justify-between mb-1">
             <Text className="text-lg font-bold text-ink flex-1" numberOfLines={1}>
-              Add From a Group
+              Add From a Squad
             </Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <Ionicons name="close" size={22} color={colors.muted} />
@@ -103,11 +103,11 @@ export default function AddPlayersFromGroupModal({
             <ActivityIndicator color={colors.primary} className="mt-6 mb-6" />
           ) : (squads ?? []).length === 0 ? (
             <Text className="text-muted text-sm mt-4 mb-2">
-              You're not in any groups yet — join or create one to add players from it here.
+              You're not in any squads yet — join or create one to add players from it here.
             </Text>
           ) : (
             <>
-              <Text className="text-muted text-xs font-semibold mt-2 mb-2">Choose a Group</Text>
+              <Text className="text-muted text-xs font-semibold mt-2 mb-2">Choose a Squad</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
                 {(squads ?? []).map((s) => {
                   const selected = selectedSquad?.id === s.id;
@@ -146,7 +146,7 @@ export default function AddPlayersFromGroupModal({
                       : `Select up to ${maxSelect} (${selectedIds.size}/${maxSelect} selected)`}
                   </Text>
                   {activeMembers.length === 0 ? (
-                    <Text className="text-muted text-sm mb-2">This group has no active members.</Text>
+                    <Text className="text-muted text-sm mb-2">This squad has no active members.</Text>
                   ) : (
                     <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={{ gap: 8 }}>
                       {activeMembers.map((m) => {

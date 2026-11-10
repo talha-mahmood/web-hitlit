@@ -254,7 +254,7 @@ export default function PlayerStatCards({
               <StatCard icon="football-outline" bg={colors.infoLight} fg="#2563EB" value={gamesPlayed} label="Games Played" loading={isLoading} />
               <StatCard icon="trophy-outline" bg="#FFFBEB" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" loading={isLoading} />
               <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" loading={isLoading} />
-              <StatCard icon="people-outline" bg={colors.primaryLight} fg="#18C66A" value={activeSquads} label="Active Groups" loading={isLoading} />
+              <StatCard icon="people-outline" bg={colors.primaryLight} fg="#18C66A" value={activeSquads} label="Active Squads" loading={isLoading} />
               <StatCard icon="time-outline" bg={colors.infoLight} fg="#2563EB" value={hoursPlayed} label="Hours Played" loading={isLoading} />
               <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" loading={isLoading} />
             </View>

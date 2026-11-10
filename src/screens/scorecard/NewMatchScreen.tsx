@@ -21,7 +21,7 @@ import type { ScorecardStackParamList } from "../../navigation/ScorecardStackNav
 
 // A roster entry typed by hand has no real identity behind it (sourceId:
 // null) — two of those with the same name are genuinely indistinguishable,
-// so that still blocks. One added via "Add From a Group" carries its real
+// so that still blocks. One added via "Add From a Squad" carries its real
 // squad_members row id, so it can share a display name with a different
 // real person without being treated as a duplicate (see matchNameValidation).
 type PlayerEntry = NamedEntry;
@@ -258,7 +258,7 @@ function TeamCard({
           >
             <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
             <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-              Add From a Group
+              Add From a Squad
             </Text>
           </Pressable>
         )}

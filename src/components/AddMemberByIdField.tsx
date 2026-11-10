@@ -44,7 +44,7 @@ export default function AddMemberByIdField({
   const handleAdd = () => {
     if (result === "not_searched" || !result) return;
     if (excludeUserIds.includes(result.id)) {
-      Alert.alert("Already Added", `${result.full_name ?? "This player"} is already in this group.`);
+      Alert.alert("Already Added", `${result.full_name ?? "This player"} is already in this squad.`);
       return;
     }
     addDirect.mutate(result.id, {

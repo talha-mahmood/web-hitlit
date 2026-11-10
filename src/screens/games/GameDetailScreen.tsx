@@ -860,7 +860,7 @@ export default function GameDetailScreen() {
               </View>
               {emptySlots > 0 && !isCancelled && !hasEnded && (
                 <Pressable onPress={() => setShowSquadFillModal(true)} className="border border-primary rounded-lg py-2 items-center mb-3">
-                  <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Group</Text>
+                  <Text className="text-primary text-xs font-semibold">Fill Open Spots With My Squad</Text>
                 </Pressable>
               )}
               {isCreator && emptySlots > 0 && !isCancelled && !hasEnded && (
@@ -1022,7 +1022,7 @@ export default function GameDetailScreen() {
           userId={userId}
           requiredCount={emptySlots}
           submitting={squadFillSlots.isPending}
-          title="Fill Open Spots With Your Group"
+          title="Fill Open Spots With Your Squad"
           onSubmit={(squadId, memberUserIds) => {
             squadFillSlots.mutate(
               { squadId, memberUserIds },

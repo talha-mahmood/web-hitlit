@@ -42,13 +42,13 @@ export default function InviteSquadModal({
             style={{ paddingBottom: 32 + insets.bottom, ...heroShadow, shadowOffset: { width: 0, height: -6 } }}
           >
             <View className="flex-row items-center justify-between mb-1">
-              <Text className="text-lg font-bold text-ink">Invite a Group</Text>
+              <Text className="text-lg font-bold text-ink">Invite a Squad</Text>
               <Pressable onPress={onClose} hitSlop={8}>
                 <Ionicons name="close" size={22} color={colors.muted} />
               </Pressable>
             </View>
             <Text className="text-muted text-sm mb-2">
-              Search for a group and invite it to join — its owner completes the actual join once
+              Search for a squad and invite it to join — its owner completes the actual join once
               they see the invite.
             </Text>
 
@@ -56,7 +56,7 @@ export default function InviteSquadModal({
               value={search}
               onChangeText={setSearch}
               prefix="Search by "
-              variants={["group name"]}
+              variants={["squad name"]}
               autoFocus
             />
 
@@ -70,7 +70,7 @@ export default function InviteSquadModal({
                 contentContainerStyle={{ gap: 8 }}
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                  <Text className="text-muted text-sm text-center mt-4">No groups found.</Text>
+                  <Text className="text-muted text-sm text-center mt-4">No squads found.</Text>
                 }
                 renderItem={({ item }) => {
                   const alreadyInvited = alreadyInvitedSquadIds.includes(item.id);

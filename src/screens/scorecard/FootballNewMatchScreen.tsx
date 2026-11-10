@@ -155,7 +155,7 @@ function AddPlayersField({
         >
           <Ionicons name="people-outline" size={16} color={colors.primaryDark} />
           <Text className="text-sm font-semibold" style={{ color: colors.primaryDark }}>
-            Add From a Group
+            Add From a Squad
           </Text>
         </Pressable>
       )}
@@ -232,7 +232,7 @@ export default function FootballNewMatchScreen() {
     (!teamBName.trim() ? "Enter a name for Team B." : null) ??
     (namesClash(teamAName, teamBName) ? "Team A and Team B can't have the same name." : null) ??
     (hasBlockingDuplicateNames([...teamAPlayers, ...teamBPlayers])
-      ? "Two players share the same name — rename one, or add them from a group so they're tracked as separate people."
+      ? "Two players share the same name — rename one, or add them from a squad so they're tracked as separate people."
       : null) ??
     (!requiresWinner ? "Pick whether the match requires a winner." : null) ??
     (!isMatchDurationValid ? "Set the match duration." : null) ??

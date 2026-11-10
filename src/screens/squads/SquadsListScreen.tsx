@@ -335,10 +335,10 @@ export default function SquadsListScreen() {
             )}
             <View className="flex-1">
               <Text className="text-ink font-extrabold" style={{ fontSize: 19 }}>
-                Groups
+                Squads
               </Text>
               <Text className="text-muted" style={{ fontSize: 10.5, marginTop: 1 }} numberOfLines={1}>
-                Find and join groups nearby
+                Find and join squads nearby
               </Text>
             </View>
           </View>
@@ -362,7 +362,7 @@ export default function SquadsListScreen() {
         <FieldInput
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search groups..."
+          placeholder="Search squads..."
           autoCapitalize="none"
           autoCorrect={false}
           containerStyle={{ borderRadius: 28, height: 52 }}
@@ -383,7 +383,7 @@ export default function SquadsListScreen() {
             {(
               [
                 { key: "all", label: "All" },
-                { key: "mine", label: "My Groups" },
+                { key: "mine", label: "My Squads" },
               ] as const
             ).map((p) => {
               const active = listFilter === p.key;
@@ -438,7 +438,7 @@ export default function SquadsListScreen() {
               ) : (
                 <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
                   <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }}>
-                    Group Type
+                    Squad Type
                   </Text>
                   <Ionicons name="chevron-down" size={14} color={colors.muted} />
                 </View>
@@ -583,31 +583,31 @@ export default function SquadsListScreen() {
             debouncedSearch || locationTags.length > 0 || selectedSportId || myOnly || distanceKmFilter != null || groupTypeFilters.length > 0 ? (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="search-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No groups found</Text>
+                <Text className="text-ink font-semibold text-base">No squads found</Text>
                 <Text className="text-muted text-sm text-center px-8">
                   {debouncedSearch && locationTags.length > 0
-                    ? `No groups match "${debouncedSearch}" near "${locationTags.join(", ")}".`
+                    ? `No squads match "${debouncedSearch}" near "${locationTags.join(", ")}".`
                     : locationTags.length > 0
-                      ? `No groups found near "${locationTags.join(", ")}".`
+                      ? `No squads found near "${locationTags.join(", ")}".`
                       : debouncedSearch
-                        ? `No groups match "${debouncedSearch}". Try a different name or group ID.`
+                        ? `No squads match "${debouncedSearch}". Try a different name or squad ID.`
                         : myOnly
-                          ? "You haven't created any groups yet."
+                          ? "You haven't created any squads yet."
                           : distanceKmFilter != null
-                            ? `No groups found within ${distanceKmFilter} km.`
-                            : "No groups match this sport filter yet."}
+                            ? `No squads found within ${distanceKmFilter} km.`
+                            : "No squads match this sport filter yet."}
                 </Text>
               </View>
             ) : (
               <View className="items-center mt-16" style={{ gap: 12 }}>
                 <Ionicons name="people-outline" size={48} color={colors.border} />
-                <Text className="text-ink font-semibold text-base">No groups yet</Text>
+                <Text className="text-ink font-semibold text-base">No squads yet</Text>
                 <Text className="text-muted text-sm text-center px-8">
-                  Create a group to find regular playmates near you!
+                  Create a squad to find regular playmates near you!
                 </Text>
                 <Pressable onPress={() => navigation.navigate("CreateSquad")}>
                   <GradientFill className="rounded-xl px-6 py-3 mt-2">
-                    <Text className="text-jazba-white font-semibold">Create a Group</Text>
+                    <Text className="text-jazba-white font-semibold">Create a Squad</Text>
                   </GradientFill>
                 </Pressable>
               </View>
@@ -632,7 +632,7 @@ export default function SquadsListScreen() {
         onSubmit={handleSubmitJoinRequest}
         submitting={joinSquad.isPending}
         title="Request to Join"
-        subtitle="The group captain will see this and can approve or reject your request."
+        subtitle="The squad captain will see this and can approve or reject your request."
       />
     </View>
   );

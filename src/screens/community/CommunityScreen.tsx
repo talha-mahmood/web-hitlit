@@ -290,14 +290,14 @@ function MyCommunityContent({
         </View>
 
         <View style={{ marginBottom: ROW_GAP }}>
-          <PairHeading icon="people-outline" title="Groups" />
+          <PairHeading icon="people-outline" title="Squads" />
           <View className="flex-row justify-between">
             <ImageCard
               width={CARD_WIDTH}
               height={imageHeight}
               source={require("../../../assets/community-icons/create-squad.jpeg")}
               onPress={() => navigation.navigate("CreateSquad")}
-              title="Create Group"
+              title="Create Squad"
               description="Build your own squad"
             />
             <ImageCard
@@ -305,8 +305,8 @@ function MyCommunityContent({
               height={imageHeight}
               source={require("../../../assets/community-icons/explore-squad.jpeg")}
               onPress={() => navigation.navigate("SquadsList")}
-              title="Explore Groups"
-              description="Find groups to join"
+              title="Explore Squads"
+              description="Find squads to join"
             />
           </View>
         </View>

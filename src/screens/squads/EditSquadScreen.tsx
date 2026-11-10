@@ -82,7 +82,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
 
   const handleSave = async () => {
     if (!isValidName(name)) {
-      Alert.alert("Invalid Name", `Group name must be ${NAME_REQUIREMENT_HINT}.`);
+      Alert.alert("Invalid Name", `Squad name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
     if (!skillLevel) {
@@ -116,7 +116,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
           <Ionicons name="arrow-back" size={22} color={colors.ink} />
         </Pressable>
-        <Text className="text-base font-bold text-ink flex-1">Edit Group</Text>
+        <Text className="text-base font-bold text-ink flex-1">Edit Squad</Text>
         <Pressable onPress={handleSave} disabled={updateSquad.isPending} style={primaryButtonShadow}>
           <GradientFill className="rounded-xl px-4 py-2">
             {updateSquad.isPending ? (
@@ -156,7 +156,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         </Pressable>
 
         {/* Name */}
-        <SectionLabel title="Group Name" required />
+        <SectionLabel title="Squad Name" required />
         <FieldInput
           value={name}
           onChangeText={setName}
@@ -189,7 +189,7 @@ function EditSquadForm({ squad }: { squad: SquadDetail }) {
         <FieldInput
           value={description}
           onChangeText={setDescription}
-          placeholder="Notes about your group (how often you play, vibe, etc.)"
+          placeholder="Notes about your squad (how often you play, vibe, etc.)"
           multiline
           numberOfLines={3}
           maxLength={300}
@@ -220,7 +220,7 @@ export default function EditSquadScreen() {
   if (error || !squad) {
     return (
       <View className="flex-1 bg-app items-center justify-center px-6">
-        <Text className="text-ink font-semibold text-base mb-2">Group not found</Text>
+        <Text className="text-ink font-semibold text-base mb-2">Squad not found</Text>
         <Pressable onPress={() => navigation.goBack()}>
           <Text className="text-primary font-medium">Go back</Text>
         </Pressable>
@@ -239,11 +239,11 @@ export default function EditSquadScreen() {
           <Pressable onPress={() => navigation.goBack()} className="mr-3 p-1">
             <Ionicons name="arrow-back" size={22} color={colors.ink} />
           </Pressable>
-          <Text className="text-base font-bold text-ink">Edit Group</Text>
+          <Text className="text-base font-bold text-ink">Edit Squad</Text>
         </View>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2 text-center">
-            Only the captain or a host can edit this group
+            Only the captain or a host can edit this squad
           </Text>
           <Text className="text-muted text-sm text-center">It can't be edited by other members.</Text>
         </View>

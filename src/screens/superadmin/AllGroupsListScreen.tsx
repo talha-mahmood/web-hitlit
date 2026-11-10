@@ -32,8 +32,8 @@ export default function AllGroupsListScreen() {
 
   const handleDelete = (squadId: string, name: string) => {
     Alert.alert(
-      "Delete Group",
-      `Permanently delete "${name}"? This removes the group and its members for everyone — this cannot be undone.`,
+      "Delete Squad",
+      `Permanently delete "${name}"? This removes the squad and its members for everyone — this cannot be undone.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -41,7 +41,7 @@ export default function AllGroupsListScreen() {
           style: "destructive",
           onPress: () =>
             disbandSquad.mutate(squadId, {
-              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete group.")),
+              onError: (err) => Alert.alert("Error", getFriendlyErrorMessage(err, "Could not delete squad.")),
             }),
         },
       ]
@@ -54,14 +54,14 @@ export default function AllGroupsListScreen() {
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <SuperAdminSectionSwitcher active="groups" />
-            <Text className="text-2xl font-bold text-ink">All Groups</Text>
+            <Text className="text-2xl font-bold text-ink">All Squads</Text>
           </View>
           <NotificationBell
             unreadCount={unreadCount}
             onPress={() => navigation.navigate("AdminNotifications")}
           />
         </View>
-        <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["group name", "group code"]} />
+        <SearchField value={search} onChangeText={setSearch} prefix="Search by " variants={["squad name", "squad code"]} />
       </View>
 
       {isLoading ? (
@@ -75,7 +75,7 @@ export default function AllGroupsListScreen() {
           ListEmptyComponent={
             <View className="border border-dashed border-border rounded-2xl p-8 items-center">
               <Ionicons name="people-outline" size={32} color={colors.border} />
-              <Text className="text-muted text-sm text-center mt-2">No groups found.</Text>
+              <Text className="text-muted text-sm text-center mt-2">No squads found.</Text>
             </View>
           }
           renderItem={({ item }) => (

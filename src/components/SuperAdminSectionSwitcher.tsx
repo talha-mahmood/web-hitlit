@@ -20,7 +20,7 @@ const ITEMS: {
 }[] = [
   { key: "venues", label: "Venues", icon: "business-outline", screen: "AllVenuesList" },
   { key: "games", label: "Games", icon: "trophy-outline", screen: "AllGamesList" },
-  { key: "groups", label: "Groups", icon: "people-outline", screen: "AllGroupsList" },
+  { key: "groups", label: "Squads", icon: "people-outline", screen: "AllGroupsList" },
   { key: "events", label: "Events", icon: "calendar-outline", screen: "AllEventsList" },
   { key: "moderation", label: "Reports", icon: "flag-outline", screen: "AdminModeration" },
   { key: "users", label: "Users", icon: "person-outline", screen: "AllUsersList" },

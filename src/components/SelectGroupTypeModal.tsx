@@ -53,10 +53,10 @@ export default function SelectGroupTypeModal({
           <View className="flex-row items-start justify-between px-5 pt-3 pb-4">
             <View className="flex-1">
               <Text className="text-ink font-extrabold" style={{ fontSize: 22 }}>
-                Filter by Group Type
+                Filter by Squad Type
               </Text>
               <Text className="text-muted" style={{ fontSize: 13.5, marginTop: 2 }}>
-                Pick any number of group types
+                Pick any number of squad types
               </Text>
             </View>
             <Pressable
