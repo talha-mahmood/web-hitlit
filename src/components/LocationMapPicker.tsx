@@ -102,6 +102,10 @@ export default function LocationMapPicker({
   // an empty map that fills in afterward.
   const [webviewLoaded, setWebviewLoaded] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  // Confirming a pin ("Use This Location") collapses the whole search+map
+  // UI down to a single summary row — it only reopens if the host taps that
+  // row to change their pick, rather than staying up after they're done.
+  const [pickerOpen, setPickerOpen] = useState(true);
   const hasCenter = picked !== null;
   // Reseeded from the current pin position (not the original initial props)
   // whenever fullscreen is toggled on or off, so switching views never loses
@@ -228,6 +232,27 @@ export default function LocationMapPicker({
 
   const pickerBody = (
     <View style={fullscreen ? { flex: 1 } : undefined}>
+      {!pickerOpen && (
+        <Pressable
+          onPress={() => {
+            // Remounts the map fresh (see the "hidden until ready" comment
+            // below) rather than reusing whatever stale WebView instance
+            // was left mounted — same as a brand new open.
+            setWebviewLoaded(false);
+            setPickerOpen(true);
+          }}
+          className="flex-row items-center rounded-xl px-3.5 py-3"
+          style={{ backgroundColor: colors.primaryLight, gap: 8 }}
+        >
+          <Ionicons name="location" size={16} color={colors.primaryDark} />
+          <Text className="flex-1 text-sm font-semibold" style={{ color: colors.primaryDark }} numberOfLines={2}>
+            {confirming ? "Saving location…" : selectedLabel || "Tap to set a location"}
+          </Text>
+          <Ionicons name="create-outline" size={17} color={colors.primaryDark} />
+        </Pressable>
+      )}
+      {pickerOpen && (
+      <>
       <View className="flex-row items-center bg-surface rounded-xl px-3.5 mb-2" style={{ borderWidth: 1.5, borderColor: colors.border, gap: 8 }}>
         <Ionicons name="search-outline" size={18} color={colors.muted} />
         <TextInput
@@ -305,7 +330,15 @@ export default function LocationMapPicker({
           )}
           {webviewLoaded && (
             <Pressable
-              onPress={() => onConfirm(picked.lat, picked.lng)}
+              onPress={() => {
+                onConfirm(picked.lat, picked.lng);
+                // Collapses the picker down to a summary row — the confirm
+                // itself (reverse-geocoding the pin) keeps running in the
+                // background. Also closes the full-screen map back to the
+                // embedded view when confirmed from there.
+                setPickerOpen(false);
+                if (fullscreen) toggleFullscreen();
+              }}
               disabled={confirming}
               className="absolute bottom-3 left-3 right-3"
               style={primaryButtonShadow}
@@ -332,6 +365,8 @@ export default function LocationMapPicker({
             {selectedLabel}
           </Text>
         </View>
+      )}
+      </>
       )}
     </View>
   );
