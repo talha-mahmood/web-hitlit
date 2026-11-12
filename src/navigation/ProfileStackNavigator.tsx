@@ -3,6 +3,7 @@ import ProfileScreen from "../screens/main/ProfileScreen";
 import AccountSettingsScreen from "../screens/main/AccountSettingsScreen";
 import MyBookingsScreen from "../screens/main/MyBookingsScreen";
 import BlockedUsersScreen from "../screens/main/BlockedUsersScreen";
+import HelpGuideScreen from "../screens/main/HelpGuideScreen";
 import GameDetailScreen from "../screens/games/GameDetailScreen";
 import GameChatScreen from "../screens/games/GameChatScreen";
 import TeamChatScreen from "../screens/games/TeamChatScreen";
@@ -39,6 +40,7 @@ import type { ManualScoreParams } from "../lib/manualScore";
 export type ProfileStackParamList = {
   ProfileHome: undefined;
   AccountSettings: undefined;
+  HelpGuide: undefined;
   MyBookings: undefined;
   BlockedUsers: undefined;
   // Reachable from the Profile stats screen's "currently enrolled" lists —
@@ -91,6 +93,7 @@ export default function ProfileStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileHome" component={ProfileScreen} />
       <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} />
+      <Stack.Screen name="HelpGuide" component={HelpGuideScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
       <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
       <Stack.Screen name="GameDetail" component={GameDetailScreen} />

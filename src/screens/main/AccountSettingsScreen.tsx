@@ -186,6 +186,25 @@ export default function AccountSettingsScreen() {
         {/* My Bookings is hidden for now — no payment method is integrated
             yet, so there's nothing real to show here. */}
         <Pressable
+          onPress={() => navigation.navigate("HelpGuide")}
+          accessibilityRole="button"
+          className="bg-surface rounded-2xl flex-row items-center p-4 mb-4"
+          style={{ ...cardShadow, gap: 12 }}
+        >
+          <View
+            className="items-center justify-center rounded-full"
+            style={{ width: 44, height: 44, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="book-outline" size={20} color={colors.primaryDark} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-ink font-bold text-base">Help & User Guide</Text>
+            <Text className="text-muted text-sm mt-0.5">Learn how to use HitLit</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
+        <Pressable
           onPress={() => navigation.navigate("BlockedUsers")}
           className="bg-surface rounded-2xl flex-row items-center p-4 mb-4"
           style={{ ...cardShadow, gap: 12 }}
