@@ -68,19 +68,19 @@ function MatchCard({
         <View
           style={{
             position: "absolute", top: 0, left: 0, width: 0, height: 0,
-            borderTopWidth: 34, borderRightWidth: 34,
+            borderTopWidth: 26, borderRightWidth: 26,
             borderTopColor: colors.primary, borderRightColor: "transparent",
           }}
         />
         <View
           style={{
             position: "absolute", top: 0, right: 0, width: 0, height: 0,
-            borderTopWidth: 34, borderLeftWidth: 34,
+            borderTopWidth: 26, borderLeftWidth: 26,
             borderTopColor: "#1D4ED8", borderLeftColor: "transparent",
           }}
         />
 
-        <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
+        <View className="flex-row items-center justify-between px-4 pt-3 pb-2">
           <View className={`flex-row items-center px-2.5 py-1 rounded-full ${isLive ? "bg-red-500" : "bg-green-50"}`} style={{ gap: 5 }}>
             {isLive ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFFFFF" }} /> : null}
             <Text className={`text-xs font-bold ${isLive ? "text-jazba-white" : "text-green-700"}`}>
@@ -93,16 +93,16 @@ function MatchCard({
           </View>
         </View>
 
-        <View className="flex-row items-center justify-between px-6 pb-3">
+        <View className="flex-row items-center justify-between px-6 pb-2">
           <View className="items-center" style={{ width: 76 }}>
-            <TeamCrest color={colors.primary} size={52} icon="badminton" />
-            <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
+            <TeamCrest color={colors.primary} size={42} icon="badminton" />
+            <Text className="text-ink font-bold text-sm mt-1 text-center" numberOfLines={1}>
               {match.team_a_name}
             </Text>
           </View>
 
           <View className="items-center flex-1">
-            <Text className="text-ink font-extrabold" style={{ fontSize: 30 }}>
+            <Text className="text-ink font-extrabold" style={{ fontSize: 25 }}>
               {state.gamesWonA} - {state.gamesWonB}
             </Text>
             <Text className="text-muted text-xs mt-0.5">
@@ -111,22 +111,22 @@ function MatchCard({
           </View>
 
           <View className="items-center" style={{ width: 76 }}>
-            <TeamCrest color="#1D4ED8" size={52} icon="badminton" />
-            <Text className="text-ink font-bold text-sm mt-2 text-center" numberOfLines={1}>
+            <TeamCrest color="#1D4ED8" size={42} icon="badminton" />
+            <Text className="text-ink font-bold text-sm mt-1 text-center" numberOfLines={1}>
               {match.team_b_name}
             </Text>
           </View>
         </View>
 
         {!isLive && match.result_summary ? (
-          <Text className="text-primary text-xs font-semibold text-center pb-2" numberOfLines={1}>
+          <Text className="text-primary text-xs font-semibold text-center pb-1" numberOfLines={1}>
             {match.result_summary}
           </Text>
         ) : null}
 
         <View className="h-px bg-border" />
 
-        <View className="flex-row items-center px-4 py-3" style={{ gap: 8 }}>
+        <View className="flex-row items-center px-4 py-2.5" style={{ gap: 8 }}>
           <Ionicons name="calendar-outline" size={15} color={colors.muted} />
           <Text className="text-muted text-sm">{dateLabel}</Text>
           {match.venue ? (
