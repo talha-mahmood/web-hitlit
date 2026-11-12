@@ -1555,6 +1555,7 @@ export type Database = {
         Row: {
           booking_id: string | null
           bring_equipment: boolean
+          co_host_ids: string[]
           cost_shared: boolean
           court_id: string | null
           created_at: string
@@ -1601,6 +1602,7 @@ export type Database = {
         Insert: {
           booking_id?: string | null
           bring_equipment?: boolean
+          co_host_ids?: string[]
           cost_shared?: boolean
           court_id?: string | null
           created_at?: string
@@ -1647,6 +1649,7 @@ export type Database = {
         Update: {
           booking_id?: string | null
           bring_equipment?: boolean
+          co_host_ids?: string[]
           cost_shared?: boolean
           court_id?: string | null
           created_at?: string

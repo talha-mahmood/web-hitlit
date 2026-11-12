@@ -555,7 +555,8 @@ export default function EditGameScreen() {
     new Date(`${game.end_date ?? game.game_date}T${game.end_time}+05:00`).getTime() < Date.now();
   const isCancelled = game.status === "CANCELLED";
 
-  if (game.creator_id !== userId || hasEnded || isCancelled) {
+  const isGameHost = game.creator_id === userId || (!!userId && (game.co_host_ids ?? []).includes(userId));
+  if (!isGameHost || hasEnded || isCancelled) {
     return (
       <View className="flex-1 bg-app">
         <View className="flex-row items-center px-4 pb-4 border-b border-border" style={{ paddingTop: insets.top + 16 }}>
@@ -568,7 +569,7 @@ export default function EditGameScreen() {
         </View>
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-ink font-semibold text-base mb-2 text-center">
-            {game.creator_id !== userId
+            {!isGameHost
               ? `Only the host can edit this ${game.game_type === "TOURNAMENT" ? "tournament" : "game"}`
               : isCancelled
                 ? `This ${game.game_type === "TOURNAMENT" ? "tournament" : "game"} has been cancelled`

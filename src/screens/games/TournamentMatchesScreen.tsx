@@ -2140,7 +2140,7 @@ export default function TournamentMatchesScreen() {
     );
   }
 
-  const isHost = game.creator_id === userId;
+  const isHost = game.creator_id === userId || (!!userId && (game.co_host_ids ?? []).includes(userId));
   // A team with just one joined player is shown by that player's name.
   const teams = (teamsData ?? []).map((t) => ({
     ...t,
@@ -2273,9 +2273,14 @@ export default function TournamentMatchesScreen() {
       teamName: "Tournament Host",
     });
   }
+  for (const host of game.hosts ?? []) {
+    if (host.id !== game.creator_id) {
+      rawScorerCandidates.push({ id: host.id, name: host.full_name ?? "Host", teamName: "Game Host" });
+    }
+  }
   const scorerCandidates: ScorerCandidate[] = Array.from(
     new Map(rawScorerCandidates.map((c) => [c.id, c])).values()
-  ).map((c) => (c.id === game.creator_id ? { ...c, name: `${c.name} (Host)` } : c));
+  ).map((c) => ((c.id === game.creator_id || (game.co_host_ids ?? []).includes(c.id)) ? { ...c, name: `${c.name} (Host)` } : c));
   const scorerNameById = new Map(scorerCandidates.map((c) => [c.id, c.name]));
   const getScorerName = (match: TournamentMatch): string | null =>
     match.scorer_user_id ? scorerNameById.get(match.scorer_user_id) ?? null : null;

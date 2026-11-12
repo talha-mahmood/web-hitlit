@@ -160,7 +160,7 @@ function GameCard({
   const teamsLeft = requiredTeams - approvedTeams.length;
   const isFull = game.status === "FULL" || (isTeamBased ? teamsLeft <= 0 : spotsLeft <= 0);
   const isCompleted = game.status === "COMPLETED";
-  const isMyGame = game.creator_id === currentUserId;
+  const isMyGame = game.creator_id === currentUserId || (!!currentUserId && (game.co_host_ids ?? []).includes(currentUserId));
   const skill = game.skill_level;
   const skillColor = skill ? GAME_SKILL_COLORS[skill] : null;
   const skillLabel =
@@ -435,6 +435,7 @@ export default function GamesListScreen() {
     ? (locationFiltered ?? []).filter(
         (g) =>
           g.creator_id === userId ||
+          (!!userId && (g.co_host_ids ?? []).includes(userId)) ||
           g.game_players.some((p) => p.user_id === userId && p.status === "JOINED") ||
           g.tournament_teams.some((t) =>
             t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED")

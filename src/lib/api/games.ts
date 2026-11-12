@@ -40,6 +40,7 @@ export type GameDetail = GameRow & {
   sports: { id: string; name: string } | null;
   venues: { id: string; name: string; city: string | null } | null;
   profiles: { id: string; full_name: string | null; avatar: string | null } | null;
+  hosts: { id: string; full_name: string | null; avatar: string | null }[];
   game_players: (Pick<
     GamePlayerRow,
     "id" | "status" | "user_id" | "manual_name" | "joined_at" | "payment_status" | "skill_level" | "location"
@@ -197,7 +198,25 @@ export async function fetchGameDetail(gameId: string): Promise<GameDetail> {
     .eq("id", gameId)
     .single();
   if (error) throw new Error(error.message);
-  return data as GameDetail;
+  const game = data as GameDetail;
+  const coHostIds = [...new Set(game.co_host_ids ?? [])].filter((id) => id !== game.creator_id);
+  let coHosts: NonNullable<GameDetail["profiles"]>[] = [];
+  if (coHostIds.length > 0) {
+    const { data: hostProfiles, error: hostProfilesError } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar")
+      .in("id", coHostIds);
+    if (hostProfilesError) throw new Error(hostProfilesError.message);
+    coHosts = hostProfiles ?? [];
+  }
+  const profileById = new Map(coHosts.map((profile) => [profile.id, profile]));
+  const orderedHostIds = [game.creator_id, ...coHostIds];
+  return {
+    ...game,
+    hosts: orderedHostIds
+      .map((id) => id === game.creator_id ? game.profiles : profileById.get(id) ?? null)
+      .filter((profile): profile is NonNullable<GameDetail["profiles"]> => !!profile),
+  };
 }
 
 export type AllGamesListItem = GameRow & {

@@ -338,7 +338,8 @@ export default function GameDetailScreen() {
   const emptySlots = Math.max(0, game.max_players - joinedPlayers.length);
   const isFull = game.status === "FULL" || joinedPlayers.length >= game.max_players;
 
-  const isCreator = game.creator_id === userId;
+  const isCreator = game.creator_id === userId || (!!userId && (game.co_host_ids ?? []).includes(userId));
+  const hostIds = [...new Set([game.creator_id, ...(game.co_host_ids ?? [])])];
   const myPlayerRecord = userId ? game.game_players.find((p) => p.user_id === userId && p.status === "JOINED") : null;
   const myPendingRecord = userId ? game.game_players.find((p) => p.user_id === userId && p.status === "PENDING") : null;
   const hasJoined = !!myPlayerRecord;
@@ -838,7 +839,7 @@ export default function GameDetailScreen() {
         {/* Players (old-style flat regular games) / Teams (tournaments and
             team-based regular games) */}
         {isTeamBased ? (
-          <TournamentTeamsSection game={game} />
+          <TournamentTeamsSection game={game} isGameHost={isCreator} />
         ) : (
           <>
             <View className="px-3.5 mt-6">
@@ -876,7 +877,7 @@ export default function GameDetailScreen() {
                     avatar={p.profiles?.avatar ?? null}
                     isManual={!p.user_id}
                     isCreator={p.user_id === game.creator_id}
-                    onRemove={isCreator && p.user_id !== game.creator_id && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? p.manual_name ?? null) : undefined}
+                    onRemove={isCreator && (!p.user_id || !hostIds.includes(p.user_id)) && !isApprovingOrRejecting ? () => handleRemove(p.id, p.profiles?.full_name ?? p.manual_name ?? null) : undefined}
                     onPressAvatar={p.user_id ? () => navigation.navigate("PlayerProfile", { userId: p.user_id as string }) : undefined}
                   />
                 ))}
@@ -903,21 +904,26 @@ export default function GameDetailScreen() {
 
         {/* Host */}
         <View className="px-3.5 mt-6 flex-row items-center" style={{ gap: 12 }}>
-          <Pressable
-            onPress={() => game.profiles?.id && navigation.navigate("PlayerProfile", { userId: game.profiles.id })}
-            disabled={!game.profiles?.id}
-          >
-            {game.profiles?.avatar ? (
-              <Image source={{ uri: game.profiles.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
-            ) : (
-              <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
-                <Text className="text-primary font-bold">{(game.profiles?.full_name ?? "?").charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
-          </Pressable>
-          <View>
-            <Text className="text-muted text-xs">Hosted by</Text>
-            <Text className="text-ink font-semibold text-sm">{game.profiles?.full_name ?? "Unknown"}</Text>
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            {(game.hosts?.length ? game.hosts : game.profiles ? [game.profiles] : []).map((host) => (
+              <Pressable key={host.id} onPress={() => navigation.navigate("PlayerProfile", { userId: host.id })}>
+                {host.avatar ? (
+                  <Image source={{ uri: host.avatar }} className="w-10 h-10 rounded-full bg-primary-light" />
+                ) : (
+                  <View className="w-10 h-10 rounded-full bg-primary-light items-center justify-center">
+                    <Text className="text-primary font-bold">{(host.full_name ?? "?").charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+              </Pressable>
+            ))}
+          </View>
+          <View className="flex-1">
+            <Text className="text-ink font-semibold text-sm" numberOfLines={2}>
+              <Text className="text-muted">Hosted by: </Text>
+              {(game.hosts?.length ? game.hosts : game.profiles ? [game.profiles] : [])
+                .map((host) => host.full_name ?? "Unknown")
+                .join(", ") || "Unknown"}
+            </Text>
           </View>
         </View>
 
@@ -1004,7 +1010,7 @@ export default function GameDetailScreen() {
           visible={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           title={`Invite Players · ${game.title}`}
-          excludeIds={[game.creator_id, ...game.game_players.map((p) => p.user_id).filter((id): id is string => !!id)]}
+          excludeIds={[...hostIds, ...game.game_players.map((p) => p.user_id).filter((id): id is string => !!id)]}
           onInvite={async (user) => {
             if (!userId) return;
             await createInvite.mutateAsync({

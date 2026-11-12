@@ -546,8 +546,15 @@ function HeadToHeadMatchCard({
       teamName: "Game Host",
     });
   }
+  for (const host of game.hosts ?? []) {
+    if (host.id !== game.creator_id) {
+      rawScorerCandidates.push({ id: host.id, name: host.full_name ?? "Host", teamName: "Game Host" });
+    }
+  }
   const scorerCandidates = Array.from(new Map(rawScorerCandidates.map((candidate) => [candidate.id, candidate])).values())
-    .map((candidate) => candidate.id === game.creator_id ? { ...candidate, name: `${candidate.name} (Host)` } : candidate);
+    .map((candidate) => (candidate.id === game.creator_id || (game.co_host_ids ?? []).includes(candidate.id))
+      ? { ...candidate, name: `${candidate.name} (Host)` }
+      : candidate);
   const scorerNameById = new Map(scorerCandidates.map((candidate) => [candidate.id, candidate.name]));
   const isAssignedScorer = !!currentUserId && match?.scorer_user_id === currentUserId;
   const scorerName = match?.scorer_user_id ? scorerNameById.get(match.scorer_user_id) ?? "Assigned scorer" : null;
@@ -777,11 +784,11 @@ function HeadToHeadMatchCard({
   );
 }
 
-export default function TournamentTeamsSection({ game }: { game: GameDetail }) {
+export default function TournamentTeamsSection({ game, isGameHost }: { game: GameDetail; isGameHost?: boolean }) {
   const navigation = useNavigation<Nav>();
   const userId = useAuthStore((s) => s.session?.user.id);
   const myGender = useProfileStore((s) => s.profile?.gender);
-  const isHost = game.creator_id === userId;
+  const isHost = isGameHost ?? (game.creator_id === userId || (!!userId && (game.co_host_ids ?? []).includes(userId)));
   // A Male/Female Only game or tournament can only have its teams created by
   // a matching user (enforced server-side too — see tournament_teams and
   // squad_fill_tournament_team) — the squad used to fill a team has to match
