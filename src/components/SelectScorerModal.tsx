@@ -18,6 +18,7 @@ export default function SelectScorerModal({
   currentScorerId,
   onSelect,
   submitting,
+  contextLabel = "tournament",
 }: {
   visible: boolean;
   onClose: () => void;
@@ -25,6 +26,7 @@ export default function SelectScorerModal({
   currentScorerId: string | null;
   onSelect: (userId: string) => void;
   submitting?: boolean;
+  contextLabel?: "game" | "tournament";
 }) {
   const insets = useSafeAreaInsets();
   const [pickingId, setPickingId] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function SelectScorerModal({
                 Select Scorer
               </Text>
               <Text className="text-muted" style={{ fontSize: 13.5, marginTop: 2 }}>
-                Pick a tournament member to score this match
+                Pick a {contextLabel} member to score this match
               </Text>
             </View>
             <Pressable
@@ -61,7 +63,7 @@ export default function SelectScorerModal({
 
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 4 }} bounces={false}>
             {members.length === 0 ? (
-              <Text className="text-muted text-sm text-center py-6">No tournament members found yet.</Text>
+              <Text className="text-muted text-sm text-center py-6">No {contextLabel} members found yet.</Text>
             ) : (
               members.map((member) => {
                 const isCurrent = member.id === currentScorerId;

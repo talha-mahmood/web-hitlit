@@ -23,7 +23,7 @@ import { usePlayerTeamSquads } from "../../hooks/useSquads";
 import { manualSportForName } from "../../lib/manualScore";
 import { isCricketFamily } from "../../lib/api/sports";
 import { LinkedMatchScoreDetails } from "../../components/MatchScoreDetails";
-import { useTournamentMatches } from "../../hooks/useTournamentMatches";
+import { useSetMatchScorer, useTournamentMatches } from "../../hooks/useTournamentMatches";
 import { useAuthStore } from "../../store/authStore";
 import { useProfileStore } from "../../store/profileStore";
 import { colors, cardShadow, primaryButtonShadow } from "../../constants/theme";
@@ -32,6 +32,7 @@ import RenameTeamModal from "../../components/RenameTeamModal";
 import SelectJoinTeamModal, { type JoinableTeam } from "../../components/SelectJoinTeamModal";
 import InviteUsersModal from "../../components/InviteUsersModal";
 import AddManualMemberModal from "../../components/AddManualMemberModal";
+import SelectScorerModal, { type ScorerCandidate } from "../../components/SelectScorerModal";
 import ChatIcon from "../../components/ChatIcon";
 import { SkeletonCardRows } from "../../components/Skeleton";
 import type { GameDetail } from "../../lib/api/games";
@@ -514,6 +515,9 @@ function HeadToHeadMatchCard({
 }) {
   const navigation = useNavigation<Nav>();
   const { data: matches } = useTournamentMatches(game.id);
+  const setMatchScorer = useSetMatchScorer(game.id);
+  const currentUserId = useAuthStore((state) => state.session?.user.id);
+  const [showScorerModal, setShowScorerModal] = useState(false);
 
   const match = (matches ?? [])[0] ?? null;
   // A team with just one joined player is shown by that player's name.
@@ -526,6 +530,27 @@ function HeadToHeadMatchCard({
       : fallback;
   const teamAName = displayName(teams[0], "Team A");
   const teamBName = displayName(teams[1], "Team B");
+  const rawScorerCandidates: ScorerCandidate[] = teams.flatMap((team) =>
+    team.tournament_team_members
+      .filter((member) => member.status === "JOINED" && member.user_id)
+      .map((member) => ({
+        id: member.user_id as string,
+        name: member.profiles?.full_name ?? "Player",
+        teamName: team.name,
+      }))
+  );
+  if (game.creator_id) {
+    rawScorerCandidates.push({
+      id: game.creator_id,
+      name: game.profiles?.full_name ?? "Host",
+      teamName: "Game Host",
+    });
+  }
+  const scorerCandidates = Array.from(new Map(rawScorerCandidates.map((candidate) => [candidate.id, candidate])).values())
+    .map((candidate) => candidate.id === game.creator_id ? { ...candidate, name: `${candidate.name} (Host)` } : candidate);
+  const scorerNameById = new Map(scorerCandidates.map((candidate) => [candidate.id, candidate.name]));
+  const isAssignedScorer = !!currentUserId && match?.scorer_user_id === currentUserId;
+  const scorerName = match?.scorer_user_id ? scorerNameById.get(match.scorer_user_id) ?? "Assigned scorer" : null;
 
   const sportName = (game.sports?.name ?? "").trim().toLowerCase();
   const isCricketSport = isCricketFamily(sportName);
@@ -543,12 +568,11 @@ function HeadToHeadMatchCard({
     }
   })();
   const isLive = !!linkedScorecardId && match?.status !== "COMPLETED";
-  // Once the match has a result (scored live or entered by hand) there's
-  // nothing left to score, so neither scoring button is offered. Scoring no
-  // longer waits on the venue being booked — a host can start scoring as
-  // soon as both teams are set, same as the button itself only ever
-  // appearing once the match row exists.
-  const canGoToScorecard = isHost && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
+  // Like tournament matches, only the assigned scorer gets score-entry
+  // actions. The host can assign or change that scorer until the match is
+  // completed; the other game members can watch once a scorecard is linked.
+  const canScore = isAssignedScorer && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
+  const canSelectScorer = isHost && !!match?.team_a && !!match?.team_b && match.status !== "COMPLETED";
 
   const rosterByTeamId = new Map<string, ScorecardPrefillPlayer[]>();
   for (const t of teams) {
@@ -661,6 +685,17 @@ function HeadToHeadMatchCard({
     }
   };
 
+  const handleSelectScorer = (scorerUserId: string) => {
+    if (!match) return;
+    setMatchScorer.mutate(
+      { matchId: match.id, scorerUserId },
+      {
+        onSuccess: () => setShowScorerModal(false),
+        onError: (error) => Alert.alert("Error", getFriendlyErrorMessage(error, "Could not assign scorer.")),
+      }
+    );
+  };
+
   return (
     <View className="mx-4 mt-4 border border-border rounded-2xl bg-surface p-4" style={cardShadow}>
       <Pressable
@@ -692,7 +727,22 @@ function HeadToHeadMatchCard({
           {match ? <LinkedMatchScoreDetails match={match} /> : null}
         </View>
       </Pressable>
-      {canGoToScorecard && (
+      {canSelectScorer && (
+        <Pressable
+          onPress={() => setShowScorerModal(true)}
+          disabled={setMatchScorer.isPending}
+          className="mt-2 flex-row items-center justify-between border border-primary rounded-lg px-3 py-2"
+        >
+          <View className="flex-row items-center" style={{ gap: 7 }}>
+            <Ionicons name="person-add-outline" size={15} color={colors.primary} />
+            <Text className="text-primary text-xs font-semibold">
+              {scorerName ? `Scorer: ${scorerName}` : "Select Scorer"}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={15} color={colors.primary} />
+        </Pressable>
+      )}
+      {canScore && (
         <View className="mt-2" style={{ gap: 8 }}>
           <Pressable onPress={handleGoToScorecard}>
             <GradientFill className="rounded-lg py-2 items-center">
@@ -704,7 +754,7 @@ function HeadToHeadMatchCard({
           </Pressable>
         </View>
       )}
-      {linkedScorecardId && !isHost && (
+      {linkedScorecardId && !isAssignedScorer && (
         <Pressable
           onPress={handleWatchScorecard}
           className="mt-2 rounded-lg border border-primary py-2 items-center"
@@ -714,6 +764,15 @@ function HeadToHeadMatchCard({
           <Text className="text-primary text-xs font-semibold">{isLive ? "Watch Live" : "View Scorecard"}</Text>
         </Pressable>
       )}
+      <SelectScorerModal
+        visible={showScorerModal}
+        onClose={() => setShowScorerModal(false)}
+        members={scorerCandidates}
+        currentScorerId={match?.scorer_user_id ?? null}
+        onSelect={handleSelectScorer}
+        submitting={setMatchScorer.isPending}
+        contextLabel="game"
+      />
     </View>
   );
 }
