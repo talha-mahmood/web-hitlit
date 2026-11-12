@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { CommonActions, useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +13,11 @@ import { useTeamFixture } from "../../hooks/useSquads";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../constants/theme";
 import type { HomeStackParamList } from "../../navigation/HomeStackNavigator";
-import type { TeamFixturePrefill } from "../../lib/api/teamChallenges";
+import { linkTeamFixtureScorecard, type TeamFixturePrefill } from "../../lib/api/teamChallenges";
+import { fetchMatchesForTournament, type ScorecardPrefill } from "../../lib/api/tournamentMatches";
+import { fetchTeamsForTournament } from "../../lib/api/tournamentTeams";
+import { disambiguateRoster } from "../../lib/matchNameValidation";
+import { isCricketFamily } from "../../lib/api/sports";
 
 const newMatchRoute = (sportName: string): keyof HomeStackParamList => {
   const sport = sportName.toLowerCase();
@@ -58,6 +63,72 @@ export default function TeamFixtureDetailsScreen() {
   const canStart = Boolean(isManager && fixture?.status === "scheduled" && new Date(fixture.scheduled_at).getTime() <= Date.now());
   const linkedTable = fixture?.scorecard_table ?? (fixture?.football_match_id ? "football_matches" : null);
   const linkedMatchId = fixture?.scorecard_match_id ?? fixture?.football_match_id ?? null;
+  const [startingScorecard, setStartingScorecard] = useState(false);
+
+  // A challenge's fixture is scored from this screen rather than the game's
+  // own "Go To Scorecard" button (see TournamentTeamsSection.tsx), but it
+  // still shares the exact same auto-generated tournament_matches/
+  // tournament_teams rows underneath (see ensure_team_fixture_game) — so
+  // this builds the same real-roster ScorecardPrefill that path uses,
+  // instead of leaving NewMatchScreen's roster blank. Without this, cricket
+  // matches started here never carry the players' real profiles.full_name
+  // into cricket_matches.team_a_players/team_b_players, which is the exact
+  // string every player's profile stats match against — so the match
+  // silently never showed up for anyone.
+  const handleStartScorecard = async () => {
+    if (!fixture || startingScorecard) return;
+    setStartingScorecard(true);
+    try {
+      let scorecardPrefill: ScorecardPrefill | undefined;
+      if (fixture.game_id && isCricketFamily(fixture.sportName)) {
+        const [matches, teams] = await Promise.all([
+          fetchMatchesForTournament(fixture.game_id),
+          fetchTeamsForTournament(fixture.game_id),
+        ]);
+        const match = matches[0];
+        if (match?.cricket_match_id) {
+          // Already started from the game's own detail screen — open that
+          // same scorecard instead of creating a duplicate match.
+          await linkTeamFixtureScorecard(fixture.id, match.cricket_match_id, "cricket_matches");
+          navigation.dispatch(CommonActions.navigate(liveRoute("cricket_matches"), { matchId: match.cricket_match_id }));
+          setStartingScorecard(false);
+          return;
+        }
+        if (match?.team_a && match?.team_b) {
+          const rosterByTeamId = new Map(
+            teams.map((t) => [
+              t.id,
+              t.tournament_team_members
+                .filter((m) => m.status === "JOINED")
+                .map((m) => ({ name: m.profiles?.full_name ?? m.manual_name ?? "Player", userId: m.user_id })),
+            ])
+          );
+          const rawA = rosterByTeamId.get(match.team_a.id) ?? [];
+          const rawB = rosterByTeamId.get(match.team_b.id) ?? [];
+          const { teamANames, teamBNames } = disambiguateRoster(
+            rawA.map((p) => ({ name: p.name, sourceId: p.userId })),
+            rawB.map((p) => ({ name: p.name, sourceId: p.userId }))
+          );
+          scorecardPrefill = {
+            tournamentMatchId: match.id,
+            gameId: fixture.game_id,
+            teamAName: match.team_a.name,
+            teamBName: match.team_b.name,
+            teamAPlayers: rawA.map((p, i) => ({ name: teamANames[i], userId: p.userId })),
+            teamBPlayers: rawB.map((p, i) => ({ name: teamBNames[i], userId: p.userId })),
+            venue: fixture.venue,
+            sportId: fixture.sport_id,
+          };
+        }
+      }
+      const teamFixture: TeamFixturePrefill = { fixtureId: fixture.id, sportId: fixture.sport_id, sportName: fixture.sportName, matchFormat: fixture.match_format as TeamFixturePrefill["matchFormat"], teamAName: fixture.home.name, teamBName: fixture.away.name, venue: fixture.venue };
+      navigation.dispatch(CommonActions.navigate(newMatchRoute(fixture.sportName), { teamFixture, prefill: scorecardPrefill }));
+    } catch (err) {
+      Alert.alert("Error", getFriendlyErrorMessage(err, "Could not start the scorecard."));
+    } finally {
+      setStartingScorecard(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-app" style={{ paddingTop: insets.top + 16 }}>
@@ -119,10 +190,7 @@ export default function TeamFixtureDetailsScreen() {
             {isManager && linkedTable && linkedMatchId ? (
               <Pressable onPress={() => navigation.dispatch(CommonActions.navigate(liveRoute(linkedTable), { matchId: linkedMatchId }))} className="mt-5 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Open Scorecard</Text></Pressable>
             ) : isManager && canStart ? (
-              <Pressable onPress={() => {
-                const teamFixture: TeamFixturePrefill = { fixtureId: fixture.id, sportId: fixture.sport_id, sportName: fixture.sportName, matchFormat: fixture.match_format as TeamFixturePrefill["matchFormat"], teamAName: fixture.home.name, teamBName: fixture.away.name, venue: fixture.venue };
-                navigation.dispatch(CommonActions.navigate(newMatchRoute(fixture.sportName), { teamFixture }));
-              }} className="mt-5 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary }}><Text className="text-white font-bold">Start {fixture.sportName} Scorecard</Text></Pressable>
+              <Pressable disabled={startingScorecard} onPress={handleStartScorecard} className="mt-5 items-center rounded-xl py-3" style={{ backgroundColor: colors.primary, opacity: startingScorecard ? 0.6 : 1 }}><Text className="text-white font-bold">{startingScorecard ? "Starting…" : `Start ${fixture.sportName} Scorecard`}</Text></Pressable>
             ) : isManager && fixture.status === "scheduled" ? (
               <Text className="mt-5 text-center text-muted text-xs">The match scorecard will be available at the scheduled time.</Text>
             ) : null}
