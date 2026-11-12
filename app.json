@@ -97,7 +97,19 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/android-icon-foreground.png",
+          "imageWidth": 160,
+          "backgroundColor": "#F5F7FA",
+          "dark": {
+            "image": "./assets/android-icon-foreground.png",
+            "backgroundColor": "#050B12"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
