@@ -206,9 +206,15 @@ function MyCommunityContent({
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: GRID_SIDE_PADDING, paddingTop: TOP_PAD, paddingBottom: 30 }}>
-        <View style={{ marginBottom: 22 }}>
-          <Text className="text-ink font-extrabold" style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.5 }}>Find your people.</Text>
-          <Text className="text-muted" style={{ fontSize: 13, lineHeight: 19, marginTop: 3 }}>Play, connect, and make every game count.</Text>
+        <View style={{ marginBottom: 22, marginHorizontal: -GRID_SIDE_PADDING }}>
+          <Image
+            source={require("../../../assets/community-icons/community-banner.png")}
+            style={{
+              width: SCREEN_WIDTH,
+              height: Math.round(SCREEN_WIDTH * 769 / 2045),
+            }}
+            resizeMode="cover"
+          />
         </View>
         <View style={{ marginBottom: ROW_GAP }}>
           <View className="flex-row justify-between">
