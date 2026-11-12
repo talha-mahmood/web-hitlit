@@ -311,6 +311,26 @@ export default function HomeScreen() {
       accentColor: "#7DD3FC",
       image: require("../../../assets/Slider-images/third_slider_image.png"),
     },
+    {
+      key: "challenge-team",
+      title: "Challenge a team",
+      subtitle: "Find and challenge teams to play your favourite sports",
+      cta: "",
+      icon: "people-outline",
+      bgColor: "#FFFFFF",
+      accentColor: colors.primary,
+      image: require("../../../assets/Slider-images/fourth_slider_image.png"),
+    },
+    {
+      key: "nearby-players",
+      title: "Find Players near you",
+      subtitle: "Connect with local players and be part of the community",
+      cta: "",
+      icon: "people-outline",
+      bgColor: "#FFFFFF",
+      accentColor: colors.primary,
+      image: require("../../../assets/Slider-images/fifth_slider_image.png"),
+    },
   ];
 
   return (
