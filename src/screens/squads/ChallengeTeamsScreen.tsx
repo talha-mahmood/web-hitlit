@@ -146,6 +146,14 @@ export default function ChallengeTeamsScreen() {
             {search ? <Pressable onPress={() => setSearch("")} hitSlop={8}><Ionicons name="close-circle" size={19} color={colors.muted} /></Pressable> : null}
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2.5" contentContainerStyle={{ gap: 6 }}>
+            <Pressable onPress={() => navigation.navigate("TeamChallenges", undefined)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: colors.border, backgroundColor: colors.surfaceRaised }}>
+              <Ionicons name="list-outline" size={15} color={colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: colors.muted }}>My Challenges</Text>
+            </Pressable>
+            <Pressable onPress={() => setSportPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: sportId ? colors.primary : colors.border, backgroundColor: sportId ? colors.primaryLight : colors.surfaceRaised }}>
+              <Ionicons name="options-outline" size={15} color={sportId ? colors.primary : colors.muted} />
+              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: sportId ? colors.primary : colors.muted }}>{sport?.name ?? "Sport"}</Text>
+            </Pressable>
             <Pressable onPress={() => { setScope("near"); setSelectedCity(null); }} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: scope === "near" ? colors.primary : colors.border, backgroundColor: scope === "near" ? colors.primaryLight : colors.surfaceRaised }}>
               <Ionicons name="navigate-outline" size={15} color={scope === "near" ? colors.primary : colors.muted} />
               <Text className="ml-1 font-bold" numberOfLines={1} style={{ fontSize: 12, color: scope === "near" ? colors.primary : colors.muted }}>Near me</Text>
@@ -153,14 +161,6 @@ export default function ChallengeTeamsScreen() {
             <Pressable onPress={() => setCityPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: selectedCity ? colors.primary : colors.border, backgroundColor: selectedCity ? colors.primaryLight : colors.surfaceRaised }}>
               <Ionicons name="business-outline" size={16} color={selectedCity ? colors.primary : colors.muted} />
               <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: selectedCity ? colors.primary : colors.muted }}>{selectedCity ?? "City"}</Text>
-            </Pressable>
-            <Pressable onPress={() => setSportPickerVisible(true)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: sportId ? colors.primary : colors.border, backgroundColor: sportId ? colors.primaryLight : colors.surfaceRaised }}>
-              <Ionicons name="options-outline" size={15} color={sportId ? colors.primary : colors.muted} />
-              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: sportId ? colors.primary : colors.muted }}>{sport?.name ?? "Sport"}</Text>
-            </Pressable>
-            <Pressable onPress={() => navigation.navigate("TeamChallenges", undefined)} className="flex-row items-center justify-center rounded-full border py-1.5 px-3" style={{ borderColor: colors.border, backgroundColor: colors.surfaceRaised }}>
-              <Ionicons name="list-outline" size={15} color={colors.muted} />
-              <Text className="ml-1 font-medium" numberOfLines={1} style={{ fontSize: 12, color: colors.muted }}>My Challenges</Text>
             </Pressable>
           </ScrollView>
         </View>
