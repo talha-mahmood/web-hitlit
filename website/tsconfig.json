@@ -1,0 +1,93 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": [
+        "../src/*"
+      ],
+      "@assets/*": [
+        "../assets/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ],
+      "@app/hooks/useDeviceLocation": [
+        "./src/platform/overrides/hooks/useDeviceLocation.ts"
+      ],
+      "@app/lib/appleAuth": [
+        "./src/platform/overrides/lib/appleAuth.ts"
+      ],
+      "@app/lib/exportCsv": [
+        "./src/platform/overrides/lib/exportCsv.ts"
+      ],
+      "@app/lib/googleAuth": [
+        "./src/platform/overrides/lib/googleAuth.ts"
+      ],
+      "@app/lib/locationPicker": [
+        "./src/platform/overrides/lib/locationPicker.ts"
+      ],
+      "@app/lib/matchReport/pdfShare": [
+        "./src/platform/overrides/lib/matchReport/pdfShare.ts"
+      ],
+      "@app/lib/pushNotifications": [
+        "./src/platform/overrides/lib/pushNotifications.ts"
+      ],
+      "@app/lib/shareImage": [
+        "./src/platform/overrides/lib/shareImage.ts"
+      ],
+      "@app/lib/sportImages": [
+        "./src/platform/overrides/lib/sportImages.ts"
+      ],
+      "@app/lib/supabase": [
+        "./src/platform/overrides/lib/supabase.ts"
+      ],
+      "@app/lib/upload": [
+        "./src/platform/overrides/lib/upload.ts"
+      ],
+      "@app/store/networkStore": [
+        "./src/platform/overrides/store/networkStore.ts"
+      ],
+      "react-native": [
+        "./src/platform/shims/react-native.ts"
+      ],
+      "@react-native-async-storage/async-storage": [
+        "./src/platform/shims/async-storage.ts"
+      ],
+      "@expo/vector-icons": [
+        "./src/platform/shims/vector-icons.ts"
+      ],
+      "*": [
+        "./node_modules/@types/*",
+        "./node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

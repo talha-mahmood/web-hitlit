@@ -46,3 +46,34 @@ yarn-error.*
 # local build artifacts
 *.apk
 *.aab
+
+
+
+#  git ignore for website
+# assets
+# database_backup
+# deep-link-setup
+# src
+# .env.example
+# .gitignore
+# .mcp.json
+# AGENTS.md
+# app.json
+# App.tsx
+# babel.config.js
+# CLAUDE.md
+# eas.json
+# global.css
+# google-services.json
+# index.ts
+# jest.config.js
+# LICENSE
+# metro.config.js
+# nativewind-env.d.ts
+# package-lock.json
+# package.json
+# PlayOye_Privacy_Policy.docx
+# PRIVACY_POLICY.md
+# tailwind.config.js
+# tsconfig.jest.json
+# tsconfig.json    

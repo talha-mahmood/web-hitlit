@@ -1,0 +1,43 @@
+{
+  "name": "hitlit-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "icons": "node scripts/gen-icons.mjs",
+    "prepare": "node scripts/sync-paths.mjs && node scripts/gen-icons.mjs && node scripts/optimize-images.mjs",
+    "dev": "npm run prepare && vite",
+    "build": "npm run prepare && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "npm run prepare && tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/poppins": "^5.3.0",
+    "@mdi/js": "^7.4.47",
+    "@supabase/supabase-js": "^2.118.0",
+    "@tanstack/react-query": "^5.105.0",
+    "html-to-image": "1.11.11",
+    "leaflet": "^1.9.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-icons": "^5.7.0",
+    "react-router": "^7.18.5",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.32",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.8.3",
+    "vite": "^6.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
