@@ -99,20 +99,32 @@ function EventCard({
             )}
           </View>
 
-          {/* Icon disc, tucked into the right edge — generic calendar glyph
-              since events have no sport to show a photo for. */}
+          {/* Generated event visual in a soft green disc, tucked into the right edge. */}
           <View
             pointerEvents="none"
             className="items-center justify-center overflow-hidden"
             style={{ position: "absolute", right: -28, top: 44, width: 82, height: 82, borderRadius: 41, backgroundColor: colors.primaryLight }}
           >
-            <Ionicons name="calendar" size={32} color={colors.primary} style={{ marginRight: 17, opacity: 0.8 }} />
+            <GeneratedEntityVisual
+              id={event.id}
+              name={event.name}
+              sport={event.event_type}
+              kind="event"
+              imageUrl={event.icon_url}
+              size={48}
+              style={{ marginRight: 17 }}
+            />
           </View>
 
           <View className="px-2.5 pt-2 pb-2">
             {/* Row 2: Icon (if the owner set a custom one) + Name */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              <GeneratedEntityVisual id={event.id} name={event.name} sport={event.event_type} kind="event" imageUrl={event.icon_url} size={22} />
+              <View
+                className="items-center justify-center overflow-hidden"
+                style={{ width: 22, height: 22, borderRadius: 22 * 0.2, backgroundColor: colors.primaryLight }}
+              >
+                <Ionicons name="calendar" size={13} color={colors.primary} style={{ opacity: 0.8 }} />
+              </View>
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {event.name}
               </Text>

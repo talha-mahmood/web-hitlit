@@ -135,7 +135,7 @@ function SquadCard({
             )}
           </View>
 
-          {/* Sport picture in a soft green disc, tucked into the right edge
+          {/* Generated squad visual in a soft green disc, tucked into the right edge
               — pushed down (and slightly further off-card) below the CTA
               badge above it, since a longer badge ("Male Only", "Female
               Only") is wider than "Join"/"Full" and was overlapping this
@@ -153,13 +153,15 @@ function SquadCard({
               backgroundColor: colors.primaryLight,
             }}
           >
-            {sportPhoto ? (
-              <Image source={sportPhoto} style={{ width: 86, height: 48, marginRight: 17 }} resizeMode="contain" />
-            ) : sportName ? (
-              <MaterialCommunityIcons name={sportGlyph.icon} size={35} color={sportGlyph.fg} style={{ marginRight: 17, opacity: 0.8 }} />
-            ) : (
-              <Ionicons name="people" size={32} color={colors.primary} style={{ marginRight: 17, opacity: 0.8 }} />
-            )}
+            <GeneratedEntityVisual
+              id={squad.id}
+              name={squad.name}
+              sport={sportName}
+              kind={squad.group_type === "team" ? "team" : "squad"}
+              imageUrl={squad.icon_url}
+              size={48}
+              style={{ marginRight: 17 }}
+            />
           </View>
 
           <View className="px-2.5 pt-2 pb-2">
@@ -167,7 +169,18 @@ function SquadCard({
                 clear of the corner CTA above via a wider right gutter, and
                 truncates to one line if there isn't room. */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              <GeneratedEntityVisual id={squad.id} name={squad.name} sport={sportName} kind={squad.group_type === "team" ? "team" : "squad"} imageUrl={squad.icon_url} size={22} />
+              <View
+                className="items-center justify-center overflow-hidden"
+                style={{ width: 22, height: 22, borderRadius: 22 * 0.2, backgroundColor: colors.primaryLight }}
+              >
+                {sportPhoto ? (
+                  <Image source={sportPhoto} style={{ width: 22, height: 13 }} resizeMode="contain" />
+                ) : sportName ? (
+                  <MaterialCommunityIcons name={sportGlyph.icon} size={14} color={sportGlyph.fg} style={{ opacity: 0.8 }} />
+                ) : (
+                  <Ionicons name="people" size={13} color={colors.primary} style={{ opacity: 0.8 }} />
+                )}
+              </View>
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {squad.name}
               </Text>

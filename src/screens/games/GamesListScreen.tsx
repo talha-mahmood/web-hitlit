@@ -246,11 +246,11 @@ function GameCard({
             )}
           </View>
 
-          {/* Sport picture in a soft green disc, tucked into the right edge
-              — pushed down (and slightly further off-card) below the CTA
-              badge above it, since a longer badge ("My Tournament",
-              "Completed") is wider than "Join"/"Full" and was overlapping
-              this disc when the two sat closer together. */}
+          {/* Generated game/tournament visual in a soft green disc, tucked
+              into the right edge — pushed down (and slightly further
+              off-card) below the CTA badge above it, since a longer badge
+              ("My Tournament", "Completed") is wider than "Join"/"Full" and
+              was overlapping this disc when the two sat closer together. */}
           <View
             pointerEvents="none"
             className="items-center justify-center overflow-hidden"
@@ -264,18 +264,31 @@ function GameCard({
               backgroundColor: colors.primaryLight,
             }}
           >
-            {sportPhoto ? (
-              <Image source={sportPhoto} style={{ width: 86, height: 48, marginRight: 17 }} resizeMode="contain" />
-            ) : (
-              <MaterialCommunityIcons name={sportGlyph.icon} size={35} color={sportGlyph.fg} style={{ marginRight: 17, opacity: 0.8 }} />
-            )}
+            <GeneratedEntityVisual
+              id={game.id}
+              name={game.title}
+              sport={sportName}
+              kind={isTournament ? "tournament" : "game"}
+              imageUrl={game.icon_url}
+              size={48}
+              style={{ marginRight: 17 }}
+            />
           </View>
 
           <View className="px-2.5 pt-2 pb-2">
             {/* Row 1: Icon (if the host set a custom one) + Title — kept clear
                 of the corner CTA via a wider right gutter, one line. */}
             <View className="flex-row items-center mb-1" style={{ gap: 6, paddingRight: 80 }}>
-              <GeneratedEntityVisual id={game.id} name={game.title} sport={sportName} kind={isTournament ? "tournament" : "game"} imageUrl={game.icon_url} size={SPORT_ICON_BADGE_SIZE} />
+              <View
+                className="items-center justify-center overflow-hidden"
+                style={{ width: SPORT_ICON_BADGE_SIZE, height: SPORT_ICON_BADGE_SIZE, borderRadius: SPORT_ICON_BADGE_SIZE * 0.2, backgroundColor: colors.primaryLight }}
+              >
+                {sportPhoto ? (
+                  <Image source={sportPhoto} style={{ width: SPORT_ICON_BADGE_SIZE, height: SPORT_ICON_BADGE_SIZE * 0.58 }} resizeMode="contain" />
+                ) : (
+                  <MaterialCommunityIcons name={sportGlyph.icon} size={SPORT_ICON_BADGE_SIZE * 0.6} color={sportGlyph.fg} style={{ opacity: 0.8 }} />
+                )}
+              </View>
               <Text className="text-ink font-extrabold flex-1" style={{ fontSize: 14 }} numberOfLines={1}>
                 {game.title}
               </Text>
