@@ -645,32 +645,6 @@ export default function GamesListScreen() {
               </Pressable>
             );
           })}
-          {/* "Tournaments" — off shows only regular games, on shows only
-              tournaments (never both mixed together). Hidden entirely when
-              this screen was opened specifically for tournaments (e.g. via
-              Home's "Tournaments near you" → See all) — that listing should
-              only ever show tournament cards, with no way to switch it off. */}
-          {gameType !== "TOURNAMENT" && (
-            <Pressable
-              onPress={() => setShowTournaments((v) => !v)}
-              style={{
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: showTournaments ? colors.primary : colors.border,
-              }}
-            >
-              <FilterPillFill
-                active={showTournaments}
-                className="flex-row items-center rounded-full"
-                style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
-              >
-                <Ionicons name="trophy-outline" size={14} color={showTournaments ? "white" : colors.muted} />
-                <Text className="font-medium" style={{ fontSize: 11.5, color: showTournaments ? "white" : colors.muted }}>
-                  Tournaments
-                </Text>
-              </FilterPillFill>
-            </Pressable>
-          )}
           {/* "Location" — opens a bottom sheet with a free-text field plus
               city suggestions (multi-select), in place of the old
               always-visible inline field. Right after All/My Games. */}
