@@ -238,7 +238,7 @@ export default function CreateSquadScreen() {
       Alert.alert("Invalid Name", `${noun} name must be ${NAME_REQUIREMENT_HINT}.`);
       return;
     }
-    if (!sportId) {
+    if (!isTrainingCampLocked && !sportId) {
       Alert.alert("Missing Info", "Please select a sport.");
       return;
     }
@@ -530,33 +530,36 @@ export default function CreateSquadScreen() {
           </FormCard>
         )}
 
-        {/* Sport */}
-        <FormCard icon="trophy" title="Sport" required hint="Select your sport">
-          {lockSport ? (
-            <View className="flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-4 py-3" style={{ gap: 8 }}>
-              <Ionicons name="football" size={20} color={colors.primary} />
-              <Text className="text-ink font-semibold">{selectedSportName ?? "Football"}</Text>
-              <Text className="ml-auto text-muted text-xs">Fixed for this challenge</Text>
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ gap: sportTileGap }}
-            >
-              {(sports ?? []).map((s) => (
-                <HomeSportTile
-                  key={s.id}
-                  name={s.name}
-                  width={sportTileWidth}
-                  selected={sportId === s.id}
-                  onPress={() => setSportId(s.id)}
-                />
-              ))}
-            </ScrollView>
-          )}
-        </FormCard>
+        {/* Sport — dropped entirely for a training-camp-locked create, since
+            a training camp isn't scoped to one sport. */}
+        {!isTrainingCampLocked && (
+          <FormCard icon="trophy" title="Sport" required hint="Select your sport">
+            {lockSport ? (
+              <View className="flex-row items-center rounded-2xl border border-border bg-surfaceRaised px-4 py-3" style={{ gap: 8 }}>
+                <Ionicons name="football" size={20} color={colors.primary} />
+                <Text className="text-ink font-semibold">{selectedSportName ?? "Football"}</Text>
+                <Text className="ml-auto text-muted text-xs">Fixed for this challenge</Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ gap: sportTileGap }}
+              >
+                {(sports ?? []).map((s) => (
+                  <HomeSportTile
+                    key={s.id}
+                    name={s.name}
+                    width={sportTileWidth}
+                    selected={sportId === s.id}
+                    onPress={() => setSportId(s.id)}
+                  />
+                ))}
+              </ScrollView>
+            )}
+          </FormCard>
+        )}
 
         {/* Skill Level */}
         <FormCard icon="stats-chart" title="Skill Level" required hint={`Choose your ${noun.toLowerCase()}'s level`}>

@@ -492,31 +492,34 @@ export default function SquadsListScreen({ lockedGroupType }: { lockedGroupType?
               )}
             </Pressable>
             {/* "Sports" — opens the same sport-select sheet the filter icon
-                next to the search box used to open. */}
-            <Pressable
-              onPress={() => {
-                setDistanceOpen(false);
-                setSportSheetOpen(true);
-              }}
-              className="rounded-full"
-              style={{ borderWidth: 1, borderColor: selectedSportId ? colors.primary : colors.border }}
-            >
-              {selectedSportId ? (
-                <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
-                  <Ionicons name="options-outline" size={14} color="white" />
-                  <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
-                    Sports
-                  </Text>
-                </GradientFill>
-              ) : (
-                <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
-                  <Ionicons name="options-outline" size={14} color={colors.muted} />
-                  <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
-                    Sports
-                  </Text>
-                </View>
-              )}
-            </Pressable>
+                next to the search box used to open. Hidden on the Training
+                Camps list, which isn't scoped to one sport. */}
+            {lockedGroupType !== "training_camp" && (
+              <Pressable
+                onPress={() => {
+                  setDistanceOpen(false);
+                  setSportSheetOpen(true);
+                }}
+                className="rounded-full"
+                style={{ borderWidth: 1, borderColor: selectedSportId ? colors.primary : colors.border }}
+              >
+                {selectedSportId ? (
+                  <GradientFill className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}>
+                    <Ionicons name="options-outline" size={14} color="white" />
+                    <Text className="font-medium" style={{ fontSize: 11.5, color: "white" }} numberOfLines={1}>
+                      Sports
+                    </Text>
+                  </GradientFill>
+                ) : (
+                  <View className="flex-row items-center rounded-full" style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5, backgroundColor: colors.surface }}>
+                    <Ionicons name="options-outline" size={14} color={colors.muted} />
+                    <Text className="font-medium" style={{ fontSize: 11.5, color: colors.muted }} numberOfLines={1}>
+                      Sports
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            )}
             {/* "Distance" — plain pill like Sports, opening a bottom sheet
                 instead of the small inline dropdown it used to expand into. */}
             <Pressable

@@ -46,7 +46,9 @@ export type SquadGroupType = "group" | "club" | "training_camp" | "team";
 export type CreateSquadParams = {
   ownerId: string;
   name: string;
-  sportId: string;
+  // Training camps aren't scoped to one sport, so this is the only
+  // groupType that can create a squad with no sport selected.
+  sportId: string | null;
   skillLevel: Database["public"]["Enums"]["skill_level_type"] | null;
   location: string;
   description: string;
