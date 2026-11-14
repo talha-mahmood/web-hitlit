@@ -645,9 +645,37 @@ export default function GamesListScreen() {
               </Pressable>
             );
           })}
+          {/* "Sports" — opens the same sport-select sheet the filter icon
+              next to the search box used to open. Right after All/My Games. */}
+          <Pressable
+            onPress={() => {
+              setDistanceOpen(false);
+              setSportSheetOpen(true);
+            }}
+            style={{
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: selectedSportId ? colors.primary : colors.border,
+            }}
+          >
+            <FilterPillFill
+              active={!!selectedSportId}
+              className="flex-row items-center rounded-full"
+              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
+            >
+              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
+              <Text
+                className="font-medium"
+                style={{ fontSize: 11.5, color: selectedSportId ? "white" : colors.muted }}
+                numberOfLines={1}
+              >
+                Sports
+              </Text>
+            </FilterPillFill>
+          </Pressable>
           {/* "Location" — opens a bottom sheet with a free-text field plus
               city suggestions (multi-select), in place of the old
-              always-visible inline field. Right after All/My Games. */}
+              always-visible inline field. */}
           <Pressable
             onPress={() => setLocationOpen(true)}
             style={{
@@ -672,34 +700,6 @@ export default function GamesListScreen() {
                     ? locationTags[0]
                     : `${locationTags.length} locations`
                   : "Location"}
-              </Text>
-            </FilterPillFill>
-          </Pressable>
-          {/* "Sports" — opens the same sport-select sheet the filter icon
-              next to the search box used to open. */}
-          <Pressable
-            onPress={() => {
-              setDistanceOpen(false);
-              setSportSheetOpen(true);
-            }}
-            style={{
-              borderRadius: 999,
-              borderWidth: 1,
-              borderColor: selectedSportId ? colors.primary : colors.border,
-            }}
-          >
-            <FilterPillFill
-              active={!!selectedSportId}
-              className="flex-row items-center rounded-full"
-              style={{ paddingHorizontal: 9, paddingVertical: 5, gap: 5 }}
-            >
-              <Ionicons name="options-outline" size={14} color={selectedSportId ? "white" : colors.muted} />
-              <Text
-                className="font-medium"
-                style={{ fontSize: 11.5, color: selectedSportId ? "white" : colors.muted }}
-                numberOfLines={1}
-              >
-                Sports
               </Text>
             </FilterPillFill>
           </Pressable>
