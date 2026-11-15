@@ -23,10 +23,10 @@
     "baseUrl": ".",
     "paths": {
       "@app/*": [
-        "../src/*"
+        "./shared/src/*"
       ],
       "@assets/*": [
-        "../assets/*"
+        "./shared/assets/*"
       ],
       "@/*": [
         "./src/*"

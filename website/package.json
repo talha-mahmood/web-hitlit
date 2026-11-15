@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/gen-icons.mjs",
-    "prepare": "node scripts/sync-paths.mjs && node scripts/gen-icons.mjs && node scripts/optimize-images.mjs",
+    "sync-app": "node scripts/sync-app.mjs",
+    "prepare": "node scripts/sync-paths.mjs && node scripts/gen-icons.mjs",
     "dev": "npm run prepare && vite",
     "build": "npm run prepare && tsc --noEmit && vite build",
     "preview": "vite preview",

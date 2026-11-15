@@ -4,7 +4,19 @@ The web version of the HitLit app: same Supabase backend, same features, same de
 
 ## How it relates to the mobile app
 
-The website **does not copy the app's business logic. It imports it.** Everything under `../src/lib`, `../src/hooks`, `../src/store`, `../src/types` and `../src/constants` (Supabase queries, React Query hooks, Zustand stores, scoring engines, validation, error messages) runs unchanged on the web, through the `@app/*` alias. A fix made there reaches both the app and the website.
+The website **reuses the app's business logic instead of rewriting it.** The app files it needs from `src/lib`, `src/hooks`, `src/store`, `src/types` and `src/constants` (Supabase queries, React Query hooks, Zustand stores, scoring engines, validation, error messages) run unchanged on the web, through the `@app/*` alias.
+
+**The website is self-contained.** Those app files are copied into `website/shared/` (about 150 files, 1.3 MB), along with the half-time sound and the privacy policy. Web-sized images are committed in `src/assets/web/` and `public/`. Building and deploying only needs the `website/` folder.
+
+**The app stays the source of truth.** Never edit `shared/` by hand. After the app changes, run this from `website/`, with the full repo checked out:
+
+```bash
+npm run sync-app   # re-copies the app files the website uses, regenerates the web images
+npm run build      # make sure it still type-checks and builds
+git add -A . && git commit -m "Sync website with app"
+```
+
+The script follows the website's `@app/…` and `@assets/…` imports, and everything those files import in turn, so new dependencies come along automatically. `shared/SYNCED_FROM.txt` records the app commit it was copied from.
 
 A few app files use native-only APIs: AsyncStorage-backed auth, native Google/Apple sign-in, the image picker, share sheets, GPS and NetInfo. Each of those has a web version at the same relative path under `src/platform/overrides/`. The `hitlit-app-bridge` plugin in `vite.config.ts` swaps them in at build time, the same way React Native's `.web.ts` files work, without touching the app's folder.
 
@@ -15,16 +27,17 @@ A few app files use native-only APIs: AsyncStorage-backed auth, native Google/Ap
 | `src/components/` | Web UI ported from the app's components (cards, alert dialog, skeletons…) |
 | `src/pages/` | One page per app screen |
 | `src/routes/` | Session, onboarding and role gate (mirrors `RootNavigator`), URL map, tab state |
-| `scripts/` | `sync-paths` (tsconfig ↔ overrides), `gen-icons` (icon registry), `optimize-images` |
+| `shared/` | Copy of the app files the website uses (made by `npm run sync-app`; don't edit) |
+| `scripts/` | `sync-app` (copy app code + images), `sync-paths` (tsconfig ↔ overrides), `gen-icons` (icon registry), `optimize-images` |
 
-**Rules for new code:** import shared logic from `@app/...`, never copy it. If a shared file needs a native API, add a web override with the **same exports**; `npm run prepare` maps it for TypeScript automatically.
+**Rules for new code:** import shared logic from `@app/...`, never copy it into website code. If you start using an app file the website didn't use before, run `npm run sync-app` so it's copied into `shared/`. If a shared file needs a native API, add a web override with the **same exports**; `npm run prepare` maps it for TypeScript automatically.
 
 ## Setup
 
 ```bash
 cd website
 cp .env.example .env    # fill in VITE_SUPABASE_ANON_KEY (same as the app's EXPO_PUBLIC_SUPABASE_ANON_KEY)
-npm install             # also runs `prepare`: tsconfig paths, icon registry, optimized images
+npm install             # also runs `prepare`: tsconfig paths, icon registry
 npm run dev             # http://localhost:5173
 npm run build           # type-check + production build into dist/
 ```
@@ -40,7 +53,7 @@ The app signs in with native ID tokens. The website uses Supabase's OAuth **redi
 
 ## Deploying
 
-The site is a static build (`dist/`). It needs the parent folder at build time, because it imports `../src` and `../assets`, so deploy from the repo with **root directory = `website`**. SPA fallback and headers are already set up for Vercel (`vercel.json`) and Netlify/Cloudflare Pages (`public/_redirects`, `public/_headers`).
+The site is a static build (`dist/`) and only needs the `website/` folder. Deploy the repo with **root directory = `website`**, or deploy the folder on its own. SPA fallback and headers are already set up for Vercel (`vercel.json`) and Netlify/Cloudflare Pages (`public/_redirects`, `public/_headers`).
 
 Checklist for the first deploy:
 
@@ -49,7 +62,7 @@ Checklist for the first deploy:
 3. Add `https://<your-domain>/auth/callback` to Supabase's Redirect URLs (see above).
 4. After deploying, check that `/robots.txt`, `/sitemap.xml`, `/sw.js` and `/manifest.webmanifest` load, and that a link to the site shows the preview card when shared. Facebook's Sharing Debugger can re-fetch the card.
 
-`public/.well-known/` holds the app's deep-link files (from `deep-link-setup/`). Hosting the site on `hitlit.pk` therefore also serves them, once their placeholders are filled in (see `../deep-link-setup/README.md`).
+`public/.well-known/` holds the app's deep-link files (from `deep-link-setup/`). Hosting the site on `hitlit.pk` therefore also serves them, once their placeholders are filled in (see `deep-link-setup/README.md` in the app).
 
 ## Feature flags
 

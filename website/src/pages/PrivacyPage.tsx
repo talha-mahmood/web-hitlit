@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import policy from "../../../PRIVACY_POLICY.md?raw";
+import policy from "../../shared/PRIVACY_POLICY.md?raw";
 
 // Renders the app's own PRIVACY_POLICY.md (single source of truth) — public,
 // no sign-in needed. The file only uses headings, paragraphs, bullet lists,

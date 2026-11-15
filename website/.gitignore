@@ -3,7 +3,3 @@ dist
 .env
 .env.*.local
 src/components/icons/registry.generated.ts
-src/assets/web
-public/icon-192.png
-public/icon-512.png
-public/splash-background.webp

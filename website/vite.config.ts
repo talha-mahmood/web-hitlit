@@ -4,9 +4,11 @@ import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
-// The website shares the mobile app's business logic (../src/lib, hooks,
-// store, types, constants) instead of copying it — same Supabase queries,
-// same scoring engines, same validation. Two things make that work:
+// The website shares the mobile app's business logic (src/lib, hooks,
+// store, types, constants): same Supabase queries, same scoring engines,
+// same validation. `npm run sync-app` copies the app files it uses into
+// shared/ (the app stays the source of truth), so the website builds on its
+// own without the rest of the repo. Two things make the sharing work:
 //
 // 1. Platform overrides. A handful of app files talk to native-only APIs
 //    (AsyncStorage-backed Supabase auth, Google/Apple native sign-in, expo
@@ -21,7 +23,8 @@ import crypto from "node:crypto";
 //    own node_modules, so there's exactly one React / one QueryClient context
 //    even if the app's own node_modules happens to be installed too.
 const WEB_ROOT = __dirname;
-const APP_SRC = path.resolve(WEB_ROOT, "../src");
+const SHARED = path.resolve(WEB_ROOT, "shared");
+const APP_SRC = path.join(SHARED, "src");
 const OVERRIDES = path.resolve(WEB_ROOT, "src/platform/overrides");
 const SHIMS = path.resolve(WEB_ROOT, "src/platform/shims");
 const RESOLVE_FROM = path.resolve(WEB_ROOT, "src/main.tsx");
@@ -134,7 +137,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@app": APP_SRC,
-        "@assets": path.resolve(WEB_ROOT, "../assets"),
+        "@assets": path.join(SHARED, "assets"),
         "@": path.resolve(WEB_ROOT, "src"),
       },
       dedupe: ["react", "react-dom", "@tanstack/react-query", "@supabase/supabase-js", "zustand"],
@@ -148,7 +151,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       fs: {
-        allow: [WEB_ROOT, APP_SRC, path.resolve(WEB_ROOT, "../assets"), path.resolve(WEB_ROOT, "../PRIVACY_POLICY.md")],
+        allow: [WEB_ROOT],
       },
     },
     build: {

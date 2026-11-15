@@ -1,3 +1,6 @@
+// Run by `npm run sync-app` (needs the app's ../assets); the outputs are
+// committed, so builds and deploys don't need the app's folders.
+//
 // Web-sized copies of the app's bundled images. The app ships full-size
 // originals (e.g. a 1 MB PNG for a 24px tab icon) — fine inside an APK, slow
 // over the network. The originals in ../assets stay the single source of

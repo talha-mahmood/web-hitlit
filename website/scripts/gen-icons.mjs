@@ -15,7 +15,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const here = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(here, "..");
-const ROOTS = [path.resolve(WEB, "../src"), path.resolve(WEB, "src")];
+const ROOTS = [path.resolve(WEB, "shared/src"), path.resolve(WEB, "src")];
 const OUT = path.resolve(WEB, "src/components/icons/registry.generated.ts");
 
 const io5 = require("react-icons/io5");
@@ -43,8 +43,10 @@ const literal = /["'`]([a-z0-9]+(?:-[a-z0-9]+)*)["'`]/g;
 
 for (const file of ROOTS.flatMap((r) => walk(r))) {
   const src = fs.readFileSync(file, "utf8");
-  // Content files (the user guide) name Ionicons as plain data.
-  const usesIon = /Ionicons|Ionicon\b|IonName/.test(src) || /[\\/]content[\\/]/.test(file);
+  // Content files (the user guide) name Ionicons as plain data, and some
+  // files only pass names along as props/data (subtitleIcon="…", icon: "…")
+  // to a component that renders them.
+  const usesIon = /Ionicons|Ionicon\b|IonName|[iI]con\b|[a-z]Icon\b/.test(src) || /[\\/]content[\\/]/.test(file);
   const usesMc = /MaterialCommunityIcons|MCIcon|McName|getSportIcon|getAmenityIcon|AMENITY_OPTIONS/.test(src);
   if (!usesIon && !usesMc) continue;
   for (const [, name] of src.matchAll(literal)) {

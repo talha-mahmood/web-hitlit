@@ -15,7 +15,7 @@ const walk = (dir) =>
 
 const toPosix = (p) => p.split(path.sep).join("/");
 
-const paths = { "@app/*": ["../src/*"], "@assets/*": ["../assets/*"], "@/*": ["./src/*"] };
+const paths = { "@app/*": ["./shared/src/*"], "@assets/*": ["./shared/assets/*"], "@/*": ["./src/*"] };
 for (const file of walk(OVERRIDES).filter((f) => /\.tsx?$/.test(f)).sort()) {
   const rel = toPosix(path.relative(OVERRIDES, file)).replace(/\.tsx?$/, "");
   paths[`@app/${rel}`] = [`./${toPosix(path.relative(WEB, file))}`];
