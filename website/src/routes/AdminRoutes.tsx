@@ -1,11 +1,31 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router";
 import { AdminRoleProvider, adminPaths, useAdminPaths, type AdminRole } from "@/components/admin/AdminParts";
 import { SuperAdminLayout, VenueAdminLayout } from "@/components/admin/AdminMenus";
-import AdminDashboardPage, { AdminVenueListPage } from "@/pages/admin/AdminDashboardPage";
-import { AdminSlotsPage, CourtPhotosPage, EditCourtPage, EditVenueDetailsPage, ManageCourtsPage, VenuePhotosPage } from "@/pages/admin/VenueEditPages";
-import { AdminAnalyticsPage, AdminNotificationsPage, AdminReviewsPage, AssignAdminPage, BoostVenuePage, VenueBookingsPage } from "@/pages/admin/VenueBusinessPages";
-import { AllEventsListPage, AllGamesListPage, AllGroupsListPage, AllUsersListPage, AllVenuesListPage, CreateVenuePage, ModerationPage } from "@/pages/admin/SuperAdminPages";
 import { AuthCallbackRedirect } from "./returnTo";
+
+// Each page loads on first visit (its own chunk).
+const AdminDashboardPage = lazy(() => import("@/pages/admin/AdminDashboardPage"));
+const AdminVenueListPage = lazy(() => import("@/pages/admin/AdminDashboardPage").then((m) => ({ default: m.AdminVenueListPage })));
+const AdminSlotsPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.AdminSlotsPage })));
+const CourtPhotosPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.CourtPhotosPage })));
+const EditCourtPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.EditCourtPage })));
+const EditVenueDetailsPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.EditVenueDetailsPage })));
+const ManageCourtsPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.ManageCourtsPage })));
+const VenuePhotosPage = lazy(() => import("@/pages/admin/VenueEditPages").then((m) => ({ default: m.VenuePhotosPage })));
+const AdminAnalyticsPage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.AdminAnalyticsPage })));
+const AdminNotificationsPage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.AdminNotificationsPage })));
+const AdminReviewsPage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.AdminReviewsPage })));
+const AssignAdminPage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.AssignAdminPage })));
+const BoostVenuePage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.BoostVenuePage })));
+const VenueBookingsPage = lazy(() => import("@/pages/admin/VenueBusinessPages").then((m) => ({ default: m.VenueBookingsPage })));
+const AllEventsListPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.AllEventsListPage })));
+const AllGamesListPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.AllGamesListPage })));
+const AllGroupsListPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.AllGroupsListPage })));
+const AllUsersListPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.AllUsersListPage })));
+const AllVenuesListPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.AllVenuesListPage })));
+const CreateVenuePage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.CreateVenuePage })));
+const ModerationPage = lazy(() => import("@/pages/admin/SuperAdminPages").then((m) => ({ default: m.ModerationPage })));
 
 // Unknown sub-pages of a venue fall back to its dashboard.
 function ToVenueDashboard() {

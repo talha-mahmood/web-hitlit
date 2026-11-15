@@ -43,6 +43,7 @@ export default {
         pulseSoft: { "0%,100%": { opacity: "0.45" }, "50%": { opacity: "0.9" } },
         dot: { "0%,100%": { opacity: "0.3", transform: "scale(1)" }, "50%": { opacity: "1", transform: "scale(1.35)" } },
         fadeUp: { from: { opacity: "0", transform: "translateY(8px)" }, to: { opacity: "1", transform: "none" } },
+        fadeIn: { from: { opacity: "0" }, to: { opacity: "1" } },
         pop: { "0%": { transform: "scale(.94)", opacity: "0" }, "100%": { transform: "scale(1)", opacity: "1" } },
         // BlinkingEyeIcon: close-open, close-open, rest.
         blink: {
@@ -62,6 +63,8 @@ export default {
         skeleton: "pulseSoft 1.4s ease-in-out infinite",
         dot: "dot 1.1s ease-in-out infinite",
         fadeUp: "fadeUp .25s ease-out both",
+        // Loading indicators that only appear if loading takes a moment.
+        fadeInLate: "fadeIn .2s ease-out .25s both",
         pop: "pop .18s ease-out both",
         wave: "wave 3.5s ease-in-out infinite",
         blink: "blink 4.2s linear infinite",

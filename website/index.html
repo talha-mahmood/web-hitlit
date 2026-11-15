@@ -15,16 +15,34 @@
       }
     </script>
     <meta name="description" content="HitLit — find players, join games and tournaments, book courts and keep live scorecards. Book. Play. Enjoy." />
+    <meta name="application-name" content="HitLit" />
+    <meta name="apple-mobile-web-app-title" content="HitLit" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HitLit" />
+    <meta property="og:url" content="%SITE_URL%/" />
     <meta property="og:title" content="HitLit — Book. Play. Enjoy." />
     <meta property="og:description" content="Find players, book courts, and get in the game." />
-    <meta property="og:image" content="/icon-192.png" />
-    <link rel="icon" type="image/png" href="/icon-192.png" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta property="og:image" content="%SITE_URL%/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="HitLit — discover sports venues near you" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HitLit — Book. Play. Enjoy." />
+    <meta name="twitter:description" content="Find players, book courts, and get in the game." />
+    <meta name="twitter:image" content="%SITE_URL%/og-image.jpg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>HitLit</title>
+    <!--preconnect-->
+    <title>HitLit — Book. Play. Enjoy.</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="font-family: sans-serif; padding: 24px; text-align: center; color: #fff">HitLit needs JavaScript turned on to run in your browser.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

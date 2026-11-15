@@ -13,7 +13,7 @@ import { GAME_SKILL_COLORS, timeBadgeColor, dayLabel } from "@app/lib/badgeColor
 import { getFriendlyErrorMessage } from "@app/lib/friendlyError";
 import { addMinutesWithOverflow } from "@app/lib/gameFormHelpers";
 import { Alert } from "@/lib/alert";
-import manualAvatar from "@assets/avatar.png";
+import manualAvatar from "@/assets/web/avatar.webp";
 import { Ionicon, MCIcon } from "@/components/icons/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import Spinner from "@/components/ui/Spinner";

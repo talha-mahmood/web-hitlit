@@ -80,7 +80,7 @@ export default function LoginPage() {
 
       <main className="flex w-full flex-col items-center justify-center px-6 py-10 lg:w-[520px] lg:shrink-0">
         <div className="flex w-full max-w-[400px] flex-col items-center rounded-3xl border-[1.5px] border-[rgba(15,23,42,0.12)] bg-surface px-6 py-8 shadow-login">
-          <img src="/icon-192.png" alt="HitLit" className="h-[68px] w-[68px] rounded-full" />
+          <img src="/logo.png" alt="HitLit" className="h-[68px] w-[68px]" />
           <h1 className="mt-4 text-center text-xl font-extrabold text-ink">Welcome to HitLit</h1>
           <p className="mt-1.5 px-2 text-center text-sm text-muted">Find players, book courts, and get in the game.</p>
 

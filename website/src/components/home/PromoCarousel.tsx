@@ -62,7 +62,7 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
 
   return (
     <section className="mb-4" aria-roledescription="carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-3xl lg:gap-0">
+      <div ref={trackRef} onScroll={onScroll} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Highlights" className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-3xl lg:gap-0">
         {slides.map((s, i) => (
           <div key={s.key} className={`shrink-0 snap-start ${perPage === 2 ? "w-1/2 px-2 first:pl-0 [&:nth-child(2n)]:pr-0 [&:nth-child(2n+1)]:pl-0" : "w-full"}`} aria-hidden={Math.floor(i / perPage) !== active}>
             <SlideImage slide={s} />

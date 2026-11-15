@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, normalizePath, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 
 // The website shares the mobile app's business logic (../src/lib, hooks,
 // store, types, constants) instead of copying it — same Supabase queries,
@@ -77,6 +78,45 @@ function appBridge(): Plugin {
   };
 }
 
+// Site-level output: absolute URLs in index.html's share tags, robots.txt,
+// sitemap.xml (the only public pages are sign-in and the privacy policy;
+// everything else needs an account) and the service worker, which is
+// templated with this build's JS/CSS chunk list so a new deploy replaces
+// the old offline cache.
+function siteFiles(siteUrl: string, supabaseUrl: string): Plugin {
+  const site = siteUrl.replace(/\/+$/, "");
+  return {
+    name: "hitlit-site",
+    transformIndexHtml(html) {
+      return html.replaceAll("%SITE_URL%", site).replace(
+        "<!--preconnect-->",
+        supabaseUrl ? `<link rel="preconnect" href="${new URL(supabaseUrl).origin}" crossorigin />` : ""
+      );
+    },
+    generateBundle(_options, bundle) {
+      this.emitFile({ type: "asset", fileName: "robots.txt", source: `User-agent: *\nAllow: /$\nAllow: /privacy\nDisallow: /\n\nSitemap: ${site}/sitemap.xml\n` });
+      const urls = ["/", "/privacy"].map((u) => `  <url><loc>${site}${u}</loc></url>`).join("\n");
+      this.emitFile({
+        type: "asset",
+        fileName: "sitemap.xml",
+        source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+      });
+      const precache = Object.keys(bundle)
+        .filter((f) => /\.(js|css)$/.test(f))
+        .sort()
+        .map((f) => `/${f}`);
+      precache.push("/manifest.webmanifest", "/favicon.png", "/logo.png");
+      const build = crypto.createHash("sha256").update(precache.join("\n")).digest("hex").slice(0, 12);
+      const template = fs.readFileSync(path.resolve(WEB_ROOT, "src/sw/sw.js"), "utf8");
+      this.emitFile({
+        type: "asset",
+        fileName: "sw.js",
+        source: template.replace("__BUILD_ID__", build).replace("__PRECACHE__", JSON.stringify(precache)),
+      });
+    },
+  };
+}
+
 // esbuild would otherwise look up the nearest tsconfig for every file — for
 // shared files that's the app's own tsconfig.json, which extends
 // "expo/tsconfig.base" (only installed on the app side). A string tsconfigRaw
@@ -88,7 +128,7 @@ const ESBUILD_TSCONFIG = JSON.stringify({
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, WEB_ROOT, "VITE_");
   return {
-    plugins: [appBridge(), react()],
+    plugins: [appBridge(), react(), siteFiles(env.VITE_SITE_URL || "https://hitlit.pk", env.VITE_SUPABASE_URL ?? "")],
     esbuild: { tsconfigRaw: ESBUILD_TSCONFIG },
     optimizeDeps: { esbuildOptions: { tsconfigRaw: ESBUILD_TSCONFIG } },
     resolve: {
@@ -111,6 +151,21 @@ export default defineConfig(({ mode }) => {
         allow: [WEB_ROOT, APP_SRC, path.resolve(WEB_ROOT, "../assets"), path.resolve(WEB_ROOT, "../PRIVACY_POLICY.md")],
       },
     },
-    build: { sourcemap: true, chunkSizeWarningLimit: 1500 },
+    build: {
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          // Libraries change less often than the site: separate chunks stay
+          // cached across deploys.
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return undefined;
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/.test(id)) return "vendor-react";
+            if (id.includes("@supabase")) return "vendor-supabase";
+            if (id.includes("@tanstack")) return "vendor-query";
+            return undefined;
+          },
+        },
+      },
+    },
   };
 });

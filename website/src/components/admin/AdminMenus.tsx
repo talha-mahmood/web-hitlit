@@ -10,6 +10,8 @@ import { signOutWithPushCleanup } from "@app/lib/pushNotifications";
 import { Alert } from "@/lib/alert";
 import { Ionicon } from "../icons/Icon";
 import { useAdminPaths } from "./AdminParts";
+import { PageSuspense } from "../PageSuspense";
+import { MAIN_CONTENT_ID, SkipLink, useFocusMainOnNavigate } from "../SkipLink";
 
 const signOut = async () => {
   await signOutGoogle();
@@ -135,16 +137,20 @@ export function VenueAdminLayout() {
   const items = useVenueMenuItems(venueId);
   const { pathname } = useLocation();
   const { data: venue } = useAdminVenueDetail(venueId);
+  useFocusMainOnNavigate();
   return (
     <div className="min-h-dvh bg-app lg:flex">
+      <SkipLink />
       <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 lg:block">
         <MenuChrome>
           {venue && <p className="mb-3 truncate px-4 text-xs font-semibold uppercase tracking-wider text-white/50">{venue.name}</p>}
           <MenuList items={items} activeKey={activeKeyFor(pathname, venueId, items)} />
         </MenuChrome>
       </aside>
-      <main className="min-w-0 flex-1">
-        <Outlet />
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="min-w-0 flex-1 outline-none">
+        <PageSuspense>
+          <Outlet />
+        </PageSuspense>
       </main>
     </div>
   );
@@ -252,11 +258,13 @@ export function SuperAdminLayout() {
             : pathname === p.home || pathname.startsWith(p.createVenue)
               ? "venues"
               : null;
+  useFocusMainOnNavigate();
   return (
     <div className="min-h-dvh bg-app lg:flex">
+      <SkipLink />
       <aside className="sticky top-0 hidden h-dvh w-[250px] shrink-0 flex-col border-r border-border bg-surface px-2.5 pb-6 pt-6 lg:flex">
         <Link to={p.home} className="mb-6 flex items-center gap-3 px-3">
-          <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-full" />
+          <img src="/logo.png" alt="" className="h-9 w-9" />
           <span className="text-lg font-extrabold text-ink">
             Hit<span className="text-primary">Lit</span>
           </span>
@@ -266,8 +274,10 @@ export function SuperAdminLayout() {
         {profile && <p className="mb-2 truncate px-3 text-xs text-muted">Signed in as {profile.full_name ?? profile.email}</p>}
         <SignOutRow />
       </aside>
-      <main className="min-w-0 flex-1">
-        <Outlet />
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="min-w-0 flex-1 outline-none">
+        <PageSuspense>
+          <Outlet />
+        </PageSuspense>
       </main>
     </div>
   );

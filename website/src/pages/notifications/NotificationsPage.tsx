@@ -92,24 +92,22 @@ function NotificationCard({
   const unread = !notification.is_read;
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onPress}
-      onKeyDown={(e) => e.key === "Enter" && onPress()}
-      className={`mb-3.5 flex min-h-[112px] cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 transition hover:shadow-card ${unread ? "border-primary/25 bg-primary-light" : "border-border bg-surface"}`}
+      className={`relative mb-3.5 flex min-h-[112px] cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 transition hover:shadow-card ${unread ? "border-primary/25 bg-primary-light" : "border-border bg-surface"}`}
     >
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-info-light">
         <Ionicon name={meta.icon} size={21} color={meta.color} />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-2">
-          <p className="flex-1 truncate text-base font-bold leading-[22px] text-ink">{notification.title}</p>
-          {unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+          <button type="button" onClick={onPress} className="flex-1 truncate text-left text-base font-bold leading-[22px] text-ink after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-primary after:rounded-3xl">
+            {notification.title}
+          </button>
+          {unread && <span role="img" className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
         </div>
         {notification.body && <p className="line-clamp-2 text-sm leading-[19px] text-muted">{notification.body}</p>}
         <p className="mt-1 text-[13px] text-muted">{timeAgo(notification.created_at)}</p>
         {inviteActions && (
-          <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="relative z-10 mt-3 flex gap-2">
             <button
               type="button"
               onClick={inviteActions.onDecline}
@@ -135,11 +133,8 @@ function NotificationCard({
       <button
         type="button"
         aria-label="Delete notification"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        className="rounded-full p-1 hover:bg-black/5"
+        onClick={onDelete}
+        className="relative z-10 rounded-full p-1 hover:bg-black/5"
       >
         <Ionicon name="trash-outline" size={22} color={colors.danger} />
       </button>

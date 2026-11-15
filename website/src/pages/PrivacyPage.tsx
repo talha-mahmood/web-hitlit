@@ -54,7 +54,7 @@ export default function PrivacyPage() {
       <header className="bg-brand">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-5 sm:px-6">
           <a href="/" className="flex items-center gap-3">
-            <img src="/icon-192.png" alt="" className="h-9 w-9 rounded-full" />
+            <img src="/logo.png" alt="" className="h-9 w-9" />
             <span className="text-lg font-bold text-white">HitLit</span>
           </a>
         </div>

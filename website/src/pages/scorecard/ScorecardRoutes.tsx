@@ -1,20 +1,30 @@
-import type { JSX } from "react";
+import { lazy, type ComponentType } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router";
 import { isMatchSport } from "@/lib/racketSports";
 import { paths, type MatchSport } from "@/routes/paths";
-import ScorecardHomePage from "./ScorecardHomePage";
-import ManualScorePage from "./ManualScorePage";
-import RacketHomePage, { CricketHomePage, FootballHomePage } from "./RacketHomePage";
-import CricketNewMatchPage from "./cricket/CricketNewMatchPage";
-import CricketLivePage from "./cricket/CricketLivePage";
-import { FootballLivePage, FootballNewMatchPage } from "./Football";
-import { PadelLivePage, PadelNewMatchPage } from "./racket/Padel";
-import { TennisLivePage, TennisNewMatchPage } from "./racket/Tennis";
-import { PickleballLivePage, PickleballNewMatchPage } from "./racket/Pickleball";
-import { BadmintonLivePage, BadmintonNewMatchPage } from "./racket/Badminton";
-import { TableTennisLivePage, TableTennisNewMatchPage } from "./racket/TableTennis";
 
-type SportPages = { home: () => JSX.Element; newMatch: () => JSX.Element; live: () => JSX.Element };
+// Each page loads on first visit (its own chunk).
+const ScorecardHomePage = lazy(() => import("./ScorecardHomePage"));
+const ManualScorePage = lazy(() => import("./ManualScorePage"));
+const RacketHomePage = lazy(() => import("./RacketHomePage"));
+const CricketHomePage = lazy(() => import("./RacketHomePage").then((m) => ({ default: m.CricketHomePage })));
+const FootballHomePage = lazy(() => import("./RacketHomePage").then((m) => ({ default: m.FootballHomePage })));
+const CricketNewMatchPage = lazy(() => import("./cricket/CricketNewMatchPage"));
+const CricketLivePage = lazy(() => import("./cricket/CricketLivePage"));
+const FootballLivePage = lazy(() => import("./Football").then((m) => ({ default: m.FootballLivePage })));
+const FootballNewMatchPage = lazy(() => import("./Football").then((m) => ({ default: m.FootballNewMatchPage })));
+const PadelLivePage = lazy(() => import("./racket/Padel").then((m) => ({ default: m.PadelLivePage })));
+const PadelNewMatchPage = lazy(() => import("./racket/Padel").then((m) => ({ default: m.PadelNewMatchPage })));
+const TennisLivePage = lazy(() => import("./racket/Tennis").then((m) => ({ default: m.TennisLivePage })));
+const TennisNewMatchPage = lazy(() => import("./racket/Tennis").then((m) => ({ default: m.TennisNewMatchPage })));
+const PickleballLivePage = lazy(() => import("./racket/Pickleball").then((m) => ({ default: m.PickleballLivePage })));
+const PickleballNewMatchPage = lazy(() => import("./racket/Pickleball").then((m) => ({ default: m.PickleballNewMatchPage })));
+const BadmintonLivePage = lazy(() => import("./racket/Badminton").then((m) => ({ default: m.BadmintonLivePage })));
+const BadmintonNewMatchPage = lazy(() => import("./racket/Badminton").then((m) => ({ default: m.BadmintonNewMatchPage })));
+const TableTennisLivePage = lazy(() => import("./racket/TableTennis").then((m) => ({ default: m.TableTennisLivePage })));
+const TableTennisNewMatchPage = lazy(() => import("./racket/TableTennis").then((m) => ({ default: m.TableTennisNewMatchPage })));
+
+type SportPages = { home: ComponentType; newMatch: ComponentType; live: ComponentType };
 
 const SPORT_PAGES: Record<MatchSport, SportPages> = {
   padel: { home: RacketHomePage, newMatch: PadelNewMatchPage, live: PadelLivePage },

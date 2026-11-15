@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { useLocation } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@app/store/authStore";
@@ -9,14 +9,20 @@ import { Alert } from "@/lib/alert";
 import SplashPage from "@/pages/SplashPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import LoginPage from "@/pages/auth/LoginPage";
-import CompleteDetailsPage from "@/pages/onboarding/CompleteDetailsPage";
-import AcceptTermsPage from "@/pages/onboarding/AcceptTermsPage";
-import AccountSuspendedPage from "@/pages/onboarding/AccountSuspendedPage";
 import { rememberReturnTo } from "./returnTo";
 import { paths } from "./paths";
-import UserRoutes from "./UserRoutes";
-import AdminRoutes from "./AdminRoutes";
 import InAppNotificationBanner from "@/components/InAppNotificationBanner";
+import DocumentTitle from "./DocumentTitle";
+import { useOfflineProfileFallback } from "./offlineProfile";
+
+// Splash, privacy and sign-in ship in the first download; everything behind
+// sign-in loads on demand, so players never download the admin screens (and
+// the other way round).
+const CompleteDetailsPage = lazy(() => import("@/pages/onboarding/CompleteDetailsPage"));
+const AcceptTermsPage = lazy(() => import("@/pages/onboarding/AcceptTermsPage"));
+const AccountSuspendedPage = lazy(() => import("@/pages/onboarding/AccountSuspendedPage"));
+const UserRoutes = lazy(() => import("./UserRoutes"));
+const AdminRoutes = lazy(() => import("./AdminRoutes"));
 
 // Web counterpart of the app's RootNavigator: the same session → profile →
 // onboarding → role gate, deciding which part of the site renders.
@@ -41,6 +47,7 @@ export default function RootGate() {
   useEffect(() => {
     initNetworkListener();
   }, []);
+  useOfflineProfileFallback(session?.user.id, isInitializing);
 
   // Tournament-result sync queued while offline flushes app-wide once the
   // connection is back (same as the app's root-level flush).
@@ -83,25 +90,34 @@ export default function RootGate() {
     }
   }, [isInitializing, session, location.pathname, location.search]);
 
-  // Public pages, reachable signed in or out.
-  if (location.pathname === "/privacy") return <PrivacyPage />;
-
-  if (isInitializing) return <SplashPage />;
-  // getSession() (inside init) waits for the OAuth code exchange, so by now a
-  // failed/cancelled /auth/callback simply has no session — LoginPage shows
-  // the provider's error, if any.
-  if (!session) return <LoginPage />;
-  if (isProfileLoading || pendingNameCapture) return <SplashPage />;
-  // An ejected account only ever sees the sign-out screen (checked first);
-  // then terms acceptance, then the profile details — same order as the app.
-  if (profile && profile.isactive === false) return <AccountSuspendedPage />;
-  if (!termsAccepted(profile)) return <AcceptTermsPage />;
-  if (!isProfileComplete(profile)) return <CompleteDetailsPage />;
-  const routes = profile?.type === "superadmin" ? <AdminRoutes role="superadmin" /> : profile?.type === "owner" ? <AdminRoutes role="owner" /> : <UserRoutes />;
   return (
     <>
-      {routes}
-      <InAppNotificationBanner />
+      <DocumentTitle />
+      <Suspense fallback={<SplashPage />}>{gate()}</Suspense>
     </>
   );
+
+  function gate() {
+    // Public pages, reachable signed in or out.
+    if (location.pathname === "/privacy") return <PrivacyPage />;
+
+    if (isInitializing) return <SplashPage />;
+    // getSession() (inside init) waits for the OAuth code exchange, so by now a
+    // failed/cancelled /auth/callback simply has no session — LoginPage shows
+    // the provider's error, if any.
+    if (!session) return <LoginPage />;
+    if (isProfileLoading || pendingNameCapture) return <SplashPage />;
+    // An ejected account only ever sees the sign-out screen (checked first);
+    // then terms acceptance, then the profile details — same order as the app.
+    if (profile && profile.isactive === false) return <AccountSuspendedPage />;
+    if (!termsAccepted(profile)) return <AcceptTermsPage />;
+    if (!isProfileComplete(profile)) return <CompleteDetailsPage />;
+    const routes = profile?.type === "superadmin" ? <AdminRoutes role="superadmin" /> : profile?.type === "owner" ? <AdminRoutes role="owner" /> : <UserRoutes />;
+    return (
+      <>
+        {routes}
+        <InAppNotificationBanner />
+      </>
+    );
+  }
 }

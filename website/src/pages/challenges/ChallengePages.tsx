@@ -409,33 +409,32 @@ export function TeamChallengesPage() {
               return (
                 <div
                   key={c.id}
-                  role="button"
-                  tabIndex={0}
                   onClick={() => navigate(paths.teamChallenge(c.id))}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(paths.teamChallenge(c.id))}
                   className={`mb-2 cursor-pointer rounded-xl border bg-surface p-2.5 hover:border-primary/40 ${c.id === focusId ? "border-primary" : "border-border"}`}
                 >
-                  <div className="flex items-center">
-                    <TeamBadge team={c.sender} />
-                    <span className="flex flex-col items-center px-1.5">
-                      <Ionicon name="arrow-forward" size={17} color={colors.muted} />
-                      <span className="mt-0.5 text-[10px] font-bold capitalize text-primary">{c.status}</span>
-                    </span>
-                    <TeamBadge team={c.receiver} />
-                  </div>
-                  <div className="mt-2 flex flex-col gap-1">
-                    <span className="flex items-center gap-1 text-xs text-ink">
-                      <Ionicon name="location-outline" size={13} color={colors.primary} />
-                      <span className="truncate">{c.venue}</span>
-                    </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted">
-                      <Ionicon name="calendar-outline" size={13} color={colors.primary} />
-                      <span className="truncate">
-                        {formatDate(c.scheduled_at)} · {formatTime(c.scheduled_at)} · {c.sender.sports?.name} · {c.match_format}
+                  <button type="button" aria-label={`Challenge details: ${c.sender.name} vs ${c.receiver.name}`} className="block w-full text-left">
+                    <span className="flex items-center">
+                      <TeamBadge team={c.sender} />
+                      <span className="flex flex-col items-center px-1.5">
+                        <Ionicon name="arrow-forward" size={17} color={colors.muted} />
+                        <span className="mt-0.5 text-[10px] font-bold capitalize text-primary">{c.status}</span>
                       </span>
+                      <TeamBadge team={c.receiver} />
                     </span>
-                    {c.fixture && <span className="text-[11px] font-semibold text-primary">Confirmed fixture · {c.fixture.id.slice(0, 8).toUpperCase()}</span>}
-                  </div>
+                    <span className="mt-2 flex flex-col gap-1">
+                      <span className="flex items-center gap-1 text-xs text-ink">
+                        <Ionicon name="location-outline" size={13} color={colors.primary} />
+                        <span className="truncate">{c.venue}</span>
+                      </span>
+                      <span className="flex items-center gap-1 text-[11px] text-muted">
+                        <Ionicon name="calendar-outline" size={13} color={colors.primary} />
+                        <span className="truncate">
+                          {formatDate(c.scheduled_at)} · {formatTime(c.scheduled_at)} · {c.sender.sports?.name} · {c.match_format}
+                        </span>
+                      </span>
+                      {c.fixture && <span className="text-[11px] font-semibold text-primary">Confirmed fixture · {c.fixture.id.slice(0, 8).toUpperCase()}</span>}
+                    </span>
+                  </button>
                   {c.status === "pending" ? (
                     <div className="mt-2.5 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                       {received ? (

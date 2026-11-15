@@ -10,6 +10,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Ionicon } from "@/components/icons/Icon";
 import { useActiveTab } from "@/routes/navigation";
 import { paths } from "@/routes/paths";
+import { PageSuspense } from "@/components/PageSuspense";
+import { MAIN_CONTENT_ID, SkipLink, useFocusMainOnNavigate } from "@/components/SkipLink";
 
 // The signed-in user area. Phones/tablets get the app's own bottom tab bar
 // (green indicator bar above the active icon, same five tabs). Desktop gets
@@ -26,12 +28,14 @@ export default function AppShell() {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [pathname]);
+  useFocusMainOnNavigate();
 
   return (
     <div className="min-h-dvh bg-app lg:flex">
+      <SkipLink />
       <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:flex">
         <Link to="/" className="mb-8 flex items-center gap-3 px-2">
-          <img src="/icon-192.png" alt="" className="h-10 w-10 rounded-full" />
+          <img src="/logo.png" alt="" className="h-10 w-10" />
           <span className="text-xl font-extrabold tracking-tight text-ink">
             Hit<span className="text-primary">Lit</span>
           </span>
@@ -93,8 +97,10 @@ export default function AppShell() {
             You're offline — changes will sync when you're back online.
           </div>
         )}
-        <main className="pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-10">
-          <Outlet />
+        <main id={MAIN_CONTENT_ID} tabIndex={-1} className="pb-[calc(76px+env(safe-area-inset-bottom))] outline-none lg:pb-10">
+          <PageSuspense>
+            <Outlet />
+          </PageSuspense>
         </main>
       </div>
 

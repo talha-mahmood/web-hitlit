@@ -27,7 +27,7 @@ import { getFriendlyErrorMessage } from "@app/lib/friendlyError";
 import { Alert } from "@/lib/alert";
 import { useAppNavigate } from "@/routes/navigation";
 import { paths, type MatchSport } from "@/routes/paths";
-import manualAvatar from "@assets/avatar.png";
+import manualAvatar from "@/assets/web/avatar.webp";
 import { Ionicon } from "../icons/Icon";
 import Spinner from "../ui/Spinner";
 import { ChatIcon, WaveDivider } from "../ui/Decor";

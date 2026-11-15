@@ -60,7 +60,7 @@ export function SquadTeamTabBar({ value, onChange, showStatistics }: { value: Sq
     ["compare", "Compare"],
   ];
   return (
-    <div role="tablist" className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3.5 lg:px-0">
+    <div role="group" aria-label="Squad sections" className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3.5 lg:px-0">
       {tabs.map(([key, label]) => (
         <Pill key={key} selected={value === key} onPress={() => onChange(key)}>
           {label}

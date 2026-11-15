@@ -209,7 +209,7 @@ export function VenueBookingsPage() {
 
 function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
-    <span className="flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <span role="img" className="flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Ionicon key={n} name={n <= rating ? "star" : "star-outline"} size={size} color="#F59E0B" />
       ))}
@@ -565,18 +565,16 @@ export function AdminNotificationsPage() {
             return (
               <div
                 key={n.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => open(n)}
-                onKeyDown={(e) => e.key === "Enter" && open(n)}
-                className={`mb-3 flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3.5 ${unread ? "border-primary bg-primary-light" : "border-border bg-surface"}`}
+                className={`relative mb-3 flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3.5 ${unread ? "border-primary bg-primary-light" : "border-border bg-surface"}`}
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${meta.bg}`}>
                   <Ionicon name={meta.icon} size={19} color={meta.color} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-bold text-ink">{n.title}</span>
+                    <button type="button" onClick={() => open(n)} className="truncate text-left text-sm font-bold text-ink after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-primary after:rounded-2xl">
+                      {n.title}
+                    </button>
                     {unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" />}
                   </p>
                   {n.body && <p className="mt-1 line-clamp-2 text-sm text-muted">{n.body}</p>}
@@ -585,14 +583,13 @@ export function AdminNotificationsPage() {
                 <button
                   type="button"
                   aria-label="Delete notification"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     Alert.alert("Delete Notification", "Remove this notification?", [
                       { text: "Cancel", style: "cancel" },
                       { text: "Delete", style: "destructive", onPress: () => deleteNotif.mutate(n.id) },
                     ]);
                   }}
-                  className="-mr-1 -mt-1 p-1"
+                  className="relative z-10 -mr-1 -mt-1 p-1"
                 >
                   <Ionicon name="close" size={18} color={colors.muted} />
                 </button>
