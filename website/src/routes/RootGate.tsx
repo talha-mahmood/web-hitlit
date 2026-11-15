@@ -16,6 +16,7 @@ import { rememberReturnTo } from "./returnTo";
 import { paths } from "./paths";
 import UserRoutes from "./UserRoutes";
 import AdminRoutes from "./AdminRoutes";
+import InAppNotificationBanner from "@/components/InAppNotificationBanner";
 
 // Web counterpart of the app's RootNavigator: the same session → profile →
 // onboarding → role gate, deciding which part of the site renders.
@@ -96,7 +97,11 @@ export default function RootGate() {
   if (profile && profile.isactive === false) return <AccountSuspendedPage />;
   if (!termsAccepted(profile)) return <AcceptTermsPage />;
   if (!isProfileComplete(profile)) return <CompleteDetailsPage />;
-  if (profile?.type === "superadmin") return <AdminRoutes role="superadmin" />;
-  if (profile?.type === "owner") return <AdminRoutes role="owner" />;
-  return <UserRoutes />;
+  const routes = profile?.type === "superadmin" ? <AdminRoutes role="superadmin" /> : profile?.type === "owner" ? <AdminRoutes role="owner" /> : <UserRoutes />;
+  return (
+    <>
+      {routes}
+      <InAppNotificationBanner />
+    </>
+  );
 }

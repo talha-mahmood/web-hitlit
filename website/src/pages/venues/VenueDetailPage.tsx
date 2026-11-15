@@ -137,7 +137,7 @@ export default function VenueDetailPage() {
         <div className="min-w-0">
           <div className="flex items-start justify-between">
             <h1 className="mr-3 flex-1 text-xl font-extrabold text-ink lg:text-[28px] lg:leading-tight">{venue.name}</h1>
-            <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#FEF9E7] px-2.5 py-1 text-sm font-bold text-ink">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-warning-light px-2.5 py-1 text-sm font-bold text-ink">
               <Ionicon name="star" size={14} color={colors.warning} />
               {venue.rating > 0 ? venue.rating.toFixed(1) : "New"}
             </span>
@@ -187,13 +187,13 @@ export default function VenueDetailPage() {
 
           {amenities.length > 0 && (
             <Section title="Amenities">
-              <div className="grid grid-cols-3 gap-x-2.5 gap-y-3 sm:grid-cols-4">
+              <div className="flex flex-wrap gap-x-2.5 gap-y-3">
                 {amenities.map((label) => (
-                  <div key={label} className="flex items-center gap-2 rounded-2xl border border-border px-3 py-2.5">
-                    <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-primary-light">
-                      <MCIcon name={getAmenityIcon(label)} size={15} color={colors.primaryDark} />
+                  <div key={label} className="flex min-w-[47%] items-center gap-2.5 rounded-2xl border border-border px-3.5 py-3 sm:min-w-[31%]">
+                    <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-primary-light">
+                      <MCIcon name={getAmenityIcon(label)} size={17} color={colors.primaryDark} />
                     </span>
-                    <span className="line-clamp-2 text-xs font-medium text-ink">{label}</span>
+                    <span className="text-sm font-medium text-ink">{label}</span>
                   </div>
                 ))}
               </div>

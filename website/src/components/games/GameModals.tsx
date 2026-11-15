@@ -179,7 +179,7 @@ export function SquadFillModal({
   userId,
   requiredCount,
   submitting,
-  title = "Fill With Your Group",
+  title = "Fill With Your Squad",
   onSubmit,
 }: {
   open: boolean;
@@ -448,12 +448,12 @@ export function InviteSquadModal({
   const { data: squads, isLoading } = useSquads({ search: search || undefined });
   return (
     <Modal open={open} onClose={onClose}>
-      <SheetHeader title="Invite a Group" onClose={onClose} />
+      <SheetHeader title="Invite a Squad" onClose={onClose} />
       <p className="mb-2 text-sm text-muted">Search for a group and invite it to join — its owner completes the actual join once they see the invite.</p>
       <FieldInput
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by group name"
+        placeholder="Search by squad name"
         autoFocus
         left={<span className="mr-2"><Ionicon name="search-outline" size={18} color={colors.muted} /></span>}
       />
@@ -671,7 +671,7 @@ export function FillTeamWithSquadModal({
   const direct = !!selectedSquad && isHostSquad(selectedSquad);
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Fill With My Group">
+    <FullScreenPanel open={open} onClose={onClose} title="Fill With My Squad">
       <p className="mb-2 text-xs font-semibold text-muted">Select a group</p>
       {isLoading ? (
         <div className="mt-4 flex justify-center">
@@ -704,7 +704,7 @@ export function FillTeamWithSquadModal({
       )}
       <p className="mt-6 text-center text-xs text-muted">
         {direct
-          ? "You're the host of this group — selected members are added to the team right away and notified."
+          ? "You're the host of this squad — selected members are added to the team right away and notified."
           : "Each selected player gets their own request — they join once they approve it from Notifications."}
       </p>
       <PrimaryButton className="mt-4 rounded-xl" enabled={canSubmit} busy={submitting} onClick={() => canSubmit && onSubmit(selectedSquad!.id, [...selected], direct)}>

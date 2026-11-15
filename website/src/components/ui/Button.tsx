@@ -41,7 +41,7 @@ export function OutlineButton({ loading, icon, children, className, disabled, ..
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        "press inline-flex items-center justify-center gap-2 rounded-2xl border-[1.5px] border-border bg-surface px-5 py-3 text-base font-semibold text-[#374151]",
+        "press inline-flex items-center justify-center gap-2 rounded-2xl border-[1.5px] border-border bg-surface px-5 py-3 text-base font-semibold text-ink-secondary",
         "hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}

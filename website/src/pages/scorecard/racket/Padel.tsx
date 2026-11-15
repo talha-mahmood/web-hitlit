@@ -1,3 +1,4 @@
+import { linkTeamFixtureScorecard, type TeamFixturePrefill } from "@app/lib/api/teamChallenges";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { useAuthStore } from "@app/store/authStore";
@@ -66,23 +67,25 @@ const STANDARD_GAMES_PER_SET = 6;
 export function PadelNewMatchPage() {
   const navigate = useAppNavigate();
   const goBack = useGoBack(HOME);
-  const prefill = (useLocation().state as { prefill?: ScorecardPrefill } | null)?.prefill;
+  const navState = useLocation().state as { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | null;
+  const prefill = navState?.prefill;
+  const teamFixture = navState?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreatePadelMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
   const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
   const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
-  const [playMode, setPlayMode] = useState<PlayMode | null>(canOfferDoubles ? "DOUBLES" : "SINGLES");
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(teamFixture?.matchFormat === "SINGLES" ? "SINGLES" : teamFixture?.matchFormat === "DOUBLES" ? "DOUBLES" : canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<PlayerPair>(prefillPair(prefill, "A"));
   const [teamBPlayers, setTeamBPlayers] = useState<PlayerPair>(prefillPair(prefill, "B"));
-  const [format, setFormat] = useState<MatchFormat | null>("BEST_OF_3");
+  const [format, setFormat] = useState<MatchFormat | null>(teamFixture?.matchFormat === "BEST_OF_1" || teamFixture?.matchFormat === "BEST_OF_3" || teamFixture?.matchFormat === "BEST_OF_3_MATCH_TIEBREAK" ? (teamFixture!.matchFormat as MatchFormat) : "BEST_OF_3");
   const [deuceType, setDeuceType] = useState<DeuceType | null>("ADVANTAGE");
   const [firstServerTeam, setFirstServerTeam] = useState<Team | null>(null);
   const [firstServerPlayerIndex, setFirstServerPlayerIndex] = useState<0 | 1 | null>(null);
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
   const [gamesPerSet, setGamesPerSet] = useState<string | null>(String(STANDARD_GAMES_PER_SET));
 
   const isDoubles = playMode === "DOUBLES";
@@ -128,8 +131,13 @@ export function PadelNewMatchPage() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "padel", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "padel", scorecardMatchId: matchId });
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "padel_matches");
+          } catch (e) {
+            Alert.alert("Match created", e instanceof Error ? e.message : "The scorecard was created but could not be linked to its fixture.");
+          }
           navigate(paths.match("padel", matchId), { replace: true });
         },
         onError: (err) => Alert.alert("Error", friendlyPadelError(err, "Could not create match.")),
@@ -139,7 +147,7 @@ export function PadelNewMatchPage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-16 lg:px-8">
-      <SportNewMatchHeader sport="padel" title="New Padel Match" subtitle="Set up teams and match rules" onBack={goBack} />
+      <SportNewMatchHeader sport="padel" title="New Match" subtitle="Set up your match details" onBack={goBack} />
       <div className="px-5 pt-1 lg:px-0">
         {prefill && <InfoBox text={PREFILL_LOCK_NOTE} />}
         <div className={prefill ? "mt-4" : ""}>

@@ -4,6 +4,7 @@ import HomePage from "@/pages/home/HomePage";
 import ProfilePage from "@/pages/profile/ProfilePage";
 import AccountSettingsPage from "@/pages/profile/AccountSettingsPage";
 import BlockedUsersPage from "@/pages/profile/BlockedUsersPage";
+import HelpGuidePage from "@/pages/profile/HelpGuidePage";
 import MyBookingsPage from "@/pages/profile/MyBookingsPage";
 import VenuesListPage from "@/pages/venues/VenuesListPage";
 import VenueDetailPage from "@/pages/venues/VenueDetailPage";
@@ -96,6 +97,7 @@ export default function UserRoutes() {
         <Route path="profile/bookings" element={<MyBookingsPage />} />
         <Route path="profile/settings" element={<AccountSettingsPage />} />
         <Route path="profile/blocked" element={<BlockedUsersPage />} />
+        <Route path="profile/help" element={<HelpGuidePage />} />
         <Route path="profile/*" element={<Navigate to={paths.profile} replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

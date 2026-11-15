@@ -43,7 +43,8 @@ const literal = /["'`]([a-z0-9]+(?:-[a-z0-9]+)*)["'`]/g;
 
 for (const file of ROOTS.flatMap((r) => walk(r))) {
   const src = fs.readFileSync(file, "utf8");
-  const usesIon = /Ionicons|Ionicon\b|IonName/.test(src);
+  // Content files (the user guide) name Ionicons as plain data.
+  const usesIon = /Ionicons|Ionicon\b|IonName/.test(src) || /[\\/]content[\\/]/.test(file);
   const usesMc = /MaterialCommunityIcons|MCIcon|McName|getSportIcon|getAmenityIcon|AMENITY_OPTIONS/.test(src);
   if (!usesIon && !usesMc) continue;
   for (const [, name] of src.matchAll(literal)) {

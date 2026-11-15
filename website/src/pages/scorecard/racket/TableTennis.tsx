@@ -1,3 +1,4 @@
+import { linkTeamFixtureScorecard, type TeamFixturePrefill } from "@app/lib/api/teamChallenges";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { useAuthStore } from "@app/store/authStore";
@@ -53,21 +54,23 @@ const INDICATOR_LABEL: Record<Exclude<Indicator, null>, string> = { GAME_POINT: 
 export function TableTennisNewMatchPage() {
   const navigate = useAppNavigate();
   const goBack = useGoBack(HOME);
-  const prefill = (useLocation().state as { prefill?: ScorecardPrefill } | null)?.prefill;
+  const navState = useLocation().state as { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | null;
+  const prefill = navState?.prefill;
+  const teamFixture = navState?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateTableTennisMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<PlayerPair>(prefillPair(prefill, "A"));
   const [teamBPlayers, setTeamBPlayers] = useState<PlayerPair>(prefillPair(prefill, "B"));
   const canOfferDoubles = !prefill || (prefill.teamAPlayers.length >= 2 && prefill.teamBPlayers.length >= 2);
   const playModeOptions = canOfferDoubles ? PLAY_MODE_OPTIONS : PLAY_MODE_OPTIONS.filter((o) => o.value !== "DOUBLES");
-  const [playMode, setPlayMode] = useState<PlayMode | null>(prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
+  const [playMode, setPlayMode] = useState<PlayMode | null>(teamFixture?.matchFormat === "SINGLES" ? "SINGLES" : teamFixture?.matchFormat === "DOUBLES" ? "DOUBLES" : prefill && canOfferDoubles ? "DOUBLES" : "SINGLES");
   const [firstServingTeam, setFirstServingTeam] = useState<Team | null>(null);
   const [firstServerIndex, setFirstServerIndex] = useState<0 | 1 | null>(null);
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
   const [pointsToWin, setPointsToWin] = useState<string | null>(String(STANDARD_POINTS_TO_WIN));
   const [gamesToWin, setGamesToWin] = useState<string | null>(String(STANDARD_GAMES_TO_WIN));
 
@@ -114,8 +117,13 @@ export function TableTennisNewMatchPage() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "table_tennis", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "table_tennis", scorecardMatchId: matchId });
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "table_tennis_matches");
+          } catch (e) {
+            Alert.alert("Match created", e instanceof Error ? e.message : "The scorecard was created but could not be linked to its fixture.");
+          }
           navigate(paths.match("table_tennis", matchId), { replace: true });
         },
         onError: (err) => Alert.alert("Error", friendlyTableTennisError(err, "Could not create match.")),
@@ -125,7 +133,7 @@ export function TableTennisNewMatchPage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-16 lg:px-8">
-      <SportNewMatchHeader sport="tableTennis" title="Table Tennis Match" subtitle="Set up players and match rules" onBack={goBack} />
+      <SportNewMatchHeader sport="tableTennis" title="New Match" subtitle="Set up your match details" onBack={goBack} />
       <div className="px-5 pt-1 lg:px-0">
         {prefill && <InfoBox text={PREFILL_LOCK_NOTE} />}
         <div className={prefill ? "mt-4" : ""}>

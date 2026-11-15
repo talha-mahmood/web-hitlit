@@ -81,6 +81,7 @@ export const paths = {
   myBookings: "/profile/bookings",
   accountSettings: "/profile/settings",
   blockedUsers: "/profile/blocked",
+  helpGuide: "/profile/help",
   authCallback: "/auth/callback",
   admin: "/admin",
   superadmin: "/superadmin",

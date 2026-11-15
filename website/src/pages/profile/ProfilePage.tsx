@@ -1,3 +1,4 @@
+import PlayerTeamSquadsList from "@/components/players/PlayerTeamSquadsList";
 import { useState } from "react";
 import { colors } from "@app/constants/theme";
 import { useProfileStore } from "@app/store/profileStore";
@@ -121,10 +122,10 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-5xl lg:px-8 lg:pt-6">
-      <header className="rounded-b-[32px] bg-brand px-3.5 pb-5 pt-[calc(env(safe-area-inset-top)+12px)] lg:rounded-[32px] lg:px-7 lg:py-6">
+      <header className="bg-app px-3.5 pb-3.5 pt-[calc(env(safe-area-inset-top)+8px)] lg:px-0 lg:pt-6">
         <div className="flex items-center">
-          <button type="button" onClick={goHome} aria-label="Back to Home" className="mr-3 rounded-full p-0.5 hover:bg-white/10 lg:hidden">
-            <Ionicon name="arrow-back" size={22} color="white" />
+          <button type="button" onClick={goHome} aria-label="Back to Home" className="mr-3 rounded-full p-0.5 hover:bg-black/5 lg:hidden">
+            <Ionicon name="arrow-back" size={22} color={colors.ink} />
           </button>
           <button type="button" onClick={handleChangeAvatar} disabled={uploadingAvatar} aria-label="Change profile photo" title="Change profile photo" className="group relative mr-4 shrink-0">
             {profile?.avatar ? (
@@ -142,25 +143,25 @@ export default function ProfilePage() {
               </span>
             )}
           </button>
-          <div className="mr-2 min-w-0 flex-1 text-white">
+          <div className="mr-2 min-w-0 flex-1 text-muted">
             <div className="flex items-center gap-1.5">
-              <h1 className="truncate text-[19px] font-bold lg:text-[22px]">{profile?.full_name ?? "Profile"}</h1>
-              <Ionicon name="checkmark-circle" size={17} color="#4ADE80" />
+              <h1 className="truncate text-[19px] font-bold text-ink lg:text-[22px]">{profile?.full_name ?? "Profile"}</h1>
+              <Ionicon name="checkmark-circle" size={14} color="#4ADE80" />
             </div>
-            <button type="button" onClick={handleCopyUserId} title="Copy your player ID" className="mt-1 flex items-center gap-1 text-sm hover:underline">
-              <Ionicon name="pricetag-outline" size={12} color="white" />
+            <button type="button" onClick={handleCopyUserId} title="Copy your player ID" className="mt-1 flex items-center gap-1 text-xs hover:underline">
+              <Ionicon name="pricetag-outline" size={10} color={colors.muted} />
               <span className="truncate">ID: {profile?.user_code ?? "—"}</span>
-              <Ionicon name={userIdCopied ? "checkmark" : "copy-outline"} size={12} color="white" />
+              <Ionicon name={userIdCopied ? "checkmark" : "copy-outline"} size={10} color={colors.muted} />
             </button>
             {profile?.created_at && (
-              <p className="mt-1 flex items-center gap-1 text-xs">
-                <Ionicon name="calendar-outline" size={12} color="white" />
+              <p className="mt-1 flex items-center gap-1 text-[10px]">
+                <Ionicon name="calendar-outline" size={10} color={colors.muted} />
                 Member since {formatMonthYear(profile.created_at)}
               </p>
             )}
             {followerCount > 0 && (
-              <p className="mt-1 flex items-center gap-1 text-xs">
-                <Ionicon name="people-outline" size={12} color="white" />
+              <p className="mt-1 flex items-center gap-1 text-[10px]">
+                <Ionicon name="people-outline" size={10} color={colors.muted} />
                 {followerCount} follower{followerCount === 1 ? "" : "s"}
               </p>
             )}
@@ -180,7 +181,7 @@ export default function ProfilePage() {
               role="tab"
               aria-selected={tab === key}
               onClick={() => setActiveTab(key)}
-              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold ${tab === key ? "bg-brand text-white" : "bg-border text-[#374151] hover:text-ink"}`}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold ${tab === key ? "bg-brand text-white" : "bg-border text-ink-secondary hover:text-ink"}`}
             >
               {label}
             </button>
@@ -194,7 +195,7 @@ export default function ProfilePage() {
             {tab === "overview" && <PlayerCricketOverview fullName={player.fullName} sportId={filterSportId} />}
             {tab === "statistics" && <PlayerCricketStatistics fullName={player.fullName} sportId={filterSportId} />}
             {tab === "matches" && <PlayerCricketMatches fullName={player.fullName} sportId={filterSportId} />}
-            {tab === "teams" && <PlayerCricketTeams fullName={player.fullName} sportId={filterSportId} />}
+            {tab === "teams" && userId && <PlayerTeamSquadsList userId={userId} sportId={filterSportId} />}
             {tab === "tournaments" && <PlayerCricketTournaments fullName={player.fullName} sportId={filterSportId} />}
             {tab === "clubs" && userId && <PlayerCricketClubs userId={userId} />}
             {tab === "insights" && <PlayerCricketInsights fullName={player.fullName} sportId={filterSportId} />}
@@ -205,7 +206,7 @@ export default function ProfilePage() {
             {tab === "overview" && <PlayerSportOverview sport={genericSport} fullName={player.fullName} />}
             {tab === "statistics" && <PlayerSportStatistics sport={genericSport} fullName={player.fullName} />}
             {tab === "matches" && <PlayerSportMatches sport={genericSport} fullName={player.fullName} />}
-            {tab === "teams" && <PlayerSportTeams sport={genericSport} fullName={player.fullName} />}
+            {tab === "teams" && userId && <PlayerTeamSquadsList userId={userId} sportId={filterSportId} />}
             {tab === "tournaments" && <PlayerSportTournaments sport={genericSport} fullName={player.fullName} />}
             {tab === "clubs" && userId && <PlayerSportClubs sport={genericSport} userId={userId} />}
             {tab === "insights" && <PlayerSportInsights sport={genericSport} fullName={player.fullName} />}
@@ -237,7 +238,7 @@ export default function ProfilePage() {
             onOpenSportFilter={() => setSportSheetOpen(true)}
           />
         )}
-        {profile?.jersey_number != null && <JerseyNumberCard number={profile.jersey_number} />}
+        {profile?.jersey_number != null && (tab === "profile" || tab === "overview") && <JerseyNumberCard number={profile.jersey_number} />}
       </div>
 
       <SelectSportSheet

@@ -67,6 +67,9 @@
       "@app/store/networkStore": [
         "./src/platform/overrides/store/networkStore.ts"
       ],
+      "@app/store/themeStore": [
+        "./src/platform/overrides/store/themeStore.ts"
+      ],
       "react-native": [
         "./src/platform/shims/react-native.ts"
       ],

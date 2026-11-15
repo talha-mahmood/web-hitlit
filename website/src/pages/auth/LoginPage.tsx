@@ -16,7 +16,7 @@ import TermsContent from "@/components/onboarding/TermsContent";
 const APPLE_ENABLED = import.meta.env.VITE_ENABLE_APPLE_SIGNIN === "true";
 
 const HIGHLIGHTS: { icon: string; label: string }[] = [
-  { icon: "people", label: "Find players & groups" },
+  { icon: "people", label: "Find players & squads" },
   { icon: "calendar", label: "Join games & tournaments" },
   { icon: "location", label: "Book courts near you" },
   { icon: "stats-chart", label: "Live scorecards" },

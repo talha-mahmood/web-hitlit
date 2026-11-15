@@ -47,7 +47,7 @@ export function TogglePill<T extends string>({ options, value, onChange }: { opt
           role="tab"
           aria-selected={value === o}
           onClick={() => onChange(o)}
-          className={`px-4 py-1.5 text-xs font-bold ${value === o ? "bg-brand text-white" : "text-[#374151] hover:text-ink"}`}
+          className={`px-4 py-1.5 text-xs font-bold ${value === o ? "bg-brand text-white" : "text-ink-secondary hover:text-ink"}`}
         >
           {o}
         </button>

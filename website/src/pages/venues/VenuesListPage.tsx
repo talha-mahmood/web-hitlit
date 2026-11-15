@@ -12,7 +12,7 @@ import { imageUrl } from "@/lib/cn";
 import { useUrlTextParam } from "@/lib/useUrlTextParam";
 import { Ionicon } from "@/components/icons/Icon";
 import FieldInput from "@/components/ui/FieldInput";
-import PageHeader from "@/components/ui/PageHeader";
+import PlainHeader from "@/components/ui/PlainHeader";
 import { SkeletonCardRows } from "@/components/ui/Skeleton";
 import FilterPill from "@/components/filters/FilterPill";
 import {
@@ -148,7 +148,7 @@ export default function VenuesListPage() {
 
   return (
     <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
-      <PageHeader title={<span className="text-[26px] font-extrabold">Venues</span>} subtitle="Find and book venues nearby" back backFallback="/" />
+      <PlainHeader title="Venues" subtitle="Find and book venues nearby" backFallback="/" />
 
       <div className="px-3.5 pt-4 sm:px-6 lg:px-0">
         <FieldInput

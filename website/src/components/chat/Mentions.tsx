@@ -25,14 +25,14 @@ const TYPE_FILTERS: { type: MentionEntityType | undefined; label: string; icon: 
   { type: "player", label: "Players", icon: "person-outline" },
   { type: "game", label: "Games", icon: "game-controller-outline" },
   { type: "tournament", label: "Tournaments", icon: "trophy-outline" },
-  { type: "squad", label: "Groups", icon: "people-outline" },
+  { type: "squad", label: "Squads", icon: "people-outline" },
 ];
 
 const TYPE_META: Record<MentionEntityType, { icon: string; bg: string; fg: string; label: string }> = {
   player: { icon: "account", bg: "rgb(var(--jz-blue-50))", fg: "#2563EB", label: "Player" },
   game: { icon: "calendar-star", bg: "rgb(var(--jz-green-50))", fg: colors.primaryDark, label: "Game" },
   tournament: { icon: "trophy", bg: "rgb(var(--jz-amber-50))", fg: "#D97706", label: "Tournament" },
-  squad: { icon: "account-group", bg: "#FDF2F8", fg: "#DB2777", label: "Group" },
+  squad: { icon: "account-group", bg: "#FDF2F8", fg: "#DB2777", label: "Squad" },
 };
 
 // Port of MentionSuggestionsList — type filter pills + result rows, anchored

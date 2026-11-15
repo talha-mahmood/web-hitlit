@@ -103,8 +103,8 @@ export default function PlayerStatCards({
             <MCIcon name="hexagon" size={52} color={tier.bg} className="absolute" />
             <Ionicon name="trophy" size={22} color={tier.color} style={{ position: "relative" }} />
           </span>
-          <span className="text-[34px] font-extrabold leading-[38px] text-ink">{rating}</span>
-          <Ionicon name="star" size={16} color="#FACC15" style={{ marginTop: -18 }} />
+          <span className="text-[25px] font-extrabold leading-[29px] text-ink">{rating}</span>
+          <Ionicon name="star" size={16} color="#FACC15" style={{ marginTop: -13 }} />
         </div>
         <p className="mb-2 flex items-center gap-1 text-xs text-muted">
           {tier.nextLabel ? `${tier.remaining} points to ${tier.nextLabel}` : "Top tier"}
@@ -154,12 +154,12 @@ export default function PlayerStatCards({
             <StatCard icon="football-outline" bg="rgb(var(--jz-blue-50))" fg="#2563EB" value={gamesPlayed} label="Games Played" />
             <StatCard icon="trophy-outline" bg="rgb(var(--jz-amber-50))" fg="#D97706" value={tournamentsPlayed} label="Tournaments Played" />
             <StatCard icon="star-outline" bg="#FFF1F2" fg="#E11D48" value={gamesHosted} label="Games Hosted" />
-            <StatCard icon="people-outline" bg="rgb(var(--jz-primary-light))" fg="#1D9254" value={activeSquads} label="Active Groups" />
+            <StatCard icon="people-outline" bg="rgb(var(--jz-primary-light))" fg="#18C66A" value={activeSquads} label="Active Squads" />
             <StatCard icon="time-outline" bg="rgb(var(--jz-blue-50))" fg="#2563EB" value={hoursPlayed} label="Hours Played" />
             <StatCard icon="pulse-outline" bg="#F5F3FF" fg="#7C3AED" value={participationScore} label="Participation Score" />
           </div>
 
-          <div className="mb-6 grid grid-cols-2 gap-3">
+          <div className="mb-6">
             <div className="rounded-2xl bg-surface p-3.5 shadow-card">
               <p className="mb-3 flex items-center gap-1.5 font-semibold text-ink">
                 <Ionicon name="pie-chart" size={15} color={colors.primary} />
@@ -192,15 +192,6 @@ export default function PlayerStatCards({
                   </div>
                 </div>
               )}
-            </div>
-            <div className="rounded-2xl bg-surface p-3.5 shadow-card">
-              <p className="mb-3 flex items-center gap-1.5 font-semibold text-ink">
-                <Ionicon name="bar-chart" size={15} color={colors.primary} />
-                <span className="truncate">Your Activity</span>
-              </p>
-              <ActivityBarRow icon="game-controller" iconBg="rgb(var(--jz-green-50))" label="Regular Games" value={regularGamesPlayed} max={activityMax} color="#60A5FA" />
-              <ActivityBarRow icon="trophy" iconBg="rgb(var(--jz-amber-50))" label="Tournaments" value={tournamentsPlayed} max={activityMax} color="#FBBF24" />
-              <ActivityBarRow icon="people" iconBg="rgb(var(--jz-purple-50))" label="Games Hosted" value={gamesHosted} max={activityMax} color="#C084FC" />
             </div>
           </div>
 

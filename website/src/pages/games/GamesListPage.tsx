@@ -15,7 +15,7 @@ import { Alert } from "@/lib/alert";
 import { useUrlTextParam } from "@/lib/useUrlTextParam";
 import { Ionicon } from "@/components/icons/Icon";
 import FieldInput from "@/components/ui/FieldInput";
-import PageHeader from "@/components/ui/PageHeader";
+import PlainHeader from "@/components/ui/PlainHeader";
 import { SkeletonCardRows } from "@/components/ui/Skeleton";
 import FilterPill from "@/components/filters/FilterPill";
 import { SelectDistanceSheet, SelectLocationSheet, SelectSportSheet } from "@/components/filters/FilterSheets";
@@ -86,6 +86,7 @@ export default function GamesListPage() {
       list = list.filter(
         (g) =>
           g.creator_id === userId ||
+          (!!userId && (g.co_host_ids ?? []).includes(userId)) ||
           g.game_players.some((p) => p.user_id === userId && p.status === "JOINED") ||
           g.tournament_teams.some((t) => t.tournament_team_members.some((m) => m.user_id === userId && m.status === "JOINED"))
       );
@@ -126,14 +127,13 @@ export default function GamesListPage() {
 
   return (
     <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
-      <PageHeader
-        title={<span className="text-[26px] font-extrabold">{gameType === "TOURNAMENT" ? "Tournaments" : "Games"}</span>}
+      <PlainHeader
+        title={gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
         subtitle={isTournamentList ? "Find and join tournaments nearby" : "Find and join games nearby"}
-        back
-        backFallback={paths.community}
+        backFallback={paths.home}
         right={
-          <button type="button" onClick={createLink} className="press flex items-center gap-1.5 rounded-full bg-surface px-5 py-3 text-[15px] font-bold text-primary-dark shadow-card hover:bg-gray-50">
-            <Ionicon name="add" size={20} color={colors.primaryDark} />
+          <button type="button" onClick={createLink} className="press flex items-center gap-1 rounded-full bg-surface px-3.5 py-2 text-[13px] font-bold text-primary-dark shadow-card hover:bg-gray-50">
+            <Ionicon name="add" size={16} color={colors.primaryDark} />
             Create
           </button>
         }
@@ -173,14 +173,13 @@ export default function GamesListPage() {
               </button>
             );
           })}
-          {gameType !== "TOURNAMENT" && <FilterPill icon="trophy-outline" label="Tournaments" active={showTournaments} onPress={() => setShowTournaments((v) => !v)} />}
+          <FilterPill icon="options-outline" label="Sports" active={!!selectedSportId} onPress={() => setSheet("sport")} />
           <FilterPill
             icon="location-outline"
             label={locationTags.length === 0 ? "Location" : locationTags.length === 1 ? locationTags[0] : `${locationTags.length} locations`}
             active={locationTags.length > 0}
             onPress={() => setSheet("location")}
           />
-          <FilterPill icon="options-outline" label="Sports" active={!!selectedSportId} onPress={() => setSheet("sport")} />
           <FilterPill
             icon="calendar-outline"
             label={timeRange ? (timeRange.start === timeRange.end ? formatShortDate(timeRange.start) : `${formatShortDate(timeRange.start)} - ${formatShortDate(timeRange.end)}`) : "Date"}

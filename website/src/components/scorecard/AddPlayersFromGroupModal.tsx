@@ -65,7 +65,7 @@ export default function AddPlayersFromGroupModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Add From a Group"
+      title="Add From a Squad"
       footer={
         selectedSquad && !isLoading && (squads ?? []).length > 0 ? (
           <button

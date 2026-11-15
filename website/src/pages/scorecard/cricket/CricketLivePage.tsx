@@ -958,7 +958,7 @@ export default function CricketLivePage() {
                               <span
                                 key={i}
                                 className="flex items-center justify-center rounded-full text-center font-bold"
-                                style={{ width: size, height: size, fontSize: label.length > 2 ? 10 : 12, backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : "#E5E7EB", color: b.isWicket || isLast ? "white" : colors.ink }}
+                                style={{ width: size, height: size, fontSize: label.length > 2 ? 10 : 12, backgroundColor: b.isWicket ? colors.danger : isLast ? "#2563EB" : colors.border, color: b.isWicket || isLast ? "white" : colors.ink }}
                               >
                                 {label}
                               </span>

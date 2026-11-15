@@ -26,6 +26,7 @@ import { Alert } from "@/lib/alert";
 import { Ionicon, MCIcon } from "@/components/icons/Icon";
 import Spinner from "@/components/ui/Spinner";
 import { CornerAccents, LiveBadge, TeamCrest, TEAM_A_COLOR, TEAM_B_COLOR, ViewScoringPanel } from "@/components/scorecard/ScorecardParts";
+import { SkeletonCardRows } from "@/components/ui/Skeleton";
 import { useAppNavigate, useGoBack } from "@/routes/navigation";
 import { paths, type MatchSport } from "@/routes/paths";
 
@@ -67,8 +68,8 @@ function MatchCard({ m, crestIcon, onPress, onDelete }: { m: CardModel; crestIco
       onContextMenu={(e) => (e.preventDefault(), onDelete())}
       className="press group relative cursor-pointer overflow-hidden rounded-[20px] bg-surface shadow-card transition-shadow hover:shadow-hero"
     >
-      <CornerAccents />
-      <div className="flex items-center justify-between px-4 pb-3 pt-4">
+      <CornerAccents size={26} />
+      <div className="flex items-center justify-between px-4 pb-2 pt-3">
         <LiveBadge live={m.live} />
         {(m.tag || m.tagChevron) && (
           <span className="flex items-center gap-1 text-sm text-muted">
@@ -77,24 +78,24 @@ function MatchCard({ m, crestIcon, onPress, onDelete }: { m: CardModel; crestIco
           </span>
         )}
       </div>
-      <div className="flex items-center justify-between px-6 pb-3">
+      <div className="flex items-center justify-between px-6 pb-2">
         <div className="flex w-[76px] flex-col items-center">
-          <TeamCrest color={TEAM_A_COLOR} size={52} icon={crestIcon} />
-          <p className="mt-2 w-full truncate text-center text-sm font-bold text-ink">{m.aName}</p>
+          <TeamCrest color={TEAM_A_COLOR} size={42} icon={crestIcon} />
+          <p className="mt-1 w-full truncate text-center text-sm font-bold text-ink">{m.aName}</p>
         </div>
         <div className="flex flex-1 flex-col items-center">
-          <p className="text-[30px] font-extrabold text-ink">{m.tally}</p>
+          <p className="text-[25px] font-extrabold text-ink">{m.tally}</p>
           {m.breakdown !== undefined && <p className="mt-0.5 text-center text-xs text-muted">{m.breakdown}</p>}
           {m.formatPill && <span className="mt-1.5 rounded-full bg-primary-light px-2.5 py-0.5 text-xs font-bold text-primary-dark">{m.formatPill}</span>}
         </div>
         <div className="flex w-[76px] flex-col items-center">
-          <TeamCrest color={TEAM_B_COLOR} size={52} icon={crestIcon} />
-          <p className="mt-2 w-full truncate text-center text-sm font-bold text-ink">{m.bName}</p>
+          <TeamCrest color={TEAM_B_COLOR} size={42} icon={crestIcon} />
+          <p className="mt-1 w-full truncate text-center text-sm font-bold text-ink">{m.bName}</p>
         </div>
       </div>
-      {!m.live && m.resultSummary ? <p className="truncate px-4 pb-2 text-center text-xs font-semibold text-primary">{m.resultSummary}</p> : null}
+      {!m.live && m.resultSummary ? <p className="truncate px-4 pb-1 text-center text-xs font-semibold text-primary">{m.resultSummary}</p> : null}
       <div className="h-px bg-border" />
-      <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted">
+      <div className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted">
         <Ionicon name="calendar-outline" size={15} color={colors.muted} />
         {dateLabel}
         {m.venue ? (
@@ -172,7 +173,7 @@ function RacketHomeView({
                 role="tab"
                 aria-selected={selected}
                 onClick={() => setTab(t.key)}
-                className={`flex flex-1 items-center justify-center gap-[5px] truncate rounded-xl py-2 text-xs ${selected ? "bg-primary-light font-bold text-primary-dark" : "font-medium text-muted hover:text-ink"}`}
+                className={`flex flex-1 items-center justify-center gap-[5px] truncate rounded-xl py-2 text-xs border-b-[3px] ${selected ? "border-primary font-bold text-primary-dark" : "border-transparent font-medium text-muted hover:text-ink"}`}
               >
                 {t.key === "live" && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />}
                 <span className="truncate">{t.label}</span>
@@ -194,8 +195,8 @@ function RacketHomeView({
           }}
         />
       ) : isLoading ? (
-        <div className="mt-8 flex justify-center">
-          <Spinner />
+        <div className="px-1">
+          <SkeletonCardRows />
         </div>
       ) : (
         <div className="px-5 lg:px-0">

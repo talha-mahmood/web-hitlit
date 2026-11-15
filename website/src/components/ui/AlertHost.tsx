@@ -69,7 +69,7 @@ export default function AlertHost() {
                 onClick={() => close(b.onPress ? () => b.onPress!() : undefined)}
                 className={`press flex-1 rounded-[18px] py-3.5 text-base font-bold ${
                   isCancel
-                    ? "border-[1.5px] border-border bg-surface text-[#374151] hover:bg-gray-50"
+                    ? "border-[1.5px] border-border bg-surface text-ink-secondary hover:bg-gray-50"
                     : isDanger
                       ? "bg-danger text-white hover:brightness-95"
                       : "bg-primary text-white hover:brightness-95"

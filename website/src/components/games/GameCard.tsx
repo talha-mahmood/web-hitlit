@@ -2,7 +2,8 @@ import type { MouseEvent } from "react";
 import { colors } from "@app/constants/theme";
 import type { GameListItem } from "@app/lib/api/games";
 import { GAME_SKILL_COLORS, timeBadgeColor } from "@app/lib/badgeColors";
-import { getSportImage } from "@app/lib/sportImages";
+import { getSportCardThumb } from "@app/lib/sportImages";
+import GeneratedEntityVisual from "../GeneratedEntityVisual";
 import { getSportIcon } from "@app/lib/sportIcons";
 import { imageUrl } from "@/lib/cn";
 import { AvatarStack } from "../ui/Avatar";
@@ -66,14 +67,14 @@ export default function GameCard({
   const teamsLeft = (game.number_of_teams ?? 0) - approvedTeams.length;
   const isFull = game.status === "FULL" || (isTeamBased ? teamsLeft <= 0 : spotsLeft <= 0);
   const isCompleted = game.status === "COMPLETED";
-  const isMyGame = game.creator_id === currentUserId;
+  const isMyGame = game.creator_id === currentUserId || (!!currentUserId && (game.co_host_ids ?? []).includes(currentUserId));
   const skillColor = game.skill_level ? GAME_SKILL_COLORS[game.skill_level] : null;
   const skillLabel = game.skill_level ? SKILL_LABEL[game.skill_level] : null;
   const multiDay = isTournament && !!game.end_date && game.end_date !== game.game_date;
   const badgeLabel = multiDay ? formatDateRange(game.game_date, game.end_date!) : `${cardDayLabel(game.game_date)} · ${fmtTime(game.start_time)} - ${fmtTime(game.end_time)}`;
   const badgeColor = isTournament ? "#7C3AED" : timeBadgeColor(game.start_time);
   const sportName = game.sports?.name ?? "";
-  const sportPhoto = imageUrl(getSportImage(sportName));
+  const sportPhoto = imageUrl(getSportCardThumb(sportName));
   const glyph = getSportIcon(sportName);
 
   const stop = (fn: () => void) => (e: MouseEvent) => {
@@ -114,16 +115,14 @@ export default function GameCard({
       </div>
 
       <span className="pointer-events-none absolute -right-7 top-11 flex h-[82px] w-[82px] items-center justify-center overflow-hidden rounded-full bg-primary-light">
-        {sportPhoto ? (
-          <img src={sportPhoto} alt="" className="mr-[17px] h-12 w-[86px] object-contain mix-blend-multiply" />
-        ) : (
-          <MCIcon name={glyph.icon} size={35} color={glyph.fg} style={{ marginRight: 17, opacity: 0.8 }} />
-        )}
+        <GeneratedEntityVisual id={game.id} name={game.title} sport={sportName} kind={isTournament ? "tournament" : "game"} imageUrl={game.icon_url} size={48} style={{ marginRight: 17 }} />
       </span>
 
       <div className="px-2.5 pb-2 pt-2">
         <div className="mb-1 flex items-center gap-1.5 pr-20">
-          {game.icon_url && <img src={game.icon_url} alt="" className="h-11 w-11 rounded-lg object-cover" />}
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[9px] bg-primary-light">
+            {sportPhoto ? <img src={sportPhoto} alt="" className="h-[26px] w-11 object-contain" /> : <MCIcon name={glyph.icon} size={26} color={glyph.fg} style={{ opacity: 0.8 }} />}
+          </span>
           <p className="flex-1 truncate text-sm font-extrabold text-ink">{game.title}</p>
         </div>
         <p className="mb-1 flex items-center gap-1 pr-[92px] text-[11.5px] text-muted">

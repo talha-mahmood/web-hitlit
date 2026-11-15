@@ -34,16 +34,16 @@ function SportCard({ sportName, title, subtitle, onPress }: { sportName: string;
     <button
       type="button"
       onClick={onPress}
-      className="group flex w-full items-center gap-2.5 rounded-3xl border-[1.5px] border-transparent bg-surface p-[9px] text-left shadow-card transition hover:border-primary hover:bg-gradient-to-br hover:from-[#D1F5DD] hover:to-green-50 active:scale-[0.97]"
+      className="group flex w-full items-center gap-2.5 rounded-3xl border-[1.5px] border-border bg-surface p-[9px] text-left shadow-card transition hover:border-primary hover:bg-gradient-to-br hover:from-[#D1F5DD] hover:to-primary-light active:scale-[0.97]"
     >
-      <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ backgroundColor: SPORT_DISC[sportName] ?? bg }}>
-        {photo ? <img src={photo} alt="" className="h-10 w-[72px] object-contain mix-blend-multiply" /> : <MCIcon name={icon} size={26} color={fg} />}
+      <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-full p-[9px]" style={{ backgroundColor: SPORT_DISC[sportName] ?? bg }}>
+        {photo ? <img src={photo} alt="" className="h-full w-full object-contain" /> : <MCIcon name={icon} size={26} color={fg} />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-bold text-ink">{title}</span>
         <span className="mt-0.5 block text-[11.5px] leading-[15px] text-muted">{subtitle}</span>
       </span>
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F1F3F5] transition group-hover:bg-brand group-hover:shadow-cta">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-overlay transition group-hover:bg-brand group-hover:shadow-cta">
         <Ionicon name="chevron-forward" size={15} color={colors.muted} className="group-hover:hidden" />
         <Ionicon name="chevron-forward" size={15} color="white" className="hidden group-hover:block" />
       </span>
@@ -58,7 +58,7 @@ function HeaderArt() {
       <svg width={52} height={72} viewBox="0 0 52 72" aria-hidden>
         <rect x={6} y={2} width={40} height={28} rx={6} fill="#6FC694" />
         <rect x={10} y={6} width={32} height={20} rx={4} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
-        <text x={26} y={21} fontSize={12} fontWeight="bold" fill="#0E5C34" textAnchor="middle">
+        <text x={26} y={21} fontSize={12} fontWeight="bold" fill={colors.primaryDark} textAnchor="middle">
           0-0
         </text>
         <rect x={13} y={30} width={4} height={10} rx={2} fill="#6FC694" />
@@ -70,7 +70,7 @@ function HeaderArt() {
         <circle cx={8} cy={66} r={4.5} fill="#CBEEDA" stroke="#1D9254" strokeWidth={1} />
       </svg>
       <div>
-        <p className="whitespace-pre-line text-[13px] font-bold italic leading-[17px] text-white">{"Keep\nScore\nKeep Playing"}</p>
+        <p className="whitespace-pre-line text-[11px] font-bold italic leading-[14px] text-muted">{"Keep\nScore\nKeep Playing"}</p>
         <svg width={70} height={8} viewBox="0 0 70 8" aria-hidden>
           <path d="M2 5c14-4 34-4 60-1" fill="none" stroke="#8FD9AE" strokeWidth={2} strokeLinecap="round" />
         </svg>
@@ -84,22 +84,22 @@ export default function ScorecardHomePage() {
   const navigate = useAppNavigate();
   return (
     <div className="mx-auto max-w-5xl lg:px-8 lg:pt-6">
-      <header className="relative overflow-hidden rounded-b-[32px] bg-brand px-3.5 pb-5 pt-[calc(env(safe-area-inset-top)+12px)] lg:rounded-[28px] lg:px-7 lg:py-7">
-        <div className="absolute bottom-5 right-3 top-[calc(env(safe-area-inset-top)+12px)] flex items-center lg:bottom-0 lg:right-8 lg:top-0">
+      <header className="relative overflow-hidden bg-app px-3.5 pb-3 pt-[calc(env(safe-area-inset-top)+8px)] lg:px-0 lg:pt-4">
+        <div className="absolute bottom-3 right-3 top-[calc(env(safe-area-inset-top)+8px)] flex origin-right scale-75 items-center lg:right-0">
           <HeaderArt />
         </div>
         <div className="flex items-center gap-2 pr-[130px]">
-          <button type="button" onClick={() => navigate(paths.home)} aria-label="Back to Home" className="rounded-full p-0.5 hover:bg-white/10 lg:hidden">
-            <Ionicon name="arrow-back" size={22} color="white" />
+          <button type="button" onClick={() => navigate(paths.home)} aria-label="Back to Home" className="rounded-full p-0.5 hover:bg-black/5 lg:hidden">
+            <Ionicon name="arrow-back" size={22} color={colors.ink} />
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-bold text-white lg:text-[28px]">Scorecard</h1>
-            <p className="mt-0.5 truncate text-[13px] text-white">Live score your game</p>
+            <h1 className="truncate text-[19px] font-bold text-ink">Scorecard</h1>
+            <p className="mt-px truncate text-[10.5px] text-muted">Live score your game</p>
           </div>
         </div>
       </header>
 
-      <div className="grid gap-2.5 px-4 pb-6 pt-3.5 md:grid-cols-2 lg:px-0 lg:pt-6 xl:grid-cols-3">
+      <div className="grid gap-[15px] px-4 pb-6 pt-3.5 md:grid-cols-2 lg:px-0 lg:pt-4 xl:grid-cols-3">
         {SPORTS.map((s) => (
           <SportCard key={s.slug} sportName={s.sportName} title={s.title} subtitle={s.subtitle} onPress={() => navigate(`${paths.scorecard}/${s.slug}`)} />
         ))}

@@ -58,7 +58,7 @@ function AddFromGroupButton({ onPress }: { onPress: () => void }) {
   return (
     <button type="button" onClick={onPress} className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-semibold text-primary-dark hover:bg-primary-light/50">
       <Ionicon name="people-outline" size={16} color={colors.primaryDark} />
-      Add From a Group
+      Add From a Squad
     </button>
   );
 }
@@ -72,7 +72,7 @@ function Label({ children, className = "" }: { children: ReactNode; className?: 
 }
 
 // Port of the racket sports' TeamCard: a side's name (singles player or
-// doubles team), its two doubles players, "Add From a Group", name-clash
+// doubles team), its two doubles players, "Add From a Squad", name-clash
 // warnings and (Tennis/Badminton) which partner serves for the side.
 export function TeamCard({
   letter,
@@ -258,4 +258,4 @@ export function StartMatchButton({ valid, pending, reason, onPress, label = "Sta
   );
 }
 
-export const DUPLICATE_PLAYERS_REASON = "Two players share the same name — rename one, or add them from a group so they're tracked as separate people.";
+export const DUPLICATE_PLAYERS_REASON = "Two players share the same name — rename one, or add them from a squad so they're tracked as separate people.";

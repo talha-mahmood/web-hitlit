@@ -450,7 +450,7 @@ export function BallsTab({ match, scorecardInnings, selectedInningsNumber, onSel
                 <span className="mt-0.5 w-8 text-xs font-semibold text-muted">{label}</span>
                 <span
                   className="flex shrink-0 items-center justify-center rounded-full text-center text-[11px] font-bold"
-                  style={{ width: ball.isWicket ? 30 : 26, height: ball.isWicket ? 30 : 26, backgroundColor: ball.isWicket ? colors.danger : "#E5E7EB", color: ball.isWicket ? "white" : colors.ink }}
+                  style={{ width: ball.isWicket ? 30 : 26, height: ball.isWicket ? 30 : 26, backgroundColor: ball.isWicket ? colors.danger : colors.border, color: ball.isWicket ? "white" : colors.ink }}
                 >
                   {ballLabel(ball)}
                 </span>

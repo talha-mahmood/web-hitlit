@@ -136,6 +136,17 @@ export default function AccountSettingsPage() {
           </div>
         </div>
 
+        <button type="button" onClick={() => navigate(paths.helpGuide)} className="mb-4 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left shadow-card transition hover:shadow-hero">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-light">
+            <Ionicon name="book-outline" size={20} color={colors.primaryDark} />
+          </span>
+          <span className="flex-1">
+            <span className="block text-base font-bold text-ink">Help &amp; User Guide</span>
+            <span className="mt-0.5 block text-sm text-muted">Learn how to use HitLit</span>
+          </span>
+          <Ionicon name="chevron-forward" size={18} color={colors.muted} />
+        </button>
+
         <button type="button" onClick={() => navigate(paths.blockedUsers)} className="mb-4 flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-left shadow-card transition hover:shadow-hero">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-light">
             <Ionicon name="hand-left-outline" size={20} color={colors.primaryDark} />

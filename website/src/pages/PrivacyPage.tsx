@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           </a>
         </div>
       </header>
-      <article className="mx-auto max-w-3xl px-4 py-10 text-[15px] leading-7 text-[#374151] sm:px-6">
+      <article className="mx-auto max-w-3xl px-4 py-10 text-[15px] leading-7 text-ink-secondary sm:px-6">
         {render(policy)}
       </article>
     </div>

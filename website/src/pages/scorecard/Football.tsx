@@ -1,3 +1,4 @@
+import { linkTeamFixtureScorecard, type TeamFixturePrefill } from "@app/lib/api/teamChallenges";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { colors } from "@app/constants/theme";
@@ -58,7 +59,7 @@ const HOME = `${paths.scorecard}/football`;
 const STANDARD_MATCH_TOTAL_MINUTES = 90;
 const STANDARD_EXTRA_TIME_TOTAL_MINUTES = 30;
 
-// Free-form team roster: type-and-add names, "Add From a Group", removable chips.
+// Free-form team roster: type-and-add names, "Add From a Squad", removable chips.
 function AddPlayersField({ players, onPlayersChange, playersLocked, otherTeamPlayers, team }: { players: NamedEntry[]; onPlayersChange: (p: NamedEntry[]) => void; playersLocked?: boolean; otherTeamPlayers: NamedEntry[]; team: "A" | "B" }) {
   const [draft, setDraft] = useState("");
   const [groupOpen, setGroupOpen] = useState(false);
@@ -100,7 +101,7 @@ function AddPlayersField({ players, onPlayersChange, playersLocked, otherTeamPla
       {!playersLocked && (
         <button type="button" onClick={() => setGroupOpen(true)} className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-semibold text-primary-dark hover:bg-primary-light/50">
           <Ionicon name="people-outline" size={16} color={colors.primaryDark} />
-          Add From a Group
+          Add From a Squad
         </button>
       )}
       {players.length > 0 && (
@@ -131,19 +132,21 @@ function AddPlayersField({ players, onPlayersChange, playersLocked, otherTeamPla
 export function FootballNewMatchPage() {
   const navigate = useAppNavigate();
   const goBack = useGoBack(HOME);
-  const prefill = (useLocation().state as { prefill?: ScorecardPrefill } | null)?.prefill;
+  const navState = useLocation().state as { prefill?: ScorecardPrefill; teamFixture?: TeamFixturePrefill } | null;
+  const prefill = navState?.prefill;
+  const teamFixture = navState?.teamFixture;
   const userId = useAuthStore((s) => s.session?.user.id);
   const createMatch = useCreateFootballMatch();
   const linkScorecardMatch = useLinkScorecardMatch(prefill?.gameId ?? "");
 
-  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? "");
-  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? "");
+  const [teamAName, setTeamAName] = useState(prefill?.teamAName ?? teamFixture?.teamAName ?? "");
+  const [teamBName, setTeamBName] = useState(prefill?.teamBName ?? teamFixture?.teamBName ?? "");
   const [teamAPlayers, setTeamAPlayers] = useState<NamedEntry[]>((prefill?.teamAPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId })));
   const [teamBPlayers, setTeamBPlayers] = useState<NamedEntry[]>((prefill?.teamBPlayers ?? []).map((p) => ({ name: p.name, sourceId: p.userId })));
   const [requiresWinner, setRequiresWinner] = useState<"NO" | "YES" | null>("NO");
   const [totalMatchMinutes, setTotalMatchMinutes] = useState<string | null>(String(STANDARD_MATCH_TOTAL_MINUTES));
   const [totalExtraTimeMinutes, setTotalExtraTimeMinutes] = useState<string | null>(String(STANDARD_EXTRA_TIME_TOTAL_MINUTES));
-  const [venue, setVenue] = useState(prefill?.venue ?? "");
+  const [venue, setVenue] = useState(prefill?.venue ?? teamFixture?.venue ?? "");
 
   const totalMatchNumber = parseInt(totalMatchMinutes ?? "", 10);
   const isMatchDurationValid = !!totalMatchMinutes && totalMatchNumber > 0;
@@ -182,8 +185,13 @@ export function FootballNewMatchPage() {
         venue: venue.trim() || undefined,
       },
       {
-        onSuccess: ({ matchId }) => {
-          if (prefill) linkScorecardMatch.mutate({ matchId: prefill.tournamentMatchId, sport: "football", scorecardMatchId: matchId });
+        onSuccess: async ({ matchId }) => {
+          try {
+            if (prefill) await linkScorecardMatch.mutateAsync({ matchId: prefill.tournamentMatchId, sport: "football", scorecardMatchId: matchId });
+            if (teamFixture) await linkTeamFixtureScorecard(teamFixture.fixtureId, matchId, "football_matches");
+          } catch (e) {
+            Alert.alert("Match created", e instanceof Error ? e.message : "The scorecard was created but could not be linked to its fixture.");
+          }
           navigate(paths.match("football", matchId), { replace: true });
         },
         onError: (err) => Alert.alert("Error", friendlyFootballError(err, "Could not create match.")),
@@ -212,7 +220,7 @@ export function FootballNewMatchPage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-16 lg:px-8">
-      <SportNewMatchHeader sport="football" title="New Football Match" subtitle="Kicks off immediately once created" onBack={goBack} />
+      <SportNewMatchHeader sport="football" title="New Match" subtitle="Set up your match details" onBack={goBack} />
       <div className="px-5 pt-1 lg:px-0">
         {prefill && (
           <div className="mb-4">

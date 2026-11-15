@@ -2,8 +2,11 @@ import { useState, type ReactNode } from "react";
 import { useParams } from "react-router";
 import { colors } from "@app/constants/theme";
 import { useGameDetail } from "@app/hooks/useGames";
-import { useTournamentTeams } from "@app/hooks/useTournamentTeams";
+import { useTournamentTeams, useSetTeamManualStatus } from "@app/hooks/useTournamentTeams";
 import {
+  useAddManualMatch,
+  useUpdateManualMatchTeams,
+  useDeleteManualMatch,
   useTournamentMatches,
   useTournamentNRR,
   useLiveCricketMatches,
@@ -31,7 +34,9 @@ import { computeFixtures, computeStandings, applyHeadToHeadTiebreak, knockoutRou
 import { Alert } from "@/lib/alert";
 import { Ionicon, MCIcon } from "@/components/icons/Icon";
 import Spinner from "@/components/ui/Spinner";
-import PageHeader from "@/components/ui/PageHeader";
+import PlainHeader from "@/components/ui/PlainHeader";
+import FieldInput from "@/components/ui/FieldInput";
+import Modal from "@/components/ui/Modal";
 import { LinkedMatchScoreDetails } from "@/components/games/MatchScoreDetails";
 import { useGoToScorecard } from "@/components/games/TournamentTeamsSection";
 import { SelectScorerModal, SetMatchTimeModal, type ScorerCandidate } from "@/components/games/FixtureModals";
@@ -217,7 +222,7 @@ function MatchRow({ match, matchNumber, h }: { match: TournamentMatch; matchNumb
   if (match.status === "COMPLETED") {
     const result = match.is_draw ? "Draw" : match.winner_team ? `${match.winner_team.name} won` : match.team_b ? "—" : `${aName} advances`;
     return (
-      <div className="rounded-2xl bg-gray-50 px-3 py-2.5">
+      <div className="rounded-2xl bg-surface px-3 py-2.5 shadow-card">
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <span className="text-xs font-bold text-muted">
             Match {matchNumber}
@@ -235,7 +240,7 @@ function MatchRow({ match, matchNumber, h }: { match: TournamentMatch; matchNumb
   }
 
   return (
-    <div className="rounded-2xl px-3 py-2.5" style={{ backgroundColor: isReady ? colors.primaryLight : "rgb(var(--jz-gray-50))" }}>
+    <div className="rounded-2xl bg-surface px-3 py-2.5 shadow-card">
       <div className="mb-1.5 flex items-center justify-between">
         <span className="text-xs font-bold" style={{ color: isReady ? colors.primaryDark : colors.muted }}>
           Match {matchNumber}
@@ -252,7 +257,7 @@ function MatchRow({ match, matchNumber, h }: { match: TournamentMatch; matchNumb
       ) : (
         <p className="mb-1.5 text-xs text-muted">Not scheduled yet</p>
       )}
-      <VsRow a={aName} b={bName} aStatus={aStatus} bStatus={bStatus} vsBg={isReady ? "bg-surface" : "bg-border"} />
+      <VsRow a={aName} b={bName} aStatus={aStatus} bStatus={bStatus} />
       {match.cricket_match_id && !match.manual_score && <MatchRunRates cricketMatchId={match.cricket_match_id} />}
       <LinkedMatchScoreDetails match={match} />
       {isReady ? (
@@ -296,6 +301,7 @@ function MatchRow({ match, matchNumber, h }: { match: TournamentMatch; matchNumb
 }
 
 function roundLabel(format: Format, round: number, roundMatches: TournamentMatch[]) {
+  if (format === "MANUAL") return roundMatches[0]?.manual_stage_name || `Round ${round}`;
   if (format === "LEAGUE" && round === 1) return "League Stage";
   const ids = new Set<string>();
   for (const m of roundMatches) {
@@ -670,8 +676,7 @@ export default function TournamentMatchesPage() {
     );
   }
 
-  const isHost = game.creator_id === userId;
-  const sportIcon = game.sports?.name ? getSportIcon(game.sports.name) : null;
+  const isHost = game.creator_id === userId || (!!userId && (game.co_host_ids ?? []).includes(userId));
   const teams = (teamsData ?? []).map((t) => ({ ...t, name: soloAwareTeamName(t.name, t.tournament_team_members.map((m) => ({ status: m.status, full_name: m.profiles?.full_name }))) }));
   const approvedFull = teams.filter((t) => t.status === "APPROVED");
   const approved = approvedFull.map((t) => ({ id: t.id, name: t.name }));
@@ -696,7 +701,11 @@ export default function TournamentMatchesPage() {
     t.tournament_team_members.filter((m) => m.status === "JOINED" && m.user_id).map((m) => ({ id: m.user_id as string, name: m.profiles?.full_name ?? "Player", teamName: t.name }))
   );
   if (game.creator_id) rawCandidates.push({ id: game.creator_id, name: game.profiles?.full_name ?? "Host", teamName: "Tournament Host" });
-  const candidates = [...new Map(rawCandidates.map((c) => [c.id, c])).values()].map((c) => (c.id === game.creator_id ? { ...c, name: `${c.name} (Host)` } : c));
+  for (const host of game.hosts ?? []) if (host.id !== game.creator_id) rawCandidates.push({ id: host.id, name: host.full_name ?? "Host", teamName: "Game Host" });
+  const candidates = [...new Map(rawCandidates.map((c) => [c.id, c])).values()].map((c) =>
+    c.id === game.creator_id || (game.co_host_ids ?? []).includes(c.id) ? { ...c, name: `${c.name} (Host)` } : c
+  );
+  const manualTeams = active.map((t) => ({ id: t.id, name: t.name, manualStatus: t.manual_status }));
   const scorerNameById = new Map(candidates.map((c) => [c.id, c.name]));
 
   const buildPrefill = (m: TournamentMatch): ScorecardPrefill | null => {
@@ -760,32 +769,23 @@ export default function TournamentMatchesPage() {
 
   return (
     <div className="relative mx-auto max-w-5xl overflow-hidden pb-10 lg:px-8 lg:pt-6">
-      {sportIcon && (
-        <>
-          <MCIcon name={sportIcon.icon} size={220} color={colors.primary} className="pointer-events-none absolute -right-12 top-24 opacity-10" style={{ transform: "rotate(12deg)" }} />
-          <MCIcon name={sportIcon.icon} size={170} color={colors.primary} className="pointer-events-none absolute bottom-24 right-5 opacity-[0.08]" style={{ transform: "rotate(-18deg)" }} />
-        </>
-      )}
-
-      <PageHeader
+      <PlainHeader
         title={
           <>
-            <span className="block text-[11px] font-bold tracking-wide text-white/75">TOURNAMENT DASHBOARD</span>
-            <span className="block truncate font-extrabold">{game.title}</span>
+            <span className="block text-[11px] font-bold tracking-wide text-muted">TOURNAMENT DASHBOARD</span>
+            <span className="block truncate text-[22px]">{game.title}</span>
           </>
         }
-        back
-        backFallback={paths.game(gameId)}
-      >
-        <div className="-mt-1 ml-[52px]">
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold text-white">{game.tournament_format ? TOURNAMENT_FORMAT_LABEL[game.tournament_format] : "—"}</span>
-            <span className="text-xs text-white/85">
+        subtitle={
+          <span className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-surface-overlay px-2.5 py-1 text-xs font-semibold text-ink">{game.tournament_format ? TOURNAMENT_FORMAT_LABEL[game.tournament_format] : "—"}</span>
+            <span className="text-xs text-muted">
               {approvedFull.length} teams · {all.length} matches
             </span>
-          </div>
-        </div>
-      </PageHeader>
+          </span>
+        }
+        backFallback={paths.game(gameId)}
+      />
 
       <div className="relative flex items-center gap-3 px-4 py-4 lg:px-0">
         {[
@@ -878,7 +878,7 @@ export default function TournamentMatchesPage() {
                 showNRR={isCricket}
               />
             ))
-          ) : game.tournament_format === "LEAGUE" ? (
+          ) : game.tournament_format === "LEAGUE" || game.tournament_format === "MANUAL" ? (
             <StandingsPanel teams={approved} matches={all} nrrByTeam={nrrByTeam} showNRR={isCricket} />
           ) : (
             <p className="mt-16 px-6 text-center text-sm text-muted">A points table only applies to a league or group stage — Knockout advances by result alone.</p>
@@ -900,7 +900,7 @@ export default function TournamentMatchesPage() {
           </>
         ) : (
           <>
-            {game.tournament_format && all.length === 0 && (
+            {game.tournament_format && game.tournament_format !== "MANUAL" && all.length === 0 && (
               <Card>
                 <CardHeader icon="calendar-outline" title="Fixtures" subtitle="Tournament matchups" badge={TOURNAMENT_FORMAT_LABEL[game.tournament_format]} />
                 <div className="grid gap-2 xl:grid-cols-2">
@@ -915,7 +915,12 @@ export default function TournamentMatchesPage() {
                 </div>
               </Card>
             )}
-            {game.tournament_format && (
+            {game.tournament_format === "MANUAL" ? (
+              <>
+                <ManualTeamsPanel gameId={game.id} teams={manualTeams} isHost={isHost} />
+                <ManualMatchesPanel gameId={game.id} teams={manualTeams} isHost={isHost} h={h} statusFilter={statusFilter} stageFilter={stageFilter} />
+              </>
+            ) : game.tournament_format && (
               <MatchesPanel gameId={game.id} format={game.tournament_format} approvedTeams={active.map((t) => ({ id: t.id, name: t.name }))} requiredTeams={requiredTeams} h={h} statusFilter={statusFilter} stageFilter={stageFilter} />
             )}
           </>
@@ -938,5 +943,305 @@ export default function TournamentMatchesPage() {
         onConfirm={(iso) => scheduleMatchId && updateSchedule.mutate({ matchId: scheduleMatchId, scheduledAt: iso }, { onSuccess: () => setScheduleMatchId(null), onError: err("Could not set match time.") })}
       />
     </div>
+  );
+}
+
+type ManualTeamStatus = Database["public"]["Enums"]["tournament_team_manual_status_type"];
+type PickTeam = { id: string; name: string };
+type ManualTeam = PickTeam & { manualStatus: ManualTeamStatus };
+
+const MANUAL_STATUS_META: Record<ManualTeamStatus, { label: string; pill: string; text: string; icon: string; iconColor: string }> = {
+  PENDING: { label: "Pending", pill: "bg-gray-100", text: "text-muted", icon: "time-outline", iconColor: colors.muted },
+  QUALIFIED: { label: "Qualified", pill: "bg-green-50", text: "text-primary", icon: "checkmark-circle", iconColor: colors.primary },
+  KNOCKED_OUT: { label: "Knocked Out", pill: "bg-red-50", text: "text-red-600", icon: "close-circle", iconColor: "#DC2626" },
+  CHAMPION: { label: "Champion", pill: "bg-amber-50", text: "text-amber-700", icon: "trophy", iconColor: colors.warning },
+};
+const MANUAL_STAGE_PRESETS = ["Round of 16", "Quarter-Final", "Semi-Final", "Final", "Third Place"];
+
+function SelectMatchTeamSheet({ open, onClose, teams, excludeId, onSelect }: { open: boolean; onClose: () => void; teams: PickTeam[]; excludeId?: string | null; onSelect: (t: PickTeam) => void }) {
+  const selectable = teams.filter((t) => t.id !== excludeId);
+  return (
+    <Modal open={open} onClose={onClose} title="Select Team">
+      {selectable.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted">No eligible teams available.</p>
+      ) : (
+        selectable.map((t) => (
+          <button key={t.id} type="button" onClick={() => onSelect(t)} className="mb-2 block w-full truncate rounded-2xl border-[1.5px] border-border bg-surface px-4 py-3 text-left text-sm font-semibold text-ink hover:border-primary/40">
+            {t.name}
+          </button>
+        ))
+      )}
+    </Modal>
+  );
+}
+
+function TeamVsTeamPicker({ teams, teamA, teamB, onPickA, onPickB }: { teams: PickTeam[]; teamA: PickTeam | null; teamB: PickTeam | null; onPickA: (t: PickTeam) => void; onPickB: (t: PickTeam) => void }) {
+  const [side, setSide] = useState<"A" | "B" | null>(null);
+  const slot = (label: string, team: PickTeam | null, onPress: () => void) => (
+    <button type="button" onClick={onPress} className={`min-w-0 flex-1 rounded-xl border-[1.5px] bg-surface px-3 py-2.5 text-left ${team ? "border-primary" : "border-border"}`}>
+      <span className="block text-xs text-muted">{label}</span>
+      <span className="block truncate text-sm font-semibold text-ink">{team?.name ?? "Pick a team"}</span>
+    </button>
+  );
+  return (
+    <>
+      <div className="flex items-center gap-2.5">
+        {slot("Team A", teamA, () => setSide("A"))}
+        <span className="text-xs font-bold text-muted">VS</span>
+        {slot("Team B", teamB, () => setSide("B"))}
+      </div>
+      <SelectMatchTeamSheet
+        open={side !== null}
+        onClose={() => setSide(null)}
+        teams={teams}
+        excludeId={side === "A" ? teamB?.id : teamA?.id}
+        onSelect={(t) => {
+          if (side === "A") onPickA(t);
+          else onPickB(t);
+          setSide(null);
+        }}
+      />
+    </>
+  );
+}
+
+function ManualTeamsPanel({ gameId, teams, isHost }: { gameId: string; teams: ManualTeam[]; isHost: boolean }) {
+  const setStatus = useSetTeamManualStatus(gameId);
+  const [target, setTarget] = useState<ManualTeam | null>(null);
+  if (teams.length === 0) return null;
+  const champion = teams.find((t) => t.manualStatus === "CHAMPION");
+  const choose = (status: ManualTeamStatus) => {
+    if (!target) return;
+    const proceed = () => setStatus.mutate({ teamId: target.id, manualStatus: status }, { onSuccess: () => setTarget(null), onError: err("Could not update the team's status.") });
+    if (status === "KNOCKED_OUT" || status === "CHAMPION") {
+      Alert.alert(
+        status === "CHAMPION" ? "Mark as Champion?" : "Knock Out This Team?",
+        status === "CHAMPION" ? `${target.name} will be shown as the Tournament Champion.` : `${target.name} won't be selectable for future matches, unless you reverse this later.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Confirm", onPress: proceed },
+        ]
+      );
+    } else proceed();
+  };
+  return (
+    <Card>
+      <CardHeader icon="people-outline" title="Teams" subtitle={isHost ? "Tap a team to set its status" : undefined} />
+      {champion && <p className="mb-3 rounded-xl bg-primary-light py-3 text-center text-xs font-semibold text-primary-dark">🏆 Tournament Champion: {champion.name}</p>}
+      <div className="flex flex-col gap-2">
+        {teams.map((t) => {
+          const meta = MANUAL_STATUS_META[t.manualStatus];
+          return (
+            <button key={t.id} type="button" disabled={!isHost} onClick={() => setTarget(t)} className="flex items-center justify-between gap-2.5 rounded-2xl bg-surface px-3 py-2.5 text-left enabled:hover:bg-gray-50">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{t.name}</span>
+              <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${meta.pill} ${meta.text}`}>
+                <Ionicon name={meta.icon} size={12} color={meta.iconColor} />
+                {meta.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <Modal open={!!target} onClose={() => setTarget(null)} title={target?.name} subtitle="Set this team's tournament status">
+        <div className="flex flex-col gap-2 pb-2">
+          {(["PENDING", "QUALIFIED", "KNOCKED_OUT", "CHAMPION"] as ManualTeamStatus[]).map((opt) => {
+            const meta = MANUAL_STATUS_META[opt];
+            const current = opt === target?.manualStatus;
+            return (
+              <button
+                key={opt}
+                type="button"
+                disabled={setStatus.isPending}
+                onClick={() => choose(opt)}
+                className={`flex items-center gap-2.5 rounded-2xl border-[1.5px] px-4 py-3 text-left ${current ? "border-primary bg-primary-light" : "border-border bg-surface hover:border-primary/40"}`}
+              >
+                <Ionicon name={meta.icon} size={18} color={current ? colors.primaryDark : meta.iconColor} />
+                <span className={`flex-1 text-sm font-semibold ${current ? "text-primary-dark" : "text-ink"}`}>{meta.label}</span>
+                {current && <Ionicon name="checkmark" size={16} color={colors.primaryDark} />}
+              </button>
+            );
+          })}
+        </div>
+      </Modal>
+    </Card>
+  );
+}
+
+function ManualMatchesPanel({ gameId, teams, isHost, h, statusFilter, stageFilter }: { gameId: string; teams: ManualTeam[]; isHost: boolean; h: RowHandlers; statusFilter: StatusFilter; stageFilter: string | null }) {
+  const { data: matches, isLoading } = useTournamentMatches(gameId);
+  const addManualMatch = useAddManualMatch(gameId);
+  const updateTeams = useUpdateManualMatchTeams(gameId);
+  const deleteMatch = useDeleteManualMatch(gameId);
+  const [draftA, setDraftA] = useState<PickTeam | null>(null);
+  const [draftB, setDraftB] = useState<PickTeam | null>(null);
+  const [targetRound, setTargetRound] = useState<number | null>(null);
+  const [newStageName, setNewStageName] = useState("");
+  const [editing, setEditing] = useState<TournamentMatch | null>(null);
+  const [editA, setEditA] = useState<PickTeam | null>(null);
+  const [editB, setEditB] = useState<PickTeam | null>(null);
+  if (isLoading) return null;
+
+  const pickable = teams.filter((t) => t.manualStatus !== "KNOCKED_OUT").map((t) => ({ id: t.id, name: t.name }));
+  const champion = teams.find((t) => t.manualStatus === "CHAMPION") ?? null;
+  const all = matches ?? [];
+  const canAdd = isHost && !champion && pickable.length >= 2;
+  const rounds = [...new Set(all.map((m) => m.round))].sort((a, b) => a - b);
+  const latestRound = rounds.length ? rounds[rounds.length - 1] : 0;
+  const effectiveRound = targetRound ?? (latestRound || 1);
+  const newRoundNumber = latestRound + 1;
+  const isNewStage = effectiveRound === newRoundNumber;
+  const existingStageName = all.find((m) => m.round === effectiveRound)?.manual_stage_name ?? null;
+  const finalHasMatch = all.some((m) => (m.manual_stage_name ?? "").trim().toLowerCase() === "final");
+  const targetStageName = (isNewStage ? newStageName : (existingStageName ?? "")).trim();
+  const finalLimitReached = targetStageName.toLowerCase() === "final" && finalHasMatch;
+  const addDisabled = !draftA || !draftB || (isNewStage && !newStageName.trim());
+
+  const add = () => {
+    if (!draftA || !draftB) return;
+    const stageName = isNewStage ? newStageName.trim() : existingStageName || `Round ${effectiveRound}`;
+    if (isNewStage && !stageName) return;
+    if (stageName.toLowerCase() === "final" && finalHasMatch) return Alert.alert("Final Stage Full", "Only one match can be added to the Final stage.");
+    const sortOrder = all.filter((m) => m.round === effectiveRound).length;
+    addManualMatch.mutate({ round: effectiveRound, stageName, sortOrder, teamAId: draftA.id, teamBId: draftB.id }, { onSuccess: () => (setDraftA(null), setDraftB(null)), onError: err("Could not add the match.") });
+  };
+  const remove = (m: TournamentMatch) =>
+    Alert.alert("Remove Match", "Remove this match? This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Remove", style: "destructive", onPress: () => deleteMatch.mutate(m.id, { onError: err("Could not remove the match.") }) },
+    ]);
+  const chip = (key: string | number, label: string, selected: boolean, onPress: () => void, extra?: { icon?: string; disabled?: boolean }) => (
+    <button
+      key={key}
+      type="button"
+      disabled={extra?.disabled}
+      onClick={onPress}
+      className={`flex shrink-0 items-center gap-1 rounded-full border-[1.5px] px-3.5 py-2 text-xs font-bold disabled:opacity-40 ${selected ? "border-primary bg-primary-light text-primary-dark" : "border-border bg-surface text-muted"}`}
+    >
+      {extra?.icon && <Ionicon name={extra.icon} size={14} color={selected ? colors.primaryDark : colors.muted} />}
+      {label}
+    </button>
+  );
+
+  const addForm = canAdd ? (
+    <div>
+      {rounds.length > 0 && (
+        <div className="no-scrollbar mb-2.5 flex gap-1.5 overflow-x-auto">
+          {rounds.map((r) => chip(r, all.find((m) => m.round === r)?.manual_stage_name || `Round ${r}`, effectiveRound === r, () => setTargetRound(r)))}
+          {chip("new", "New Stage", isNewStage, () => setTargetRound(newRoundNumber), { icon: "add" })}
+        </div>
+      )}
+      {isNewStage && (
+        <div className="mb-3">
+          <p className="mb-2 text-xs font-semibold text-ink">Name this stage</p>
+          <div className="no-scrollbar mb-2 flex gap-1.5 overflow-x-auto">
+            {MANUAL_STAGE_PRESETS.map((preset) => chip(preset, preset, newStageName === preset, () => setNewStageName(preset), { disabled: preset.toLowerCase() === "final" && finalHasMatch }))}
+          </div>
+          <FieldInput value={newStageName} onChange={(e) => setNewStageName(e.target.value)} placeholder="Or type a custom stage name" aria-label="Stage name" />
+        </div>
+      )}
+      {finalLimitReached ? (
+        <p className="rounded-xl border-[1.5px] border-border bg-surface px-3.5 py-3 text-xs text-muted">Only one match is allowed in the Final stage, and it's already been added. Pick a different stage to add more matches.</p>
+      ) : (
+        <>
+          <TeamVsTeamPicker teams={pickable} teamA={draftA} teamB={draftB} onPickA={setDraftA} onPickB={setDraftB} />
+          <button
+            type="button"
+            onClick={add}
+            disabled={addDisabled || addManualMatch.isPending}
+            className="press mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3 text-sm font-bold text-white"
+            style={{ opacity: addDisabled ? 0.5 : 1 }}
+          >
+            {addManualMatch.isPending ? (
+              <Spinner size={16} color="white" />
+            ) : (
+              <>
+                <Ionicon name="add-circle-outline" size={16} color="white" />
+                Add to {isNewStage ? newStageName.trim() || "New Stage" : existingStageName || `Round ${effectiveRound}`}
+              </>
+            )}
+          </button>
+        </>
+      )}
+    </div>
+  ) : null;
+
+  if (all.length === 0) {
+    if (!isHost) return null;
+    return (
+      <Card>
+        <CardHeader icon="git-network-outline" title="Matches" subtitle="Add this tournament's first match by hand" />
+        {canAdd ? addForm : <p className="text-xs text-muted">Add at least 2 eligible teams to this tournament before creating matches.</p>}
+      </Card>
+    );
+  }
+
+  let shown = 0;
+  return (
+    <Card>
+      <CardHeader icon="git-network-outline" title="Matches" badge={TOURNAMENT_FORMAT_LABEL.MANUAL} />
+      {rounds.map((round) => {
+        const roundMatches = all.filter((m) => m.round === round);
+        const label = roundLabel("MANUAL", round, roundMatches);
+        if (stageFilter !== null && stageFilter !== label) return null;
+        const visible = roundMatches.filter((m) => passes(m, statusFilter));
+        if (visible.length === 0) return null;
+        return (
+          <div key={round} className={shown++ > 0 ? "mt-4" : undefined}>
+            <p className="mb-2 text-xs font-semibold text-ink">{label}</p>
+            <div className="grid gap-2 xl:grid-cols-2">
+              {visible.map((m, i) => (
+                <div key={m.id}>
+                  {isHost && m.status !== "COMPLETED" && (
+                    <div className="mb-1 flex justify-end gap-3.5 text-xs font-semibold">
+                      <button type="button" onClick={() => (setEditing(m), setEditA(m.team_a), setEditB(m.team_b))} className="flex items-center gap-1 text-muted hover:underline">
+                        <Ionicon name="pencil-outline" size={14} color={colors.muted} />
+                        Edit
+                      </button>
+                      <button type="button" onClick={() => remove(m)} className="flex items-center gap-1 text-[#DC2626] hover:underline">
+                        <Ionicon name="trash-outline" size={14} color="#DC2626" />
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  <MatchRow match={m} matchNumber={i + 1} h={h} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {champion ? (
+        <p className="mt-4 rounded-xl bg-primary-light py-3 text-center text-xs font-semibold text-primary-dark">🏆 {champion.name} won the Final — tournament complete, no further matches can be added</p>
+      ) : (
+        canAdd && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold text-ink">Add a Match</p>
+            {addForm}
+          </div>
+        )
+      )}
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title="Edit Match"
+        footer={
+          <button
+            type="button"
+            disabled={!editA || !editB || updateTeams.isPending}
+            onClick={() =>
+              editing && editA && editB && updateTeams.mutate({ matchId: editing.id, teamAId: editA.id, teamBId: editB.id }, { onSuccess: () => setEditing(null), onError: err("Could not update the match.") })
+            }
+            className="press flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3 text-sm font-bold text-white"
+            style={{ opacity: !editA || !editB ? 0.5 : 1 }}
+          >
+            {updateTeams.isPending ? <Spinner size={16} color="white" /> : "Save Changes"}
+          </button>
+        }
+      >
+        <div className="pb-2">
+          <TeamVsTeamPicker teams={pickable} teamA={editA} teamB={editB} onPickA={setEditA} onPickB={setEditB} />
+        </div>
+      </Modal>
+    </Card>
   );
 }
