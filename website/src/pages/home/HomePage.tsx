@@ -25,7 +25,6 @@ import { Ionicon } from "@/components/icons/Icon";
 import { SkeletonBlock, SkeletonCardRows } from "@/components/ui/Skeleton";
 import Rail from "@/components/ui/Rail";
 import VenueCard from "@/components/VenueCard";
-import PromoCarousel from "@/components/home/PromoCarousel";
 import HomeHero, { type HeroStat } from "@/components/home/HomeHero";
 import { HomeEventCard, HomeGameRowCard, HomeSquadCard, NearbyEmptyRow, SportFilterCard } from "@/components/home/HomeCards";
 import { useAppNavigate } from "@/routes/navigation";
@@ -252,7 +251,17 @@ export default function HomePage() {
 
   return (
     <div>
-      <HomeHero firstName={firstName} sports={sports ?? []} stats={heroStats} />
+      <HomeHero
+        firstName={firstName}
+        sports={sports ?? []}
+        stats={heroStats}
+        slides={[
+          { key: "venues", title: "Book Premium Turfs", image: slide2 },
+          { key: "squads", title: "Build Your Squad", image: slide3 },
+          { key: "challenge-team", title: "Challenge a team", image: slide4 },
+          { key: "nearby-players", title: "Find Players near you", image: slide5 },
+        ]}
+      />
 
       <div className="border-b border-border bg-surface">
         <section className="site-container py-8 lg:py-10" aria-labelledby="sport-filter-title">
@@ -309,23 +318,6 @@ export default function HomePage() {
           render={({ item, km }) => <VenueCard venue={item} showFavorite={false} minimal distanceLabel={km !== null ? formatDistanceKm(km) : undefined} onPress={() => navigate(paths.venue(item.id))} />}
           onSeeAll={() => navigate(paths.venues(), { state: { tab: "venues" } })}
         />
-
-        <section className="mb-12" aria-labelledby="highlights-title">
-          <h2 id="highlights-title" className="mb-4 flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-light">
-              <Ionicon name="sparkles" size={17} color={colors.primary} />
-            </span>
-            <span className="section-title">Highlights</span>
-          </h2>
-          <PromoCarousel
-            slides={[
-              { key: "venues", title: "Book Premium Turfs", image: slide2 },
-              { key: "squads", title: "Build Your Squad", image: slide3 },
-              { key: "challenge-team", title: "Challenge a team", image: slide4 },
-              { key: "nearby-players", title: "Find Players near you", image: slide5 },
-            ]}
-          />
-        </section>
 
         <NearbySection
           title="Challenge a Team"
