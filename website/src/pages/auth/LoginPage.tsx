@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { GOOGLE_BUTTON_ENABLED, promptGoogleSignIn, renderGoogleButton } from "@/lib/googleIdentity";
 import { useNavigate } from "react-router";
 import { paths } from "@/routes/paths";
 import { peekReturnTo } from "@/routes/returnTo";
@@ -10,12 +11,56 @@ import Spinner from "@/components/ui/Spinner";
 import { Ionicon } from "@/components/icons/Icon";
 import GoogleIcon from "@/components/GoogleIcon";
 import Modal from "@/components/ui/Modal";
-import { splashImage } from "@/pages/SplashPage";
 import TermsContent from "@/components/onboarding/TermsContent";
 import SiteFooter from "@/components/site/SiteFooter";
+import ThemeToggle from "@/components/ThemeToggle";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { colors } from "@app/constants/theme";
+import { getResolvedTheme, useThemeStore } from "@app/store/themeStore";
+import heroCommunity from "@/assets/web/slide-venues.webp";
+import heroChallenge from "@/assets/web/slide-fourth.webp";
 
 const APPLE_ENABLED = import.meta.env.VITE_ENABLE_APPLE_SIGNIN === "true";
+
+// Hero background: real players from the app's promo artwork, crossfading.
+// Each image has its own headline on the left, which the hero's fade covers.
+// (The other slides show a phone/map mockup, which reads as clutter here.)
+const HERO_PHOTOS = [heroCommunity, heroChallenge];
+const HERO_PHOTO_MS = 7000;
+
+// The hero follows the light/dark theme: deep green with white text in dark,
+// white with the app's ink and green in light. `base` is the fade colour.
+const HERO_THEME = {
+  dark: {
+    base: "6,42,25",
+    pill: "bg-white/10 text-[#86EFAC] ring-white/15",
+    pillIcon: "#86EFAC",
+    title: "text-white",
+    accent: "text-[#4ADE80]",
+    body: "text-white/80",
+    item: "text-white/90",
+    itemIcon: "bg-white/15",
+    itemIconColor: "#6EE7B0",
+    sports: "text-white/70",
+  },
+  light: {
+    base: "255,255,255",
+    pill: "bg-primary-light text-primary-dark ring-primary/20",
+    pillIcon: "",
+    title: "text-ink",
+    accent: "text-primary",
+    body: "text-ink-secondary",
+    item: "text-ink",
+    itemIcon: "bg-primary-light",
+    itemIconColor: "",
+    sports: "text-ink-secondary",
+  },
+} as const;
+
+// Desktop fade, anchored to the content column so the photo's own headline
+// stays covered on wide screens: solid under the copy, clear behind the card.
+const heroFade = (rgb: string) =>
+  `linear-gradient(90deg, rgb(${rgb}) 0%, rgb(${rgb}) max(36%, calc(50% - 38rem + 540px)), rgba(${rgb},0.88) max(48%, calc(50% - 38rem + 700px)), rgba(${rgb},0.35) max(64%, calc(50% - 38rem + 940px)), rgba(${rgb},0.08) 100%)`;
 
 const HIGHLIGHTS: { icon: string; label: string }[] = [
   { icon: "people", label: "Find players & squads" },
@@ -46,6 +91,18 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState<"google" | "apple" | null>(null);
   const [termsOpen, setTermsOpen] = useState(false);
 
+  const preference = useThemeStore((s) => s.preference);
+  const systemTheme = useThemeStore((s) => s.systemTheme);
+  const theme = getResolvedTheme({ ...useThemeStore.getState(), preference, systemTheme });
+  const hero = HERO_THEME[theme === "light" ? "light" : "dark"];
+  const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const [photo, setPhoto] = useState(0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const t = setTimeout(() => setPhoto((i) => (i + 1) % HERO_PHOTOS.length), HERO_PHOTO_MS);
+    return () => clearTimeout(t);
+  }, [photo, reduceMotion]);
+
   // Coming back from a failed/cancelled OAuth attempt: surface the
   // provider's message once, then clean the URL. Any other URL (a deep link
   // the visitor opened) is left as-is so they land on it after signing in.
@@ -73,29 +130,68 @@ export default function LoginPage() {
     }
   };
 
+  // Google's own button (see lib/googleIdentity): Google then names this
+  // site, not the Supabase project, on its account chooser. If Google's
+  // script can't load or Google won't show the button for this origin, the
+  // card falls back to the redirect sign-in button.
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [googleButtonFailed, setGoogleButtonFailed] = useState(false);
+  const [googleButtonShown, setGoogleButtonShown] = useState(false);
+  const useGoogleButton = GOOGLE_BUTTON_ENABLED && !googleButtonFailed;
+  useEffect(() => {
+    const el = googleButtonRef.current;
+    if (!GOOGLE_BUTTON_ENABLED || !el) return;
+    renderGoogleButton(el, {
+      theme: theme === "light" ? "light" : "dark",
+      width: el.clientWidth,
+      onStart: () => setIsSigningIn("google"),
+      onError: (err) => {
+        Alert.alert("Sign-in failed", getFriendlyErrorMessage(err, "Something went wrong. Please try again."));
+        setIsSigningIn(null);
+      },
+    })
+      .then(() => setGoogleButtonShown(true))
+      .catch(() => setGoogleButtonFailed(true));
+  }, [theme]);
+
   const signInCard = (
-    <div id="sign-in" className="flex w-full max-w-[420px] scroll-mt-24 flex-col items-center rounded-3xl border-[1.5px] border-[rgba(15,23,42,0.12)] bg-surface px-6 py-8 shadow-login sm:px-8 sm:py-10">
+    <div id="sign-in" className="flex w-full max-w-[420px] scroll-mt-24 flex-col items-center rounded-3xl border-[1.5px] border-[rgba(15,23,42,0.12)] bg-surface/90 px-6 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:px-8 sm:py-10">
       <img src="/logo.png" alt="HitLit" className="h-[68px] w-[68px]" />
       <h2 className="mt-4 text-center text-2xl font-extrabold text-ink">Welcome to HitLit</h2>
       <p className="mt-1.5 px-2 text-center text-sm text-muted">Find players, book courts, and get in the game.</p>
 
-      <button
-        type="button"
-        onClick={() => handleSignIn("google")}
-        disabled={!!isSigningIn}
-        className="press mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 disabled:opacity-70"
-      >
-        {isSigningIn === "google" ? (
-          <Spinner color="white" />
-        ) : (
-          <>
-            <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-surface">
-              <GoogleIcon size={16} />
-            </span>
-            <span className="text-base font-semibold text-white">Sign In with Google</span>
-          </>
+      {/* The green button is always what's seen. Once Google shows its own
+          button for this site, that button sits invisibly on top and takes
+          the click (so Google names this site); until then, or if Google
+          won't, the green button signs in through the Supabase redirect. */}
+      <div className="group relative mt-8 w-full">
+        <button
+          type="button"
+          onClick={() => handleSignIn("google")}
+          disabled={!!isSigningIn}
+          tabIndex={googleButtonShown ? -1 : undefined}
+          aria-hidden={googleButtonShown || undefined}
+          className="press flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 group-hover:brightness-110 group-focus-within:ring-2 group-focus-within:ring-primary group-focus-within:ring-offset-2 group-focus-within:ring-offset-surface disabled:opacity-70"
+        >
+          {isSigningIn === "google" ? (
+            <Spinner color="white" />
+          ) : (
+            <>
+              <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-surface">
+                <GoogleIcon size={16} />
+              </span>
+              <span className="text-base font-semibold text-white">Sign In with Google</span>
+            </>
+          )}
+        </button>
+        {useGoogleButton && (
+          <div
+            className={`absolute inset-0 overflow-hidden rounded-xl opacity-[0.01] ${googleButtonShown && !isSigningIn ? "" : "pointer-events-none"}`}
+          >
+            <div ref={googleButtonRef} id="google-signin-button" className="flex h-full w-full origin-center scale-y-[1.35] items-center justify-center" />
+          </div>
         )}
-      </button>
+      </div>
 
       {APPLE_ENABLED && (
         <button
@@ -122,7 +218,18 @@ export default function LoginPage() {
     </div>
   );
 
-  const scrollToSignIn = () => document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Header "Sign in": with Google as the only provider it signs in straight
+  // away (scrolling to a card that's already on screen looks like nothing
+  // happened). With Apple enabled too, it takes you to the card to choose.
+  // With Google's own button, which can only be opened by clicking it, this
+  // brings the card into view and asks Google for its sign-in prompt.
+  const headerSignIn = () => {
+    if (!APPLE_ENABLED && !googleButtonShown) return handleSignIn("google");
+    const card = document.getElementById("sign-in");
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (googleButtonShown) return promptGoogleSignIn();
+    card?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+  };
 
   return (
     <div className="flex min-h-dvh flex-col bg-app">
@@ -139,44 +246,75 @@ export default function LoginPage() {
             <a href="#how-it-works" className="rounded-xl px-3.5 py-2 text-[15px] font-semibold text-ink-secondary transition-colors hover:bg-gray-50 hover:text-ink">How it works</a>
             <a href="/privacy" className="rounded-xl px-3.5 py-2 text-[15px] font-semibold text-ink-secondary transition-colors hover:bg-gray-50 hover:text-ink">Privacy</a>
           </nav>
-          <button type="button" onClick={scrollToSignIn} className="press ml-auto rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-cta transition hover:brightness-110">
-            Sign in
-          </button>
+          <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={headerSignIn}
+              disabled={!!isSigningIn}
+              className="press flex min-w-[88px] items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-cta transition hover:brightness-110 disabled:opacity-70"
+            >
+              {isSigningIn ? <Spinner size={18} color="white" /> : "Sign in"}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="flex-1">
-        <section className="relative overflow-hidden bg-[#062A19]">
-          <div
-            aria-hidden
-            className="absolute inset-0 opacity-35"
-            style={{ backgroundImage: `url(${splashImage()})`, backgroundSize: "cover", backgroundPosition: "center 30%" }}
-          />
-          <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-[#062A19] via-[#062A19]/90 to-[#062A19]/40" />
-          <div className="site-container relative grid items-center gap-10 py-14 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:py-24">
+        <section className="relative isolate overflow-hidden" style={{ backgroundColor: `rgb(${hero.base})` }}>
+          {/* Background: players from the app's artwork, slowly crossfading. */}
+          <div aria-hidden className="absolute inset-0 -z-10">
+            {/* Desktop: zoomed from the bottom-right so the artwork's own
+                labels (top and left) fall outside and the players fill it.
+                Capped at 1440px wide (right-aligned, its left edge under the
+                solid fade) so wide screens get the same framing. */}
+            <div className="absolute inset-y-0 right-0 w-full max-w-[1440px] blur-[2px] lg:origin-bottom-right lg:scale-[1.42] lg:blur-none xl:scale-[1.28]">
+              {HERO_PHOTOS.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  loading={i === 0 ? "eager" : "lazy"}
+                  className={`absolute inset-0 h-full w-full object-cover object-[78%_center] transition-[opacity,transform] duration-[1400ms] ease-out lg:object-right-bottom ${
+                    i === photo ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"
+                  }`}
+                />
+              ))}
+            </div>
+            {/* Phones/tablets: the copy spans the width, so the whole photo is toned down. */}
+            <div className="absolute inset-0 lg:hidden" style={{ backgroundColor: `rgba(${hero.base},0.88)` }} />
+            {/* Desktop: solid under the copy, photo showing on the right. */}
+            <div className="absolute inset-0 hidden lg:block" style={{ backgroundImage: heroFade(hero.base) }} />
+            <div className="absolute inset-x-0 bottom-0 h-32" style={{ backgroundImage: `linear-gradient(to top, rgba(${hero.base},0.7), transparent)` }} />
+          </div>
+
+          <div className="site-container relative grid items-center gap-10 py-14 sm:py-16 lg:min-h-[640px] lg:grid-cols-[1.15fr_1fr] lg:py-20">
             <div className="animate-fadeUp">
-              <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-[#86EFAC] ring-1 ring-white/15">
-                <Ionicon name="flash" size={13} color="#86EFAC" />
+              <p className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 backdrop-blur-sm ${hero.pill}`}>
+                <Ionicon name="flash" size={13} color={hero.pillIcon || colors.primaryDark} />
                 Your city's sports community, in one place
               </p>
-              <h1 className="mt-5 text-[40px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-[68px]">
+              <h1 className={`mt-5 text-[40px] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-[68px] ${hero.title}`}>
                 Book. Play.
                 <br />
-                <span className="text-[#4ADE80]">Enjoy.</span>
+                <span className={hero.accent}>Enjoy.</span>
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
+              <p className={`mt-5 max-w-xl text-base leading-relaxed sm:text-lg ${hero.body}`}>
                 Find players and squads, join games and tournaments, discover courts and turfs near you, and keep live scorecards, all from one account.
               </p>
               <ul className="mt-8 grid max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
                 {HIGHLIGHTS.map((h) => (
-                  <li key={h.label} className="flex items-center gap-2.5 text-sm font-medium text-white/90">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
-                      <Ionicon name={h.icon} size={16} color="#6EE7B0" />
+                  <li key={h.label} className={`flex items-center gap-2.5 text-sm font-medium ${hero.item}`}>
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-full ${hero.itemIcon}`}>
+                      <Ionicon name={h.icon} size={16} color={hero.itemIconColor || colors.primary} />
                     </span>
                     {h.label}
                   </li>
                 ))}
               </ul>
+              <p className={`mt-8 text-[13px] font-medium ${hero.sports}`}>
+                Cricket · Football · Padel · Tennis · Badminton · Pickleball · Table tennis
+              </p>
             </div>
             <div className="flex justify-center lg:justify-end">{signInCard}</div>
           </div>
@@ -227,7 +365,7 @@ export default function LoginPage() {
             <p className="relative mx-auto mt-3 max-w-lg text-white/80">Sign in with Google and find your next game in minutes.</p>
             <button
               type="button"
-              onClick={() => handleSignIn("google")}
+              onClick={() => (googleButtonShown ? headerSignIn() : handleSignIn("google"))}
               disabled={!!isSigningIn}
               className="press relative mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3.5 text-base font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3] disabled:opacity-70"
             >

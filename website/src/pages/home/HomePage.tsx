@@ -25,8 +25,8 @@ import { Ionicon } from "@/components/icons/Icon";
 import { SkeletonBlock, SkeletonCardRows } from "@/components/ui/Skeleton";
 import Rail from "@/components/ui/Rail";
 import VenueCard from "@/components/VenueCard";
-import PromoCarousel from "@/components/home/PromoCarousel";
-import { HomeEventCard, HomeGameRowCard, HomeSportTile, HomeSquadCard, NearbyEmptyRow } from "@/components/home/HomeCards";
+import HomeHero, { type HeroStat } from "@/components/home/HomeHero";
+import { HomeEventCard, HomeGameRowCard, HomeSquadCard, NearbyEmptyRow, SportFilterCard } from "@/components/home/HomeCards";
 import { useAppNavigate } from "@/routes/navigation";
 import { DESKTOP_QUERY, useMediaQuery } from "@/lib/useMediaQuery";
 import { paths } from "@/routes/paths";
@@ -163,22 +163,8 @@ function NearbySection<T>({
   );
 }
 
-const QUICK_LINKS: { label: string; description: string; icon: string; to: string; tab?: "venues" | "community" | "scorecard" }[] = [
-  { label: "Venues", description: "Courts & turfs", icon: "location", to: paths.venues(), tab: "venues" },
-  { label: "Games", description: "Pickup games", icon: "tennisball", to: paths.games() },
-  { label: "Tournaments", description: "Compete & win", icon: "trophy", to: paths.games({ gameType: "TOURNAMENT" }) },
-  { label: "Squads", description: "Teams & groups", icon: "people", to: paths.squads },
-  { label: "Events", description: "What's on", icon: "calendar", to: paths.events() },
-  { label: "Scorecard", description: "Live scoring", icon: "stats-chart", to: paths.scorecard, tab: "scorecard" },
-];
-
-function greeting() {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
-
-// Port of HomeScreen as a website home: a brand hero (greeting, headline,
-// main actions, the promo carousel), quick links to every section, the
+// Port of HomeScreen as a website home: a search-first hero (greeting,
+// search across venues/games/tournaments/squads/events, live counts), the
 // sport filter (tap again to clear), and the nearest-first Venues /
 // Challenge a Team / Squads / Games / Tournaments / Events sections, each
 // with "View all". Challenging a team opens the composer, or asks you to
@@ -251,115 +237,49 @@ export default function HomePage() {
   };
 
   const firstName = profile?.full_name?.split(" ")[0];
+  // Desktop: every sport card (plus "All sports") shares one row when they fit.
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const sportCardCount = (sports?.length ?? 0) + 1;
+  const sportGridStyle = isDesktop && sportCardCount <= 12 ? { gridTemplateColumns: `repeat(${sportCardCount}, minmax(0, 1fr))` } : undefined;
   const selectedSport = (sports ?? []).find((s) => s.id === selectedSportId);
-  const stats = [
-    { label: "Venues", value: nearbyVenues.length, loading: venuesLoading },
-    { label: "Open games", value: nearbyRegularGames.length, loading: gamesLoading },
-    { label: "Squads", value: nearbySquads.length, loading: squadsLoading },
-    { label: "Events", value: nearbyEvents.length, loading: eventsLoading },
+  const heroStats: HeroStat[] = [
+    { label: "Venues", value: nearbyVenues.length, loading: venuesLoading, icon: "location", to: paths.venues() },
+    { label: "Open games", value: nearbyRegularGames.length, loading: gamesLoading, icon: "tennisball", to: paths.games() },
+    { label: "Squads", value: nearbySquads.length, loading: squadsLoading, icon: "people", to: paths.squads },
+    { label: "Events", value: nearbyEvents.length, loading: eventsLoading, icon: "calendar", to: paths.events() },
   ];
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-brand">
-        <span aria-hidden className="pointer-events-none absolute -left-24 -top-40 h-[420px] w-[420px] rounded-full border-[48px] border-white/[0.05]" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-48 right-[-120px] h-[460px] w-[460px] rounded-full bg-white/[0.04]" />
-        <div className="site-container relative grid items-center gap-8 py-9 sm:py-12 lg:grid-cols-[1fr_1.05fr] lg:gap-12 lg:py-16">
-          <div className="animate-fadeUp">
-            <p className="text-sm font-semibold text-white">
-              {greeting()}
-              {firstName ? `, ${firstName}` : ""} 👋
-            </p>
-            <h1 className="mt-2 text-[32px] font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[52px]">
-              Book. Play. <span className="text-[#BBF7D0]">Enjoy.</span>
-            </h1>
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/90 sm:text-lg">
-              Venues, teams, games and tournaments near you, all in one place. Find your next match in minutes.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(paths.venues(), { state: { tab: "venues" } })}
-                className="press inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-[15px] font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3]"
-              >
-                <Ionicon name="location" size={18} color="#0B7A45" />
-                Find a venue
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(paths.createGame())}
-                className="press inline-flex items-center gap-2 rounded-xl border-[1.5px] border-white/40 px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/10"
-              >
-                <Ionicon name="add-circle-outline" size={18} color="white" />
-                Create a game
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate(paths.challengeTeams({ sportId: selectedSportId ?? undefined }))}
-                className="press inline-flex items-center gap-2 rounded-xl px-3 py-3 text-[15px] font-semibold text-white/90 transition hover:text-white hover:underline"
-              >
-                Challenge a team
-                <Ionicon name="arrow-forward" size={16} color="white" />
-              </button>
-            </div>
-            <dl className="mt-9 grid max-w-lg grid-cols-4 gap-3 border-t border-white/15 pt-6">
-              {stats.map((s) => (
-                <div key={s.label}>
-                  <dt className="text-[11px] font-medium uppercase tracking-wider text-white/85 sm:text-xs">{s.label}</dt>
-                  <dd className="mt-1 text-xl font-extrabold text-white sm:text-2xl">{s.loading ? "–" : s.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <div className="min-w-0">
-            <PromoCarousel
-              single
-              onDark
-              slides={[
-                { key: "venues", title: "Book Premium Turfs", image: slide2 },
-                { key: "squads", title: "Build Your Squad", image: slide3 },
-                { key: "challenge-team", title: "Challenge a team", image: slide4 },
-                { key: "nearby-players", title: "Find Players near you", image: slide5 },
-              ]}
-            />
-          </div>
-        </div>
-      </section>
+      <HomeHero
+        firstName={firstName}
+        sports={sports ?? []}
+        stats={heroStats}
+        slides={[
+          { key: "venues", title: "Book Premium Turfs", image: slide2 },
+          { key: "squads", title: "Build Your Squad", image: slide3 },
+          { key: "challenge-team", title: "Challenge a team", image: slide4 },
+          { key: "nearby-players", title: "Find Players near you", image: slide5 },
+        ]}
+      />
 
-      <div className="site-container">
-        <nav aria-label="Explore" className="relative z-10 -mt-6 mb-10 grid grid-cols-3 gap-2.5 sm:gap-3 lg:-mt-8 lg:grid-cols-6 lg:gap-4">
-          {QUICK_LINKS.map((q) => (
-            <button
-              key={q.label}
-              type="button"
-              onClick={() => navigate(q.to, q.tab ? { state: { tab: q.tab } } : undefined)}
-              className="card press lift group flex flex-col items-center gap-2 px-2 py-4 text-center sm:flex-row sm:gap-3 sm:px-4 sm:text-left"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-light transition-colors group-hover:bg-primary/20">
-                <Ionicon name={q.icon} size={21} color={colors.primary} />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] font-bold text-ink sm:text-sm">{q.label}</span>
-                <span className="hidden truncate text-xs text-muted sm:block">{q.description}</span>
-              </span>
-            </button>
-          ))}
-        </nav>
-
-        <section className="card mb-12 p-4 sm:p-6" aria-labelledby="sport-filter-title">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div className="border-b border-border bg-surface">
+        <section className="site-container py-8 lg:py-10" aria-labelledby="sport-filter-title">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 id="sport-filter-title" className="flex items-center gap-2">
-                <Ionicon name="filter" size={16} color={colors.primary} />
-                <span className="section-title">Filter by Sport</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-light">
+                  <Ionicon name="football" size={17} color={colors.primary} />
+                </span>
+                <span className="section-title">Browse by sport</span>
               </h2>
-              <p className="mt-0.5 text-sm text-ink-secondary">
+              <p className="mt-1 text-sm text-ink-secondary">
                 {selectedSport ? (
                   <>
-                    Showing <span className="font-semibold text-ink">{selectedSport.name}</span> near you
+                    Showing <span className="font-semibold text-ink">{selectedSport.name}</span> venues, teams, games and events below.
                   </>
                 ) : (
-                  "Showing every sport near you"
+                  "Pick a sport to filter the venues, teams, games and events below."
                 )}
               </p>
             </div>
@@ -374,12 +294,17 @@ export default function HomePage() {
               </button>
             )}
           </div>
-          <Rail gap={14}>
+          {/* Phones: a swipeable row. Wider screens: cards share the full row width. */}
+          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 pt-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:[grid-template-columns:repeat(auto-fit,minmax(112px,1fr))] lg:gap-4" style={sportGridStyle}>
+            <SportFilterCard allSports name="All sports" selected={!selectedSportId} onPress={() => setSelectedSportId(null)} />
             {(sports ?? []).map((s) => (
-              <HomeSportTile key={s.id} compact name={s.name} selected={selectedSportId === s.id} onPress={() => setSelectedSportId((prev) => (prev === s.id ? null : s.id))} />
+              <SportFilterCard key={s.id} name={s.name} selected={selectedSportId === s.id} onPress={() => setSelectedSportId((prev) => (prev === s.id ? null : s.id))} />
             ))}
-          </Rail>
+          </div>
         </section>
+      </div>
+
+      <div className="site-container pt-10 lg:pt-12">
 
         <NearbySection
           title="Venues near you"
