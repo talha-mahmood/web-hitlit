@@ -27,7 +27,7 @@ import Rail from "@/components/ui/Rail";
 import VenueCard from "@/components/VenueCard";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import HomeHero, { type HeroStat } from "@/components/home/HomeHero";
-import { HomeEventCard, HomeGameRowCard, HomeSportTile, HomeSquadCard, NearbyEmptyRow } from "@/components/home/HomeCards";
+import { HomeEventCard, HomeGameRowCard, HomeSquadCard, NearbyEmptyRow, SportFilterCard } from "@/components/home/HomeCards";
 import { useAppNavigate } from "@/routes/navigation";
 import { DESKTOP_QUERY, useMediaQuery } from "@/lib/useMediaQuery";
 import { paths } from "@/routes/paths";
@@ -238,6 +238,10 @@ export default function HomePage() {
   };
 
   const firstName = profile?.full_name?.split(" ")[0];
+  // Desktop: every sport card (plus "All sports") shares one row when they fit.
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const sportCardCount = (sports?.length ?? 0) + 1;
+  const sportGridStyle = isDesktop && sportCardCount <= 12 ? { gridTemplateColumns: `repeat(${sportCardCount}, minmax(0, 1fr))` } : undefined;
   const selectedSport = (sports ?? []).find((s) => s.id === selectedSportId);
   const heroStats: HeroStat[] = [
     { label: "Venues", value: nearbyVenues.length, loading: venuesLoading, icon: "location", to: paths.venues() },
@@ -251,19 +255,22 @@ export default function HomePage() {
       <HomeHero firstName={firstName} sports={sports ?? []} stats={heroStats} />
 
       <div className="border-b border-border bg-surface">
-        <section className="site-container py-6" aria-labelledby="sport-filter-title">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <section className="site-container py-8 lg:py-10" aria-labelledby="sport-filter-title">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 id="sport-filter-title" className="section-title">
-                Browse by sport
+              <h2 id="sport-filter-title" className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-light">
+                  <Ionicon name="football" size={17} color={colors.primary} />
+                </span>
+                <span className="section-title">Browse by sport</span>
               </h2>
-              <p className="mt-0.5 text-sm text-ink-secondary">
+              <p className="mt-1 text-sm text-ink-secondary">
                 {selectedSport ? (
                   <>
-                    Showing <span className="font-semibold text-ink">{selectedSport.name}</span> near you. Tap it again to clear.
+                    Showing <span className="font-semibold text-ink">{selectedSport.name}</span> venues, teams, games and events below.
                   </>
                 ) : (
-                  "Pick a sport to filter everything below"
+                  "Pick a sport to filter the venues, teams, games and events below."
                 )}
               </p>
             </div>
@@ -278,11 +285,13 @@ export default function HomePage() {
               </button>
             )}
           </div>
-          <Rail gap={14}>
+          {/* Phones: a swipeable row. Wider screens: cards share the full row width. */}
+          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 pt-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:[grid-template-columns:repeat(auto-fit,minmax(112px,1fr))] lg:gap-4" style={sportGridStyle}>
+            <SportFilterCard allSports name="All sports" selected={!selectedSportId} onPress={() => setSelectedSportId(null)} />
             {(sports ?? []).map((s) => (
-              <HomeSportTile key={s.id} compact name={s.name} selected={selectedSportId === s.id} onPress={() => setSelectedSportId((prev) => (prev === s.id ? null : s.id))} />
+              <SportFilterCard key={s.id} name={s.name} selected={selectedSportId === s.id} onPress={() => setSelectedSportId((prev) => (prev === s.id ? null : s.id))} />
             ))}
-          </Rail>
+          </div>
         </section>
       </div>
 

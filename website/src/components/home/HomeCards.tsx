@@ -13,6 +13,44 @@ import { AvatarStack } from "../ui/Avatar";
 
 // Ports of the app's HomeWideCards.tsx — same data rules and labels.
 
+// Website "Browse by sport" card: sport artwork on a soft tile with the full
+// name below; lifts on hover; green border, tint and check when selected.
+// `allSports` renders the "All sports" card (clears the filter).
+export function SportFilterCard({ name, selected, onPress, allSports }: { name: string; selected: boolean; onPress: () => void; allSports?: boolean }) {
+  const photo = allSports ? null : imageUrl(getSportImage(name));
+  const { icon, bg, fg } = allSports ? { icon: "", bg: "", fg: "" } : getSportIcon(name);
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      aria-pressed={selected}
+      className={`group relative flex w-[108px] shrink-0 flex-col items-center rounded-2xl border-[1.5px] px-2 pb-3 pt-3.5 text-center transition duration-200 sm:w-auto ${
+        selected
+          ? "border-primary bg-primary-light shadow-[0_8px_20px_rgb(var(--jz-primary)/0.18)]"
+          : "border-border bg-surface shadow-card hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_24px_rgba(15,23,42,0.10)]"
+      }`}
+    >
+      {selected && (
+        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+          <Ionicon name="checkmark" size={13} color="white" />
+        </span>
+      )}
+      <span className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl transition-transform duration-200 group-hover:scale-105 ${selected ? "bg-surface" : "bg-app"}`}>
+        {allSports ? (
+          <Ionicon name="apps" size={28} color={colors.primary} />
+        ) : photo ? (
+          <img src={photo} alt="" className="h-full w-full object-contain p-1.5" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center" style={{ backgroundColor: bg }}>
+            <MCIcon name={icon} size={30} color={fg} />
+          </span>
+        )}
+      </span>
+      <span className={`mt-2.5 line-clamp-2 text-[13px] leading-tight ${selected ? "font-bold text-primary-dark" : "font-semibold text-ink"}`}>{name}</span>
+    </button>
+  );
+}
+
 // "Filter by Sport" tile — photo-led rounded square; green border when selected.
 export function HomeSportTile({ name, selected, onPress, compact }: { name: string; selected: boolean; onPress: () => void; compact?: boolean }) {
   const photo = imageUrl(getSportImage(name));
