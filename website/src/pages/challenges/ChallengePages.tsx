@@ -158,8 +158,8 @@ export function ChallengeTeamsPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-app">
-      <PlainHeader title="Challenge a Team" backFallback={paths.home} centered />
+    <div className="bg-app">
+      <PlainHeader crumbs={[{ label: "Home", to: "/" }]} title="Challenge a Team" subtitle="Pick a team and send a match request" backFallback={paths.home} />
       <div className="mx-auto w-full max-w-3xl">
         <div className="flex items-center justify-between px-4 pb-2 pt-2">
           <h2 className="text-base font-bold text-ink">Pick a team to challenge</h2>
@@ -351,7 +351,7 @@ export function TeamChallengesPage() {
   );
 
   return (
-    <div className="min-h-dvh bg-app">
+    <div className="bg-app">
       <PlainHeader title="Team Challenges" subtitle="Requests and confirmed fixtures" backFallback={paths.challengeTeams()} />
       <div className="mx-auto w-full max-w-3xl">
         <div role="tablist" className="mx-3 mb-2.5 flex rounded-xl bg-surface-raised p-1">
@@ -563,7 +563,7 @@ export function TeamChallengeDetailsPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-app">
+    <div className="bg-app">
       <PlainHeader title="Challenge details" subtitle="Team match request" backFallback={paths.teamChallenges()} />
       <div className="mx-auto w-full max-w-xl px-4 pb-10 pt-2">
         {loading ? (
@@ -696,7 +696,7 @@ export function TeamFixtureDetailsPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-app">
+    <div className="bg-app">
       <PlainHeader title="Team fixture" subtitle="Confirmed match details" backFallback={paths.teamChallenges()} />
       <div className="mx-auto w-full max-w-xl px-4 pb-10 pt-2">
         {isLoading ? (

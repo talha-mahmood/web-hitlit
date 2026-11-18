@@ -9,7 +9,7 @@ import { useAppNavigate } from "@/routes/navigation";
 export default function ComingSoonPage({ title, phase, icon = "construct-outline", back = true }: { title: string; phase: number; icon?: string; back?: boolean }) {
   const navigate = useAppNavigate();
   return (
-    <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
+    <div className="mx-auto max-w-7xl lg:px-8 lg:pt-6">
       <PageHeader title={title} back={back} />
       <div className="px-4 pt-10 sm:px-6 lg:px-0">
         <div className="card mx-auto flex max-w-md flex-col items-center p-8 text-center">

@@ -308,7 +308,7 @@ export default function ChatRoom({
   const canSend = !!draft.trim() && !send.isPending;
 
   return (
-    <div className="relative mx-auto flex h-[calc(100dvh-var(--tabbar-h)-env(safe-area-inset-bottom))] max-w-4xl flex-col overflow-hidden bg-surface lg:h-dvh lg:px-8 lg:pt-6">
+    <div className="relative mx-auto flex h-[calc(100dvh-var(--header-h))] max-w-4xl flex-col overflow-hidden bg-surface lg:px-8 lg:pt-6">
       {watermarkIcon}
       <div className="relative flex items-center px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-0">
         <button type="button" onClick={goBack} aria-label="Back" className="mr-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface shadow-card hover:bg-gray-50">

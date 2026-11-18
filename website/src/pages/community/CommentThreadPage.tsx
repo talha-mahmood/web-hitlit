@@ -135,7 +135,7 @@ export default function CommentThreadPage() {
   );
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-var(--tabbar-h))] max-w-3xl flex-col lg:min-h-dvh lg:px-8 lg:pt-6">
+    <div className="mx-auto flex min-h-[calc(100dvh-var(--header-h))] max-w-3xl flex-col lg:px-8">
       <PageHeader title="Comment" back backFallback={paths.community + "/chat"} />
 
       <div className="flex-1 p-4 pb-6 lg:px-0">

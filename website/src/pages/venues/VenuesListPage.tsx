@@ -147,8 +147,8 @@ export default function VenuesListPage() {
       : byDistance;
 
   return (
-    <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
-      <PlainHeader title="Venues" subtitle="Find and book venues nearby" backFallback="/" />
+    <div className="mx-auto max-w-7xl lg:px-8 lg:pt-6">
+      <PlainHeader wide crumbs={[{ label: "Home", to: "/" }]} title="Venues" subtitle="Find and book venues nearby" backFallback="/" />
 
       <div className="px-3.5 pt-4 sm:px-6 lg:px-0">
         <FieldInput

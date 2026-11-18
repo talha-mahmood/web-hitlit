@@ -10,10 +10,8 @@ import { useMyOwnedSquads } from "@app/hooks/useSquadTeamFill";
 import { challengeFormatsForSport } from "@app/lib/teamChallengeFormats";
 import type { EventListItem } from "@app/lib/api/events";
 import { Alert } from "@/lib/alert";
-import ThemeToggle from "@/components/ThemeToggle";
 import { TeamChallengeComposerModal, TeamManagerRequiredModal } from "@/components/challenges/ChallengeModals";
 import { useVenues } from "@app/hooks/useVenues";
-import { useUnreadNotificationCount } from "@app/hooks/useNotifications";
 import { useDeviceLocation } from "@app/hooks/useDeviceLocation";
 import { distanceKm, formatDistanceKm } from "@app/lib/distance";
 import { isVenueBoosted, type VenueListItem } from "@app/lib/api/venues";
@@ -26,11 +24,11 @@ import slide5 from "@/assets/web/slide-fifth.webp";
 import { Ionicon } from "@/components/icons/Icon";
 import { SkeletonBlock, SkeletonCardRows } from "@/components/ui/Skeleton";
 import Rail from "@/components/ui/Rail";
-import NotificationBell from "@/components/NotificationBell";
 import VenueCard from "@/components/VenueCard";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import { HomeEventCard, HomeGameRowCard, HomeSportTile, HomeSquadCard, NearbyEmptyRow } from "@/components/home/HomeCards";
 import { useAppNavigate } from "@/routes/navigation";
+import { DESKTOP_QUERY, useMediaQuery } from "@/lib/useMediaQuery";
 import { paths } from "@/routes/paths";
 
 // Attach a distance from the device's coordinates and sort nearest-first;
@@ -54,23 +52,36 @@ function withDistance<T>(
     });
 }
 
-function SectionHeader({ title, icon, onSeeAll, seeAllLabel = "See all" }: { title: string; icon: string; onSeeAll: () => void; seeAllLabel?: string }) {
+function SectionHeader({ title, icon, subtitle, onSeeAll, seeAllLabel = "View all" }: { title: string; icon: string; subtitle?: string; onSeeAll: () => void; seeAllLabel?: string }) {
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <h2 className="flex items-center gap-1.5">
-        <Ionicon name={icon} size={17} color={colors.primary} />
-        <span className="section-title">{title}</span>
-      </h2>
-      <button type="button" onClick={onSeeAll} className="flex items-center gap-0.5 rounded-lg px-1 text-sm font-semibold text-primary hover:underline">
+    <div className="mb-4 flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-light">
+            <Ionicon name={icon} size={17} color={colors.primary} />
+          </span>
+          <span className="section-title">{title}</span>
+        </h2>
+        {subtitle && <p className="mt-1 hidden text-sm text-ink-secondary sm:block">{subtitle}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={onSeeAll}
+        className="group flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary-light"
+      >
         {seeAllLabel}
-        <Ionicon name="chevron-forward" size={16} color={colors.primary} />
+        <Ionicon name="arrow-forward" size={15} color={colors.primary} style={{ transition: "transform .15s" }} />
       </button>
     </div>
   );
 }
 
+// Desktop shows a grid with this many cards, then a "view all" tile.
+const DESKTOP_GRID_COUNT = 8;
+
 function NearbySection<T>({
   title,
+  subtitle,
   icon,
   data,
   isLoading,
@@ -83,6 +94,7 @@ function NearbySection<T>({
   previewCount = 3,
 }: {
   title: string;
+  subtitle?: string;
   icon: string;
   data: { item: T; km: number | null }[];
   isLoading: boolean;
@@ -94,25 +106,48 @@ function NearbySection<T>({
   horizontal?: boolean;
   previewCount?: number;
 }) {
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const grid = horizontal && isDesktop;
   return (
-    <section className="mb-7 min-w-0">
-      <SectionHeader title={title} icon={icon} onSeeAll={onSeeAll} />
+    <section className="mb-12 min-w-0">
+      <SectionHeader title={title} subtitle={subtitle} icon={icon} onSeeAll={onSeeAll} />
       {isLoading ? (
         horizontal ? (
-          <div className="flex gap-2.5">
-            <SkeletonBlock width={180} height={140} radius={16} />
-            <SkeletonBlock width={180} height={140} radius={16} />
-            <SkeletonBlock width={180} height={140} radius={16} className="hidden sm:block" />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <SkeletonBlock height={150} radius={16} />
+            <SkeletonBlock height={150} radius={16} />
+            <SkeletonBlock height={150} radius={16} className="hidden sm:block" />
+            <SkeletonBlock height={150} radius={16} className="hidden lg:block" />
           </div>
         ) : (
           <SkeletonCardRows count={2} />
         )
       ) : data.length === 0 ? (
         <NearbyEmptyRow icon={emptyIcon} label={emptyLabel} />
+      ) : grid ? (
+        <div className="grid grid-cols-4 gap-4">
+          {data.slice(0, DESKTOP_GRID_COUNT).map((entry) => (
+            <div key={keyOf(entry.item)} className="min-w-0">
+              {render(entry)}
+            </div>
+          ))}
+          {data.length > DESKTOP_GRID_COUNT && (
+            <button
+              type="button"
+              onClick={onSeeAll}
+              className="lift flex min-h-[140px] flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-primary/40 bg-primary-light/60 text-sm font-semibold text-primary-dark"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                <Ionicon name="arrow-forward" size={20} color="white" />
+              </span>
+              View all {data.length}
+            </button>
+          )}
+        </div>
       ) : horizontal ? (
         <Rail>
           {data.map((entry) => (
-            <div key={keyOf(entry.item)} className="w-[calc((100vw-38px)*0.48)] shrink-0 sm:w-[200px] lg:w-[210px]">
+            <div key={keyOf(entry.item)} className="w-[calc((100vw-38px)*0.48)] shrink-0 sm:w-[220px]">
               {render(entry)}
             </div>
           ))}
@@ -128,11 +163,26 @@ function NearbySection<T>({
   );
 }
 
-// Port of HomeScreen: compact top bar (light/dark switch, HitLit, bell,
-// avatar), promo carousel, sport filter (tap again to clear), and the
-// nearest-first Venues / Challenge a Team / Squads / Games / Tournaments /
-// Events sections, each with "See all". Challenging a team opens the
-// composer, or asks you to create a team first (and resumes afterwards).
+const QUICK_LINKS: { label: string; description: string; icon: string; to: string; tab?: "venues" | "community" | "scorecard" }[] = [
+  { label: "Venues", description: "Courts & turfs", icon: "location", to: paths.venues(), tab: "venues" },
+  { label: "Games", description: "Pickup games", icon: "tennisball", to: paths.games() },
+  { label: "Tournaments", description: "Compete & win", icon: "trophy", to: paths.games({ gameType: "TOURNAMENT" }) },
+  { label: "Squads", description: "Teams & groups", icon: "people", to: paths.squads },
+  { label: "Events", description: "What's on", icon: "calendar", to: paths.events() },
+  { label: "Scorecard", description: "Live scoring", icon: "stats-chart", to: paths.scorecard, tab: "scorecard" },
+];
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+
+// Port of HomeScreen as a website home: a brand hero (greeting, headline,
+// main actions, the promo carousel), quick links to every section, the
+// sport filter (tap again to clear), and the nearest-first Venues /
+// Challenge a Team / Squads / Games / Tournaments / Events sections, each
+// with "View all". Challenging a team opens the composer, or asks you to
+// create a team first (and resumes afterwards).
 export default function HomePage() {
   const navigate = useAppNavigate();
   const profile = useProfileStore((s) => s.profile);
@@ -144,7 +194,6 @@ export default function HomePage() {
 
   const { data: sports } = useSports();
   const { data: venues, isLoading: venuesLoading } = useVenues({ sportId: selectedSportId ?? undefined });
-  const { data: unreadCount } = useUnreadNotificationCount(userId);
   const { coords } = useDeviceLocation();
   const { data: games, isLoading: gamesLoading } = useGames({ sportId: selectedSportId ?? undefined });
   const { data: squads, isLoading: squadsLoading } = useSquads({ sportId: selectedSportId ?? undefined });
@@ -201,50 +250,140 @@ export default function HomePage() {
     else setManagerRequiredOpen(true);
   };
 
+  const firstName = profile?.full_name?.split(" ")[0];
+  const selectedSport = (sports ?? []).find((s) => s.id === selectedSportId);
+  const stats = [
+    { label: "Venues", value: nearbyVenues.length, loading: venuesLoading },
+    { label: "Open games", value: nearbyRegularGames.length, loading: gamesLoading },
+    { label: "Squads", value: nearbySquads.length, loading: squadsLoading },
+    { label: "Events", value: nearbyEvents.length, loading: eventsLoading },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl lg:px-8">
-      <header className="sticky top-0 z-20 bg-app/95 px-5 pb-3.5 pt-[calc(env(safe-area-inset-top)+12px)] backdrop-blur lg:px-0 lg:pt-6">
-        <div className="relative flex min-h-[46px] items-center justify-between">
-          <ThemeToggle />
-          <span className="pointer-events-none absolute inset-x-0 text-center text-[22px] font-extrabold tracking-[-0.4px] text-ink">HitLit</span>
-          <div className="relative flex items-center gap-4">
-            <NotificationBell size={25} color={colors.ink} unreadCount={unreadCount} onPress={() => navigate(paths.notifications)} />
-            <button
-              type="button"
-              onClick={() => navigate(paths.profile, { state: { tab: "profile" } })}
-              aria-label="Your profile"
-              className="flex h-[34px] w-[34px] items-center justify-center overflow-hidden rounded-full bg-surface-raised"
-            >
-              {profile?.avatar ? <img src={profile.avatar} alt="" className="h-full w-full object-cover" /> : <Ionicon name="person" size={18} color={colors.ink} />}
-            </button>
+    <div>
+      <section className="relative overflow-hidden bg-brand">
+        <span aria-hidden className="pointer-events-none absolute -left-24 -top-40 h-[420px] w-[420px] rounded-full border-[48px] border-white/[0.05]" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-48 right-[-120px] h-[460px] w-[460px] rounded-full bg-white/[0.04]" />
+        <div className="site-container relative grid items-center gap-8 py-9 sm:py-12 lg:grid-cols-[1fr_1.05fr] lg:gap-12 lg:py-16">
+          <div className="animate-fadeUp">
+            <p className="text-sm font-semibold text-white">
+              {greeting()}
+              {firstName ? `, ${firstName}` : ""} 👋
+            </p>
+            <h1 className="mt-2 text-[32px] font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[52px]">
+              Book. Play. <span className="text-[#BBF7D0]">Enjoy.</span>
+            </h1>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/90 sm:text-lg">
+              Venues, teams, games and tournaments near you, all in one place. Find your next match in minutes.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(paths.venues(), { state: { tab: "venues" } })}
+                className="press inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-[15px] font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3]"
+              >
+                <Ionicon name="location" size={18} color="#0B7A45" />
+                Find a venue
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(paths.createGame())}
+                className="press inline-flex items-center gap-2 rounded-xl border-[1.5px] border-white/40 px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/10"
+              >
+                <Ionicon name="add-circle-outline" size={18} color="white" />
+                Create a game
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(paths.challengeTeams({ sportId: selectedSportId ?? undefined }))}
+                className="press inline-flex items-center gap-2 rounded-xl px-3 py-3 text-[15px] font-semibold text-white/90 transition hover:text-white hover:underline"
+              >
+                Challenge a team
+                <Ionicon name="arrow-forward" size={16} color="white" />
+              </button>
+            </div>
+            <dl className="mt-9 grid max-w-lg grid-cols-4 gap-3 border-t border-white/15 pt-6">
+              {stats.map((s) => (
+                <div key={s.label}>
+                  <dt className="text-[11px] font-medium uppercase tracking-wider text-white/85 sm:text-xs">{s.label}</dt>
+                  <dd className="mt-1 text-xl font-extrabold text-white sm:text-2xl">{s.loading ? "–" : s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div className="min-w-0">
+            <PromoCarousel
+              single
+              onDark
+              slides={[
+                { key: "venues", title: "Book Premium Turfs", image: slide2 },
+                { key: "squads", title: "Build Your Squad", image: slide3 },
+                { key: "challenge-team", title: "Challenge a team", image: slide4 },
+                { key: "nearby-players", title: "Find Players near you", image: slide5 },
+              ]}
+            />
           </div>
         </div>
-      </header>
+      </section>
 
-      <div className="px-3.5 pt-5 sm:px-6 lg:px-0">
-        <PromoCarousel
-          slides={[
-            { key: "venues", title: "Book Premium Turfs", image: slide2 },
-            { key: "squads", title: "Build Your Squad", image: slide3 },
-            { key: "challenge-team", title: "Challenge a team", image: slide4 },
-            { key: "nearby-players", title: "Find Players near you", image: slide5 },
-          ]}
-        />
+      <div className="site-container">
+        <nav aria-label="Explore" className="relative z-10 -mt-6 mb-10 grid grid-cols-3 gap-2.5 sm:gap-3 lg:-mt-8 lg:grid-cols-6 lg:gap-4">
+          {QUICK_LINKS.map((q) => (
+            <button
+              key={q.label}
+              type="button"
+              onClick={() => navigate(q.to, q.tab ? { state: { tab: q.tab } } : undefined)}
+              className="card press lift group flex flex-col items-center gap-2 px-2 py-4 text-center sm:flex-row sm:gap-3 sm:px-4 sm:text-left"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-light transition-colors group-hover:bg-primary/20">
+                <Ionicon name={q.icon} size={21} color={colors.primary} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[13px] font-bold text-ink sm:text-sm">{q.label}</span>
+                <span className="hidden truncate text-xs text-muted sm:block">{q.description}</span>
+              </span>
+            </button>
+          ))}
+        </nav>
 
-        <h2 className="mb-3 flex items-center gap-2">
-          <Ionicon name="filter" size={16} color={colors.primary} />
-          <span className="section-title">Filter by Sport</span>
-        </h2>
-        <div className="mb-6">
+        <section className="card mb-12 p-4 sm:p-6" aria-labelledby="sport-filter-title">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 id="sport-filter-title" className="flex items-center gap-2">
+                <Ionicon name="filter" size={16} color={colors.primary} />
+                <span className="section-title">Filter by Sport</span>
+              </h2>
+              <p className="mt-0.5 text-sm text-ink-secondary">
+                {selectedSport ? (
+                  <>
+                    Showing <span className="font-semibold text-ink">{selectedSport.name}</span> near you
+                  </>
+                ) : (
+                  "Showing every sport near you"
+                )}
+              </p>
+            </div>
+            {selectedSport && (
+              <button
+                type="button"
+                onClick={() => setSelectedSportId(null)}
+                className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:bg-gray-50"
+              >
+                <Ionicon name="close" size={14} color={colors.muted} />
+                Clear filter
+              </button>
+            )}
+          </div>
           <Rail gap={14}>
             {(sports ?? []).map((s) => (
               <HomeSportTile key={s.id} compact name={s.name} selected={selectedSportId === s.id} onPress={() => setSelectedSportId((prev) => (prev === s.id ? null : s.id))} />
             ))}
           </Rail>
-        </div>
+        </section>
 
         <NearbySection
           title="Venues near you"
+          subtitle="Courts and turfs closest to you, featured venues first"
           icon="location"
           data={nearbyVenues}
           isLoading={venuesLoading}
@@ -257,6 +396,7 @@ export default function HomePage() {
 
         <NearbySection
           title="Challenge a Team"
+          subtitle="Teams near you that are up for a match"
           icon="football"
           data={nearbyChallengeTeams}
           isLoading={squadsLoading}
@@ -279,6 +419,7 @@ export default function HomePage() {
 
         <NearbySection
           title="Squads near you"
+          subtitle="Groups and squads you can join"
           icon="people"
           data={nearbyGroups}
           isLoading={squadsLoading}
@@ -289,7 +430,7 @@ export default function HomePage() {
           onSeeAll={() => navigate(paths.squads)}
         />
 
-        <div className="grid gap-x-8 lg:grid-cols-2">
+        <div className="grid gap-x-10 lg:grid-cols-2">
           <NearbySection
             title="Games near you"
             icon="calendar"
@@ -318,6 +459,7 @@ export default function HomePage() {
 
         <NearbySection
           title="Events near you"
+          subtitle="Meetups, socials and community events"
           icon="calendar-outline"
           data={nearbyEvents}
           isLoading={eventsLoading}
@@ -327,6 +469,32 @@ export default function HomePage() {
           render={({ item }) => <HomeEventCard event={item} currentUserId={userId} myGender={profile?.gender} onPress={() => navigate(paths.event(item.id))} />}
           onSeeAll={() => navigate(paths.events())}
         />
+
+        <section className="relative overflow-hidden rounded-3xl bg-brand px-6 py-9 shadow-hero sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10 lg:py-12">
+          <span aria-hidden className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border-[36px] border-white/[0.06]" />
+          <div className="relative max-w-xl">
+            <h2 className="text-2xl font-extrabold text-white sm:text-3xl">Bring your people together</h2>
+            <p className="mt-2 text-white/90">Start a squad for your regulars, host an event, or set up a tournament. Everyone gets notified.</p>
+          </div>
+          <div className="relative mt-6 flex flex-wrap gap-3 lg:mt-0 lg:shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate(paths.createSquad)}
+              className="press inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-[15px] font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3]"
+            >
+              <Ionicon name="people" size={18} color="#0B7A45" />
+              Create a squad
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(paths.hostEvent)}
+              className="press inline-flex items-center gap-2 rounded-xl border-[1.5px] border-white/40 px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/10"
+            >
+              <Ionicon name="calendar" size={18} color="white" />
+              Host an event
+            </button>
+          </div>
+        </section>
       </div>
 
       <TeamManagerRequiredModal

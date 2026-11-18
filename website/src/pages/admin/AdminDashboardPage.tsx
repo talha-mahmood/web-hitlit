@@ -31,45 +31,77 @@ export function AdminVenueListPage() {
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: venues, isLoading } = useMyVenues(userId);
 
+  const signOut = async () => {
+    await signOutGoogle();
+    signOutWithPushCleanup();
+  };
+
   return (
     <div className="min-h-dvh bg-app">
-      <div className="mx-auto max-w-2xl px-4 pb-10 pt-[calc(env(safe-area-inset-top)+16px)] lg:pt-10">
-        <h1 className="mb-4 px-2 text-2xl font-bold text-ink">Your Venues</h1>
-        {isLoading ? (
-          <SkeletonCardRows />
-        ) : (venues ?? []).length === 0 ? (
-          <EmptyBox icon="business-outline" text="No venues assigned to you yet. Contact the app admin." />
-        ) : (
-          <div className="flex flex-col gap-3">
-            {(venues ?? []).map((v) => (
-              <button key={v.id} type="button" onClick={() => navigate(p.venue(v.id))} className="flex items-center rounded-2xl border border-border bg-surface p-3 text-left transition hover:shadow-card">
-                {v.venue_images[0] ? (
-                  <img src={v.venue_images[0].image_url} alt="" className="mr-3 h-14 w-14 rounded-xl bg-app object-cover" />
-                ) : (
-                  <span className="mr-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-light">
-                    <Ionicon name="business-outline" size={22} color={colors.primary} />
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-surface/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="site-container flex h-16 items-center gap-3">
+          <span className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="" className="h-9 w-9" />
+            <span className="text-[21px] font-extrabold tracking-tight text-ink">
+              Hit<span className="text-primary">Lit</span>
+            </span>
+          </span>
+          <span className="ml-1 hidden rounded-full bg-primary-light px-2.5 py-1 text-xs font-bold text-primary-dark sm:inline">Venue dashboard</span>
+          <button
+            type="button"
+            onClick={signOut}
+            className="ml-auto flex items-center gap-2 rounded-xl border border-border px-3.5 py-2 text-sm font-semibold text-danger transition-colors hover:border-danger/40 hover:bg-red-50"
+          >
+            <Ionicon name="log-out-outline" size={17} color={colors.danger} />
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <main className="site-container pb-16 pt-8 sm:pt-12">
+        <p className="eyebrow">Venue dashboard</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Your Venues</h1>
+        <p className="mt-2 max-w-xl text-ink-secondary">Choose a venue to manage its bookings, courts, photos, reviews and analytics.</p>
+
+        <div className="mt-8">
+          {isLoading ? (
+            <SkeletonCardRows />
+          ) : (venues ?? []).length === 0 ? (
+            <EmptyBox icon="business-outline" text="No venues assigned to you yet. Contact the app admin." />
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {(venues ?? []).map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => navigate(p.venue(v.id))}
+                  className="card press lift group flex flex-col overflow-hidden text-left"
+                >
+                  {v.venue_images[0] ? (
+                    <img src={v.venue_images[0].image_url} alt="" className="aspect-[16/9] w-full bg-app object-cover" />
+                  ) : (
+                    <span className="flex aspect-[16/9] w-full items-center justify-center bg-primary-light">
+                      <Ionicon name="business-outline" size={40} color={colors.primary} />
+                    </span>
+                  )}
+                  <span className="flex items-center gap-3 p-4">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-base font-bold text-ink">{v.name}</span>
+                      <span className="mt-0.5 flex items-center gap-1 truncate text-sm text-ink-secondary">
+                        <Ionicon name="location-outline" size={14} color={colors.muted} />
+                        {v.city ?? "City not set"}
+                      </span>
+                    </span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-light transition-colors group-hover:bg-primary/20">
+                      <Ionicon name="arrow-forward" size={17} color={colors.primary} />
+                    </span>
                   </span>
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-ink">{v.name}</span>
-                  <span className="mt-0.5 block truncate text-xs text-muted">{v.city ?? "City not set"}</span>
-                </span>
-                <Ionicon name="chevron-forward" size={16} color={colors.muted} />
-              </button>
-            ))}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={async () => {
-            await signOutGoogle();
-            signOutWithPushCleanup();
-          }}
-          className="mt-4 w-full rounded-xl border border-danger py-3 font-semibold text-danger hover:bg-red-50"
-        >
-          Sign out
-        </button>
-      </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

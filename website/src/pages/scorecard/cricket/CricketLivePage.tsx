@@ -832,7 +832,7 @@ export default function CricketLivePage() {
 
   return (
     <div className="mx-auto max-w-5xl pb-6 lg:px-8 lg:pt-6">
-      <header className="sticky top-0 z-20 bg-brand pt-[calc(env(safe-area-inset-top)+12px)] lg:rounded-[28px] lg:pt-5">
+      <header className="sticky top-[var(--header-h)] z-20 bg-brand pt-[calc(env(safe-area-inset-top)+12px)] lg:rounded-[28px] lg:pt-5">
         <div className="flex items-center gap-2.5 px-4 lg:px-6">
           <button type="button" onClick={back} aria-label="Back" className="rounded-full p-0.5 hover:bg-white/10">
             <Ionicon name="arrow-back" size={22} color="white" />
@@ -974,7 +974,7 @@ export default function CricketLivePage() {
           </div>
 
           {showSheet && (
-            <aside className={`sticky bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] z-10 mt-3 bg-brand px-5 pb-[18px] pt-2 lg:bottom-auto lg:top-36 lg:mt-0 lg:self-start lg:rounded-3xl lg:shadow-hero ${addBall.isPending ? "pointer-events-none" : ""}`}>
+            <aside className={`sticky bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] z-10 mt-3 bg-brand px-5 pb-[18px] pt-2 lg:bottom-auto lg:top-[calc(var(--header-h)+144px)] lg:mt-0 lg:self-start lg:rounded-3xl lg:shadow-hero ${addBall.isPending ? "pointer-events-none" : ""}`}>
               {scoringSheet}
             </aside>
           )}

@@ -74,7 +74,7 @@ export function HomeSquadCard({
   const muted = isClosedToJoins || isGenderRestricted;
 
   return (
-    <div role="link" tabIndex={0} onClick={onPress} onKeyDown={(e) => e.key === "Enter" && onPress()} className="card press w-full cursor-pointer p-3 text-left hover:shadow-hero/40">
+    <div role="link" tabIndex={0} onClick={onPress} onKeyDown={(e) => e.key === "Enter" && onPress()} className="card press lift w-full cursor-pointer p-3 text-left hover:shadow-hero/40">
       <div className="flex items-center gap-2">
         <GeneratedEntityVisual id={squad.id} name={squad.name} sport={squad.sports?.name} kind={squad.group_type === "team" ? "team" : "squad"} imageUrl={squad.icon_url} size={36} />
         <div className="min-w-0 flex-1">
@@ -124,7 +124,7 @@ export function HomeEventCard({ event, currentUserId, myGender, onPress }: { eve
   const statusLabel = isClosed ? "Closed" : isGenderRestricted ? (event.gender === "male" ? "Male Only" : "Female Only") : hasJoined ? "Joined" : "Join";
   const muted = isClosed || isGenderRestricted;
   return (
-    <button type="button" onClick={onPress} className="card press w-full p-3 text-left hover:shadow-hero/40">
+    <button type="button" onClick={onPress} className="card press lift w-full p-3 text-left hover:shadow-hero/40">
       <div className="flex items-center gap-2">
         <GeneratedEntityVisual id={event.id} name={event.name} sport={event.event_type} kind="event" imageUrl={event.icon_url} size={36} />
         <div className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ export function HomeGameRowCard({ game, distanceKm, onPress }: { game: GameListI
   const isFull = game.status === "FULL" || (!isTeamBased && joined.length >= game.max_players);
 
   return (
-    <button type="button" onClick={onPress} className="card press flex w-full items-center gap-3 p-3 text-left">
+    <button type="button" onClick={onPress} className="card press lift flex w-full items-center gap-3 p-3 text-left">
       <GeneratedEntityVisual id={game.id} name={game.title} sport={game.sports?.name} kind={isTournament ? "tournament" : "game"} imageUrl={game.icon_url} size={60} style={{ borderRadius: 14 }} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">

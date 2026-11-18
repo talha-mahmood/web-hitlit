@@ -704,7 +704,7 @@ export function FootballLivePage() {
 
   return (
     <div className="mx-auto max-w-5xl pb-10 lg:px-8">
-      <header className="sticky top-0 z-20 flex items-center gap-2 bg-white/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:px-0 lg:pt-6">
+      <header className="sticky top-[var(--header-h)] z-20 flex items-center gap-2 bg-white/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:px-0 lg:pt-6">
         <button type="button" onClick={back} aria-label="Back" className="rounded-full p-1 hover:bg-gray-100">
           <Ionicon name="arrow-back" size={22} color={colors.ink} />
         </button>
@@ -784,7 +784,7 @@ export function FootballLivePage() {
           )}
         </div>
 
-        {isScorer && <aside className="mt-1 lg:sticky lg:top-24 lg:mt-0 lg:self-start">{controls}</aside>}
+        {isScorer && <aside className="mt-1 lg:sticky lg:top-[calc(var(--header-h)+96px)] lg:mt-0 lg:self-start">{controls}</aside>}
       </div>
 
       <Modal open={!!goalPickerTeam} onClose={() => setGoalPickerTeam(null)} title="Select a Player" subtitle={`Who scored for ${goalPickerTeam === "A" ? match.team_a_name : match.team_b_name}?`}>

@@ -126,8 +126,10 @@ export default function GamesListPage() {
   const createLink = () => navigate(paths.createGame(gameType ? { gameType } : undefined));
 
   return (
-    <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
+    <div className="mx-auto max-w-7xl lg:px-8 lg:pt-6">
       <PlainHeader
+        wide
+        crumbs={[{ label: "Home", to: "/" }]}
         title={gameType === "TOURNAMENT" ? "Tournaments" : "Games"}
         subtitle={isTournamentList ? "Find and join tournaments nearby" : "Find and join games nearby"}
         backFallback={paths.home}
