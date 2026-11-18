@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { GOOGLE_BUTTON_ENABLED, promptGoogleSignIn, renderGoogleButton } from "@/lib/googleIdentity";
 import { useNavigate } from "react-router";
 import { paths } from "@/routes/paths";
 import { peekReturnTo } from "@/routes/returnTo";
@@ -129,29 +130,65 @@ export default function LoginPage() {
     }
   };
 
+  // Google's own button (see lib/googleIdentity): Google then names this
+  // site, not the Supabase project, on its account chooser. If Google's
+  // script can't load or Google won't show the button for this origin, the
+  // card falls back to the redirect sign-in button.
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [googleButtonFailed, setGoogleButtonFailed] = useState(false);
+  const [googleButtonShown, setGoogleButtonShown] = useState(false);
+  const useGoogleButton = GOOGLE_BUTTON_ENABLED && !googleButtonFailed;
+  useEffect(() => {
+    const el = googleButtonRef.current;
+    if (!GOOGLE_BUTTON_ENABLED || !el) return;
+    renderGoogleButton(el, {
+      theme: theme === "light" ? "light" : "dark",
+      width: el.clientWidth,
+      onStart: () => setIsSigningIn("google"),
+      onError: (err) => {
+        Alert.alert("Sign-in failed", getFriendlyErrorMessage(err, "Something went wrong. Please try again."));
+        setIsSigningIn(null);
+      },
+    })
+      .then(() => setGoogleButtonShown(true))
+      .catch(() => setGoogleButtonFailed(true));
+  }, [theme]);
+
   const signInCard = (
     <div id="sign-in" className="flex w-full max-w-[420px] scroll-mt-24 flex-col items-center rounded-3xl border-[1.5px] border-[rgba(15,23,42,0.12)] bg-surface/90 px-6 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:px-8 sm:py-10">
       <img src="/logo.png" alt="HitLit" className="h-[68px] w-[68px]" />
       <h2 className="mt-4 text-center text-2xl font-extrabold text-ink">Welcome to HitLit</h2>
       <p className="mt-1.5 px-2 text-center text-sm text-muted">Find players, book courts, and get in the game.</p>
 
-      <button
-        type="button"
-        onClick={() => handleSignIn("google")}
-        disabled={!!isSigningIn}
-        className="press mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 disabled:opacity-70"
-      >
-        {isSigningIn === "google" ? (
-          <Spinner color="white" />
-        ) : (
-          <>
-            <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-surface">
-              <GoogleIcon size={16} />
-            </span>
-            <span className="text-base font-semibold text-white">Sign In with Google</span>
-          </>
-        )}
-      </button>
+      {useGoogleButton ? (
+        <div className="relative mt-8 w-full">
+          <div ref={googleButtonRef} id="google-signin-button" className="flex min-h-[44px] w-full justify-center" />
+          {!googleButtonShown && <div aria-hidden className="pointer-events-none absolute inset-0 animate-skeleton rounded-md bg-gray-200" />}
+          {isSigningIn === "google" && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-surface/90" role="status" aria-label="Signing in">
+              <Spinner />
+            </div>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => handleSignIn("google")}
+          disabled={!!isSigningIn}
+          className="press mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 disabled:opacity-70"
+        >
+          {isSigningIn === "google" ? (
+            <Spinner color="white" />
+          ) : (
+            <>
+              <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-surface">
+                <GoogleIcon size={16} />
+              </span>
+              <span className="text-base font-semibold text-white">Sign In with Google</span>
+            </>
+          )}
+        </button>
+      )}
 
       {APPLE_ENABLED && (
         <button
@@ -181,10 +218,13 @@ export default function LoginPage() {
   // Header "Sign in": with Google as the only provider it signs in straight
   // away (scrolling to a card that's already on screen looks like nothing
   // happened). With Apple enabled too, it takes you to the card to choose.
+  // With Google's own button, which can only be opened by clicking it, this
+  // brings the card into view and asks Google for its sign-in prompt.
   const headerSignIn = () => {
-    if (!APPLE_ENABLED) return handleSignIn("google");
+    if (!APPLE_ENABLED && !useGoogleButton) return handleSignIn("google");
     const card = document.getElementById("sign-in");
     card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (useGoogleButton) return promptGoogleSignIn();
     card?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
   };
 
@@ -322,7 +362,7 @@ export default function LoginPage() {
             <p className="relative mx-auto mt-3 max-w-lg text-white/80">Sign in with Google and find your next game in minutes.</p>
             <button
               type="button"
-              onClick={() => handleSignIn("google")}
+              onClick={() => (useGoogleButton ? headerSignIn() : handleSignIn("google"))}
               disabled={!!isSigningIn}
               className="press relative mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3.5 text-base font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3] disabled:opacity-70"
             >
