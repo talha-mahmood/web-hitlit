@@ -1,0 +1,70 @@
+@import "@fontsource/poppins/latin-400.css";
+@import "@fontsource/poppins/latin-500.css";
+@import "@fontsource/poppins/latin-600.css";
+@import "@fontsource/poppins/latin-700.css";
+@import "@fontsource/poppins/latin-800.css";
+
+@import "./theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-app text-ink font-sans antialiased;
+  }
+  /* Height of the phone/tablet bottom tab bar, so sticky action bars can
+     sit just above it. Desktop has no tab bar. */
+  :root {
+    --tabbar-h: 76px;
+  }
+  @media (min-width: 1024px) {
+    :root {
+      --tabbar-h: 0px;
+    }
+  }
+  /* Same "pure white canvas" the app uses behind every screen. */
+  #root {
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--jz-primary));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* The app's standard list/detail card: white, rounded-2xl, light border + cardShadow. */
+  .card {
+    @apply bg-surface rounded-2xl border border-border shadow-card;
+  }
+  /* Bouncy press feedback (the app's <Bouncy> spring) as a CSS transition. */
+  .press {
+    @apply transition-transform duration-150 ease-out active:scale-[0.98];
+  }
+  .section-title {
+    @apply text-lg font-semibold text-ink;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

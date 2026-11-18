@@ -1,0 +1,253 @@
+import { useEffect, useState } from "react";
+import { View, Text, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
+import Image from "./images/OptimizedImage";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../constants/theme";
+import GradientFill from "./GradientFill";
+import { useMentionSearch } from "../hooks/useMentions";
+import MentionSuggestionsList from "./MentionSuggestionsList";
+import {
+  findActiveMentionTrigger,
+  insertMention,
+  computeMentions,
+  type Mention,
+  type MentionCandidate,
+  type MentionEntityType,
+} from "../lib/mentionParser";
+import type { MentionSuggestion } from "../lib/api/mentions";
+import { containsObjectionableContent } from "../lib/contentFilter";
+
+function Avatar({ name, avatar, size = 32 }: { name: string | null; avatar: string | null; size?: number }) {
+  const initials = (name ?? "?").charAt(0).toUpperCase();
+  if (avatar) {
+    return <Image source={{ uri: avatar }} style={{ width: size, height: size, borderRadius: size / 2 }} className="bg-primary-light" />;
+  }
+  return (
+    <GradientFill className="items-center justify-center" style={{ width: size, height: size, borderRadius: size / 2 }}>
+      <Text className="text-jazba-white font-bold" style={{ fontSize: size * 0.4 }}>{initials}</Text>
+    </GradientFill>
+  );
+}
+
+// The one composer used both by the main Community Chat feed (dropdown
+// opens downward, composer sits above the feed) and a comment thread's
+// reply box (dropdown opens upward, composer sits at the bottom) — see
+// dropdownPosition. Owns its own text/selection/mention state entirely;
+// callers just get a finished (body, mentions) pair on submit.
+export default function MentionComposer({
+  avatarName,
+  avatarUrl,
+  placeholder,
+  dropdownPosition,
+  onSend,
+  sending,
+  editing,
+  onSave,
+  onCancelEdit,
+  saving,
+  onPressPoll,
+}: {
+  avatarName: string | null;
+  avatarUrl: string | null;
+  placeholder: string;
+  dropdownPosition: "above" | "below";
+  onSend: (body: string, mentions: Mention[]) => void;
+  sending?: boolean;
+  // Present while editing an existing message — swaps the send button for
+  // a Save/Cancel pair and prefills the draft from that message.
+  editing?: { messageId: string; initialBody: string; initialMentions: Mention[] } | null;
+  onSave?: (body: string, mentions: Mention[]) => void;
+  onCancelEdit?: () => void;
+  saving?: boolean;
+  // Only the main community feed passes this — polls are feed-level posts
+  // only, not replies inside a comment thread.
+  onPressPoll?: () => void;
+}) {
+  const [text, setText] = useState("");
+  // The cursor position is tracked here purely for our own logic (finding
+  // an active "@" trigger, inserting at the right spot) — it's kept
+  // separate from the TextInput's `selection` prop below, which is left
+  // uncontrolled (undefined) almost all the time. A multiline TextInput
+  // with a *controlled* selection fights Android's own auto-grow height
+  // measurement on every keystroke, so this field would never grow past
+  // one line as long as `selection` stayed permanently controlled.
+  // `forcedSelection` is only set for the one render right after we
+  // programmatically move the cursor ourselves (inserting an emoji or a
+  // mention), then released back to undefined as soon as the native view
+  // confirms it via onSelectionChange.
+  const [cursor, setCursor] = useState({ start: 0, end: 0 });
+  const [forcedSelection, setForcedSelection] = useState<{ start: number; end: number } | undefined>(undefined);
+  const [confirmedTokens, setConfirmedTokens] = useState<MentionCandidate[]>([]);
+  const [activeType, setActiveType] = useState<MentionEntityType | undefined>(undefined);
+
+  // Enter/refresh edit mode whenever a *different* message is targeted.
+  useEffect(() => {
+    if (!editing) return;
+    setText(editing.initialBody);
+    setConfirmedTokens(
+      editing.initialMentions.map((m) => ({ entityType: m.entityType, entityId: m.entityId, displayName: m.displayName }))
+    );
+    const end = editing.initialBody.length;
+    setCursor({ start: end, end });
+    setForcedSelection({ start: end, end });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing?.messageId]);
+
+  const trigger = findActiveMentionTrigger(text, cursor.start);
+  const { data: suggestions, isLoading, isError } = useMentionSearch(trigger?.query ?? "", activeType);
+
+  const handleChangeText = (next: string) => {
+    setText(next);
+  };
+
+  const handleSelect = (item: MentionSuggestion) => {
+    if (!trigger) return;
+    const result = insertMention(text, trigger, cursor.end, item);
+    setText(result.text);
+    setCursor({ start: result.cursor, end: result.cursor });
+    setForcedSelection({ start: result.cursor, end: result.cursor });
+    setConfirmedTokens((prev) => [...prev, { entityType: item.entityType, entityId: item.entityId, displayName: item.displayName }]);
+    setActiveType(undefined);
+  };
+
+  const reset = () => {
+    setText("");
+    setConfirmedTokens([]);
+    setCursor({ start: 0, end: 0 });
+    setForcedSelection({ start: 0, end: 0 });
+    setActiveType(undefined);
+  };
+
+  const handleSubmit = () => {
+    const body = text.trim();
+    if (!body) return;
+    if (containsObjectionableContent(body)) {
+      Alert.alert("Message not sent", "Your message contains language that violates our community guidelines.");
+      return;
+    }
+    // Compute against the trimmed string specifically — trimming can shift
+    // every index, so this must run after trimming, not before.
+    const finalMentions = computeMentions(body, confirmedTokens);
+    if (editing) {
+      onSave?.(body, finalMentions);
+    } else {
+      onSend(body, finalMentions);
+      reset();
+    }
+  };
+
+  const isBusy = editing ? !!saving : !!sending;
+  const canSubmit = text.trim().length > 0 && !isBusy;
+
+  return (
+    <View
+      className={`bg-surface ${dropdownPosition === "above" ? "border-t" : "border-b"} border-border`}
+      // The suggestions dropdown below (position="below") overflows past this
+      // view's own box into the space of *later* siblings (the day-filter
+      // row, the feed list) — without a higher stacking order here, those
+      // later siblings would paint over it. Harmless when the dropdown opens
+      // "above" instead, where default paint order already puts this on top.
+      style={{ zIndex: 20, elevation: trigger ? 20 : 0 }}
+    >
+      {editing && (
+        <View className="flex-row items-center justify-between px-4 pt-2.5 pb-1.5" style={{ backgroundColor: colors.primaryLight }}>
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <Ionicons name="pencil" size={13} color={colors.primaryDark} />
+            <Text className="text-xs font-semibold" style={{ color: colors.primaryDark }}>
+              Editing message
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              reset();
+              onCancelEdit?.();
+            }}
+            hitSlop={8}
+          >
+            <Ionicons name="close" size={16} color={colors.primaryDark} />
+          </Pressable>
+        </View>
+      )}
+      <View className="flex-row items-center px-4 py-3" style={{ gap: 8 }}>
+        <Avatar name={avatarName} avatar={avatarUrl} />
+        {onPressPoll && !editing && (
+          <Pressable
+            onPress={onPressPoll}
+            className="items-center justify-center rounded-full"
+            style={{ width: 36, height: 36, backgroundColor: colors.primaryLight }}
+          >
+            <Ionicons name="bar-chart-outline" size={17} color={colors.primary} />
+          </Pressable>
+        )}
+        <View className="flex-1" style={{ position: "relative" }}>
+          <TextInput
+            value={text}
+            onChangeText={handleChangeText}
+            onSelectionChange={(e) => {
+              setCursor(e.nativeEvent.selection);
+              setForcedSelection(undefined);
+            }}
+            selection={forcedSelection}
+            placeholder={placeholder}
+            // No `flex-1` here — the wrapping View (a column-flow container)
+            // already stretches this to full width via its default
+            // alignItems, and giving the TextInput itself a flex-grow
+            // fights the intrinsic, content-driven height that multiline
+            // auto-grow depends on (flex-1's flexBasis: 0% governs height
+            // in a column parent, not width) — that's what was keeping this
+            // field stuck at one line no matter how much was typed.
+            // rounded-2xl (not rounded-full) so a grown, multi-line box reads
+            // as a squared-off WhatsApp-style bubble instead of stretching
+            // into a tall capsule/pill shape.
+            className="border border-border rounded-2xl px-4 text-ink"
+            // Fixed line height keeps the placeholder (and a single line of
+            // typed text) sitting still instead of drifting up/down; extra
+            // lines grow the field, WhatsApp-style, up to maxHeight, past
+            // which it scrolls internally instead of growing further.
+            style={{
+              minHeight: 44,
+              maxHeight: 140,
+              paddingVertical: 11,
+              fontSize: 14,
+              lineHeight: 20,
+              textAlignVertical: "top",
+              includeFontPadding: false,
+            }}
+            maxLength={1000}
+            multiline
+          />
+          <MentionSuggestionsList
+            visible={!!trigger}
+            position={dropdownPosition}
+            query={trigger?.query ?? ""}
+            activeType={activeType}
+            onChangeType={setActiveType}
+            suggestions={suggestions ?? []}
+            isLoading={isLoading}
+            isError={isError}
+            onSelect={handleSelect}
+          />
+        </View>
+        <Pressable onPress={handleSubmit} disabled={!canSubmit}>
+          {canSubmit ? (
+            <GradientFill className="w-10 h-10 rounded-full items-center justify-center">
+              {isBusy ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Ionicons name={editing ? "checkmark" : "send"} size={16} color="white" />
+              )}
+            </GradientFill>
+          ) : (
+            <View className="w-10 h-10 rounded-full items-center justify-center bg-gray-200">
+              {isBusy ? (
+                <ActivityIndicator size="small" color={colors.muted} />
+              ) : (
+                <Ionicons name={editing ? "checkmark" : "send"} size={16} color={colors.muted} />
+              )}
+            </View>
+          )}
+        </Pressable>
+      </View>
+    </View>
+  );
+}

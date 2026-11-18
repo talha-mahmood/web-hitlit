@@ -1,0 +1,214 @@
+import { useMemo, useState } from "react";
+import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
+import Image from "../../components/images/OptimizedImage";
+import { Ionicons } from "@expo/vector-icons";
+import { useSports } from "../../hooks/useSports";
+import { useTopPlayers } from "../../hooks/usePlayers";
+import type { TopPlayer } from "../../lib/api/players";
+import { computeRankingRating, getRatingTierInfo } from "../../lib/playerRating";
+import { colors, cardShadow } from "../../constants/theme";
+import GradientFill from "../../components/GradientFill";
+import SelectSportModal from "../../components/SelectSportModal";
+import Bouncy from "../../components/Bouncy";
+import FieldInput from "../../components/FieldInput";
+import { SkeletonCardRows } from "../../components/Skeleton";
+
+function PlayerRow({
+  player,
+  rank,
+  onPress,
+}: {
+  player: TopPlayer;
+  rank: number;
+  onPress: () => void;
+}) {
+  const rating = computeRankingRating(player);
+  const tier = getRatingTierInfo(rating);
+  const initials = (player.fullName ?? "?").charAt(0).toUpperCase();
+  const rankLabel = rank < 10 ? `0${rank}` : `${rank}`;
+
+  return (
+    <Bouncy
+      onPress={onPress}
+      scaleTo={0.98}
+      style={{ ...cardShadow, backgroundColor: colors.surface, borderRadius: 16 }}
+      className="mb-3"
+    >
+      <View className="flex-row items-center border border-border rounded-2xl bg-surface px-4 py-3">
+        {player.avatar ? (
+          <Image source={{ uri: player.avatar }} className="w-12 h-12 rounded-full bg-primary-light mr-3" />
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-primary-light items-center justify-center mr-3">
+            <Text className="text-primary font-bold">{initials}</Text>
+          </View>
+        )}
+        <View className="flex-1 mr-2">
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <GradientFill style={{ width: 7, height: 7, borderRadius: 3.5 }} />
+            <Text className="text-ink font-bold text-sm" numberOfLines={1}>
+              {player.fullName ?? "Player"}
+            </Text>
+          </View>
+          <Text className="text-muted text-xs mt-1" numberOfLines={1}>
+            {player.gamesPlayedTotal} games · {player.tournamentsPlayedTotal} tournaments
+          </Text>
+          <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+            <View
+              className="items-center justify-center rounded-full"
+              style={{ width: 18, height: 18, backgroundColor: tier.bg }}
+            >
+              <Ionicons name="flame" size={11} color={tier.color} />
+            </View>
+            <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8, flexShrink: 1 }}>
+              Rating {rating} · {tier.label}
+            </Text>
+            <View className="flex-row items-center" style={{ gap: 3 }}>
+              <Ionicons name="people-outline" size={12} color={colors.muted} />
+              <Text className="text-muted text-xs" numberOfLines={1} style={{ opacity: 0.8 }}>
+                {player.followerCount} follower{player.followerCount === 1 ? "" : "s"}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <Text className="text-muted font-semibold text-xs">
+          # {rankLabel}
+        </Text>
+      </View>
+    </Bouncy>
+  );
+}
+
+// Shared between the standalone PlayersDashboardScreen (pushed from Home)
+// and the Community tab's in-place "Top Players" segment — same list, same
+// filter, just embedded under whatever header the caller provides.
+export default function PlayersDashboardContent({
+  onPressPlayer,
+}: {
+  onPressPlayer: (userId: string, sport?: { id: string; name: string }) => void;
+}) {
+  const [sportId, setSportId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sportSheetOpen, setSportSheetOpen] = useState(false);
+  const { data: sports } = useSports();
+  const { data: players, isLoading, refetch, isRefetching } = useTopPlayers(sportId ?? undefined);
+
+  const selectedSport = useMemo(() => {
+    const match = sportId ? (sports ?? []).find((s) => s.id === sportId) : undefined;
+    return match ? { id: match.id, name: match.name } : undefined;
+  }, [sportId, sports]);
+
+  const rankedPlayers = useMemo(
+    () =>
+      [...(players ?? [])].sort(
+        (a, b) =>
+          computeRankingRating(b) - computeRankingRating(a) ||
+          b.matchesPlayedTotal - a.matchesPlayedTotal ||
+          b.gamesPlayedTotal - a.gamesPlayedTotal
+      ),
+    [players]
+  );
+
+  // A player keeps their real rank in the full ranking while searching, so
+  // "3" next to a name always means third overall (for the selected sport).
+  const visiblePlayers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const withRank = rankedPlayers.map((player, index) => ({ player, rank: index + 1 }));
+    if (!query) return withRank;
+    return withRank.filter(
+      ({ player }) =>
+        (player.fullName ?? "").toLowerCase().includes(query) ||
+        (player.userCode ?? "").toLowerCase().includes(query)
+    );
+  }, [rankedPlayers, search]);
+
+  // The search bar/filter button render immediately regardless of load
+  // state — only the player list area below swaps between a skeleton and
+  // the real FlatList, same pattern as every other list screen in the app
+  // (SquadsListScreen, GamesListScreen, VenuesListScreen, …) rather than a
+  // bare spinner replacing the whole screen.
+  const searchAndFilterRow = (
+    <View className="mb-1 flex-row items-center px-3.5 pt-1" style={{ gap: 10 }}>
+      <View className="flex-1">
+        <FieldInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search players by name or ID"
+          autoCorrect={false}
+          returnKeyType="search"
+          left={<Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginRight: 8 }} />}
+          right={
+            search ? (
+              <Ionicons name="close-circle" size={18} color={colors.muted} onPress={() => setSearch("")} />
+            ) : undefined
+          }
+        />
+      </View>
+      <Pressable
+        onPress={() => setSportSheetOpen(true)}
+        className="items-center justify-center bg-surface"
+        style={{ width: 48, height: 48, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, ...cardShadow }}
+      >
+        <Ionicons name="options-outline" size={20} color={colors.ink} />
+        {sportId && (
+          <GradientFill
+            style={{
+              position: "absolute", top: 6, right: 6,
+              width: 8, height: 8, borderRadius: 4,
+            }}
+          />
+        )}
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <>
+    {searchAndFilterRow}
+    {isLoading ? (
+      <View className="px-3.5 pt-1">
+        <SkeletonCardRows />
+      </View>
+    ) : (
+      <FlatList
+        data={visiblePlayers}
+        keyboardShouldPersistTaps="handled"
+        keyExtractor={(item) => item.player.userId}
+        contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 4, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        ListEmptyComponent={
+          <View className="items-center mt-16" style={{ gap: 12 }}>
+            <Ionicons name="trophy-outline" size={48} color={colors.border} />
+            <Text className="text-ink font-semibold text-base">
+              {search.trim() ? "No players found" : "No players yet"}
+            </Text>
+            <Text className="text-muted text-sm text-center px-8">
+              {search.trim()
+                ? "Try a different name."
+                : sportId
+                  ? "No one has played this sport yet — be the first!"
+                  : "Play a game to show up on the leaderboard."}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <PlayerRow
+            player={item.player}
+            rank={item.rank}
+            onPress={() => onPressPlayer(item.player.userId, selectedSport)}
+          />
+        )}
+      />
+    )}
+    <SelectSportModal
+      visible={sportSheetOpen}
+      onClose={() => setSportSheetOpen(false)}
+      sports={sports ?? []}
+      selectedSportId={sportId ?? undefined}
+      onApply={(id) => {
+        setSportId(id ?? null);
+        setSportSheetOpen(false);
+      }}
+    />
+    </>
+  );
+}

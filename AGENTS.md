@@ -1,0 +1,15 @@
+# Expo HAS CHANGED
+
+Reads the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.
+
+keep this in mind that this app will upload on google playstore so when a user downloads it will work exactly same as we are using in testing and there must be not any kind of issue in using this apps any service and also it will upload on IOS App store so when a Iphone user downloads it will work exactly same as we are using in testing and there must be not any kind of issue in using this apps any service
+
+NEVER create test/disposable accounts via Supabase's signup API using made-up email addresses (e.g. invented strings at @gmail.com, @yahoo.com, etc.) to get past login screens for testing purposes (Simulator screenshots, bypassing OAuth, etc.). Supabase's signup flow sends a real confirmation email to whatever address is given, regardless of whether it's a real inbox — a made-up address causes a hard bounce. This happens even if the account is deleted afterward, since the bounce already occurred at signup time before deletion. Enough of these bounces can get the project's email sending privileges restricted, breaking real transactional email for actual users. If a test login is genuinely needed, ask the user for a real address they control, or find a way to bypass auth that doesn't touch Supabase's live email-sending signup flow.
+
+While an iOS build is submitted and pending Apple App Review (or already live on TestFlight), do not touch iOS — do not rebuild or resubmit a new iOS build unless explicitly asked. Local code changes (JS/TS, assets, database migrations, etc.) do not affect a build that has already been compiled and submitted; only running a new `eas build` + `eas submit` would. The build already on TestFlight/in review stays exactly as it was at build time — same binary, same code — no matter what changes afterward in the local source. Only rebuild iOS when the user explicitly asks for a new build.
+
+For any UI change you must not change any app functionality it was just a UI change strickly do not change anything in my app just change UI
+
+Now i will give you updated UI screenshot of a screen of my app recognize which screen it is and make its UI exactly like in the attached image
+
+Whenever you build a brand-new screen or a brand-new component (not editing an existing one), its UI must match the existing UI/design system of this app exactly — same card style (white rounded-2xl cards with cardShadow), same color palette (colors.primary/primaryDark/primaryLight, the "#14532D" dark-green rounded-bottom banner treatment used across tab-root screens), same typography/icon conventions (Ionicons/MaterialCommunityIcons at the sizes/weights already used elsewhere), same spacing. Do not invent a new visual style for a new screen/component unless explicitly asked to.
