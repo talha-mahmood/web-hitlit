@@ -160,22 +160,18 @@ export default function LoginPage() {
       <h2 className="mt-4 text-center text-2xl font-extrabold text-ink">Welcome to HitLit</h2>
       <p className="mt-1.5 px-2 text-center text-sm text-muted">Find players, book courts, and get in the game.</p>
 
-      {useGoogleButton ? (
-        <div className="relative mt-8 w-full">
-          <div ref={googleButtonRef} id="google-signin-button" className="flex min-h-[44px] w-full justify-center" />
-          {!googleButtonShown && <div aria-hidden className="pointer-events-none absolute inset-0 animate-skeleton rounded-md bg-gray-200" />}
-          {isSigningIn === "google" && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-surface/90" role="status" aria-label="Signing in">
-              <Spinner />
-            </div>
-          )}
-        </div>
-      ) : (
+      {/* The green button is always what's seen. Once Google shows its own
+          button for this site, that button sits invisibly on top and takes
+          the click (so Google names this site); until then, or if Google
+          won't, the green button signs in through the Supabase redirect. */}
+      <div className="group relative mt-8 w-full">
         <button
           type="button"
           onClick={() => handleSignIn("google")}
           disabled={!!isSigningIn}
-          className="press mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 disabled:opacity-70"
+          tabIndex={googleButtonShown ? -1 : undefined}
+          aria-hidden={googleButtonShown || undefined}
+          className="press flex w-full items-center justify-center gap-3 rounded-xl bg-brand py-3.5 shadow-cta transition hover:brightness-110 group-hover:brightness-110 group-focus-within:ring-2 group-focus-within:ring-primary group-focus-within:ring-offset-2 group-focus-within:ring-offset-surface disabled:opacity-70"
         >
           {isSigningIn === "google" ? (
             <Spinner color="white" />
@@ -188,7 +184,14 @@ export default function LoginPage() {
             </>
           )}
         </button>
-      )}
+        {useGoogleButton && (
+          <div
+            className={`absolute inset-0 overflow-hidden rounded-xl opacity-[0.01] ${googleButtonShown && !isSigningIn ? "" : "pointer-events-none"}`}
+          >
+            <div ref={googleButtonRef} id="google-signin-button" className="flex h-full w-full origin-center scale-y-[1.35] items-center justify-center" />
+          </div>
+        )}
+      </div>
 
       {APPLE_ENABLED && (
         <button
@@ -221,10 +224,10 @@ export default function LoginPage() {
   // With Google's own button, which can only be opened by clicking it, this
   // brings the card into view and asks Google for its sign-in prompt.
   const headerSignIn = () => {
-    if (!APPLE_ENABLED && !useGoogleButton) return handleSignIn("google");
+    if (!APPLE_ENABLED && !googleButtonShown) return handleSignIn("google");
     const card = document.getElementById("sign-in");
     card?.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (useGoogleButton) return promptGoogleSignIn();
+    if (googleButtonShown) return promptGoogleSignIn();
     card?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
   };
 
@@ -362,7 +365,7 @@ export default function LoginPage() {
             <p className="relative mx-auto mt-3 max-w-lg text-white/80">Sign in with Google and find your next game in minutes.</p>
             <button
               type="button"
-              onClick={() => (useGoogleButton ? headerSignIn() : handleSignIn("google"))}
+              onClick={() => (googleButtonShown ? headerSignIn() : handleSignIn("google"))}
               disabled={!!isSigningIn}
               className="press relative mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3.5 text-base font-bold text-primary-deep shadow-hero transition hover:bg-[#ECFDF3] disabled:opacity-70"
             >
