@@ -77,8 +77,10 @@ export default function SquadsListPage({ lockedGroupType }: { lockedGroupType?: 
   const createLink = () => navigate(lockedGroupType ? paths.createSquadWith({ presetType: lockedGroupType, lockType: true }) : paths.createSquad);
 
   return (
-    <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
+    <div className="mx-auto max-w-7xl lg:px-8 lg:pt-6">
       <PlainHeader
+        wide
+        crumbs={[{ label: "Home", to: "/" }]}
         title={kindPlural}
         subtitle={`Find and join ${kindPluralLower} nearby`}
         backFallback={paths.community}

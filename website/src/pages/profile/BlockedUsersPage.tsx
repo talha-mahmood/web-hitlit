@@ -1,20 +1,18 @@
-import { colors } from "@app/constants/theme";
 import { useBlockedUsers, useUnblockUser } from "@app/hooks/useModeration";
 import { useAuthStore } from "@app/store/authStore";
 import type { BlockedUser } from "@app/lib/api/moderation";
 import { getFriendlyErrorMessage } from "@app/lib/friendlyError";
 import { Alert } from "@/lib/alert";
-import { Ionicon } from "@/components/icons/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import Spinner from "@/components/ui/Spinner";
-import { useAppNavigate, useGoBack } from "@/routes/navigation";
+import { useAppNavigate } from "@/routes/navigation";
 import { paths } from "@/routes/paths";
+import PlainHeader from "@/components/ui/PlainHeader";
 
 // Port of BlockedUsersScreen: everyone you've blocked, tap the avatar for
 // their profile, Unblock (with confirmation).
 export default function BlockedUsersPage() {
   const navigate = useAppNavigate();
-  const goBack = useGoBack(paths.accountSettings);
   const userId = useAuthStore((s) => s.session?.user.id);
   const { data: blocked, isLoading } = useBlockedUsers(userId);
   const unblockUser = useUnblockUser(userId);
@@ -27,12 +25,7 @@ export default function BlockedUsersPage() {
 
   return (
     <div className="mx-auto max-w-2xl lg:px-8">
-      <div className="flex items-center border-b border-border bg-surface px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-6">
-        <button type="button" onClick={goBack} aria-label="Back" className="mr-3 rounded-full p-1 hover:bg-gray-100">
-          <Ionicon name="arrow-back" size={22} color={colors.ink} />
-        </button>
-        <h1 className="text-base font-bold text-ink">Blocked Users</h1>
-      </div>
+      <PlainHeader wide crumbs={[{ label: "Home", to: "/" }, { label: "Profile", to: "/profile" }, { label: "Account Settings", to: "/profile/settings" }]} title="Blocked Users" subtitle="People you have blocked can't message or invite you" />
 
       {isLoading ? (
         <div className="flex justify-center py-20">

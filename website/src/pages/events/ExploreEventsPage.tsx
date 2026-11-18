@@ -154,8 +154,10 @@ export default function ExploreEventsPage() {
                   : `No events found within ${distanceKmFilter} km.`;
 
   return (
-    <div className="mx-auto max-w-6xl lg:px-8">
+    <div className="mx-auto max-w-7xl lg:px-8">
       <PlainHeader
+        wide
+        crumbs={[{ label: "Home", to: "/" }]}
         title="Events"
         subtitle="Find and join events nearby"
         backFallback={paths.community}

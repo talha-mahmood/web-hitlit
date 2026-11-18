@@ -104,7 +104,7 @@ function AddTeamFlow({ params }: { params: AddTeamParams }) {
   );
 
   return (
-    <div className="min-h-dvh bg-app">
+    <div className="bg-app">
       <header className="relative flex items-center justify-center bg-brand px-4 pb-4 pt-[calc(env(safe-area-inset-top)+12px)] lg:rounded-b-3xl">
         <button type="button" onClick={handleBack} aria-label="Back" className="absolute left-4 rounded-full p-1 hover:bg-white/15">
           <Ionicon name={selectedSquadId && !params.squadId ? "arrow-back" : "close"} size={22} color="white" />

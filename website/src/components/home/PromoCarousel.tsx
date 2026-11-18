@@ -26,12 +26,14 @@ function SlideImage({ slide }: { slide: PromoSlide }) {
 // every 4.5s (a manual swipe or hover pauses it), gradient pill for the
 // active dot. On desktop two slides show side by side and the carousel
 // pages through them in pairs, instead of one banner the height of the screen.
-export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
+// `single`: one slide at a time on every screen (e.g. inside a hero column).
+// `onDark`: dot colours for a dark-green background.
+export default function PromoCarousel({ slides, single, onDark }: { slides: PromoSlide[]; single?: boolean; onDark?: boolean }) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const perPage = isDesktop ? 2 : 1;
+  const perPage = isDesktop && !single ? 2 : 1;
   const pages = Math.max(1, Math.ceil(slides.length / perPage));
 
   const goTo = (page: number) => {
@@ -61,8 +63,8 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
   };
 
   return (
-    <section className="mb-4" aria-roledescription="carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div ref={trackRef} onScroll={onScroll} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Highlights" className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-3xl lg:gap-0">
+    <section className={single ? "" : "mb-4"} aria-roledescription="carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div ref={trackRef} onScroll={onScroll} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Highlights" className={`no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-3xl lg:gap-0 ${onDark ? "shadow-login ring-1 ring-white/10" : ""}`}>
         {slides.map((s, i) => (
           <div key={s.key} className={`shrink-0 snap-start ${perPage === 2 ? "w-1/2 px-2 first:pl-0 [&:nth-child(2n)]:pr-0 [&:nth-child(2n+1)]:pl-0" : "w-full"}`} aria-hidden={Math.floor(i / perPage) !== active}>
             <SlideImage slide={s} />
@@ -70,14 +72,14 @@ export default function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
         ))}
       </div>
       {pages > 1 && (
-        <div className="mt-2 flex justify-center gap-[5px]">
+        <div className={`flex justify-center gap-[5px] ${onDark ? "mt-3" : "mt-2"}`}>
           {Array.from({ length: pages }, (_, i) => (
             <button
               key={i}
               type="button"
               aria-label={`Show slide ${i + 1}`}
               onClick={() => goTo(i)}
-              className={`h-1.5 rounded-full transition-all ${i === active ? "w-[18px] bg-brand" : "w-1.5 bg-border"}`}
+              className={`h-1.5 rounded-full transition-all ${i === active ? (onDark ? "w-[18px] bg-white" : "w-[18px] bg-brand") : onDark ? "w-1.5 bg-white/35" : "w-1.5 bg-border"}`}
             />
           ))}
         </div>

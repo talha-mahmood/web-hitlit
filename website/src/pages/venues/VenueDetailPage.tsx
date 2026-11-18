@@ -114,7 +114,7 @@ export default function VenueDetailPage() {
     ) : null;
 
   return (
-    <div className="mx-auto max-w-6xl lg:px-8 lg:pt-6">
+    <div className="mx-auto max-w-7xl lg:px-8 lg:pt-6">
       <div className="relative">
         {images.length > 0 ? (
           <ImageGallery images={images} className="h-[260px] sm:h-[340px] lg:h-[420px] lg:rounded-[28px]" />
@@ -247,7 +247,7 @@ export default function VenueDetailPage() {
 
         {bookCard && (
           <aside className="hidden lg:block">
-            <div className="card sticky top-6 p-5">{bookCard}</div>
+            <div className="card sticky top-[calc(var(--header-h)+24px)] p-5">{bookCard}</div>
           </aside>
         )}
       </div>

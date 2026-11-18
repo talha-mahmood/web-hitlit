@@ -5,6 +5,7 @@ import { imageUrl } from "@/lib/cn";
 import { Ionicon, MCIcon } from "@/components/icons/Icon";
 import { useAppNavigate } from "@/routes/navigation";
 import { paths, type MatchSport } from "@/routes/paths";
+import PlainHeader from "@/components/ui/PlainHeader";
 
 // Pastel disc behind each sport's photo.
 const SPORT_DISC: Record<string, string> = {
@@ -84,20 +85,17 @@ export default function ScorecardHomePage() {
   const navigate = useAppNavigate();
   return (
     <div className="mx-auto max-w-5xl lg:px-8 lg:pt-6">
-      <header className="relative overflow-hidden bg-app px-3.5 pb-3 pt-[calc(env(safe-area-inset-top)+8px)] lg:px-0 lg:pt-4">
-        <div className="absolute bottom-3 right-3 top-[calc(env(safe-area-inset-top)+8px)] flex origin-right scale-75 items-center lg:right-0">
-          <HeaderArt />
-        </div>
-        <div className="flex items-center gap-2 pr-[130px]">
-          <button type="button" onClick={() => navigate(paths.home)} aria-label="Back to Home" className="rounded-full p-0.5 hover:bg-black/5 lg:hidden">
-            <Ionicon name="arrow-back" size={22} color={colors.ink} />
-          </button>
-          <div className="min-w-0">
-            <h1 className="truncate text-[19px] font-bold text-ink">Scorecard</h1>
-            <p className="mt-px truncate text-[10.5px] text-muted">Live score your game</p>
+      <PlainHeader
+        wide
+        crumbs={[{ label: "Home", to: "/" }]}
+        title="Scorecard"
+        subtitle="Live score your game: pick a sport to start a match"
+        right={
+          <div className="hidden h-[64px] origin-right scale-90 items-center sm:flex">
+            <HeaderArt />
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div className="grid gap-[15px] px-4 pb-6 pt-3.5 md:grid-cols-2 lg:px-0 lg:pt-4 xl:grid-cols-3">
         {SPORTS.map((s) => (

@@ -17,7 +17,7 @@ export function GradientButton({ loading, icon, children, className, disabled, .
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        "press inline-flex items-center justify-center gap-3 rounded-2xl bg-brand px-5 py-3.5 text-base font-semibold text-white shadow-cta",
+        "press inline-flex items-center justify-center gap-3 rounded-xl bg-brand px-5 py-3.5 text-base font-semibold text-white shadow-cta transition hover:brightness-110 hover:shadow-[0_8px_18px_rgb(var(--jz-primary)/0.3)]",
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100",
         loading && "!opacity-70",
         className
@@ -41,7 +41,7 @@ export function OutlineButton({ loading, icon, children, className, disabled, ..
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        "press inline-flex items-center justify-center gap-2 rounded-2xl border-[1.5px] border-border bg-surface px-5 py-3 text-base font-semibold text-ink-secondary",
+        "press inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-surface px-5 py-3 text-base font-semibold text-ink-secondary transition-colors hover:border-primary/40",
         "hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}

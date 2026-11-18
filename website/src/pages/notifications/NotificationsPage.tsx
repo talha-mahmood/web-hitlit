@@ -15,9 +15,10 @@ import { getFriendlyErrorMessage } from "@app/lib/friendlyError";
 import { Alert } from "@/lib/alert";
 import { Ionicon } from "@/components/icons/Icon";
 import Spinner from "@/components/ui/Spinner";
-import { useAppNavigate, useGoBack } from "@/routes/navigation";
+import { useAppNavigate } from "@/routes/navigation";
 import { notificationPath } from "@/lib/notificationLinks";
 import { SkeletonCardRows } from "@/components/ui/Skeleton";
+import PlainHeader from "@/components/ui/PlainHeader";
 
 const TYPE_META: Record<string, { icon: string; color: string; bg: string }> = {
   game_join_request: { icon: "person-add", color: colors.primary, bg: "bg-primary-light" },
@@ -147,7 +148,6 @@ function NotificationCard({
 // (status persists from the invite row), mark all read, delete one / all.
 export default function NotificationsPage() {
   const navigate = useAppNavigate();
-  const goBack = useGoBack("/");
   const userId = useAuthStore((s) => s.session?.user.id);
 
   const { data: notifications, isLoading } = useNotifications(userId);
@@ -197,12 +197,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-3.5 pt-[calc(env(safe-area-inset-top)+12px)] sm:px-6 lg:px-8 lg:pt-8">
-      <div className="relative mb-7 flex min-h-[52px] items-center justify-center">
-        <button type="button" onClick={goBack} aria-label="Go back" className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-raised hover:brightness-95">
-          <Ionicon name="arrow-back" size={22} color={colors.ink} />
-        </button>
-        <h1 className="text-2xl font-bold text-ink">Notifications</h1>
-      </div>
+      <PlainHeader flush crumbs={[{ label: "Home", to: "/" }]} title="Notifications" subtitle="Invites, requests and updates from your games and squads" />
+      <div className="mb-3" />
       <div className="mb-4 flex items-center justify-between px-2.5">
         <p className="text-base text-muted">{(notifications ?? []).filter((n) => !n.is_read).length} unread</p>
         <div className="flex items-center gap-[18px]">

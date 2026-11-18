@@ -110,7 +110,7 @@ function MenuChrome({ children, onClose }: { children: ReactNode; onClose?: () =
   );
 }
 
-// Full-screen menu on phones (the dashboard's hamburger / avatar).
+// Slide-in menu drawer on phones/tablets (the dashboard's hamburger / avatar).
 export function VenueMenuOverlay({ venueId, open, onClose }: { venueId: string; open: boolean; onClose: () => void }) {
   const items = useVenueMenuItems(venueId);
   const { pathname } = useLocation();
@@ -122,10 +122,13 @@ export function VenueMenuOverlay({ venueId, open, onClose }: { venueId: string; 
   }, [open, onClose]);
   if (!open) return null;
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[95] animate-fadeUp">
-      <MenuChrome onClose={onClose}>
-        <MenuList items={items} activeKey={activeKeyFor(pathname, venueId, items)} onNavigate={onClose} />
-      </MenuChrome>
+    <div className="fixed inset-0 z-[95]">
+      <div className="absolute inset-0 animate-fadeUp bg-black/45" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="Menu" className="absolute inset-y-0 left-0 w-[min(320px,86vw)] animate-fadeUp shadow-hero">
+        <MenuChrome onClose={onClose}>
+          <MenuList items={items} activeKey={activeKeyFor(pathname, venueId, items)} onNavigate={onClose} />
+        </MenuChrome>
+      </div>
     </div>,
     document.body
   );

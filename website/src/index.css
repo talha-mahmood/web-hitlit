@@ -18,15 +18,24 @@
   body {
     @apply bg-app text-ink font-sans antialiased;
   }
-  /* Height of the phone/tablet bottom tab bar, so sticky action bars can
-     sit just above it. Desktop has no tab bar. */
+  /* The website has a sticky top header and no bottom tab bar: sticky
+     page elements sit below --header-h; --tabbar-h stays 0 so bottom
+     action bars sit on the viewport edge. */
   :root {
-    --tabbar-h: 76px;
+    --tabbar-h: 0px;
+    --header-h: calc(64px + env(safe-area-inset-top));
   }
-  @media (min-width: 1024px) {
-    :root {
-      --tabbar-h: 0px;
-    }
+  html {
+    scroll-padding-top: calc(var(--header-h) + 16px);
+    /* With the sticky header, Chrome's scroll anchoring can jump the page
+       mid-click when content above changes near the bottom of a page, so
+       the click lands on a different element. Keep the scroll position put. */
+    overflow-anchor: none;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
   }
   /* Same "pure white canvas" the app uses behind every screen. */
   #root {
@@ -48,7 +57,24 @@
     @apply transition-transform duration-150 ease-out active:scale-[0.98];
   }
   .section-title {
-    @apply text-lg font-semibold text-ink;
+    @apply text-lg font-bold tracking-tight text-ink lg:text-xl;
+  }
+  /* Page-width container shared by the header, footer and pages. */
+  .site-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  /* Lift-on-hover for clickable cards (mouse only). */
+  .lift {
+    @apply transition duration-200 ease-out;
+  }
+  @media (hover: hover) {
+    .lift:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+    }
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.12em] text-primary-dark;
   }
   .no-scrollbar {
     scrollbar-width: none;

@@ -11,8 +11,9 @@ import { Alert } from "@/lib/alert";
 import { Ionicon } from "@/components/icons/Icon";
 import FieldInput from "@/components/ui/FieldInput";
 import Spinner from "@/components/ui/Spinner";
-import { useAppNavigate, useGoBack } from "@/routes/navigation";
+import { useAppNavigate } from "@/routes/navigation";
 import { paths } from "@/routes/paths";
+import PlainHeader from "@/components/ui/PlainHeader";
 
 function SectionCard({ icon, iconBg = colors.primaryLight, iconFg = colors.primaryDark, title, subtitle, children }: { icon: string; iconBg?: string; iconFg?: string; title: string; subtitle: string; children: ReactNode }) {
   return (
@@ -53,7 +54,6 @@ const signOut = async () => {
 // number, profile visibility, the type-DELETE account deletion, Sign out.
 export default function AccountSettingsPage() {
   const navigate = useAppNavigate();
-  const goBack = useGoBack(paths.profile);
   const profile = useProfileStore((s) => s.profile);
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const userId = useAuthStore((s) => s.session?.user.id);
@@ -115,15 +115,8 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl pb-10 lg:px-8">
-      <div className="flex items-center px-3.5 pb-[22px] pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-6">
-        <button type="button" onClick={goBack} aria-label="Back" className="mr-3 rounded-full p-1 hover:bg-gray-100">
-          <Ionicon name="arrow-back" size={24} color={colors.ink} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-extrabold text-ink">Account Settings</h1>
-          <p className="mt-0.5 text-sm text-muted">Manage your account details</p>
-        </div>
-      </div>
+      <PlainHeader wide crumbs={[{ label: "Home", to: "/" }, { label: "Profile", to: "/profile" }]} title="Account Settings" subtitle="Manage your account details" />
+      <div className="mb-4" />
 
       <div className="px-5 lg:px-0">
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-card">

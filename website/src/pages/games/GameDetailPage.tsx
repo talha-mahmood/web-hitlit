@@ -170,13 +170,13 @@ export default function GameDetailPage() {
   return (
     <div className="mx-auto max-w-5xl lg:px-8 lg:pt-6">
       <div className="relative">
-        <header className="relative overflow-hidden bg-brand px-4 pb-7 pt-[calc(env(safe-area-inset-top)+10px)] lg:rounded-t-[28px] lg:px-7 lg:pt-5">
+        <header className="relative overflow-hidden bg-brand px-4 pb-7 pt-[calc(env(safe-area-inset-top)+10px)] lg:rounded-t-[28px] lg:px-10 lg:pb-12 lg:pt-8">
           {sportIcon && <MCIcon name={sportIcon.icon} size={84} color="white" className="pointer-events-none absolute -bottom-2.5 -right-3.5 opacity-[0.14]" style={{ transform: "rotate(-10deg)" }} />}
           <div className="flex items-center">
             <button type="button" onClick={goBack} aria-label="Back" className="mr-3 flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/30 bg-white/[0.16] hover:bg-white/25">
               <Ionicon name="arrow-back" size={20} color="white" />
             </button>
-            <h1 className="min-w-0 flex-1 truncate text-[19px] font-extrabold text-white">{game.title}</h1>
+            <h1 className="min-w-0 flex-1 truncate text-[19px] font-extrabold text-white sm:text-2xl lg:text-[32px] lg:tracking-tight">{game.title}</h1>
             {(isCreator || hasJoined || isApprovedParticipant) && (
               <button
                 type="button"

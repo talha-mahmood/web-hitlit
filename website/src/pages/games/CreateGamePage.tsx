@@ -415,7 +415,7 @@ export default function CreateGamePage() {
 
   return (
     <div className="mx-auto max-w-3xl lg:px-8">
-      <div className="sticky top-0 z-30 border-b border-border bg-white/95 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:pt-6">
+      <div className="sticky top-[var(--header-h)] z-30 border-b border-border bg-white/95 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:pt-6">
         <div className="flex items-center px-4 pb-4 lg:px-0">
           <button type="button" onClick={goBack} aria-label="Back" className="mr-3 rounded-full p-1 transition hover:bg-gray-100 active:scale-90">
             <Ionicon name="arrow-back" size={22} color={colors.ink} />

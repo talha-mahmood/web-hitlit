@@ -230,7 +230,7 @@ export function RacketLiveView({
 
   return (
     <div className="mx-auto max-w-5xl pb-10 lg:px-8">
-      <header className="sticky top-0 z-20 flex items-center gap-2 bg-white/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:px-0 lg:pt-6">
+      <header className="sticky top-[var(--header-h)] z-20 flex items-center gap-2 bg-white/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+16px)] backdrop-blur lg:px-0 lg:pt-6">
         <button type="button" onClick={onBack} aria-label="Back" className="rounded-full p-1 hover:bg-gray-100">
           <Ionicon name="arrow-back" size={22} color={colors.ink} />
         </button>
@@ -314,7 +314,7 @@ export function RacketLiveView({
         </div>
 
         {isScorer && (
-          <aside className="mt-4 flex flex-col gap-2.5 lg:sticky lg:top-24 lg:mt-0 lg:self-start">
+          <aside className="mt-4 flex flex-col gap-2.5 lg:sticky lg:top-[calc(var(--header-h)+96px)] lg:mt-0 lg:self-start">
             <p className="hidden text-xs font-bold tracking-[0.5px] text-muted lg:block">SCORE</p>
             <div className={`flex flex-col gap-2.5 ${pointPending ? "pointer-events-none" : ""}`}>
               <GradientActionButton onPress={() => onPoint("A")} from={colors.primary} to={colors.primaryDark} icon="add" label={`${aName} Point`} watermarkIcon={watermarkIcon} shadow={!pointPending} />

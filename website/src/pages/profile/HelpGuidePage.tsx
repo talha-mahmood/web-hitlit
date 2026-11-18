@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { colors } from "@app/constants/theme";
 import { USER_GUIDE, type GuideChapter } from "@app/content/userGuide";
 import { Ionicon } from "@/components/icons/Icon";
-import { useGoBack } from "@/routes/navigation";
 import { paths } from "@/routes/paths";
+import PlainHeader from "@/components/ui/PlainHeader";
 
 // A chapter survives a search if its title/intro or any section matches.
 function searchableChapter(chapter: GuideChapter, query: string): GuideChapter | null {
@@ -19,7 +19,6 @@ function searchableChapter(chapter: GuideChapter, query: string): GuideChapter |
 // Port of HelpGuideScreen: the offline user guide (same chapters as the
 // app), searchable, with a chapter strip that jumps to and opens a chapter.
 export default function HelpGuidePage() {
-  const goBack = useGoBack(paths.accountSettings);
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(USER_GUIDE[0]?.id ?? null);
   const chapters = useMemo(() => USER_GUIDE.map((c) => searchableChapter(c, query)).filter((c): c is GuideChapter => c !== null), [query]);
@@ -32,18 +31,18 @@ export default function HelpGuidePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10 lg:px-8">
-      <header className="flex items-center gap-3 pb-3 pt-[calc(env(safe-area-inset-top)+10px)] lg:pt-6">
-        <button type="button" onClick={goBack} aria-label="Go back" className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-surface-raised hover:brightness-95">
-          <Ionicon name="arrow-back" size={21} color={colors.ink} />
-        </button>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-extrabold text-ink">Help &amp; User Guide</h1>
-          <p className="mt-0.5 text-xs text-muted">Learn your way around HitLit</p>
-        </div>
-        <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-primary-light">
-          <Ionicon name="book-outline" size={20} color={colors.primary} />
-        </span>
-      </header>
+      <PlainHeader
+        flush
+        crumbs={[{ label: "Home", to: "/" }, { label: "Profile", to: "/profile" }, { label: "Account Settings", to: "/profile/settings" }]}
+        title="Help & User Guide"
+        subtitle="Learn your way around HitLit"
+        right={
+          <span className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-primary-light">
+            <Ionicon name="book-outline" size={20} color={colors.primary} />
+          </span>
+        }
+      />
+      <div className="mb-3" />
 
       <section className="mb-4 rounded-2xl border border-border bg-surface p-4 shadow-card">
         <div className="flex items-start gap-3">

@@ -770,6 +770,7 @@ export default function TournamentMatchesPage() {
   return (
     <div className="relative mx-auto max-w-5xl overflow-hidden pb-10 lg:px-8 lg:pt-6">
       <PlainHeader
+        wide
         title={
           <>
             <span className="block text-[11px] font-bold tracking-wide text-muted">TOURNAMENT DASHBOARD</span>
