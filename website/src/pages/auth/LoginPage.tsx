@@ -122,7 +122,15 @@ export default function LoginPage() {
     </div>
   );
 
-  const scrollToSignIn = () => document.getElementById("sign-in")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Header "Sign in": with Google as the only provider it signs in straight
+  // away (scrolling to a card that's already on screen looks like nothing
+  // happened). With Apple enabled too, it takes you to the card to choose.
+  const headerSignIn = () => {
+    if (!APPLE_ENABLED) return handleSignIn("google");
+    const card = document.getElementById("sign-in");
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    card?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+  };
 
   return (
     <div className="flex min-h-dvh flex-col bg-app">
@@ -139,8 +147,13 @@ export default function LoginPage() {
             <a href="#how-it-works" className="rounded-xl px-3.5 py-2 text-[15px] font-semibold text-ink-secondary transition-colors hover:bg-gray-50 hover:text-ink">How it works</a>
             <a href="/privacy" className="rounded-xl px-3.5 py-2 text-[15px] font-semibold text-ink-secondary transition-colors hover:bg-gray-50 hover:text-ink">Privacy</a>
           </nav>
-          <button type="button" onClick={scrollToSignIn} className="press ml-auto rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-cta transition hover:brightness-110">
-            Sign in
+          <button
+            type="button"
+            onClick={headerSignIn}
+            disabled={!!isSigningIn}
+            className="press ml-auto flex min-w-[88px] items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-cta transition hover:brightness-110 disabled:opacity-70"
+          >
+            {isSigningIn ? <Spinner size={18} color="white" /> : "Sign in"}
           </button>
         </div>
       </header>
