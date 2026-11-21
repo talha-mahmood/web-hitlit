@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.playoye.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_ANDROID_SHA256_FINGERPRINT"]
+      "sha256_cert_fingerprints": ["88:6E:30:BB:35:C0:20:F9:4A:50:28:AD:6A:4B:BD:10:98:E0:78:72:2C:97:BB:30:B6:13:AA:61:0A:80:0E:36"]
     }
   }
 ]

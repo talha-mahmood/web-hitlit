@@ -15,7 +15,8 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
-        "applinks:hitlit.pk"
+        "applinks:hitlit.pk",
+        "applinks:www.hitlit.pk"
       ]
     },
     "android": {
@@ -37,6 +38,11 @@
             {
               "scheme": "https",
               "host": "hitlit.pk",
+              "pathPrefix": "/comment"
+            },
+            {
+              "scheme": "https",
+              "host": "www.hitlit.pk",
               "pathPrefix": "/comment"
             }
           ],
