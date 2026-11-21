@@ -4,7 +4,7 @@
     "details": [
       {
         "appID": "7RGZYH5548.com.playoye.app",
-        "paths": ["/comment/*"]
+        "paths": ["/comment/*", "/game/*", "/event/*", "/squad/*"]
       }
     ]
   }

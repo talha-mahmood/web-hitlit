@@ -4,7 +4,11 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.playoye.app",
-      "sha256_cert_fingerprints": ["88:6E:30:BB:35:C0:20:F9:4A:50:28:AD:6A:4B:BD:10:98:E0:78:72:2C:97:BB:30:B6:13:AA:61:0A:80:0E:36"]
+      "sha256_cert_fingerprints": [
+        "88:6E:30:BB:35:C0:20:F9:4A:50:28:AD:6A:4B:BD:10:98:E0:78:72:2C:97:BB:30:B6:13:AA:61:0A:80:0E:36",
+        "8B:E7:8F:7E:E4:93:D5:B8:8A:59:EA:66:05:D6:E0:64:D8:19:96:02:1C:71:54:D2:B3:6E:93:A2:4A:75:CE:AE",
+        "24:C7:B6:22:86:73:86:85:C6:67:C8:FC:AC:AB:00:FD:5D:16:B6:07:00:1C:E4:A0:E4:B8:36:AD:3A:90:A0:82"
+      ]
     }
   }
 ]
