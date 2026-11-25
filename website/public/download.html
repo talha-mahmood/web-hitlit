@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050B12" />
+    <title>Download HitLit</title>
+    <meta name="description" content="Get the HitLit app — find players, join games and tournaments, book courts and keep live scorecards." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HitLit" />
+    <meta property="og:url" content="https://www.hitlit.pk/download" />
+    <meta property="og:title" content="Download HitLit — Book. Play. Enjoy." />
+    <meta property="og:description" content="Get HitLit on Android and iPhone. Find players, book courts, and get in the game." />
+    <meta property="og:image" content="https://www.hitlit.pk/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Download HitLit — Book. Play. Enjoy." />
+    <meta name="twitter:description" content="Get HitLit on Android and iPhone." />
+    <meta name="twitter:image" content="https://www.hitlit.pk/og-image.jpg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <script>
+      // One link for everyone: phones go straight to their store, computers
+      // see both store buttons below.
+      (function () {
+        var PLAY = "https://play.google.com/store/apps/details?id=com.playoye.app";
+        var APPLE = "https://apps.apple.com/pk/app/hitlit/id6809699311";
+        var ua = navigator.userAgent || "";
+        var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+        var isAndroid = /Android/i.test(ua);
+        if (isIOS) location.replace(APPLE);
+        else if (isAndroid) location.replace(PLAY);
+      })();
+    </script>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        background: radial-gradient(120% 80% at 50% 0%, #3a1608 0%, #050b12 60%);
+        color: #f5f3ee;
+        font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+        min-height: 100vh;
+      }
+      main { width: 100%; max-width: 420px; text-align: center; }
+      .logo { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 12px 40px rgba(255, 90, 31, 0.35); }
+      h1 { margin: 20px 0 6px; font-size: 32px; font-weight: 800; letter-spacing: 0.5px; font-style: italic; text-transform: uppercase; }
+      h1 span { color: #ff5a1f; }
+      p { margin: 0 0 28px; color: #b9b6c8; font-size: 15px; line-height: 1.5; }
+      .btn {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        width: 100%; padding: 15px 18px; margin-bottom: 12px; border-radius: 14px;
+        font-weight: 700; font-size: 16px; text-decoration: none;
+      }
+      .play { background: linear-gradient(90deg, #ffb547, #ff5a1f); color: #0b0b14; }
+      .apple { background: #000; color: #fff; border: 1px solid #2a2a3a; }
+      .btn svg { width: 22px; height: 22px; flex: none; }
+      .site { display: inline-block; margin-top: 14px; color: #ff7a45; font-size: 14px; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="/apple-touch-icon.png" alt="HitLit" />
+      <h1>Hit<span>Lit</span></h1>
+      <p>Book. Play. Enjoy.<br />Find players, book courts, and get in the game.</p>
+      <a class="btn play" href="https://play.google.com/store/apps/details?id=com.playoye.app">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.6 1.8 13.8 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1Zm11.7 11.7 2.4 2.4-11.2 6.4 8.8-8.8Zm4.2-3.4c.9.5.9 1.8 0 2.3l-2.3 1.3-2.6-2.6 2.6-2.6 2.3 1.6ZM6.5 1.7l11.2 6.4-2.4 2.4-8.8-8.8Z"/></svg>
+        Get it on Google Play
+      </a>
+      <a class="btn apple" href="https://apps.apple.com/pk/app/hitlit/id6809699311">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3.1-2.4 1-1.4 1.4-2.7 1.4-2.8 0 0-2.5-1-2.5-4.2ZM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3.1 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
+        Download on the App Store
+      </a>
+      <a class="site" href="/">Visit hitlit.pk</a>
+    </main>
+  </body>
+</html>
